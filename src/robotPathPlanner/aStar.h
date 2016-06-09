@@ -152,10 +152,10 @@ class ordered_set_type
     }
     void print()
     {
-        printf("front (smallest)%f \n", set.front().f_score);
+        yDebug("front (smallest)%f \n", set.front().f_score);
         for (unsigned int i=0; i<set.size(); i++)
-            printf ("id%d x%d y%d %f\n", i, set[i].x, set[i].y, set[i].f_score);
-        printf("back (biggest) %f \n", set.back().f_score);
+            yDebug("id%d x%d y%d %f\n", i, set[i].x, set[i].y, set[i].f_score);
+        yDebug("back (biggest) %f \n", set.back().f_score);
     }
     int size()
     {
@@ -218,7 +218,7 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
     while (open_set.size()>0)
     {
         iterations++;
-        //printf ("%d\n", iterations++);
+        //yDebug ("%d\n", iterations++);
         //open_set.print();
         node_type curr=open_set.get_smallest();
         
@@ -248,7 +248,7 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
         closed_set.insert(curr);
 
         list<node_type> neighbors;
-        //printf ("%d %d \n", curr.x, curr.y);
+        //yDebug ("%d %d \n", curr.x, curr.y);
         if (map.nodes[curr.x][curr.y+1].empty)   neighbors.push_back(map.nodes[curr.x][curr.y+1]);
         if (map.nodes[curr.x][curr.y-1].empty)   neighbors.push_back(map.nodes[curr.x][curr.y-1]);
         if (map.nodes[curr.x+1][curr.y].empty)   neighbors.push_back(map.nodes[curr.x+1][curr.y]);
@@ -270,7 +270,7 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
         neighbors.push_back(map.nodes[cr][cu]);
         neighbors.push_back(map.nodes[cl][cd]);
         neighbors.push_back(map.nodes[cl][cd]);*/
-        //printf ("%d %d \n", curr.x, curr.y);
+        //yDebug ("%d %d \n", curr.x, curr.y);
 
         while(neighbors.size()>0)
         {

@@ -54,7 +54,7 @@ class   status_type
         else if (internal_status == THINKING) s = "THINKING";
         else 
         {
-            printf ("ERROR: unknown status of inner controller!");
+            yError ("unknown status of inner controller!");
             s = "IDLE";
         }
         return s;
@@ -81,7 +81,7 @@ class   status_type
         else if (s=="THINKING") status = THINKING;
         else 
         {
-            printf ("ERROR: unknown status of inner controller!");
+            yError("unknown status of inner controller!");
             status = IDLE;
         }
         this->internal_status=status;

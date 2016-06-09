@@ -95,22 +95,22 @@ public:
         bool err = false;
         if (plannerThread->laser_timeout_counter>TIMEOUT_MAX)
         {
-            printf ("ERROR: timeout, no laser data received!\n");
+            yError("timeout, no laser data received!\n");
             err= true;
         }
         if (plannerThread->loc_timeout_counter>TIMEOUT_MAX)
         {
-            printf ("ERROR: timeout, no localization data received!\n");
+            yError(" timeout, no localization data received!\n");
             err= true;
         }
         if (plannerThread->inner_status_timeout_counter>TIMEOUT_MAX)
         {
-            printf ("ERROR: timeout, no status info received!\n");
+            yError("timeout, no status info received!\n");
             err= true;
         }
         
         if (err==false)
-        printf ("module running, ALL ok\n");
+        yInfo ("module running, ALL ok");
 
         return true; 
     }
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {
-        fprintf(stderr,"ERROR: check Yarp network.\n");
+        yError("check Yarp network.\n");
         return -1;
     }
 

@@ -101,7 +101,7 @@ void map_class::enlargePixelSkeleton (int& i, int& j, cv::Mat& src_mat, cv::Mat&
     int ir = i+1<src_mat.rows-1?i+1:src_mat.rows-1;
     int ju = j-1>0?j-1:0;
     int jd = j+1<src_mat.cols-1?j+1:src_mat.cols-1;
-    //printf ("-- %d %d %d %d\n", il, ir, ju, jd);
+    //yDebug ("-- %d %d %d %d\n", il, ir, ju, jd);
     b = &dst_mat.at<cv::Vec3b>(il,j);
     if (pixel_is_white(*b)) {(*b) = color; next_list.push_back(cv::Vec2d(il,j)); }
     b = &dst_mat.at<cv::Vec3b>(ir,j);
@@ -131,7 +131,7 @@ void map_class::enlargePixelObstacle (int& i, int& j, cv::Mat& src_mat, cv::Mat&
     int ir = i+1<src_mat.rows-1?i+1:src_mat.rows-1;
     int ju = j-1>0?j-1:0;
     int jd = j+1<src_mat.cols-1?j+1:src_mat.cols-1;
-    //printf ("-- %d %d %d %d\n", il, ir, ju, jd);
+    //yDebug ("-- %d %d %d %d\n", il, ir, ju, jd);
     b = &dst_mat.at<cv::Vec3b>(il,j);
     if (pixel_is_free(*b)) {(*b) = color; next_list.push_back(cv::Vec2d(il,j)); }
     b = &dst_mat.at<cv::Vec3b>(ir,j);
@@ -227,7 +227,7 @@ bool map_class::skeletonize(const IplImage* src, IplImage*& dst)
         src_list->clear();
     }
     double t2 = yarp::os::Time::now();
-    printf("Map skeletonization performed in %fs\n", t2-t1);
+    yInfo("Map skeletonization performed in %fs", t2-t1);
     return true;
 }
 
@@ -322,7 +322,7 @@ bool map_class::enlargeObstacles(const IplImage* src, IplImage*& dst, unsigned i
         src_list->clear();
     }
     double t2 = yarp::os::Time::now();
-    printf("Obtacles enlargment performed in %fs\n", t2-t1);
+    yInfo("Obtacles enlargment performed in %fs", t2 - t1);
     return true;
 }
 
@@ -334,7 +334,7 @@ bool map_class::loadMap(string filename)
     loaded_map = cvLoadImage(pgm_file.c_str());
     if (loaded_map == 0)
     {
-        fprintf(stderr, "unable to load pgm map file %s\n", filename.c_str());
+        yError("unable to load pgm map file %s\n", filename.c_str());
         return false;
     }
 
@@ -349,7 +349,7 @@ bool map_class::loadMap(string filename)
     char tmp[255];
     if (pFile!=NULL)
     {
-        printf ("opening yaml map file %s\n", filename.c_str()); 
+        yInfo ("opening yaml map file %s", filename.c_str()); 
         //read here resolution, origin, size
         while (1)
         {
@@ -360,7 +360,7 @@ bool map_class::loadMap(string filename)
                 {
                     fscanf(pFile,"%s",tmp);
                     resolution = atof(tmp);
-                    printf("map resolution: %f\n",resolution);
+                    yInfo("map resolution: %f",resolution);
                 }
             if (strcmp(buff,"origin:")==0) 
                 {
@@ -370,15 +370,15 @@ bool map_class::loadMap(string filename)
                     origin[1] = atof(tmp);
                     fscanf(pFile,"%s",tmp);
                     origin[2] = atof(tmp);
-                    printf("map origin: [%s]\n",origin.toString().c_str());
+                    yInfo("map origin: [%s]", origin.toString().c_str());
                 } 
         }
-        printf("\n");
+        yInfo("\n");
         fclose (pFile);
     }
     else
     {
-        fprintf(stderr, "unable to load yaml map file %s\n", filename.c_str());
+        yError("unable to load yaml map file %s\n", filename.c_str());
         return false;
     }
 
@@ -436,7 +436,7 @@ bool map_class::simplifyPath(IplImage *map, std::queue<cell> input_path, std::qu
         {
             old_stop_cell = path.at(j-1);
             stop_cell     = path.at(j);
-            //printf ("%d %d -> %d %d\n", start_cell.x, start_cell.y, stop_cell.x, stop_cell.y);
+            //yDebug ("%d %d -> %d %d\n", start_cell.x, start_cell.y, stop_cell.x, stop_cell.y);
             if (checkStraightLine(map, start_cell, stop_cell))
             {
                 best_old_stop_cell=old_stop_cell;
