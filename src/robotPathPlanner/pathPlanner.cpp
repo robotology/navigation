@@ -116,8 +116,8 @@ void PlannerThread::run()
         for (unsigned int i = 0; i<scansize; i++)
         {
             double angle = ((1080 - i) / 1080.0*270.0 - 135.0)* M_PI / 180.0;  //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
-            laser_data[i].x = scan[i] * cos(angle) + 0.245;                    //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
-            laser_data[i].y = scan[i] * sin(angle); //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
+            laser_data[i].x = scan[i] * cos(angle) + robot_laser_x;
+            laser_data[i].y = scan[i] * sin(angle) + robot_laser_y;
             yarp::sig::Vector v(2);
             double cs = cos ((localization_data[2]-90.0)/180.0*M_PI);
             double ss = sin ((localization_data[2]-90.0)/180.0*M_PI);

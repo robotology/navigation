@@ -66,6 +66,9 @@ class laser_type
     double laser_y   [1080];
     double distances [1080];
     double angles    [1080];
+    double laser_pos_x = 0;
+    double laser_pos_y = 0;
+    double laser_pos_t = 0;
     
     public:
     laser_type ()
@@ -82,8 +85,8 @@ class laser_type
         for (unsigned int i=0; i<1080; i++) //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
         {
             double angle = ((1080 - i) / 1080.0*270.0 - 135.0)* M_PI / 180.0;  //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
-            laser_x[i] = laser_map[i] * cos(angle) + 0.245;   //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
-            laser_y[i] = laser_map[i] * sin(angle); //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
+            laser_x[i] = laser_map[i] * cos(angle) + laser_pos_x;
+            laser_y[i] = laser_map[i] * sin(angle) + laser_pos_y;
             distances[i]=sqrt(laser_x[i]*laser_x[i]+laser_y[i]*laser_y[i]);
             angles[i] = atan2(double(laser_x[i]),double(laser_y[i]))*RAD2DEG;
         }
@@ -93,6 +96,7 @@ class laser_type
     inline const double& get_angle (int i) { return angles[i]; }
     inline const double& get_x (int i) { return laser_x[i]; }
     inline const double& get_y (int i) { return laser_y[i]; }
+    inline void set_laser_position(double x, double y, double t) { laser_pos_x = x; laser_pos_y = y; laser_pos_t = t; }
 };
 
 class GotoThread: public yarp::os::RateThread
@@ -114,6 +118,9 @@ class GotoThread: public yarp::os::RateThread
     double min_lin_speed;       //m/s
     double min_ang_speed;       //deg/s
     double robot_radius;        //m
+    double robot_laser_x;       //m
+    double robot_laser_y;       //m
+    double robot_laser_t;       //deg
     int    retreat_duration; 
 
     int    loc_timeout_counter;
@@ -209,6 +216,10 @@ class GotoThread: public yarp::os::RateThread
         iLaser = 0;
         min_laser_angle = 0;
         max_laser_angle = 0;
+        robot_radius = 0;
+        robot_laser_x = 0;
+        robot_laser_y = 0;
+        robot_laser_t = 0;
     }
 
     virtual bool threadInit()
@@ -220,7 +231,6 @@ class GotoThread: public yarp::os::RateThread
         max_ang_speed = 10.0; //deg/s
         min_lin_speed = 0.0;  //m/s
         min_ang_speed = 0.0; //deg/s
-        robot_radius = 0.30;  //m
         use_odometry = true;
         use_localization = true;
         yInfo ("Using following paramters: %s", rf.toString().c_str());
@@ -230,7 +240,33 @@ class GotoThread: public yarp::os::RateThread
         if (rf.check("max_ang_speed"))      {max_ang_speed = rf.find("max_ang_speed").asDouble();}
         if (rf.check("min_lin_speed"))      {min_lin_speed = rf.find("min_lin_speed").asDouble();}
         if (rf.check("min_ang_speed"))      {min_ang_speed = rf.find("min_ang_speed").asDouble();}
-        if (rf.check("robot_radius"))       {robot_radius = rf.find("robot_radius").asDouble();}
+        
+        Bottle geometry_group = rf.findGroup("ROBOT_GEOMETRY");
+        if (geometry_group.isNull())
+        {
+            yError() << "Missing ROBOT_GEOMETRY group!";
+            return false;
+        }
+
+        bool ff = geometry_group.check("robot_radius");
+        ff &= geometry_group.check("laser_pos_x");
+        ff &= geometry_group.check("laser_pos_y");
+        ff &= geometry_group.check("laser_pos_theta");
+
+        if (ff)
+        {
+            robot_radius = rf.find("robot_radius").asDouble();
+            robot_laser_x = rf.find("laser_pos_x").asDouble();
+            robot_laser_y = rf.find("laser_pos_y").asDouble();
+            robot_laser_t = rf.find("laser_pos_theta").asDouble();
+        }
+        else
+        {
+            yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
+            return false;
+        }
+        laser_data.set_laser_position(robot_laser_x, robot_laser_y, robot_laser_t);
+
         if (rf.check("goal_tolerance_lin")) {goal_tolerance_lin = rf.find("goal_tolerance_lin").asDouble();}
         if (rf.check("goal_tolerance_ang")) {goal_tolerance_ang = rf.find("goal_tolerance_ang").asDouble();}
         if (rf.check("use_odometry"))       {use_odometry       = (rf.find("use_odometry").asInt()==1);}
@@ -271,6 +307,7 @@ class GotoThread: public yarp::os::RateThread
         port_speak_output.open((localName+"/speak:o").c_str());
         port_gui_output.open((localName+"/gui:o").c_str());
 
+        //open the laser interface
         PolyDriver p;
         Property options;
         options.put("device", "Rangefinder2DClient");
@@ -294,13 +331,11 @@ class GotoThread: public yarp::os::RateThread
         }
 
         //automatic connections for debug
-        yarp::os::Network::connect("/robot/laser:o","/laserScannerGui/laser:i");
-        yarp::os::Network::connect("/robotGoto/gui:o","/laserScannerGui/nav_display:i");
+        yarp::os::Network::connect("/robot/laser:o","/yarpLaserScannerGui/laser:i");
+        yarp::os::Network::connect("/robotGoto/gui:o","/yarpLaserScannerGui/nav_display:i");
 
         //automatic port connections
-        /*bool b = false;
-        b = Network::connect("/robot_ros_bridge/localization:o",(localName+"/localization:i").c_str(), "udp", false);
-        if (!b) {yError ("Unable to connect the localization port!"); return false;}
+        /*
         b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
         if (!b) {yError ("Unable to connect the output command port!"); return false;}
         */

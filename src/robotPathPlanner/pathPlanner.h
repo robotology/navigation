@@ -70,7 +70,10 @@ class PlannerThread: public yarp::os::RateThread
 
     protected:
     //configuration parameters
-    double    robot_radius;     //m
+    double    robot_radius;        //m
+    double    robot_laser_x;       //m
+    double    robot_laser_y;       //m
+    double    robot_laser_t;       //deg
     map_class map;
     bool      use_optimized_path;
     double    min_laser_angle;
@@ -138,25 +141,15 @@ class PlannerThread: public yarp::os::RateThread
         iLaser = 0;
         min_laser_angle = 0;
         max_laser_angle = 0;
+        robot_radius = 0;
+        robot_laser_x = 0;
+        robot_laser_y = 0;
+        robot_laser_t = 0;
     }
 
     virtual bool threadInit()
     {
         //read configuration parametes
-        yarp::os::ResourceFinder mapFinder;
-        mapFinder.setDefaultContext("robot/maps");
-        mapFinder.configure(0,0);
-
-        string map_filename;
-        map_filename = mapFinder.getHomeContextPath().c_str() + string("/");
-        map_filename = map_filename + rf.find("map_file").asString().c_str();
-        //map_filename = rf.find("map_file").asString().c_str();
-        if (!map.loadMap(map_filename))
-        {
-            yError("map file not found, closing");
-            return false;
-        }
-
         if (rf.check("waypoint_tolerance_lin")) {waypoint_tolerance_lin = rf.find("waypoint_tolerance_lin").asDouble();}
         if (rf.check("waypoint_tolerance_ang")) {waypoint_tolerance_ang = rf.find("waypoint_tolerance_ang").asDouble();}
         if (rf.check("goal_tolerance_lin"))     {goal_tolerance_lin = rf.find("goal_tolerance_lin").asDouble();}
@@ -168,6 +161,32 @@ class PlannerThread: public yarp::os::RateThread
         if (rf.check("min_ang_speed"))          {min_ang_speed = rf.find("min_ang_speed").asDouble();}
         if (rf.check("min_waypoint_distance"))  {min_waypoint_distance = rf.find("min_waypoint_distance").asInt();}
 
+        Bottle geometry_group = rf.findGroup("ROBOT_GEOMETRY");
+        if (geometry_group.isNull())
+        {
+            yError() << "Missing ROBOT_GEOMETRY group!";
+            return false;
+        }
+
+        bool ff = geometry_group.check("robot_radius");
+        ff &= geometry_group.check("laser_pos_x");
+        ff &= geometry_group.check("laser_pos_y");
+        ff &= geometry_group.check("laser_pos_theta");
+
+        if (ff)
+        {
+            robot_radius = rf.find("robot_radius").asDouble();
+            robot_laser_x = rf.find("laser_pos_x").asDouble();
+            robot_laser_y = rf.find("laser_pos_y").asDouble();
+            robot_laser_t = rf.find("laser_pos_theta").asDouble();
+        }
+        else
+        {
+            yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
+            return false;
+        }
+
+
         //open module ports
         string localName = "/robotPathPlanner";
         port_localization_input.open((localName+"/localization:i").c_str());
@@ -178,6 +197,7 @@ class PlannerThread: public yarp::os::RateThread
         port_yarpview_target_input.open((localName+"/yarpviewTarget:i").c_str());
         port_yarpview_target_output.open((localName+"/yarpviewTarget:o").c_str());
 
+        //open the laser interface
         PolyDriver p;
         Property options;
         options.put("device", "Rangefinder2DClient");
@@ -200,10 +220,21 @@ class PlannerThread: public yarp::os::RateThread
             return false;
         }
 
-        //automatic port connections
-        //bool b = false;
-        //b = Network::connect("/robot_ros_bridge/localization:o",(localName+"/localization:i").c_str(), "udp", false);
-        // if (!b) {yError ("Unable to connect the localization port!\n"); return false;}
+        //read the map
+        yarp::os::ResourceFinder mapFinder;
+        mapFinder.setDefaultContext("robot/maps");
+        mapFinder.configure(0, 0);
+
+        string map_filename;
+        map_filename = mapFinder.getHomeContextPath().c_str() + string("/");
+        map_filename = map_filename + rf.find("map_file").asString().c_str();
+        //map_filename = rf.find("map_file").asString().c_str();
+        if (!map.loadMap(map_filename))
+        {
+            yError("map file not found, closing");
+            return false;
+        }
+
         return true;
     }
 
