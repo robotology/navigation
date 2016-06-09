@@ -1,0 +1,67 @@
+<application>
+<name>robotPathPlanner</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>robotGoto</name>
+   <parameters></parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotPathPlanner</name>
+   <parameters>--map_file rbcsLab</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /plannerView:i --out /mapClick:o</parameters>
+   <node>icub14</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/robot/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/map:o</from>
+  <to>/plannerView:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/commands:o</from>
+  <to>/robotGoto/rpc:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/robotGoto/status:o</from>
+  <to>/robotPathPlanner/navigationStatus:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/robotGoto/speak:o</from>
+  <to>/iSpeak</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/robot/odometry:o</from>
+  <to>/robotGoto/odometry:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/mapClick:o</from>
+  <to>/robotPathPlanner/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>

@@ -1,0 +1,26 @@
+<application>
+<name>robotGoto_no_laser</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>robotGoto</name>
+   <parameters>--no_stop_on_obstacles</parameters>
+   <node>icub14</node>
+   <tag>robotGoto</tag>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/robot/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robot/odometry:o</from>
+  <to>/robotGoto/odometry:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+</application>
