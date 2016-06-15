@@ -37,6 +37,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Semaphore.h>
+#include <yarp/dev/ITransform.h>
 #include <string>
 
 #include "status.h"
@@ -78,11 +79,14 @@ class PlannerThread: public yarp::os::RateThread
     bool      use_optimized_path;
     double    min_laser_angle;
     double    max_laser_angle;
+    bool      use_localization_from_port;
+    bool      use_localization_from_tf;
 
     //ports
+    IRangefinder2D*                                        iLaser;
+    ITransform*                                            iTf;
     BufferedPort<yarp::sig::Vector>                        port_localization_input;
     BufferedPort<yarp::os::Bottle>                         port_status_input;
-    IRangefinder2D*                                        iLaser;
     BufferedPort<yarp::os::Bottle>                         port_yarpview_target_input;
     BufferedPort<yarp::os::Bottle>                         port_yarpview_target_output;
 
@@ -145,6 +149,8 @@ class PlannerThread: public yarp::os::RateThread
         robot_laser_x = 0;
         robot_laser_y = 0;
         robot_laser_t = 0;
+        use_localization_from_port = false;
+        use_localization_from_tf = false;
     }
 
     virtual bool threadInit()
@@ -167,11 +173,25 @@ class PlannerThread: public yarp::os::RateThread
             yError() << "Missing ROBOT_GEOMETRY group!";
             return false;
         }
+        Bottle localization_group = rf.findGroup("LOCALIZATION");
+        if (localization_group.isNull())
+        {
+            yError() << "Missing LOCALIZATION group!";
+            return false;
+        }
 
         bool ff = geometry_group.check("robot_radius");
         ff &= geometry_group.check("laser_pos_x");
         ff &= geometry_group.check("laser_pos_y");
         ff &= geometry_group.check("laser_pos_theta");
+
+        if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
+        if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
+        if (use_localization_from_port == true && use_localization_from_tf == true)
+        {
+            yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
+            return false;
+        }
 
         if (ff)
         {
@@ -189,13 +209,38 @@ class PlannerThread: public yarp::os::RateThread
 
         //open module ports
         string localName = "/robotPathPlanner";
-        port_localization_input.open((localName+"/localization:i").c_str());
         port_status_input.open((localName+"/navigationStatus:i").c_str());
         port_status_output.open((localName+"/plannerStatus:o").c_str());
         port_commands_output.open((localName+"/commands:o").c_str());
         port_map_output.open((localName+"/map:o").c_str());
         port_yarpview_target_input.open((localName+"/yarpviewTarget:i").c_str());
         port_yarpview_target_output.open((localName+"/yarpviewTarget:o").c_str());
+
+        //localization
+        if (use_localization_from_port)
+        {
+            port_localization_input.open((localName + "/localization:i").c_str());
+        }
+
+        if (use_localization_from_tf)
+        {
+            PolyDriver ptf;
+            Property options;
+            options.put("device", "transformClient");
+            options.put("local", "/robotPathPlanner/localizationTfClient");
+            options.put("remote", "/transformServer");
+            if (ptf.open(options) == false)
+            {
+                yError() << "Unable to open transform client";
+                return false;
+            }
+            ptf.view(iTf);
+            if (iTf == 0)
+            {
+                yError() << "Unable to view iTransform interface";
+                return false;
+            }
+        }
 
         //open the laser interface
         PolyDriver p;

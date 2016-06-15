@@ -150,13 +150,46 @@ void GotoThread::run()
     mutex.wait();
     
     //data is formatted as follows: x, y, angle
-    yarp::sig::Vector *loc = port_localization_input.read(false);
-    if (loc) {localization_data = *loc; loc_timeout_counter=0;}
-    else 
-    {  
-       if (use_localization) loc_timeout_counter++;
-       if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter=TIMEOUT_MAX;
+    yarp::sig::Vector *loc = 0;
+    
+    if (use_localization_from_port)
+    {
+        loc = port_localization_input.read(false);
+        if (loc)
+        {
+            localization_data = *loc;
+            loc_timeout_counter = 0;
+        }
+        else
+        {
+            loc_timeout_counter++;
+            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+        }
     }
+    else if (use_localization_from_tf)
+    {
+        yarp::sig::Vector iv;
+        yarp::sig::Vector pose;
+        iv.resize(6,0.0);
+        bool r = iTf->transformPose("mobile_base",iv, pose);
+        if (r)
+        {
+            localization_data[0] = pose[0]; //x
+            localization_data[1] = pose[1]; //y
+            localization_data[2] = pose[5]; //theta
+            loc_timeout_counter = 0;
+        }
+        else
+        {
+            loc_timeout_counter++;
+            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+        }
+    }
+    else
+    {
+        yWarning() << "Localization disabled";
+    }
+
     if (loc_timeout_counter>=TIMEOUT_MAX)
     {
         if (status == MOVING)

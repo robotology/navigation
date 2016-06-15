@@ -33,6 +33,7 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/IRangefinder2d.h>
 #include <yarp/os/Log.h>
+#include <yarp/dev/ITransform.h>
 #include <yarp/os/LogStream.h>
 #include <string>
 #include <math.h>
@@ -137,6 +138,7 @@ class GotoThread: public yarp::os::RateThread
 
     //ports
     IRangefinder2D*                 iLaser;
+    ITransform*                     iTf;
     BufferedPort<yarp::sig::Vector> port_odometry_input;
     BufferedPort<yarp::sig::Vector> port_localization_input;
     BufferedPort<yarp::sig::Vector> port_target_input;
@@ -144,7 +146,7 @@ class GotoThread: public yarp::os::RateThread
     BufferedPort<yarp::os::Bottle>  port_status_output;
     BufferedPort<yarp::os::Bottle>  port_speak_output;
     BufferedPort<yarp::os::Bottle>  port_gui_output;
-
+    
     Property            robotCtrl_options;
     ResourceFinder      &rf;
     yarp::sig::Vector   localization_data;
@@ -155,7 +157,8 @@ class GotoThread: public yarp::os::RateThread
     status_type         status;
     int                 retreat_counter;
     bool                use_odometry;
-    bool                use_localization;
+    bool                use_localization_from_port;
+    bool                use_localization_from_tf;
     double              min_laser_angle;
     double              max_laser_angle;
 
@@ -214,6 +217,7 @@ class GotoThread: public yarp::os::RateThread
         min_detection_distance = 0.4;
         obstacle_removal_time = 0.0;
         iLaser = 0;
+        iTf = 0;
         min_laser_angle = 0;
         max_laser_angle = 0;
         robot_radius = 0;
@@ -232,7 +236,8 @@ class GotoThread: public yarp::os::RateThread
         min_lin_speed = 0.0;  //m/s
         min_ang_speed = 0.0; //deg/s
         use_odometry = true;
-        use_localization = true;
+        use_localization_from_port = false;
+        use_localization_from_tf = false;
         yInfo ("Using following paramters: %s", rf.toString().c_str());
         if (rf.check("ang_speed_gain"))     {k_ang_gain = rf.find("ang_speed_gain").asDouble();}
         if (rf.check("lin_speed_gain"))     {k_lin_gain = rf.find("lin_speed_gain").asDouble();}
@@ -245,6 +250,12 @@ class GotoThread: public yarp::os::RateThread
         if (geometry_group.isNull())
         {
             yError() << "Missing ROBOT_GEOMETRY group!";
+            return false;
+        }
+        Bottle localization_group = rf.findGroup("LOCALIZATION");
+        if (localization_group.isNull())
+        {
+            yError() << "Missing LOCALIZATION group!";
             return false;
         }
 
@@ -269,8 +280,14 @@ class GotoThread: public yarp::os::RateThread
 
         if (rf.check("goal_tolerance_lin")) {goal_tolerance_lin = rf.find("goal_tolerance_lin").asDouble();}
         if (rf.check("goal_tolerance_ang")) {goal_tolerance_ang = rf.find("goal_tolerance_ang").asDouble();}
-        if (rf.check("use_odometry"))       {use_odometry       = (rf.find("use_odometry").asInt()==1);}
-        if (rf.check("use_localization"))   {use_localization   = (rf.find("use_localization").asInt()==1);}
+        if (localization_group.check("use_odometry"))       { use_odometry = (localization_group.find("use_odometry").asInt() == 1); }
+        if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
+        if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
+        if (use_localization_from_port == true && use_localization_from_tf == true)
+        {
+            yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
+            return false;
+        }
 
         Bottle btmp;
         btmp = rf.findGroup("RETREAT_OPTION");
@@ -300,12 +317,37 @@ class GotoThread: public yarp::os::RateThread
 
         //open module ports
         string localName = "/robotGoto";
-        port_localization_input.open((localName+"/localization:i").c_str());
         port_commands_output.open((localName+"/control:o").c_str());
         port_status_output.open((localName+"/status:o").c_str());
         port_odometry_input.open((localName+"/odometry:i").c_str());
         port_speak_output.open((localName+"/speak:o").c_str());
         port_gui_output.open((localName+"/gui:o").c_str());
+
+        //localization
+        if (use_localization_from_port)
+        {
+            port_localization_input.open((localName + "/localization:i").c_str());
+        }
+
+        if (use_localization_from_tf)
+        {
+            PolyDriver ptf;
+            Property options;
+            options.put("device", "transformClient");
+            options.put("local", "/robotPathPlanner/localizationTfClient");
+            options.put("remote", "/transformServer");
+            if (ptf.open(options) == false)
+            {
+                yError() << "Unable to open transform client";
+                return false;
+            }
+            ptf.view(iTf);
+            if (iTf == 0)
+            {
+                yError() << "Unable to view iTransform interface";
+                return false;
+            }
+        }
 
         //open the laser interface
         PolyDriver p;

@@ -97,13 +97,43 @@ void PlannerThread::run()
     }
 
     //read the localization data
-    yarp::sig::Vector *loc = port_localization_input.read(false);
-    if (loc)
+    if (use_localization_from_port)
     {
-        localization_data = *loc;
-        loc_timeout_counter=0;
+        yarp::sig::Vector *loc = port_localization_input.read(false);
+        if (loc)
+        {
+            localization_data = *loc;
+            loc_timeout_counter = 0;
+        }
+        else
+        {
+            loc_timeout_counter++;
+            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+        }
     }
-    else loc_timeout_counter++;
+    else if (use_localization_from_tf)
+    {
+        yarp::sig::Vector iv;
+        yarp::sig::Vector pose;
+        iv.resize(6, 0.0);
+        bool r = iTf->transformPose("mobile_base", iv, pose);
+        if (r)
+        {
+            localization_data[0] = pose[0]; //x
+            localization_data[1] = pose[1]; //y
+            localization_data[2] = pose[5]; //theta
+            loc_timeout_counter = 0;
+        }
+        else
+        {
+            loc_timeout_counter++;
+            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+        }
+    }
+    else
+    {
+        yWarning() << "Localization disabled";
+    }
 
     //read the laser data
     yarp::sig::Vector scan;
