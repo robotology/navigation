@@ -171,7 +171,7 @@ void GotoThread::run()
         yarp::sig::Vector iv;
         yarp::sig::Vector pose;
         iv.resize(6,0.0);
-        bool r = iTf->transformPose("mobile_base",iv, pose);
+        bool r = iTf->transformPose(frame_map_id, frame_robot_id, iv, pose);
         if (r)
         {
             localization_data[0] = pose[0]; //x

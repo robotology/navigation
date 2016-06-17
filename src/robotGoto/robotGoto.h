@@ -137,6 +137,8 @@ class GotoThread: public yarp::os::RateThread
     double pause_duration;
 
     //ports
+    PolyDriver                      ptf;
+    PolyDriver                      pLas;
     IRangefinder2D*                 iLaser;
     ITransform*                     iTf;
     BufferedPort<yarp::sig::Vector> port_odometry_input;
@@ -159,6 +161,8 @@ class GotoThread: public yarp::os::RateThread
     bool                use_odometry;
     bool                use_localization_from_port;
     bool                use_localization_from_tf;
+    string              frame_robot_id;
+    string              frame_map_id;
     double              min_laser_angle;
     double              max_laser_angle;
 
@@ -283,6 +287,8 @@ class GotoThread: public yarp::os::RateThread
         if (localization_group.check("use_odometry"))       { use_odometry = (localization_group.find("use_odometry").asInt() == 1); }
         if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
         if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
+        if (localization_group.check("robot_frame_id"))             { this->frame_robot_id = localization_group.find("robot_frame_id").asString(); }
+        if (localization_group.check("robot_map_id"))               { this->frame_map_id = localization_group.find("map_frame_id").asString(); }
         if (use_localization_from_port == true && use_localization_from_tf == true)
         {
             yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
@@ -331,7 +337,6 @@ class GotoThread: public yarp::os::RateThread
 
         if (use_localization_from_tf)
         {
-            PolyDriver ptf;
             Property options;
             options.put("device", "transformClient");
             options.put("local", "/robotPathPlanner/localizationTfClient");
@@ -350,17 +355,17 @@ class GotoThread: public yarp::os::RateThread
         }
 
         //open the laser interface
-        PolyDriver p;
         Property options;
         options.put("device", "Rangefinder2DClient");
         options.put("local", "/robotGoto/laser:i");
         options.put("remote", "/laser");
-        if (p.open(options) == false)
+        options.put("period", 10);
+        if (pLas.open(options) == false)
         {
             yError() << "Unable to open laser driver";
             return false;
         }
-        p.view(iLaser);
+        pLas.view(iLaser);
         if (iLaser == 0)
         {
             yError() << "Unable to open laser interface";
@@ -402,7 +407,9 @@ class GotoThread: public yarp::os::RateThread
     string getNavigationStatus();
 
     virtual void threadRelease()
-    {    
+    {   
+        if (ptf.isValid()) ptf.close();
+        if (pLas.isValid()) pLas.close();
         port_localization_input.interrupt();
         port_localization_input.close();
         port_target_input.interrupt();

@@ -81,8 +81,12 @@ class PlannerThread: public yarp::os::RateThread
     double    max_laser_angle;
     bool      use_localization_from_port;
     bool      use_localization_from_tf;
+    string    frame_robot_id;
+    string    frame_map_id;
 
     //ports
+    PolyDriver                                             ptf;
+    PolyDriver                                             pLas;
     IRangefinder2D*                                        iLaser;
     ITransform*                                            iTf;
     BufferedPort<yarp::sig::Vector>                        port_localization_input;
@@ -143,6 +147,7 @@ class PlannerThread: public yarp::os::RateThread
         current_path=&computed_simplified_path;
         min_waypoint_distance = 0;
         iLaser = 0;
+        iTf = 0;
         min_laser_angle = 0;
         max_laser_angle = 0;
         robot_radius = 0;
@@ -187,6 +192,8 @@ class PlannerThread: public yarp::os::RateThread
 
         if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
         if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
+        if (localization_group.check("robot_frame_id"))             { this->frame_robot_id = localization_group.find("robot_frame_id").asString(); }
+        if (localization_group.check("robot_map_id"))               { this->frame_map_id = localization_group.find("map_frame_id").asString(); }
         if (use_localization_from_port == true && use_localization_from_tf == true)
         {
             yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
@@ -224,7 +231,6 @@ class PlannerThread: public yarp::os::RateThread
 
         if (use_localization_from_tf)
         {
-            PolyDriver ptf;
             Property options;
             options.put("device", "transformClient");
             options.put("local", "/robotPathPlanner/localizationTfClient");
@@ -235,7 +241,7 @@ class PlannerThread: public yarp::os::RateThread
                 return false;
             }
             ptf.view(iTf);
-            if (iTf == 0)
+            if (ptf.isValid() == false || iTf == 0)
             {
                 yError() << "Unable to view iTransform interface";
                 return false;
@@ -256,18 +262,17 @@ class PlannerThread: public yarp::os::RateThread
         }
         string laser_remote_port = laserBottle.find("laser_port").asString();
 
-        PolyDriver p;
         Property options;
         options.put("device", "Rangefinder2DClient");
         options.put("local", "/robotPathPlanner/laser:i");
         options.put("remote", laser_remote_port);
         options.put("period", "10");
-        if (p.open(options) == false)
+        if (pLas.open(options) == false)
         {
             yError() << "Unable to open laser driver";
             return false;
         }
-        p.view(iLaser);
+        pLas.view(iLaser);
         if (iLaser == 0)
         {
             yError() << "Unable to open laser interface";
@@ -323,7 +328,9 @@ class PlannerThread: public yarp::os::RateThread
     void select_optimized_path(bool b);
 
     virtual void threadRelease()
-    {    
+    {   
+        if (ptf.isValid()) ptf.close();
+        if (pLas.isValid()) pLas.close();
         port_localization_input.interrupt();
         port_localization_input.close();
         port_map_output.interrupt();
