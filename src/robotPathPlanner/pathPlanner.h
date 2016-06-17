@@ -243,11 +243,25 @@ class PlannerThread: public yarp::os::RateThread
         }
 
         //open the laser interface
+        Bottle laserBottle = rf.findGroup("LASER");
+        if (laserBottle.isNull())
+        {
+            yError("LASER group not found,closing");
+            return false;
+        }
+        if (laserBottle.check("laser_port") == false)
+        {
+            yError("laser_port param not found,closing");
+            return false;
+        }
+        string laser_remote_port = laserBottle.find("laser_port").asString();
+
         PolyDriver p;
         Property options;
         options.put("device", "Rangefinder2DClient");
         options.put("local", "/robotPathPlanner/laser:i");
-        options.put("remote", "/laser");
+        options.put("remote", laser_remote_port);
+        options.put("period", "10");
         if (p.open(options) == false)
         {
             yError() << "Unable to open laser driver";
@@ -266,14 +280,27 @@ class PlannerThread: public yarp::os::RateThread
         }
 
         //read the map
-        yarp::os::ResourceFinder mapFinder;
-        mapFinder.setDefaultContext("robot/maps");
-        mapFinder.configure(0, 0);
-
         string map_filename;
-        map_filename = mapFinder.getHomeContextPath().c_str() + string("/");
-        map_filename = map_filename + rf.find("map_file").asString().c_str();
+        //yarp::os::ResourceFinder mapFinder;
+        //mapFinder.setDefaultContext("robot/maps");
+        //mapFinder.configure(0, 0);
+        //map_filename = mapFinder.getHomeContextPath().c_str() + string("/");
+        //map_filename = map_filename + rf.find("map_file").asString().c_str();
         //map_filename = rf.find("map_file").asString().c_str();
+
+        Bottle mapBottle = rf.findGroup("MAP");
+        if (mapBottle.isNull())
+        {
+            yError("MAP group not found,closing");
+            return false;
+        }
+        if (mapBottle.check("file_name")==false)
+        {
+            yError("map_file param not found,closing");
+            return false;
+        }
+        map_filename = mapBottle.find("file_name").asString();
+
         if (!map.loadMap(map_filename))
         {
             yError("map file not found, closing");
