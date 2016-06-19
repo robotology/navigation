@@ -116,6 +116,12 @@ void PlannerThread::run()
         yarp::sig::Vector iv;
         yarp::sig::Vector pose;
         iv.resize(6, 0.0);
+        pose.resize(6, 0.0);
+#if 0
+        string sss;
+        iTf->allFramesAsString(sss);
+        yDebug() << "All Frames:" <<  sss;
+#endif
         bool r = iTf->transformPose(frame_map_id, frame_robot_id, iv, pose);
         if (r)
         {

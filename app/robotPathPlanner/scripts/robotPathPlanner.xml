@@ -6,25 +6,25 @@
 
 <module>
    <name>robotGoto</name>
-   <parameters></parameters>
+   <parameters>--from C:\software\navigation\app\robotGoto\conf\robotGoto.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>robotPathPlanner</name>
-   <parameters>--map_file rbcsLab</parameters>
+   <parameters>--from C:\software\navigation\app\robotPathPlanner\conf\robotPathPlanner.ini </parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpview</name>
    <parameters>--name /plannerView:i --out /mapClick:o</parameters>
-   <node>icub14</node>
+   <node>console</node>
 </module>
 
 <connection>
   <from>/robotGoto/control:o</from>
-  <to>/robot/control:i</to>
+  <to>/baseControl/control:i</to>
   <protocol>udp</protocol>
 </connection>
 
@@ -53,7 +53,7 @@
 </connection>
 
 <connection>
-  <from>/robot/odometry:o</from>
+  <from>/baseControl/odometry:o</from>
   <to>/robotGoto/odometry:i</to>
   <protocol>udp</protocol>
 </connection>

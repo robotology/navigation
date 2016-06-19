@@ -7,18 +7,17 @@
 <module>
    <name>robotGoto</name>
    <parameters>--no_stop_on_obstacles</parameters>
-   <node>icub14</node>
-   <tag>robotGoto</tag>
+   <node>console</node>
 </module>
 
 <connection>
   <from>/robotGoto/control:o</from>
-  <to>/robot/control:i</to>
+  <to>/baseControl/control:i</to>
   <protocol>udp</protocol>
 </connection>
 
 <connection>
-  <from>/robot/odometry:o</from>
+  <from>/baseControl/odometry:o</from>
   <to>/robotGoto/odometry:i</to>
   <protocol>udp</protocol>
 </connection>

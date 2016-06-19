@@ -171,6 +171,7 @@ void GotoThread::run()
         yarp::sig::Vector iv;
         yarp::sig::Vector pose;
         iv.resize(6,0.0);
+        pose.resize(6, 0.0);
         bool r = iTf->transformPose(frame_map_id, frame_robot_id, iv, pose);
         if (r)
         {

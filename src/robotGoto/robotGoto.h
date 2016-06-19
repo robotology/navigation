@@ -288,7 +288,7 @@ class GotoThread: public yarp::os::RateThread
         if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
         if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
         if (localization_group.check("robot_frame_id"))             { this->frame_robot_id = localization_group.find("robot_frame_id").asString(); }
-        if (localization_group.check("robot_map_id"))               { this->frame_map_id = localization_group.find("map_frame_id").asString(); }
+        if (localization_group.check("map_frame_id"))               { this->frame_map_id = localization_group.find("map_frame_id").asString(); }
         if (use_localization_from_port == true && use_localization_from_tf == true)
         {
             yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
@@ -339,7 +339,7 @@ class GotoThread: public yarp::os::RateThread
         {
             Property options;
             options.put("device", "transformClient");
-            options.put("local", "/robotPathPlanner/localizationTfClient");
+            options.put("local", "/robotGoto/localizationTfClient");
             options.put("remote", "/transformServer");
             if (ptf.open(options) == false)
             {
@@ -355,10 +355,23 @@ class GotoThread: public yarp::os::RateThread
         }
 
         //open the laser interface
+        Bottle laserBottle = rf.findGroup("LASER");
+        if (laserBottle.isNull())
+        {
+            yError("LASER group not found,closing");
+            return false;
+        }
+        if (laserBottle.check("laser_port") == false)
+        {
+            yError("laser_port param not found,closing");
+            return false;
+        }
+        string laser_remote_port = laserBottle.find("laser_port").asString();
+
         Property options;
         options.put("device", "Rangefinder2DClient");
         options.put("local", "/robotGoto/laser:i");
-        options.put("remote", "/laser");
+        options.put("remote", laser_remote_port);
         options.put("period", 10);
         if (pLas.open(options) == false)
         {

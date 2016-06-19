@@ -8,17 +8,16 @@
    <name>robotGoto</name>
    <parameters></parameters>
    <node>console</node>
-   <tag>robotGoto</tag>
 </module>
 
 <connection>
   <from>/robotGoto/control:o</from>
-  <to>/robot/control:i</to>
+  <to>/baseControl/control:i</to>
   <protocol>udp</protocol>
 </connection>
 
 <connection>
-  <from>/robot/odometry:o</from>
+  <from>/baseControl/odometry:o</from>
   <to>/robotGoto/odometry:i</to>
   <protocol>udp</protocol>
 </connection>
