@@ -57,10 +57,17 @@ bool GotoThread::compute_obstacle_avoidance()
     double min_distance = max_obstacle_distance;
     double min_angle    = 0.0;
 
-    for (size_t i=0; i<1080; i++)
+    if (laser_data == 0)
     {
-        double curr_d     = laser_data.get_distance(i);
-        double curr_angle = laser_data.get_angle(i);
+        yError() << "Internal error, invalid laser data struct!";
+        return false;
+    }
+
+    size_t las_size = laser_data->size();
+    for (size_t i = 0; i<las_size; i++)
+    {
+        double curr_d = laser_data->get_distance(i);
+        double curr_angle = laser_data->get_angle(i);
         size_t angle_t = (size_t)(4.0 * frontal_blind_angle);
         if (i>=540-angle_t && i<=540+angle_t) continue; //skip frontalobstacles
 
@@ -104,9 +111,16 @@ bool GotoThread::check_obstacles_in_path()
     vertx[3]= -robot_radius * ctheta;
     verty[3]= -robot_radius * stheta;
 
-    for (size_t i=0; i<1080; i++)
+    if (laser_data == 0)
     {
-        double d = laser_data.get_distance(i);
+        yError() << "Internal error, invalid laser data struct!";
+        return false;
+    }
+
+    size_t las_size = laser_data->size();
+    for (size_t i = 0; i<las_size; i++)
+    {
+        double d = laser_data->get_distance(i);
         if (d < robot_radius) 
         {
             laser_obstacles++;
@@ -114,11 +128,11 @@ bool GotoThread::check_obstacles_in_path()
             continue;
         }
 
-        double px= laser_data.get_x(i);
-        double py= laser_data.get_y(i);
+        double px = laser_data->get_x(i);
+        double py = laser_data->get_y(i);
         if (pnpoly(4,vertx,verty,px,py)>0)
         {
-            double d = laser_data.get_distance(i);
+            double d = laser_data->get_distance(i);
             if (d < goal_distance)
             //if (laser_data.get_distance(i) < goal_distance)
             {
@@ -158,6 +172,7 @@ void GotoThread::run()
         if (loc)
         {
             localization_data = *loc;
+            localization_data[2] = localization_data[2] * DEG2RAD;
             loc_timeout_counter = 0;
         }
         else
@@ -177,7 +192,7 @@ void GotoThread::run()
         {
             localization_data[0] = pose[0]; //x
             localization_data[1] = pose[1]; //y
-            localization_data[2] = pose[5]; //theta
+            localization_data[2] = -pose[5]; //theta //@@@@@ BEWARE the minus sign is a temp fix!!!
             loc_timeout_counter = 0;
         }
         else
@@ -220,7 +235,12 @@ void GotoThread::run()
     bool ret = iLaser->getMeasurementData(scan);
     if (ret)
     {
-        laser_data.set_cartesian_laser_data(scan);
+        if (laser_data == 0)
+        {
+            laser_data = new laser_type(scan.size(), this->laser_angle_of_view);
+            laser_data->set_laser_position(robot_laser_x, robot_laser_y, robot_laser_t);
+        }
+        laser_data->set_cartesian_laser_data(scan);
         las_timeout_counter = 0;
     }
     else

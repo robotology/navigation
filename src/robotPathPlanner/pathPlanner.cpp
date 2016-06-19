@@ -42,6 +42,10 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+#ifndef DEG2RAD
+#define DEG2RAD M_PI/180
+#endif
+
 status_type string2status(string s)
 {
     //enum status_type {IDLE=0, MOVING, WAITING_OBSTACLE, REACHED, ABORTED, PAUSED};
@@ -103,6 +107,7 @@ void PlannerThread::run()
         if (loc)
         {
             localization_data = *loc;
+            localization_data[2] = localization_data[2] * DEG2RAD;
             loc_timeout_counter = 0;
         }
         else
@@ -122,12 +127,13 @@ void PlannerThread::run()
         iTf->allFramesAsString(sss);
         yDebug() << "All Frames:" <<  sss;
 #endif
-        bool r = iTf->transformPose(frame_map_id, frame_robot_id, iv, pose);
+        bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
         if (r)
         {
             localization_data[0] = pose[0]; //x
             localization_data[1] = pose[1]; //y
-            localization_data[2] = pose[5]; //theta
+            localization_data[2] = -pose[5]; //theta //@@@@@ BEWARE the minus sign is a temp fix!!!
+            //yDebug() << pose[0] << pose[1] << pose[2] << pose[3] << pose[4] << pose[5];
             loc_timeout_counter = 0;
         }
         else
@@ -149,14 +155,18 @@ void PlannerThread::run()
     {
         laser_map_cell.clear();
         unsigned int scansize = scan.size();
+        if (laser_data == 0)
+        {
+            laser_data = new lasermap_type[scansize];
+        }
         for (unsigned int i = 0; i<scansize; i++)
         {
-            double angle = ((1080 - i) / 1080.0*270.0 - 135.0)* M_PI / 180.0;  //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
+            double angle = (i / double(scansize)*laser_angle_of_view + robot_laser_t)* DEG2RAD;
             laser_data[i].x = scan[i] * cos(angle) + robot_laser_x;
             laser_data[i].y = scan[i] * sin(angle) + robot_laser_y;
             yarp::sig::Vector v(2);
-            double cs = cos ((localization_data[2]-90.0)/180.0*M_PI);
-            double ss = sin ((localization_data[2]-90.0)/180.0*M_PI);
+            double cs = cos (localization_data[2]);
+            double ss = sin (localization_data[2]);
             v[0] = laser_data[i].x*cs - laser_data[i].y*ss + localization_data[0] ;
             v[1] = laser_data[i].x*ss + laser_data[i].y*cs + localization_data[1] ;
             cell tmp_cell = map.world2cell(v);

@@ -396,11 +396,11 @@ bool map_class::loadMap(string filename)
     /*
     //use this block to perform skeletonziation and wall enlargement
     skeletonize     (loaded_map, tmp1);
-    enlargeObstacles(tmp1, processed_map, 6);
+    enlargeObstacles(tmp1, processed_map, 6); //@@@ remove magic number
     */
     
     //use this block to perform wall enlargment only
-    enlargeObstacles(loaded_map, processed_map, 6);
+    enlargeObstacles(loaded_map, processed_map, 6); //@@@ remove magic number
 
     cvReleaseImage (&tmp1);
     return true;

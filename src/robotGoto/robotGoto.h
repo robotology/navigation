@@ -33,6 +33,7 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/IRangefinder2d.h>
 #include <yarp/os/Log.h>
+#include <yarp/os/LockGuard.h>
 #include <yarp/dev/ITransform.h>
 #include <yarp/os/LogStream.h>
 #include <string>
@@ -63,41 +64,69 @@ struct target_type
 
 class laser_type
 {
-    double laser_x   [1080];
-    double laser_y   [1080];
-    double distances [1080];
-    double angles    [1080];
-    double laser_pos_x = 0;
-    double laser_pos_y = 0;
-    double laser_pos_t = 0;
+    yarp::os::Mutex  m_mutex;
+    unsigned int     m_data_size;
+    double           m_laser_angle_of_view;
+    double* m_laser_x;
+    double* m_laser_y;
+    double* m_distances;
+    double* m_angles;
+    double  m_laser_pos_x;
+    double  m_laser_pos_y;
+    double  m_laser_pos_t;
     
     public:
-    laser_type ()
+    laser_type(size_t data_size, double laser_angle_of_view)
     {
+        m_data_size = data_size;
+        m_laser_angle_of_view = laser_angle_of_view;
         unsigned int i = 0;
-        for (i=0;i<1080; i++) laser_x[i]=0.0;
-        for (i=0;i<1080; i++) laser_y[i]=0.0;
-        for (i=0;i<1080; i++) distances[i]=0.0;
-        for (i=0;i<1080; i++) angles[i]=0.0;
+        m_laser_x = new double[m_data_size];
+        m_laser_y = new double[m_data_size];
+        m_distances = new double[m_data_size];
+        m_angles = new double[m_data_size];
+        for (i = 0; i<data_size; i++) m_laser_x[i] = 0.0;
+        for (i = 0; i<data_size; i++) m_laser_y[i] = 0.0;
+        for (i = 0; i<data_size; i++) m_distances[i] = 0.0;
+        for (i = 0; i<data_size; i++) m_angles[i] = 0.0;
+        m_laser_pos_x = 0;
+        m_laser_pos_y = 0;
+        m_laser_pos_t = 0;
+    }
+
+    ~laser_type()
+    {
+        if (m_laser_x)   { delete [] m_laser_x; m_laser_x = 0; }
+        if (m_laser_y)   { delete [] m_laser_y; m_laser_y = 0; }
+        if (m_distances) { delete [] m_distances; m_distances = 0; }
+        if (m_angles)    { delete [] m_angles; m_angles = 0; }
+    }
+
+    size_t size()
+    {
+        yarp::os::LockGuard lock(m_mutex);
+        return m_data_size;
     }
 
     void set_cartesian_laser_data (const yarp::sig::Vector laser_map)
     {
-        for (unsigned int i=0; i<1080; i++) //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
+        yarp::os::LockGuard lock (m_mutex);
+        size_t scansize = laser_map.size();
+        for (unsigned int i = 0; i<scansize; i++)
         {
-            double angle = ((1080 - i) / 1080.0*270.0 - 135.0)* M_PI / 180.0;  //@@@@@@@@@@@@@ REMOVE MAGIC NUMBERS!
-            laser_x[i] = laser_map[i] * cos(angle) + laser_pos_x;
-            laser_y[i] = laser_map[i] * sin(angle) + laser_pos_y;
-            distances[i]=sqrt(laser_x[i]*laser_x[i]+laser_y[i]*laser_y[i]);
-            angles[i] = atan2(double(laser_x[i]),double(laser_y[i]))*RAD2DEG;
+            double angle = (i / double(scansize) * m_laser_angle_of_view - m_laser_pos_t)* DEG2RAD;
+            m_laser_x[i] = laser_map[i] * cos(angle) + m_laser_pos_x;
+            m_laser_y[i] = laser_map[i] * sin(angle) + m_laser_pos_y;
+            m_distances[i] = sqrt(m_laser_x[i] * m_laser_x[i] + m_laser_y[i] * m_laser_y[i]);
+            m_angles[i] = atan2(double(m_laser_x[i]), double(m_laser_y[i]))*RAD2DEG;
         }
     }
 
-    inline const double& get_distance(int i) { return distances[i]; }
-    inline const double& get_angle (int i) { return angles[i]; }
-    inline const double& get_x (int i) { return laser_x[i]; }
-    inline const double& get_y (int i) { return laser_y[i]; }
-    inline void set_laser_position(double x, double y, double t) { laser_pos_x = x; laser_pos_y = y; laser_pos_t = t; }
+    inline const double& get_distance(int i) { yarp::os::LockGuard lock(m_mutex); return m_distances[i]; }
+    inline const double& get_angle(int i) { yarp::os::LockGuard lock(m_mutex); return m_angles[i]; }
+    inline const double& get_x(int i) { yarp::os::LockGuard lock(m_mutex); return m_laser_x[i]; }
+    inline const double& get_y(int i) { yarp::os::LockGuard lock(m_mutex); return m_laser_y[i]; }
+    inline void set_laser_position(double x, double y, double t) { yarp::os::LockGuard lock(m_mutex); m_laser_pos_x = x; m_laser_pos_y = y; m_laser_pos_t = t; }
 };
 
 class GotoThread: public yarp::os::RateThread
@@ -154,7 +183,7 @@ class GotoThread: public yarp::os::RateThread
     yarp::sig::Vector   localization_data;
     yarp::sig::Vector   odometry_data;
     target_type         target_data;
-    laser_type          laser_data;
+    laser_type*         laser_data;
     yarp::sig::Vector   control_out;
     status_type         status;
     int                 retreat_counter;
@@ -165,12 +194,12 @@ class GotoThread: public yarp::os::RateThread
     string              frame_map_id;
     double              min_laser_angle;
     double              max_laser_angle;
+    double              laser_angle_of_view;
 
     //obstacles_emergency_stop block
     public:
     bool                enable_obstacles_emergency_stop;
     bool                enable_dynamic_max_distance;
-    double              free_distance[1080];
     double              obstacle_time;
     double              max_obstacle_wating_time;
     double              safety_coeff;
@@ -228,6 +257,7 @@ class GotoThread: public yarp::os::RateThread
         robot_laser_x = 0;
         robot_laser_y = 0;
         robot_laser_t = 0;
+        laser_data = 0;
     }
 
     virtual bool threadInit()
@@ -270,17 +300,16 @@ class GotoThread: public yarp::os::RateThread
 
         if (ff)
         {
-            robot_radius = rf.find("robot_radius").asDouble();
-            robot_laser_x = rf.find("laser_pos_x").asDouble();
-            robot_laser_y = rf.find("laser_pos_y").asDouble();
-            robot_laser_t = rf.find("laser_pos_theta").asDouble();
+            robot_radius = geometry_group.find("robot_radius").asDouble();
+            robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
+            robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
+            robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
         }
         else
         {
             yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
             return false;
         }
-        laser_data.set_laser_position(robot_laser_x, robot_laser_y, robot_laser_t);
 
         if (rf.check("goal_tolerance_lin")) {goal_tolerance_lin = rf.find("goal_tolerance_lin").asDouble();}
         if (rf.check("goal_tolerance_ang")) {goal_tolerance_ang = rf.find("goal_tolerance_ang").asDouble();}
@@ -389,6 +418,7 @@ class GotoThread: public yarp::os::RateThread
             yError() << "Unable to obtain laser scan limits";
             return false;
         }
+        laser_angle_of_view = fabs(min_laser_angle) + fabs(max_laser_angle);
 
         //automatic connections for debug
         yarp::os::Network::connect("/robot/laser:o","/yarpLaserScannerGui/laser:i");
@@ -399,13 +429,6 @@ class GotoThread: public yarp::os::RateThread
         b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
         if (!b) {yError ("Unable to connect the output command port!"); return false;}
         */
-
-        //compute the free distance
-        for (int i=0; i<1080; i++)
-        {
-            free_distance[i] = fabs(robot_radius / sin(((double(i)/1080.0)*270.0-135.0)*DEG2RAD));
-            if (free_distance[i]>2.0) free_distance[i] = 2.0;
-        }
 
         return true;
     }

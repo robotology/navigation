@@ -79,6 +79,7 @@ class PlannerThread: public yarp::os::RateThread
     bool      use_optimized_path;
     double    min_laser_angle;
     double    max_laser_angle;
+    double    laser_angle_of_view;
     bool      use_localization_from_port;
     bool      use_localization_from_tf;
     string    frame_robot_id;
@@ -108,7 +109,7 @@ class PlannerThread: public yarp::os::RateThread
         double y;
         lasermap_type() {x=y=0.0;}
     };
-    lasermap_type       laser_data[1080];
+    lasermap_type*      laser_data;
     std::vector<cell>   laser_map_cell;
     cell                current_waypoint;
 
@@ -134,6 +135,7 @@ class PlannerThread: public yarp::os::RateThread
         localization_data.resize(3,0.0);
         loc_timeout_counter = 0;
         laser_timeout_counter = 0;
+        laser_data = 0;
         inner_status_timeout_counter = 0;
         goal_tolerance_lin = 0.05;
         goal_tolerance_ang = 0.6;
@@ -202,10 +204,10 @@ class PlannerThread: public yarp::os::RateThread
 
         if (ff)
         {
-            robot_radius = rf.find("robot_radius").asDouble();
-            robot_laser_x = rf.find("laser_pos_x").asDouble();
-            robot_laser_y = rf.find("laser_pos_y").asDouble();
-            robot_laser_t = rf.find("laser_pos_theta").asDouble();
+            robot_radius = geometry_group.find("robot_radius").asDouble();
+            robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
+            robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
+            robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
         }
         else
         {
@@ -283,6 +285,7 @@ class PlannerThread: public yarp::os::RateThread
             yError() << "Unable to obtain laser scan limits";
             return false;
         }
+        laser_angle_of_view = fabs(min_laser_angle) + fabs(max_laser_angle);
 
         //read the map
         string map_filename;
@@ -328,7 +331,8 @@ class PlannerThread: public yarp::os::RateThread
     void select_optimized_path(bool b);
 
     virtual void threadRelease()
-    {   
+    {
+        if (laser_data != 0) { delete [] laser_data; laser_data = 0; }
         if (ptf.isValid()) ptf.close();
         if (pLas.isValid()) pLas.close();
         port_localization_input.interrupt();
