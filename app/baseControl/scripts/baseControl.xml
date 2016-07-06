@@ -1,0 +1,62 @@
+<application>
+<name>mobile_base_test_application</name>
+
+<dependencies>	
+cerSrv
+</dependencies>
+
+<module>
+   <name>robotInterface</name>
+   <parameters>--context cer --config conf/cer.ini</parameters>
+   <node>cerSrv</node>
+   <stdio>cerSrv</stdio>
+</module>
+
+<module>
+   <name>baseCtrl</name>
+   <parameters></parameters>
+   <node>cerSrv</node>
+   <stdio>cerSrv</stdio>
+</module>
+
+<module>
+   <name>joystickCtrl</name>
+   <parameters>--context joystickCtrl --from conf/cer.ini</parameters>
+   <node>cerSrv</node>
+   <stdio>cerSrv</stdio>
+</module>
+
+<module>
+   <name>yarpMotorGui</name>
+   <parameters>--context /cer/conf</parameters>
+   <node>cerSrv</node>
+   <stdio>cerSrv</stdio>
+</module>
+
+<module>
+   <name>laserScannerGui</name>
+   <parameters></parameters>
+   <node>cerSrv</node>
+   <stdio>cerSrv</stdio>
+</module>
+
+<module>
+   <name>batteryDisplay</name>
+   <parameters></parameters>
+   <node>cerSrv</node>
+   <stdio>cerSrv</stdio>
+</module>
+
+<connection>
+  <from>/cer/laser:o</from>
+  <to>/laserScannerGui/laser:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/joystickCtrl:o</from>
+  <to>/cer/joystick:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+</application>

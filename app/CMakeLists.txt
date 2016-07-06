@@ -6,4 +6,5 @@
 
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
+add_subdirectory(baseControl)
 
