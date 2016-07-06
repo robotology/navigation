@@ -499,7 +499,7 @@ bool ControlThread::threadInit()
     }
 
     yInfo() << control_type.c_str();
-    if (control_type == string("velocity_pid"))    { this->set_control_type("velocity_pid");    yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
+    if      (control_type == string("velocity_pid"))    { this->set_control_type("velocity_pid");    yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
     else if (control_type == string("velocity_no_pid")) { this->set_control_type("velocity_no_pid"); yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
     else if (control_type == string("openloop_pid"))    { this->set_control_type("openloop_pid");    yInfo("setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true; }
     else if (control_type == string("openloop_no_pid")) { this->set_control_type("openloop_no_pid"); yInfo("setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true; }

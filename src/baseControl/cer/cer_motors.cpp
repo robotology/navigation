@@ -24,8 +24,8 @@
 bool CER_MotorControl::set_control_openloop()
 {
     yInfo ("Setting openloop mode");
-    icmd->setOpenLoopMode(0);
-    icmd->setOpenLoopMode(1);
+    icmd->setControlMode(0, VOCAB_CM_OPENLOOP);
+    icmd->setControlMode(1, VOCAB_CM_OPENLOOP);
     iopl->setRefOutput(0,0);
     iopl->setRefOutput(1,0);
     return true;
@@ -34,8 +34,8 @@ bool CER_MotorControl::set_control_openloop()
 bool CER_MotorControl::set_control_velocity()
 {
     yInfo ("Setting velocity mode");
-    icmd->setVelocityMode(0);
-    icmd->setVelocityMode(1);
+    icmd->setControlMode(0, VOCAB_CM_VELOCITY);
+    icmd->setControlMode(1, VOCAB_CM_VELOCITY);
     ivel->setRefAcceleration(0, 1000000);
     ivel->setRefAcceleration(1, 1000000);
     ivel->velocityMove(0,0);
@@ -56,7 +56,7 @@ bool CER_MotorControl::set_control_idle()
 
 bool CER_MotorControl::check_motors_on()
 {
-    int c0(0),c1(0),c2(0);
+    int c0(0),c1(0);
     yarp::os::Time::delay(0.05);
     icmd->getControlMode(0,&c0);
     icmd->getControlMode(0,&c1);
@@ -76,15 +76,14 @@ void CER_MotorControl::updateControlMode()
 {
     icmd->getControlMode(0, &board_control_modes[0]);
     icmd->getControlMode(1, &board_control_modes[1]);
-    /*
-        for (int i=0; i<3; i++)
-        if (board_control_modes[i]==VOCAB_CM_IDLE)
-        {
-            yWarning ("One motor is in idle state. Turning off control.");
-            turn_off_control();
-            break;
-        }
-    */
+    
+    for (int i=0; i<2; i++)
+    if (board_control_modes[i]==VOCAB_CM_IDLE)
+    {
+        yWarning ("One motor is in idle state. Turning off control.");
+        //turn_off_control();
+        break;
+    }
 }
 
 void CER_MotorControl::printStats()

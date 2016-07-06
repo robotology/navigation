@@ -5,6 +5,7 @@
 #
 
 add_subdirectory(baseControl)
+add_subdirectory(forceGuidance)
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
 
