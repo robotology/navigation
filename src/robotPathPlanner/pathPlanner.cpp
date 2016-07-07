@@ -27,7 +27,7 @@
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
-#include <yarp/dev/IRangefinder2d.h>
+#include <yarp/dev/IRangefinder2D.h>
 #include <string>
 
 #define _USE_MATH_DEFINES

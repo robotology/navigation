@@ -29,7 +29,7 @@
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
-#include <yarp/dev/IRangefinder2d.h>
+#include <yarp/dev/IRangefinder2D.h>
 #include <string>
 #include <math.h>
 
