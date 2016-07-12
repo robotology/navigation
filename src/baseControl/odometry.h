@@ -78,7 +78,6 @@ protected:
     std::string                                     child_frame_id;
     std::string                                     rosNodeName;
     std::string                                     rosTopicName_odometry;
-    yarp::os::Node                                  *rosNode;
     yarp::os::NetUint32                             rosMsgCounter;
 
     yarp::os::Publisher<geometry_msgs_PolygonStamped>          rosPublisherPort_footprint;
@@ -125,14 +124,15 @@ protected:
 public:
     Odometry(unsigned int _period, PolyDriver* _driver); 
     ~Odometry();
-    virtual bool reset_odometry() = 0;
-    virtual bool open(ResourceFinder &_rf, Property &options) = 0;
-    virtual void compute() = 0;
-    virtual void broadcast();
-    virtual void printStats() = 0;
-    virtual void close();
+    virtual bool   reset_odometry() = 0;
+    virtual bool   open(ResourceFinder &_rf, Property &options) = 0;
+    virtual void   compute() = 0;
+    virtual void   broadcast();
+    virtual void   printStats() = 0;
+    virtual void   close();
     virtual double get_base_vel_lin();
     virtual double get_base_vel_theta();
+    yarp::os::Node *rosNode;
 };
 
 #endif

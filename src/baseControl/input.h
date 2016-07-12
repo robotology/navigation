@@ -24,6 +24,9 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
+#include <yarp/os/Subscriber.h>
+#include <yarp/os/Node.h>
+#include "include/geometry_msgs_Twist.h"
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
@@ -53,12 +56,14 @@ private:
     int                 thread_timeout_counter;
 
     int                 command_received;
+    int                 rosInput_received;
     int                 auxiliary_received;
     int                 joystick_received;
 
     int                 mov_timeout_counter;
     int                 aux_timeout_counter;
     int                 joy_timeout_counter;
+    int                 ros_timeout_counter;
 
     //movement control variables (input from external)
     double              joy_linear_speed;
@@ -75,6 +80,11 @@ private:
     double              aux_angular_speed;
     double              aux_desired_direction;
     double              aux_pwm_gain;
+    
+    double              ros_linear_speed;
+    double              ros_angular_speed;
+    double              ros_desired_direction;
+    double              ros_pwm_gain;
 
     //motor variables
     double              max_linear_vel;
@@ -82,30 +92,35 @@ private:
 
 protected:
     //ResourceFinder            rf;
-    PolyDriver                *control_board_driver;
-    BufferedPort<Bottle>      port_movement_control;
-    BufferedPort<Bottle>      port_auxiliary_control;
-    BufferedPort<Bottle>      port_joystick_control;
-
-    string             localName;
+    PolyDriver*                       control_board_driver;
+    BufferedPort<Bottle>              port_movement_control;
+    Subscriber<geometry_msgs_Twist>   rosSubscriberPort_twist;
+    string                            rosTopicName_twist;
+    string                            rosNodeName;
+    bool                              useRos;
+    BufferedPort<Bottle>              port_auxiliary_control;
+    BufferedPort<Bottle>              port_joystick_control;
+    string                            localName;
 
 public:
 
     Input(unsigned int _period, PolyDriver* _driver);
     ~Input();
 
-    bool open(ResourceFinder &_rf, Property &_options);
-    void close();
-    void updateControlMode();
-    void printStats();
+    bool   open(ResourceFinder &_rf, Property &_options);
+    void   close();
+    void   updateControlMode();
+    void   printStats();
  
-    void read_inputs        (double *linear_speed, double *angular_speed, double *desired_direction, double *pwm_gain);
-    void read_percent_polar (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    void read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    void read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    void read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_inputs        (double *linear_speed, double *angular_speed, double *desired_direction, double *pwm_gain);
+    void   read_percent_polar (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     double get_max_linear_vel()   {return max_linear_vel;}
     double get_max_angular_vel()  {return max_angular_vel;}
+    
+    yarp::os::Node* rosNode;
 };
 
 #endif
