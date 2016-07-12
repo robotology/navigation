@@ -238,8 +238,6 @@ void ControlThread::run()
         pidout_linear_speed  = exec_linear_speed;
         pidout_angular_speed = exec_angular_speed;
         pidout_direction     = exec_desired_direction;
-        if (pidout_direction > -90 && pidout_direction < 90) pidout_linear_speed = -fabs(pidout_linear_speed);
-        else pidout_linear_speed = + fabs(pidout_linear_speed);
         this->motor_handler->execute_openloop(pidout_linear_speed, pidout_direction, pidout_angular_speed);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
@@ -260,7 +258,7 @@ void ControlThread::run()
     }
     else if (base_control_type == BASE_CONTROL_OPENLOOP_PID)
     {
-        exec_linear_speed = input_linear_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
+        exec_linear_speed = input_linear_speed / 100.0 * max_motor_pwm * exec_pfwm_gain;
         exec_angular_speed = input_angular_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
         
         apply_control_openloop_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
