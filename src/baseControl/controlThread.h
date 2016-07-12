@@ -63,66 +63,75 @@ enum
     BASE_CONTROL_VELOCITY_PID = 4
 };
 
+typedef iCub::ctrl::parallelPID parlPID;
+
 class ControlThread : public yarp::os::RateThread
 {
 private:
-    Property            ctrl_options;
-
-    double              thread_period;
-    int                 base_control_type;
-    int                 thread_timeout_counter;
-
+    Property             ctrl_options;
+    double               thread_period;
+    int                  base_control_type;
+    int                  thread_timeout_counter;
+                         
     //the current command
-    double input_linear_speed;
-    double input_angular_speed;
-    double input_desired_direction;
-    double input_pwm_gain;
-
+    double               input_linear_speed;
+    double               input_angular_speed;
+    double               input_desired_direction;
+    double               input_pwm_gain;
+                         
     //movement control variables (internally computed)
-    double              exec_linear_speed;
-    double              exec_angular_speed;
-    double              exec_desired_direction;
-    double              exec_pwm_gain;
-
-    //control pids
-    iCub::ctrl::parallelPID*    linear_speed_pid;
-    iCub::ctrl::parallelPID*    angular_speed_pid;
-    iCub::ctrl::parallelPID*    linear_ol_pid;
-    iCub::ctrl::parallelPID*    angular_ol_pid;
-
+    double               exec_linear_speed;
+    double               exec_angular_speed;
+    double               exec_desired_direction;
+    double               exec_pwm_gain;
+                         
+    //controlpids
+    parlPID*             linear_speed_pid;
+    parlPID*             angular_speed_pid;
+    parlPID*             linear_ol_pid;
+    parlPID*             angular_ol_pid;
+                         
     //controller parameters
-    int                 robot_type;
-    double              lin_ang_ratio;
-    bool                both_lin_ang_enabled;
-    int                 input_filter_enabled;
-    bool                debug_enabled;
-    double              max_motor_pwm;
-    double              max_motor_vel;
+    int                  robot_type;
+    double               lin_ang_ratio;
+    bool                 both_lin_ang_enabled;
+    int                  input_filter_enabled;
+    bool                 debug_enabled;
+    double               max_motor_pwm;
+    double               max_motor_vel;
+    
+    //ROS node
+    yarp::os::Node*     rosNode;
 
 protected:
-    ResourceFinder            &rf;
-    PolyDriver                *control_board_driver;
+    ResourceFinder       &rf;
+    PolyDriver           *control_board_driver;
 
-    BufferedPort<Bottle>      port_debug_linear;
-    BufferedPort<Bottle>      port_debug_angular;
+    BufferedPort<Bottle> port_debug_linear;
+    BufferedPort<Bottle> port_debug_angular;
 
-    Odometry*                 odometry_handler;
-    MotorControl*             motor_handler;
-    Input*                    input_handler;
+    Odometry*            odometry_handler;
+    MotorControl*        motor_handler;
+    Input*               input_handler;
 
-    string                    remoteName;
-    string                    localName;
+    string               remoteName;
+    string               localName;
 
 public:
-    Odometry* const     get_odometry_handler() { return odometry_handler;}
-    MotorControl* const get_motor_handler()    { return motor_handler;}
-    Input* const get_input_handler()           { return input_handler; }
-    void                enable_debug(bool b);
+    Odometry* const      get_odometry_handler() { return odometry_handler;}
+    MotorControl* const  get_motor_handler()    { return motor_handler;}
+    Input* const         get_input_handler()    { return input_handler; }
+    void                 enable_debug(bool b);
 
-    ControlThread(unsigned int _period, ResourceFinder &_rf, Property options) :
-               RateThread(_period),     rf(_rf),
-               ctrl_options(options)
+    ControlThread
+    (
+        unsigned int _period, 
+        ResourceFinder &_rf,
+        Property options
+    )
+    : RateThread(_period), rf(_rf), ctrl_options(options)
     {
+        rosNode                  = NULL;
         control_board_driver     = 0;
         thread_timeout_counter   = 0;
         base_control_type        = BASE_CONTROL_NONE;
@@ -160,7 +169,7 @@ public:
 
     virtual void run();
     bool set_control_type (string s);
-    int get_control_type ();
+    int  get_control_type ();
     void printStats();
     void set_pid (string id, double kp, double ki, double kd);
     void apply_ratio_limiter (double max, double& linear_speed, double& angular_speed);
@@ -177,10 +186,10 @@ public:
         if (motor_handler)     {delete motor_handler; motor_handler=0;}
         if (input_handler)     {delete input_handler; input_handler = 0; }
 
-        if (linear_speed_pid)    {delete linear_speed_pid;  linear_speed_pid=0;}
-        if (angular_speed_pid)   {delete angular_speed_pid; angular_speed_pid=0;}
-        if (linear_ol_pid)    {delete linear_ol_pid;  linear_ol_pid=0;}
-        if (angular_ol_pid)   {delete angular_ol_pid; angular_ol_pid=0;}
+        if (linear_speed_pid)  {delete linear_speed_pid;  linear_speed_pid=0;}
+        if (angular_speed_pid) {delete angular_speed_pid; angular_speed_pid=0;}
+        if (linear_ol_pid)     {delete linear_ol_pid;  linear_ol_pid=0;}
+        if (angular_ol_pid)    {delete angular_ol_pid; angular_ol_pid=0;}
 
         if (debug_enabled)
         {

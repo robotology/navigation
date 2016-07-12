@@ -282,9 +282,9 @@ void ControlThread::run()
     else
     {
         yError ("Unknown control mode!");
-        exec_linear_speed = 0;
-        exec_angular_speed = 0;
-        exec_pwm_gain = 0;
+        exec_linear_speed      = 0;
+        exec_angular_speed     = 0;
+        exec_pwm_gain          = 0;
         exec_desired_direction = 0;
         this->motor_handler->execute_none();
     }
@@ -332,18 +332,26 @@ bool ControlThread::threadInit()
     if (general_options.check("max_motor_pwm") == false) { yError() << "Missing 'max_motor_pwm' param"; return false; }
     if (general_options.check("max_motor_vel") == false) { yError() << "Missing 'max_motor_vel' param"; return false; }
     if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
-    string control_type = general_options.check("control_mode", Value("none"), "type of control for the wheels").asString().c_str();
-    input_filter_enabled = general_options.check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-    lin_ang_ratio = general_options.check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
-    max_motor_pwm = general_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
-    max_motor_vel = general_options.check("max_motor_vel", Value(0), "max_motor_vel").asDouble();
-    string robot_type_s = general_options.check("robot_type", Value("none"), "geometry of the robot").asString();
+    
+    string control_type, robot_type_s;
+    bool useRos;
+    
+    control_type         = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
+    input_filter_enabled = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+    lin_ang_ratio        = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
+    max_motor_pwm        = general_options.check("max_motor_pwm",        Value(0),      "max_motor_pwm").asDouble();
+    max_motor_vel        = general_options.check("max_motor_vel",        Value(0),      "max_motor_vel").asDouble();
+    robot_type_s         = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
+    useRos               = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();
+
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");
-    int trials = 0;
-    double start_time = yarp::os::Time::now();
-    Property control_board_options("(device remote_controlboard)");
+
+    int trials  = 0;
+    double      start_time = yarp::os::Time::now();
+    Property    control_board_options("(device remote_controlboard)");
+
     control_board_options.put("remote", remoteName.c_str());
     control_board_options.put("local", localName.c_str());
 
@@ -359,8 +367,8 @@ bool ControlThread::threadInit()
         }
 
         //creates the new device driver
-        control_board_driver = new PolyDriver(control_board_options);
-        bool connected = control_board_driver->isValid();
+        control_board_driver    = new PolyDriver(control_board_options);
+        bool connected          = control_board_driver->isValid();
 
         //check if the driver is connected
         if (connected) break;
@@ -382,36 +390,64 @@ bool ControlThread::threadInit()
         yWarning("Unable to connect the device driver, trying again...");
     } while (true);
 
+    //initialize ROS
+    if(useRos)
+    {
+        if (ctrl_options.check("ROS_GENERAL"))
+        {
+            string rosNodeName;
+            yarp::os::Bottle r_group = ctrl_options.findGroup("ROS_GENERAL");
+            if (r_group.check("node_name") == false)
+            {
+                yError() << "Missing node_name parameter"; return false;
+            }
+            rosNodeName = r_group.find("node_name").asString();
+            rosNode     = new yarp::os::Node(rosNodeName);
+        }
+        else
+        {
+            yError() << "[ROS_GENERAL] group is missing from configuration file. ROS comunication will not be initialized";
+        }
+    }
+
     //create the odometry and the motor handlers
 
     if (robot_type_s == "cer")
     {
         yInfo("Using cer robot type");
-        robot_type = ROBOT_TYPE_DIFFERENTIAL;
+        robot_type       = ROBOT_TYPE_DIFFERENTIAL;
         odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
-        motor_handler = new CER_MotorControl((int)(thread_period), control_board_driver);
-        input_handler = new Input((int)(thread_period), control_board_driver);
+        motor_handler    = new CER_MotorControl((int)(thread_period), control_board_driver);
+        input_handler    = new Input((int)(thread_period), control_board_driver);
+        
+        
     }
     else if (robot_type_s == "ikart_V1")
     {
         yInfo("Using ikart_V1 robot type");
-        robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
+        robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
         odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-        motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
-        input_handler = new Input((int)(thread_period), control_board_driver);
+        motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
+        input_handler    = new Input((int)(thread_period), control_board_driver);
     }
     else if (robot_type_s == "ikart_V2")
     {
         yInfo("Using ikart_V2 robot type");
-        robot_type = ROBOT_TYPE_THREE_MECHANUM;
+        robot_type       = ROBOT_TYPE_THREE_MECHANUM;
         odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-        motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
-        input_handler = new Input((int)(thread_period), control_board_driver);
+        motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
+        input_handler    = new Input((int)(thread_period), control_board_driver);
     }
     else
     {
         yError() << "Invalid Robot type selected: ROBOT_TYPE_NONE";
         return false;
+    }
+    
+    if(useRos)
+    {
+        odometry_handler->rosNode = rosNode;
+        input_handler->rosNode    = rosNode;
     }
     
     if (odometry_handler->open(rf, ctrl_options) == false)
@@ -455,34 +491,38 @@ bool ControlThread::threadInit()
     yarp::sig::Vector N[3];
     yarp::sig::Vector Tt[3];
     yarp::sig::Matrix sat[3];
+    
     for (int i = 0; i<3; i++)
     {
         kp[i].resize(1); ki[i].resize(1); kd[i].resize(1);
         kp[i] = ki[i] = kd[i] = 0.0;
+        
         wp[i].resize(1); wi[i].resize(1); wd[i].resize(1);
         wp[i] = wi[i] = wd[i] = 1.0;
+        
         N[i].resize(1); Tt[i].resize(1); sat[i].resize(1, 2);
         N[i] = 10;
+        
         Tt[i] = 1;
     }
 
-    kp[0] = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
-    kd[0] = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
-    ki[0] = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
-    sat[0](0, 0) = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
-    sat[0](0, 1) = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
+    kp[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
+    kd[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
+    ki[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
+    sat[0](0, 0)      = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
+    sat[0](0, 1)      = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
+                      
+    kp[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
+    kd[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
+    ki[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
+    sat[1](0, 0)      = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
+    sat[1](0, 1)      = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
 
-    kp[1] = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
-    kd[1] = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
-    ki[1] = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
-    sat[1](0, 0) = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
-    sat[1](0, 1) = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
-
-    linear_speed_pid = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[0], ki[0], kd[0], wp[0], wi[0], wd[0], N[0], Tt[0], sat[0]);
+    linear_speed_pid  = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[0], ki[0], kd[0], wp[0], wi[0], wd[0], N[0], Tt[0], sat[0]);
     angular_speed_pid = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[1], ki[1], kd[1], wp[1], wi[1], wd[1], N[1], Tt[1], sat[1]);
 
-    linear_ol_pid = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[0], ki[0], kd[0], wp[0], wi[0], wd[0], N[0], Tt[0], sat[0]);
-    angular_ol_pid = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[1], ki[1], kd[1], wp[1], wi[1], wd[1], N[1], Tt[1], sat[1]);
+    linear_ol_pid     = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[0], ki[0], kd[0], wp[0], wi[0], wd[0], N[0], Tt[0], sat[0]);
+    angular_ol_pid    = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[1], ki[1], kd[1], wp[1], wi[1], wd[1], N[1], Tt[1], sat[1]);
 
     //debug ports
     if (debug_enabled)

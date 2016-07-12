@@ -48,25 +48,24 @@ Odometry::~Odometry()
 
 Odometry::Odometry(unsigned int _period, PolyDriver* _driver)
 {
-    period = _period;
-    control_board_driver= _driver;
-    odom_x=0;
-    odom_y=0;
-    odom_z=0;
-    odom_theta=0;
-
-    odom_vel_x=0;
-    odom_vel_y=0;
-    odom_vel_lin=0;
-    odom_vel_theta=0;
-    base_vel_x = 0;
-    base_vel_y = 0;
-    base_vel_lin = 0;
-    base_vel_theta = 0;
-    traveled_distance=0;
-    traveled_angle=0;
-    rosNode = NULL;
-    rosMsgCounter=0;
+    period               = _period;
+    control_board_driver = _driver;
+    odom_x               = 0;
+    odom_y               = 0;
+    odom_z               = 0;
+    odom_theta           = 0;
+    odom_vel_x           = 0;
+    odom_vel_y           = 0;
+    odom_vel_lin         = 0;
+    odom_vel_theta       = 0;
+    base_vel_x           = 0;
+    base_vel_y           = 0;
+    base_vel_lin         = 0;
+    base_vel_theta       = 0;
+    traveled_distance    = 0;
+    traveled_angle       = 0;
+    rosNode              = NULL;
+    rosMsgCounter        = 0;
 }
 
 bool Odometry::open(ResourceFinder &_rf, Property &options)
@@ -131,7 +130,11 @@ bool Odometry::open(ResourceFinder &_rf, Property &options)
 
     if (enable_ROS)
     {
-        rosNode = new yarp::os::Node(rosNodeName);   // add a ROS node
+        if(rosNode == NULL)
+        {
+            rosNode = new yarp::os::Node(rosNodeName);   // add a ROS node
+        }
+        
         if (rosNode == NULL)
         {
             yError() << " opening " << rosNodeName << " Node, check your yarp-ROS network configuration\n";
