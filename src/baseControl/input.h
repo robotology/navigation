@@ -63,6 +63,7 @@ private:
     int                 mov_timeout_counter;
     int                 aux_timeout_counter;
     int                 joy_timeout_counter;
+    int                 ros_timeout_counter;
 
     //movement control variables (input from external)
     double              joy_linear_speed;

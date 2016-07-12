@@ -134,6 +134,7 @@ Input::Input(unsigned int _period, PolyDriver* _driver)
     mov_timeout_counter    = 0;
     joy_timeout_counter    = 0;
     aux_timeout_counter    = 0;
+    ros_timeout_counter    = 0;
 
     joy_linear_speed       = 0;
     joy_angular_speed      = 0;
@@ -233,7 +234,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
     if (Bottle *b = port_joystick_control.read(false))
     {                
         if (b->get(0).asInt()==1)
-        {                                
+        {
             //received a joystick command.
             read_percent_polar(b, joy_desired_direction,joy_linear_speed,joy_angular_speed,joy_pwm_gain);
             wdt_old_joy_cmd = wdt_joy_cmd;
@@ -364,6 +365,14 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         aux_pwm_gain=0;
         aux_timeout_counter++;
     }
+    if (wdt-wdt_ros_cmd > 0.200)
+    {
+        ros_desired_direction=0;
+        ros_linear_speed=0;
+        ros_angular_speed=0;
+        ros_pwm_gain=0;
+        ros_timeout_counter++;
+    }
 
     if (wdt-wdt_old > 0.040) { thread_timeout_counter++;  }
     wdt_old=wdt;
@@ -371,5 +380,5 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
     if (joystick_received>0)   { joystick_received--;  }
     if (command_received>0)    { command_received--;   }
     if (auxiliary_received>0)  { auxiliary_received--; }
-    if (rosInput_received>0)   { auxiliary_received--; }
+    if (rosInput_received>0)   { rosInput_received--; }
 }

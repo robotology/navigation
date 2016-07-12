@@ -73,7 +73,7 @@ bool Odometry::open(ResourceFinder &_rf, Property &options)
     if (ctrl_options.check("GENERAL"))
     {
         yarp::os::Bottle g_group = ctrl_options.findGroup("GENERAL");
-        enable_ROS = (g_group.find("use_ROS").asInt() == 1);
+        enable_ROS = (g_group.find("use_ROS").asBool() == true);
         if (enable_ROS) yInfo() << "ROS enabled";
         else
             yInfo() << "ROS not enabled";
