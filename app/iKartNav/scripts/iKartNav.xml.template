@@ -1,0 +1,45 @@
+<application>
+<name>iKart Navigation Application</name>
+
+<dependencies>	
+ikart
+</dependencies>
+
+<module>
+   <name>iKartNav</name>
+   <parameters>--context ikart --config conf/iKartNav.ini</parameters>
+   <node>ikart</node>
+   <tag>iKartNavigation</tag>
+</module>
+
+<module>
+   <name>iKartUtils</name>
+   <node>icub14</node>
+   <tag>iKartUtils</tag>
+</module>
+
+<connection>
+  <from>/ikart/laser:o</from>
+  <to>/ikartnav/laser:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/ikart/odometry:o</from>
+  <to>/ikartnav/odometry:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/ikartnav/control:o</from>
+  <to>/ikart/control:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/ikartnav/resetodometry:o</from>
+  <to>/ikart/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>
