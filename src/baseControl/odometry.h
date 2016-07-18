@@ -76,7 +76,6 @@ protected:
     yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
     std::string                                     odometry_frame_id;
     std::string                                     child_frame_id;
-    std::string                                     rosNodeName;
     std::string                                     rosTopicName_odometry;
     yarp::os::NetUint32                             rosMsgCounter;
 
@@ -132,7 +131,6 @@ public:
     virtual void   close();
     virtual double get_base_vel_lin();
     virtual double get_base_vel_theta();
-    yarp::os::Node *rosNode;
 };
 
 #endif

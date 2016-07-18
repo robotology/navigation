@@ -258,7 +258,7 @@ void ControlThread::run()
     }
     else if (base_control_type == BASE_CONTROL_OPENLOOP_PID)
     {
-        exec_linear_speed = input_linear_speed / 100.0 * max_motor_pwm * exec_pfwm_gain;
+        exec_linear_speed = input_linear_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
         exec_angular_speed = input_angular_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
         
         apply_control_openloop_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
@@ -444,8 +444,8 @@ bool ControlThread::threadInit()
     
     if(useRos)
     {
-        odometry_handler->rosNode = rosNode;
-        input_handler->rosNode    = rosNode;
+        //odometry_handler->rosNode = rosNode;
+        //input_handler->rosNode    = rosNode;
     }
     
     if (odometry_handler->open(rf, ctrl_options) == false)

@@ -89,17 +89,6 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
             return false;
         }
         
-        if(rosNode == NULL)
-        {
-            rosNode = new yarp::os::Node(rosNodeName);   // add a ROS node
-        }
-        
-        if (rosNode == NULL)
-        {
-            yError() << " opening " << rosNodeName << " Node, check your yarp-ROS network configuration\n";
-            return false;
-        }
-
         if (!rosSubscriberPort_twist.topic(rosTopicName_twist))
         {
             yError() << " opening " << rosTopicName_twist << " Topic, check your yarp-ROS network configuration\n";

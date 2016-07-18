@@ -96,7 +96,6 @@ protected:
     BufferedPort<Bottle>              port_movement_control;
     Subscriber<geometry_msgs_Twist>   rosSubscriberPort_twist;
     string                            rosTopicName_twist;
-    string                            rosNodeName;
     bool                              useRos;
     BufferedPort<Bottle>              port_auxiliary_control;
     BufferedPort<Bottle>              port_joystick_control;
@@ -119,8 +118,6 @@ public:
     void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     double get_max_linear_vel()   {return max_linear_vel;}
     double get_max_angular_vel()  {return max_angular_vel;}
-    
-    yarp::os::Node* rosNode;
 };
 
 #endif

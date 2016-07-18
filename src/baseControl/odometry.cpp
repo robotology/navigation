@@ -64,7 +64,6 @@ Odometry::Odometry(unsigned int _period, PolyDriver* _driver)
     base_vel_theta       = 0;
     traveled_distance    = 0;
     traveled_angle       = 0;
-    rosNode              = NULL;
     rosMsgCounter        = 0;
 }
 
@@ -81,18 +80,6 @@ bool Odometry::open(ResourceFinder &_rf, Property &options)
     else
     {
         yError() << "Missing [GENERAL] section";
-        return false;
-    }
-
-    if (ctrl_options.check("ROS_GENERAL"))
-    {
-        yarp::os::Bottle rg_group = ctrl_options.findGroup("ROS_GENERAL");
-        if (rg_group.check("node_name") == false)  { yError() << "Missing node_name parameter"; return false; }
-        rosNodeName = rg_group.find("node_name").asString();
-    }
-    else
-    {
-        yError() << "Missing [ROS_GENERAL] section";
         return false;
     }
 
@@ -130,16 +117,6 @@ bool Odometry::open(ResourceFinder &_rf, Property &options)
 
     if (enable_ROS)
     {
-        if(rosNode == NULL)
-        {
-            rosNode = new yarp::os::Node(rosNodeName);   // add a ROS node
-        }
-        
-        if (rosNode == NULL)
-        {
-            yError() << " opening " << rosNodeName << " Node, check your yarp-ROS network configuration\n";
-            return false;
-        }
 
         if (!rosPublisherPort_odometry.topic(rosTopicName_odometry))
         {

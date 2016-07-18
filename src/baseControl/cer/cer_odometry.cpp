@@ -75,7 +75,6 @@ CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry
     encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
     enc.resize(2);
     encv.resize(2);
-    rosNode = NULL;
     rosMsgCounter=0;
 }
 

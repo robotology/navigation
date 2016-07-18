@@ -198,6 +198,13 @@ public:
             port_debug_angular.interrupt();
             port_debug_angular.close();
         }
+
+        if (rosNode)
+        {
+            rosNode->interrupt();
+            delete rosNode;
+            rosNode = 0;
+        }
     }
 };
 
