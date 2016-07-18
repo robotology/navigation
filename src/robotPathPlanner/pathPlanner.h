@@ -37,7 +37,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Semaphore.h>
-#include <yarp/dev/ITransform.h>
+#include <yarp/dev/IFrameTransform.h>
 #include <string>
 
 #include "status.h"
@@ -89,7 +89,7 @@ class PlannerThread: public yarp::os::RateThread
     PolyDriver                                             ptf;
     PolyDriver                                             pLas;
     IRangefinder2D*                                        iLaser;
-    ITransform*                                            iTf;
+    IFrameTransform*                                       iTf;
     BufferedPort<yarp::sig::Vector>                        port_localization_input;
     BufferedPort<yarp::os::Bottle>                         port_status_input;
     BufferedPort<yarp::os::Bottle>                         port_yarpview_target_input;

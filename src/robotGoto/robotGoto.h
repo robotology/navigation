@@ -34,7 +34,7 @@
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LockGuard.h>
-#include <yarp/dev/ITransform.h>
+#include <yarp/dev/IFrameTransform.h>
 #include <yarp/os/LogStream.h>
 #include <string>
 #include <math.h>
@@ -169,7 +169,7 @@ class GotoThread: public yarp::os::RateThread
     PolyDriver                      ptf;
     PolyDriver                      pLas;
     IRangefinder2D*                 iLaser;
-    ITransform*                     iTf;
+    IFrameTransform*                iTf;
     BufferedPort<yarp::sig::Vector> port_odometry_input;
     BufferedPort<yarp::sig::Vector> port_localization_input;
     BufferedPort<yarp::sig::Vector> port_target_input;
