@@ -171,7 +171,7 @@ void Input::read_percent_cart(const Bottle *b, double& des_dir, double& lin_spd,
     double y_speed = b->get(2).asDouble();
     double t_speed = b->get(3).asDouble();
     pwm_gain       = b->get(4).asDouble();
-    des_dir        = atan2(x_speed,y_speed) * 180.0 / 3.14159265;
+    des_dir        = atan2(y_speed,x_speed) * 180.0 / 3.14159265;
     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
     ang_spd        = t_speed;
     lin_spd        = (lin_spd<+100)  ? lin_spd  : +100; 
@@ -199,7 +199,7 @@ void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, d
     double x_speed = b->get(1).asDouble() * 100.0 / max_linear_vel;
     double y_speed = b->get(2).asDouble() * 100.0 / max_linear_vel;
     double t_speed = b->get(3).asDouble() * 100.0 / max_angular_vel;
-    des_dir        = atan2(x_speed,y_speed) * 180.0 / 3.14159265;
+    des_dir        = atan2(y_speed,x_speed) * 180.0 / 3.14159265;
     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
     ang_spd        = t_speed;
     lin_spd        = (lin_spd<+100) ? lin_spd : +100; 
@@ -289,7 +289,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         b.addInt(3);
         b.addDouble(rosTwist->linear.x);
         b.addDouble(rosTwist->linear.y);
-        b.addDouble(rosTwist->angular.z);
+        b.addDouble(rosTwist->angular.z*180/3.14);
         read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
         wdt_old_ros_cmd   = wdt_ros_cmd;
         wdt_ros_cmd       = Time::now();

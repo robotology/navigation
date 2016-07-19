@@ -186,8 +186,8 @@ CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : 
 void CER_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
     //wheel contribution calculation
-    F[0] = appl_linear_speed * cos(appl_desired_direction / 180.0 * 3.14159265) + appl_angular_speed;
-    F[1] = appl_linear_speed * cos(appl_desired_direction / 180.0 * 3.14159265) - appl_angular_speed;
+    F[0] = appl_linear_speed * cos(appl_desired_direction / 180.0 * 3.14159265) - appl_angular_speed;
+    F[1] = appl_linear_speed * cos(appl_desired_direction / 180.0 * 3.14159265) + appl_angular_speed;
 }
 
 void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -201,10 +201,10 @@ void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desir
 
     //Apply the commands
 #ifdef  CONTROL_DEBUG
-    yDebug (">**: %+6.6f %+6.6f **** %+6.6f %+6.6f\n",exec_linear_speed,exec_desired_direction,-F_L,-F_R);
+    yDebug (">**: %+6.6f %+6.6f **** %+6.6f %+6.6f\n",exec_linear_speed,exec_desired_direction,F[0],F[1]);
 #endif
-    ivel->velocityMove(0,-F[0]);
-    ivel->velocityMove(1,-F[1]);
+    ivel->velocityMove(0,F[0]);
+    ivel->velocityMove(1,F[1]);
 }
 
 void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -217,8 +217,8 @@ void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_de
     }
 
     //Apply the commands
-    iopl->setRefOutput(0, -F[0]);
-    iopl->setRefOutput(1, -F[1]);
+    iopl->setRefOutput(0, F[0]);
+    iopl->setRefOutput(1, F[1]);
 }
 
 void CER_MotorControl::execute_none()
