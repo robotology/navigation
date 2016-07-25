@@ -203,3 +203,13 @@ void CER_Odometry::compute()
 
     mutex.post();
 }
+
+double CER_Odometry::get_vlin_coeff()
+{
+    return 1 / geom_r;
+}
+
+double CER_Odometry::get_vang_coeff()
+{
+    return geom_L / (2 * geom_r);
+}

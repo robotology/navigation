@@ -146,23 +146,6 @@ bool CER_MotorControl::open(ResourceFinder &_rf, Property &_options)
 
     motors_filter_enabled = general_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
 
-    if (!general_options.check("max_linear_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
-        return false;
-    }
-    if (!general_options.check("max_angular_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
-        return false;
-    }
-
-    double tmp = 0;
-    tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_ANGULAR_VEL) max_angular_vel = tmp;
-    tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_LINEAR_VEL) max_linear_vel = tmp;
-
     localName = ctrl_options.find("local").asString();
 
     return true;
@@ -176,9 +159,6 @@ CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : 
 
     F.resize(2, 0.0);
     board_control_modes.resize(2, 0);
-
-    max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
-    max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
 
     thread_period = _period;
 }
@@ -200,11 +180,9 @@ void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desir
     }
 
     //Apply the commands
-#ifdef  CONTROL_DEBUG
-    yDebug (">**: %+6.6f %+6.6f **** %+6.6f %+6.6f\n",exec_linear_speed,exec_desired_direction,F[0],F[1]);
-#endif
     ivel->velocityMove(0,F[0]);
     ivel->velocityMove(1,F[1]);
+    //yDebug() << F[0] << F[1];
 }
 
 void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
