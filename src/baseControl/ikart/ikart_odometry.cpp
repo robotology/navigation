@@ -279,3 +279,13 @@ void iKart_Odometry::compute()
 
     mutex.post();
 }
+
+double iKart_Odometry::get_vlin_coeff()
+{
+    return 1;
+}
+
+double iKart_Odometry::get_vang_coeff()
+{
+    return 1;
+}

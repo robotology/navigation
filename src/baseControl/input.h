@@ -43,9 +43,6 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-#define DEFAULT_MAX_LINEAR_VEL  0.42  // maximum linear  velocity (m/s)
-#define DEFAULT_MAX_ANGULAR_VEL 24.0  // maximum angular velocity (deg/s)
-
 class Input
 {
 private:
@@ -86,9 +83,8 @@ private:
     double              ros_desired_direction;
     double              ros_pwm_gain;
 
-    //motor variables
-    double              max_linear_vel;
-    double              max_angular_vel;
+    double              linear_vel_at_100_joy;
+    double              angular_vel_at_100_joy;
 
 protected:
     //ResourceFinder            rf;
@@ -116,8 +112,11 @@ public:
     void   read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    double get_max_linear_vel()   {return max_linear_vel;}
-    double get_max_angular_vel()  {return max_angular_vel;}
+    //double get_max_linear_vel()   {return max_linear_vel;}
+    //double get_max_angular_vel()  {return max_angular_vel;}
+
+    double get_linear_vel_at_100_joy()   { return linear_vel_at_100_joy; }
+    double get_angular_vel_at_100_joy()  { return angular_vel_at_100_joy; }
 };
 
 #endif

@@ -41,20 +41,8 @@ void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_s
         if (lin_ang_ratio>0.0) coeff = (tot-100.0)/100.0;
         double angular_speed_A, angular_speed_B, linear_speed_A, linear_speed_B;
 
-        angular_speed_A = angular_speed *(1-lin_ang_ratio);
-        linear_speed_A  = linear_speed * lin_ang_ratio;
-
-        double current_ratio = fabs(linear_speed/angular_speed);
-        if (angular_speed>0) angular_speed_B =  100.0/(current_ratio+1.0);
-        else                 angular_speed_B = -100.0/(current_ratio+1.0);
-
-        linear_speed_B  =  100.0-fabs(angular_speed_B);
-        //if (angular_speed>0) linear_speed_B  =  100.0-fabs(angular_speed_B);
-        //else                 linear_speed_B  = -100.0+fabs(angular_speed_B);
-
-        linear_speed  = linear_speed_A  *     (coeff) + linear_speed_B  * (1.0-coeff);
-        angular_speed = angular_speed_A *     (coeff) + angular_speed_B * (1.0-coeff);
-
+        angular_speed = angular_speed *(1-lin_ang_ratio);
+        linear_speed  = linear_speed * lin_ang_ratio;
     }
 }
 
@@ -136,20 +124,16 @@ void ControlThread::set_pid (string id, double kp, double ki, double kd)
     this->angular_speed_pid->reset(tmp);
 }
 
-void ControlThread::apply_control_speed_pid(double& pidout_linear_speed,double& pidout_angular_speed, 
+void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,double& pidout_angular_throttle, 
                            const double ref_linear_speed, const double ref_angular_speed)
 {
-    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin() / this->motor_handler->get_max_linear_vel() * 200;
-    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta() / this->motor_handler->get_max_angular_vel() * 200;
+    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin();
+    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_speed_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
- //   pidout_linear_speed  = exec_pwm_gain * tmp[0];
-    pidout_linear_speed  = 1.0 * tmp[0];
+    pidout_linear_throttle = 1.0 * tmp[0];
     tmp = angular_speed_pid->compute(yarp::sig::Vector(1,ref_angular_speed),yarp::sig::Vector(1,feedback_angular_speed));
-   // pidout_angular_speed = exec_pwm_gain * tmp[0];
-    pidout_angular_speed = 1.0 * tmp[0];
-    //pidout_linear_speed=0; //@@@
-    //pidout_angular_speed=0; //@@@
+    pidout_angular_throttle = 1.0 * tmp[0];
 
     if (debug_enabled) // debug block
     {
@@ -158,7 +142,7 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_speed,double& 
         {
             Bottle &b1=port_debug_linear.prepare();
             b1.clear();
-            yInfo("%+9.4f %+9.4f %+9.4f %+9.4f",ref_linear_speed,feedback_linear_speed,ref_linear_speed-feedback_linear_speed,pidout_linear_speed);
+            yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
             b1.addString(buff);
             port_debug_linear.write();
         }
@@ -167,37 +151,35 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_speed,double& 
         {
             Bottle &b2=port_debug_angular.prepare();
             b2.clear();
-            yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_speed);
+            yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
             b2.addString(buff);
             port_debug_angular.write();
         }
     }
 }
 
-void ControlThread::apply_control_openloop_pid(double& pidout_linear_speed,double& pidout_angular_speed, const double ref_linear_speed,const double ref_angular_speed)
+void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed)
 {
-    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin() / this->motor_handler->get_max_linear_vel() * 100;
-    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta() / this->motor_handler->get_max_angular_vel() * 100;
+    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin();
+    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_ol_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
-    pidout_linear_speed  = exec_pwm_gain * tmp[0];
+    pidout_linear_throttle = 1.0 * tmp[0];
     tmp = angular_ol_pid->compute(yarp::sig::Vector(1,ref_angular_speed),yarp::sig::Vector(1,feedback_angular_speed));
-    pidout_angular_speed = exec_pwm_gain * tmp[0];
-    pidout_linear_speed=0; //@@@
-    pidout_angular_speed=0; //@@@
+    pidout_angular_throttle = 1.0 * tmp[0];
 
     if (debug_enabled) // debug block
     {
         char buff [255];
         Bottle &b1=port_debug_linear.prepare();
         b1.clear();
-        yInfo( "%+9.4f %+9.4f %+9.4f %+9.4f",ref_linear_speed,feedback_linear_speed,ref_linear_speed-feedback_linear_speed,pidout_linear_speed);
+        yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
         b1.addString(buff);
         port_debug_linear.write();
 
         Bottle &b2=port_debug_angular.prepare();
         b2.clear();
-        yInfo( "%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_speed);
+        yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
         b2.addString(buff);
         port_debug_angular.write();
     }
@@ -208,14 +190,24 @@ void ControlThread::run()
     this->odometry_handler->compute();
     this->odometry_handler->broadcast();
 
-    double pidout_linear_speed  = 0;
-    double pidout_angular_speed = 0;
+    double pidout_linear_throttle = 0;
+    double pidout_angular_throttle = 0;
     double pidout_direction     = 0;
 
-    //input_linear_speed and input_angular speed ranges are: 0-100
+    //read inputs (input_linear_speed in m/s, input_angular_speed in deg/s...)
     this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
+
+    //low pass filter
     apply_input_filter(input_linear_speed, input_angular_speed,input_desired_direction);
-    apply_ratio_limiter(input_linear_speed, input_angular_speed);
+    
+    //apply limiter
+    if (input_linear_speed  > get_max_linear_vel())   input_linear_speed  = get_max_linear_vel();
+    if (input_linear_speed  < -get_max_linear_vel())  input_linear_speed  = -get_max_linear_vel();
+    if (input_angular_speed > get_max_angular_vel())  input_angular_speed = get_max_angular_vel();
+    if (input_angular_speed < -get_max_angular_vel()) input_angular_speed = -get_max_angular_vel();
+    
+    //aply ratio limiter
+    if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
 
     /*
     if (!lateral_movement_enabled)
@@ -226,64 +218,42 @@ void ControlThread::run()
     }
     */
 
-    exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
-    exec_desired_direction = input_desired_direction;
-
     //The controllers
     if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
     {
-        exec_linear_speed  = input_linear_speed  / 100.0 * max_motor_pwm * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
-        
-        pidout_linear_speed  = exec_linear_speed;
-        pidout_angular_speed = exec_angular_speed;
-        pidout_direction     = exec_desired_direction;
-        this->motor_handler->execute_openloop(pidout_linear_speed, pidout_direction, pidout_angular_speed);
+        double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
+        pidout_linear_throttle = input_linear_speed * odometry_handler->get_vlin_coeff() *  exec_pwm_gain;
+        pidout_angular_throttle = input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain;
+        pidout_direction = input_desired_direction;
+        this->motor_handler->execute_openloop(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
-        exec_linear_speed = input_linear_speed / 100.0 *  max_motor_vel * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 * max_motor_vel * exec_pwm_gain;
-
-//#define PRINT_CURRENT_VEL
-#ifdef  PRINT_CURRENT_VEL
-        //yDebug("%+5.5f, %+5.5f, %+5.5f\n", input_angular_speed /100 * this->motor_handler->get_max_angular_vel(), this->odometry_handler->base_vel_theta, exec_angular_speed);
-        yDebug("%+5.5f, %+5.5f, %+5.5f\n", input_linear_speed /100 * this->motor_handler->get_max_linear_vel(), this->odometry_handler->base_vel_lin, exec_linear_speed);
-#endif
-
-        pidout_linear_speed  = exec_linear_speed;
-        pidout_angular_speed = exec_angular_speed;
-        pidout_direction     = exec_desired_direction;
-        this->motor_handler->execute_speed(pidout_linear_speed, pidout_direction, pidout_angular_speed);
+        double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
+        pidout_linear_throttle = input_linear_speed * odometry_handler->get_vlin_coeff() * 180.0 / M_PI * exec_pwm_gain;
+        pidout_angular_throttle = input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain;
+        pidout_direction     = input_desired_direction;
+        this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_OPENLOOP_PID)
     {
-        exec_linear_speed = input_linear_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
-        
-        apply_control_openloop_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
-        this->motor_handler->execute_speed(pidout_linear_speed, pidout_direction, pidout_angular_speed);
+        double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
+        apply_control_openloop_pid(pidout_linear_throttle, pidout_angular_throttle,
+            (input_linear_speed * odometry_handler->get_vlin_coeff() * exec_pwm_gain),
+            (input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain));
+        this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_PID)
     {
-        const double max_wheels_vel = 200;
-        exec_linear_speed = input_linear_speed / 100.0 * max_wheels_vel * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 *  max_wheels_vel * exec_pwm_gain;
-        //exec_linear_speed = input_linear_speed / 100.0 *  this->motor_handler->get_max_linear_vel() * exec_pwm_gain;
-        //exec_angular_speed = input_angular_speed / 100.0 *  this->motor_handler->get_max_angular_vel() * exec_pwm_gain;
-        
-        apply_control_speed_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
-        
-        pidout_angular_speed += exec_angular_speed;
-        this->motor_handler->execute_speed(pidout_linear_speed, pidout_direction, pidout_angular_speed);
+        double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
+        apply_control_speed_pid(pidout_linear_throttle, pidout_angular_throttle,
+            (input_linear_speed * odometry_handler->get_vlin_coeff() * 180.0 / M_PI * exec_pwm_gain),
+            (input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain));
+        this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else
     {
         yError ("Unknown control mode!");
-        exec_linear_speed      = 0;
-        exec_angular_speed     = 0;
-        exec_pwm_gain          = 0;
-        exec_desired_direction = 0;
         this->motor_handler->execute_none();
     }
 }
@@ -292,7 +262,6 @@ void ControlThread::printStats()
 {
     yInfo ("* Control thread:\n");
     yInfo ("Input command: %+5.0f %+5.0f %+5.0f  %+5.0f      ", input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
-    yInfo ("Robot command: %+5.2f %+5.2f\n", input_linear_speed / 100.0*this->get_motor_handler()->get_max_linear_vel(), input_angular_speed / 100.0*this->get_motor_handler()->get_max_angular_vel());
 }
 
 bool ControlThread::set_control_type (string s)
@@ -325,23 +294,30 @@ bool ControlThread::threadInit()
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
     if (general_options.check("control_mode") == false) { yError() << "Missing 'control_mode' param"; return false; }
+    if (general_options.check("ratio_limiter_enabled") == false) { yError() << "Missing 'ratio_limiter_enabled' param"; return false; }
     if (general_options.check("input_filter_enabled") == false) { yError() << "Missing 'input_filter_enabled' param"; return false; }
     if (general_options.check("linear_angular_ratio") == false) { yError() << "Missing 'linear_angular_ratio' param"; return false; }
-    if (general_options.check("max_motor_pwm") == false) { yError() << "Missing 'max_motor_pwm' param"; return false; }
-    if (general_options.check("max_motor_vel") == false) { yError() << "Missing 'max_motor_vel' param"; return false; }
     if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
-    
+    if (general_options.check("max_linear_vel") == false)  { yError() << "Missing 'max_linear_vel' param";  return false; }
+    if (general_options.check("max_angular_vel") == false)   { yError() << "Missing 'max_angular_vel' param";   return false; }
+
     string control_type, robot_type_s;
     bool useRos;
     
-    control_type         = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
-    input_filter_enabled = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-    lin_ang_ratio        = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
-    max_motor_pwm        = general_options.check("max_motor_pwm",        Value(0),      "max_motor_pwm").asDouble();
-    max_motor_vel        = general_options.check("max_motor_vel",        Value(0),      "max_motor_vel").asDouble();
-    robot_type_s         = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
-    useRos               = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();
-
+    control_type          = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
+    input_filter_enabled  = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt();
+    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt();
+    lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
+    robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
+    useRos                = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();
+    
+    double tmp = 0;
+    tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
+    if (tmp >= 0) { max_angular_vel = tmp; }
+    else { yError() << "Invalid max_angular_vel"; return false; }
+    tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
+    if (tmp >= 0) { max_linear_vel = tmp; }
+    else { yError() << "Invalid max_linear_vel"; return false; }
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");

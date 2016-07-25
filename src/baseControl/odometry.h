@@ -131,6 +131,8 @@ public:
     virtual void   close();
     virtual double get_base_vel_lin();
     virtual double get_base_vel_theta();
+    virtual double get_vlin_coeff() = 0;
+    virtual double get_vang_coeff() = 0;
 };
 
 #endif

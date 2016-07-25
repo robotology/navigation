@@ -80,6 +80,8 @@ public:
     bool open(ResourceFinder &_rf, Property &options);
     void compute();
     void printStats();
+    double get_vlin_coeff();
+    double get_vang_coeff();
 
 };
 

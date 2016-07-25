@@ -41,9 +41,6 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-#define DEFAULT_MAX_LINEAR_VEL  0.42  // maximum linear  velocity (m/s)
-#define DEFAULT_MAX_ANGULAR_VEL 24.0  // maximum angular velocity (deg/s)
-
 class iKart_MotorControl : public MotorControl
 {
 public:
@@ -64,8 +61,6 @@ public:
     void printStats();
     void set_motors_filter(int b) {motors_filter_enabled=b;}
  
-    double get_max_linear_vel()   {return max_linear_vel;}
-    double get_max_angular_vel()  {return max_angular_vel;}
 };
 
 #endif
