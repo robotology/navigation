@@ -130,8 +130,8 @@ void CER_Odometry::compute()
     ienc->getEncoderSpeed(1,&velR);
         
     //remove the offset and convert in radians
-    enc[0]= -(encL - encL_offset) * 0.0174532925; 
-    enc[1]= -(encR - encR_offset) * 0.0174532925;
+    enc[0]= (encL - encL_offset) * 0.0174532925; 
+    enc[1]= (encR - encR_offset) * 0.0174532925;
        
     //estimate the speeds
     iCub::ctrl::AWPolyElement el;
@@ -140,7 +140,7 @@ void CER_Odometry::compute()
     encv= encvel_estimator->estimate(el);
 
     //compute the orientation.
-    odom_theta = -(geom_r / geom_L) * (-enc[0] + enc[1]);
+    odom_theta = (geom_r / geom_L) * (-enc[0] + enc[1]);
 
     iCub::ctrl::AWPolyElement el2;
     el2.data = yarp::sig::Vector(1,odom_theta);
@@ -176,15 +176,16 @@ void CER_Odometry::compute()
     */
 
 
-    base_vel_x = 0;
-    base_vel_y = geom_r / 2 * encv[0] + geom_r / 2 * encv[1]; 
-    base_vel_lin = base_vel_y;
+    base_vel_x = geom_r / 2 * encv[0] + geom_r / 2 * encv[1]; 
+    base_vel_y = 0;
+    base_vel_lin = fabs(base_vel_x);
     base_vel_theta = vvv[0];///-(geom_r / geom_L) * encv[0] + (geom_r / geom_L) * encv[1];
     //yDebug() << base_vel_theta << vvv[0];
 
+    
+    odom_vel_x = base_vel_x * cos(odom_theta);
+    odom_vel_y = base_vel_x * sin(odom_theta);
     odom_vel_lin = base_vel_lin;
-    odom_vel_x = -odom_vel_lin * cos(odom_theta);
-    odom_vel_y = -odom_vel_lin * sin(odom_theta);
     odom_vel_theta = base_vel_theta;
 
     //the integration step
