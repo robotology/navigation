@@ -110,7 +110,7 @@ bool NavTestModule::updateModule()
         step.frames.push_back(navFrame(0,  -0.5, 0));
         step.frames.push_back(navFrame(0,   0,   90));
         step.frames.push_back(navFrame(0.5, 0,   0));
-        step.absPos = navFrame(0.5, 0.5, 0);
+        step.absPos = navFrame(0.5, -0.5, 0);
         step.label  = "NE";
         stepVector.push_back(step);
 
@@ -118,8 +118,10 @@ bool NavTestModule::updateModule()
         step.absPos = navFrame(0.5, 0.5, 0);
         step.label  = "NW";
         stepVector.push_back(step);
+        step.absPos = navFrame(-0.5, 0.5, 0);
         step.label = "SW";
         stepVector.push_back(step);
+        step.absPos = navFrame(-0.5, -0.5, 0);
         step.label = "SE";
         stepVector.push_back(step);
 
