@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("cer");
-    rf.setDefaultConfigFile("baseCtrl.ini");
+    rf.setDefaultContext("navigationTest");
+    rf.setDefaultConfigFile("navigationTest.ini");
     rf.configure(argc,argv);
 
     if (rf.check("help"))
@@ -55,7 +55,5 @@ int main(int argc, char* argv[])
 
     NavTestModule mod;
 
-    //return mod.runModule(rf);
-
-    return 0;
+    return mod.runModule(rf);
 }
