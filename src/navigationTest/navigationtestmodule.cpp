@@ -1,12 +1,16 @@
 #include "navigationtestmodule.h"
+#include <cmath>
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace std;
-#define I2S(x) static_cast<ostringstream*>( &(ostringstream() << x) )->str()
+#define PERIOD  0
+#define TIMEOUT 60
 NavTestModule::NavTestModule()
 {
     period          = PERIOD;
     locationsStored = false;
+    linToll = 0.1;
+    angToll = 0.1;
 }
 
 NavTestModule::~NavTestModule()
@@ -82,7 +86,6 @@ bool NavTestModule::executeStep(navStep s)
             if(!iNav->getNavigationStatus(status))
             {
                 yError("unable to get navigation status while heading towards frame %lu of step %s", i, s.label.c_str());
-                yInfo() << "cippa";
                 return false;
             }
             if(Time::now() - time >= TIMEOUT)
@@ -101,6 +104,7 @@ bool NavTestModule::updateModule()
 {
     static size_t        i;
     NavigationStatusEnum status;
+    double               time;
 
     //storing location
     if(!locationsStored)
@@ -114,7 +118,7 @@ bool NavTestModule::updateModule()
         step.label  = "NE";
         stepVector.push_back(step);
 
-        step.frames.push_back(navFrame(0, 1, 90));
+        step.frames.push_back(navFrame(0, 1, 0));
         step.absPos = navFrame(0.5, 0.5, 0);
         step.label  = "NW";
         stepVector.push_back(step);
@@ -151,19 +155,36 @@ bool NavTestModule::updateModule()
 
         currentGoal = i%stepVector.size();
         iNav->gotoTargetByLocationName(stepVector[currentGoal].label);
+        time = Time::now();
         i++;
     }
-
+    if(Time::now() - time > TIMEOUT)
+    {
+        yError() << "time out while reaching goal " << stepVector[currentGoal].label;
+        return false;
+    }
 
     return true;
+}
+
+bool checkEqual(double a, double b, double tollerance)
+{
+    if(fabs(a - b) < tollerance)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool NavTestModule::checkCurrentGoalReached()
 {
     Map2DLocation cg;
-    navFrame&     f = stepVector[currentGoal].frames.back();
+    navFrame&     f = stepVector[currentGoal].absPos;
     iNav->getCurrentPosition(cg);
-    if(cg.x == f.x && cg.y == f.y && cg.theta == f.t)
+    if(checkEqual(cg.x, f.x, linToll) && checkEqual(cg.y, f.y, linToll) && checkEqual(cg.theta, f.t, angToll))
     {
         return true;
     }
@@ -175,5 +196,10 @@ bool NavTestModule::checkCurrentGoalReached()
 
 bool NavTestModule::interruptModule()
 {
+    if(iNav)
+    {
+        iNav->stopNavigation();
+    }
+
     return false;
 }

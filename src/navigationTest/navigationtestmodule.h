@@ -3,12 +3,11 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
-#define PERIOD  0
-#define TIMEOUT 60
+
 
 typedef struct navigationTestFrame
 {
-    navigationTestFrame(){x = 0; y = 0; t = 0;};
+    navigationTestFrame(){x = 0; y = 0; t = 0;}
     navigationTestFrame(double ix, double iy, double it)
     {
         x = ix;
@@ -43,6 +42,8 @@ private:
     yarp::dev::PolyDriver      ddNavClient;
     std::vector<navStep>       stepVector;
     unsigned int               currentGoal;
+    double                     linToll;
+    double                     angToll;
     bool                       checkCurrentGoalReached();
 
     bool executeStep(navStep s);
