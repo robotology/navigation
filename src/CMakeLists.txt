@@ -11,3 +11,5 @@ add_subdirectory(robotPathPlanner)
 
 
 
+
+add_subdirectory(navigationTest)
