@@ -94,6 +94,8 @@ private:
     bool                 debug_enabled;
     double               max_angular_vel;
     double               max_linear_vel;
+    double               max_angular_acc;
+    double               max_linear_acc;
     
     //ROS node
     yarp::os::Node*     rosNode;
@@ -149,6 +151,8 @@ public:
         angular_ol_pid           = 0;
         max_linear_vel           = 0;
         max_angular_vel          = 0;
+        max_angular_acc          = 0;
+        max_linear_acc           = 0;
         remoteName               = ctrl_options.find("remote").asString();
         localName                = ctrl_options.find("local").asString();
     }
@@ -170,6 +174,7 @@ public:
     void set_pid (string id, double kp, double ki, double kd);
     void apply_ratio_limiter (double max, double& linear_speed, double& angular_speed);
     void apply_ratio_limiter (double& linear_speed, double& angular_speed);
+    void apply_acceleration_limiter (double& linear_speed, double& angular_speed, double& desired_direction);
     void apply_input_filter  (double& linear_speed, double& angular_speed, double& desired_direction);
     void set_input_filter    (int b) {input_filter_enabled=b;}
     

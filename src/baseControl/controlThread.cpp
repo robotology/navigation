@@ -56,6 +56,17 @@ void ControlThread::apply_ratio_limiter (double max, double& linear_speed, doubl
     if (angular_speed < -max*(1-lin_ang_ratio)) angular_speed = -max*(1-lin_ang_ratio);
 }
 
+void ControlThread::apply_acceleration_limiter(double& linear_speed, double& angular_speed, double& desired_direction)
+{
+    double period = this->getRate()/1000;
+    angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc*period);
+    linear_speed = control_filters::ratelim_filter_0(linear_speed, 8, max_linear_acc*period);
+    //desired_direction does not use any filtering
+    #if DEBUG_LIMTER
+    yDebug()<<angular_speed<<linear_speed;
+    #endif
+}
+
 void ControlThread::apply_input_filter (double& linear_speed, double& angular_speed, double& desired_direction)
 {
     if (input_filter_enabled == 8)
@@ -64,26 +75,24 @@ void ControlThread::apply_input_filter (double& linear_speed, double& angular_sp
         linear_speed = control_filters::lp_filter_8Hz(linear_speed, 8);
         desired_direction = control_filters::lp_filter_8Hz(desired_direction, 9);
     }
-    if (input_filter_enabled == 4)
+    else if (input_filter_enabled == 4)
     {
         angular_speed = control_filters::lp_filter_4Hz(angular_speed, 7);
         linear_speed = control_filters::lp_filter_4Hz(linear_speed, 8);
         desired_direction = control_filters::lp_filter_4Hz(desired_direction, 9);
     }
-    if (input_filter_enabled == 2)
+    else if(input_filter_enabled == 2)
     {
         angular_speed = control_filters::lp_filter_2Hz(angular_speed, 7);
         linear_speed = control_filters::lp_filter_2Hz(linear_speed, 8);
         desired_direction = control_filters::lp_filter_2Hz(desired_direction, 9);
     }
-    if (input_filter_enabled == 1)
+    else if(input_filter_enabled == 1)
     {
         angular_speed = control_filters::lp_filter_1Hz(angular_speed, 7);
         linear_speed = control_filters::lp_filter_1Hz(linear_speed, 8);
         desired_direction = control_filters::lp_filter_1Hz(desired_direction, 9);
     }
-
-
 }
 
 void ControlThread::enable_debug(bool b)
@@ -198,15 +207,18 @@ void ControlThread::run()
     this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
 
     //low pass filter
-    apply_input_filter(input_linear_speed, input_angular_speed,input_desired_direction);
-    
+    apply_input_filter(input_linear_speed, input_angular_speed, input_desired_direction);
+
+    //acceleration_limiter
+    apply_acceleration_limiter(input_linear_speed, input_angular_speed, input_desired_direction);
+
     //apply limiter
     if (input_linear_speed  > get_max_linear_vel())   input_linear_speed  = get_max_linear_vel();
     if (input_linear_speed  < -get_max_linear_vel())  input_linear_speed  = -get_max_linear_vel();
     if (input_angular_speed > get_max_angular_vel())  input_angular_speed = get_max_angular_vel();
     if (input_angular_speed < -get_max_angular_vel()) input_angular_speed = -get_max_angular_vel();
     
-    //aply ratio limiter
+    //apply ratio limiter
     if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
 
     /*
@@ -300,6 +312,8 @@ bool ControlThread::threadInit()
     if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
     if (general_options.check("max_linear_vel") == false)  { yError() << "Missing 'max_linear_vel' param";  return false; }
     if (general_options.check("max_angular_vel") == false)   { yError() << "Missing 'max_angular_vel' param";   return false; }
+    if (general_options.check("max_linear_acc") == false)  { yError() << "Missing 'max_linear_acc' param";  return false; }
+    if (general_options.check("max_angular_acc") == false)   { yError() << "Missing 'max_angular_acc' param";   return false; }
 
     string control_type, robot_type_s;
     bool useRos;
@@ -318,6 +332,12 @@ bool ControlThread::threadInit()
     tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
     if (tmp >= 0) { max_linear_vel = tmp; }
     else { yError() << "Invalid max_linear_vel"; return false; }
+    tmp = (general_options.check("max_angular_acc", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+    if (tmp >= 0) { max_angular_acc = tmp; }
+    else { yError() << "Invalid max_angular_acc"; return false; }
+    tmp = (general_options.check("max_linear_acc", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+    if (tmp >= 0) { max_linear_acc = tmp; }
+    else { yError() << "Invalid max_linear_acc"; return false; }
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");

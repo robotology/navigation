@@ -287,5 +287,6 @@ double iKart_Odometry::get_vlin_coeff()
 
 double iKart_Odometry::get_vang_coeff()
 {
-    return 1;
+    // theta = - r(e0 + e1 +e2)/eL
+    return geom_L/geom_r;
 }
