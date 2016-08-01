@@ -38,9 +38,9 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/IFrameTransform.h>
+#include <yarp/dev/INavigation2D.h>
 #include <string>
 
-#include "status.h"
 #include "map.h"
 
 using namespace std;
@@ -116,8 +116,8 @@ class PlannerThread: public yarp::os::RateThread
     std::queue<cell>    computed_path;
     std::queue<cell>    computed_simplified_path;
     std::queue<cell>*   current_path;
-    status_type         planner_status;
-    status_type         inner_status;
+    NavigationStatusEnum   planner_status;
+    NavigationStatusEnum   inner_status;
 
     //timeouts
     public:
@@ -130,8 +130,8 @@ class PlannerThread: public yarp::os::RateThread
                RateThread(_period),     rf(_rf),
                robotCtrl_options (options)
     {
-        planner_status = IDLE;
-        inner_status = IDLE;
+        planner_status = navigation_status_idle;
+        inner_status = navigation_status_idle;
         localization_data.resize(3,0.0);
         loc_timeout_counter = 0;
         laser_timeout_counter = 0;

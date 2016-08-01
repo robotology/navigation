@@ -39,6 +39,19 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+std::string getStatusAsString(NavigationStatusEnum status)
+{
+    if (status == navigation_status_idle) return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
+    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
+    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+
+    yError("Unknown status of inner controller: '%d'!", status);
+    return std::string("unknown");
+}
+
 //checks if a point is inside a polygon
 int GotoThread::pnpoly(int nvert, double *vertx, double *verty, double testx, double testy)
 {
@@ -208,10 +221,10 @@ void GotoThread::run()
 
     if (loc_timeout_counter>=TIMEOUT_MAX)
     {
-        if (status == MOVING)
+        if (status == navigation_status_moving)
         {
             yError ("stopping navigation because of localization timeouts!");
-            status = ABORTED;
+            status = navigation_status_aborted;
         }
     }
 
@@ -224,10 +237,10 @@ void GotoThread::run()
     }
     if (odm_timeout_counter>=TIMEOUT_MAX)
     {
-        if (status == MOVING)
+        if (status == navigation_status_moving)
         {
             yError ("stopping navigation because of odometry timeouts!");
-            status = ABORTED;
+            status = navigation_status_aborted;
         }
     }
 
@@ -353,7 +366,7 @@ void GotoThread::run()
     }
     else
     {
-        if (status == MOVING)
+        if (status == navigation_status_moving)
         {
         }
     }
@@ -361,9 +374,9 @@ void GotoThread::run()
     double current_time = yarp::os::Time::now();
     double speed_ramp = (current_time-obstacle_removal_time)/2.0;
 
-    switch (status.getStatusAsInt())
+    switch (status)
     {
-        case MOVING:
+    case navigation_status_moving:
             //Update the safety coefficient only if your are MOVING.
             //If you are WAITING_OBSTACLE, use the last valid safety_coeff until the 
             //obstacle has been removed.
@@ -379,7 +392,7 @@ void GotoThread::run()
                 //check if the goal has been reached in position but not in orientation
                 if (fabs(distance) < goal_tolerance_lin)
                 {
-                    status=REACHED;
+                    status = navigation_status_goal_reached;
                     yInfo ("Goal reached!");
                 }
             }
@@ -388,7 +401,7 @@ void GotoThread::run()
                  //check if the goal has been reached in both position and orientation
                 if (fabs(distance) < goal_tolerance_lin && fabs(gamma) < goal_tolerance_ang) 
                 {
-                    status=REACHED;
+                    status = navigation_status_goal_reached;
                     yInfo("Goal reached!");
                 }
 
@@ -398,7 +411,7 @@ void GotoThread::run()
             if  (enable_obstacles_emergency_stop && obstacles_in_path)
             {
                 yInfo ("Obstacles detected, stopping");
-                status=WAITING_OBSTACLE;
+                status = navigation_status_waiting_obstacle;
                 obstacle_time = current_time;
                 Bottle b;
                 b.addString("Obstacles detected");
@@ -409,13 +422,13 @@ void GotoThread::run()
             }
         break;
 
-        case WAITING_OBSTACLE:
+        case navigation_status_waiting_obstacle:
             if (!obstacles_in_path)
             {   
                 if (fabs(current_time-obstacle_time)>1.0)
                 {
                     yInfo ("Obstacles removed, thank you");
-                    status=MOVING;
+                    status = navigation_status_moving;
                     Bottle b;
                     b.addString("Obstacles removed, thank you");
                     Bottle tmp = port_speak_output.prepare();
@@ -430,23 +443,23 @@ void GotoThread::run()
                 if (fabs(current_time-obstacle_time)>max_obstacle_wating_time)
                 {
                     yError ("failed to recover from obstacle, goal aborted");
-                    status=ABORTED;
+                    status = navigation_status_aborted;
                 }
             }
         break;
 
-        case PAUSED:
+        case navigation_status_paused:
             //check if pause is expired
             double current_time = yarp::os::Time::now();
             if (current_time - pause_start > pause_duration)
             {
                 yInfo("pause expired! resuming");
-                status=MOVING;
+                status = navigation_status_moving;
             }
         break;
     }
 
-    if (status != MOVING)
+    if (status != navigation_status_moving)
     {
        control_out[0]=control_out[1]=control_out[2] = 0.0;
     }
@@ -483,7 +496,7 @@ void GotoThread::sendOutput()
     if (port_status_output.getOutputCount()>0)
     {
         string string_out;
-        string_out = status.getStatusAsString();
+        string_out = getStatusAsString(status);
         Bottle &b=port_status_output.prepare();
         port_status_output.setEnvelope(stamp);
         b.clear();
@@ -524,7 +537,7 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
         target_data.weak_angle=true;
     }
     target_data.target=target;
-    status=MOVING;
+    status = navigation_status_moving;
     yDebug ( "current pos: abs(%.3f %.3f %.2f)", localization_data[0], localization_data[1], localization_data[2]);
     yDebug ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
     retreat_counter = retreat_duration;
@@ -543,19 +556,19 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
     target_data[0]=target[1] * cos (a) - (-target[0]) * sin (a) + localization_data[0] ;
     target_data[1]=target[1] * sin (a) + (-target[0]) * cos (a) + localization_data[1] ;
     target_data[2]=-target[2] + localization_data[2];
-    status=MOVING;
+    status = navigation_status_moving;
     yInfo ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
     retreat_counter = retreat_duration;
 }
 
 void GotoThread::pauseMovement(double secs)
 {
-    if (status == PAUSED)
+    if (status == navigation_status_paused)
     {
         yWarning ( "already in pause!");
         return;
     }
-    if (status != MOVING)
+    if (status != navigation_status_moving)
     {
         yWarning( "not moving!");
         return;
@@ -571,25 +584,25 @@ void GotoThread::pauseMovement(double secs)
         yInfo( "asked to pause");
         pause_duration = 10000000;
     }
-    status=PAUSED;
+    status = navigation_status_paused;
     pause_start = yarp::os::Time::now();
 }
 
 void GotoThread::resumeMovement()
 {
     yInfo( "asked to resume movement");
-    status=MOVING;
+    status = navigation_status_moving;
 }
 
 void GotoThread::stopMovement()
 {
     yInfo( "asked to stop");
-    status=IDLE;
+    status = navigation_status_idle;
 }
 
 string GotoThread::getNavigationStatus()
 {
-    return status.getStatusAsString();
+    return getStatusAsString(status);
 }
 
 void GotoThread::printStats()
@@ -598,5 +611,5 @@ void GotoThread::printStats()
     yDebug( "loc timeouts: %d", loc_timeout_counter);
     yDebug( "odm timeouts: %d", odm_timeout_counter);
     yDebug( "las timeouts: %d", las_timeout_counter);
-    yDebug( "status: %s", status.getStatusAsString().c_str());
+    yDebug("status: %s", getStatusAsString(status).c_str());
 }

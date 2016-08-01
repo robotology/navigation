@@ -46,22 +46,35 @@ using namespace yarp::dev;
 #define DEG2RAD M_PI/180
 #endif
 
-status_type string2status(string s)
+NavigationStatusEnum string2status(string s)
 {
     //enum status_type {IDLE=0, MOVING, WAITING_OBSTACLE, REACHED, ABORTED, PAUSED};
-    status_type status;
-    if      (s=="IDLE")     status = IDLE;
-    else if (s=="MOVING")   status = MOVING;
-    else if (s=="WAITING_OBSTACLE")  status = WAITING_OBSTACLE;
-    else if (s=="REACHED")  status = REACHED;
-    else if (s=="ABORTED")  status = ABORTED;
-    else if (s=="PAUSED")   status = PAUSED;
+    NavigationStatusEnum status;
+    if (s == "IDLE")     status = navigation_status_idle;
+    else if (s == "MOVING")   status = navigation_status_moving;
+    else if (s == "WAITING_OBSTACLE")  status = navigation_status_waiting_obstacle;
+    else if (s == "REACHED")  status = navigation_status_goal_reached;
+    else if (s == "ABORTED")  status = navigation_status_aborted;
+    else if (s == "PAUSED")   status = navigation_status_paused;
     else 
     {
         yError("Unknown status of inner controller: '%s'!", s.c_str());
-        status = IDLE;
+        status = navigation_status_idle;
     }
     return status;
+}
+
+std::string getStatusAsString(NavigationStatusEnum status)
+{
+    if (status == navigation_status_idle) return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
+    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
+    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+
+    yError("Unknown status of inner controller: '%d'!", status);
+    return std::string("unknown");
 }
 
 void PlannerThread::select_optimized_path(bool b)
@@ -127,7 +140,12 @@ void PlannerThread::run()
         iTf->allFramesAsString(sss);
         yDebug() << "All Frames:" <<  sss;
 #endif
-        bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
+        iTf->transformPose("mobile_base_body", "map", iv, pose);
+        iTf->transformPose("mobile_base_body", "odom", iv, pose);
+        iTf->transformPose("odom", "map", iv, pose);
+
+        //bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
+        bool r = false;
         if (r)
         {
             localization_data[0] = pose[0]; //x
@@ -199,16 +217,16 @@ void PlannerThread::run()
 
     //check if the next waypoint has to be sent
     int path_size = current_path->size();
-    if (planner_status == MOVING)
+    if (planner_status == navigation_status_moving)
     {
-        if (inner_status == REACHED)
+        if (inner_status == navigation_status_goal_reached)
         {
             yInfo ("waypoint reached");
             if (path_size == 0)
             {
                 //navigation is complete
                 yInfo("navigation complete");
-                planner_status = REACHED;
+                planner_status = navigation_status_goal_reached;
             }
             else if (path_size == 1)
             {
@@ -259,22 +277,22 @@ void PlannerThread::run()
                 }
             }
         }
-        else if (inner_status == MOVING)
+        else if (inner_status == navigation_status_moving)
         {
             //do nothing, just wait
         }
-        else if (inner_status == WAITING_OBSTACLE)
+        else if (inner_status == navigation_status_waiting_obstacle)
         {
             //do nothing, just wait
         }
-        else if (inner_status == ABORTED)
+        else if (inner_status == navigation_status_aborted)
         {
             //terminate navigation
-            planner_status = ABORTED;
+            planner_status = navigation_status_aborted;
             yError ("unable to reach next waypoint, aborting navigation");
             //current_path.clear();
         }
-        else if (inner_status == IDLE)
+        else if (inner_status == navigation_status_idle)
         {
             //send the first waypoint
             yInfo ("sending the first waypoint");
@@ -332,35 +350,35 @@ void PlannerThread::run()
         }
         else
         {
-            yError ("unrecognized inner status: %d", inner_status.getStatusAsInt());
+            yError ("unrecognized inner status: %d", inner_status);
         }
     }
-    else if (planner_status == REACHED)
+    else if (planner_status == navigation_status_goal_reached)
     {
         //do nothing, just wait
     }
-    else if (planner_status == IDLE)
+    else if (planner_status == navigation_status_idle)
     {
         //do nothing, just wait
     }
-    else if (planner_status == THINKING)
+    else if (planner_status == navigation_status_thinking)
     {
         //do nothing, just wait
     }
-    else if (planner_status == ABORTED)
+    else if (planner_status == navigation_status_aborted)
     {
         //do nothing, just wait
     }
     else
     {
         //unknown status
-        yError ("unknown status:%d", planner_status.getStatusAsInt());
+        yError ("unknown status:%d", planner_status);
     }
 
     //broadcast the planner status
     if (port_status_output.getOutputCount()>0)
     {
-        string s = planner_status.getStatusAsString();
+        string s = getStatusAsString(planner_status);
         Bottle &b=this->port_status_output.prepare();
         b.clear();
         b.addString(s.c_str());
@@ -388,7 +406,7 @@ void PlannerThread::run()
     CvScalar color = cvScalar(0,200,0);
     CvScalar color2 = cvScalar(0,200,100);
 
-    if (planner_status!=IDLE && planner_status!=REACHED)
+    if (planner_status != navigation_status_idle && planner_status != navigation_status_goal_reached)
     {
 #ifdef DRAW_BOTH_PATHS
         map.drawPath(map_with_path, start, computed_path, color); 
@@ -414,7 +432,7 @@ void PlannerThread::sendWaypoint()
     if (path_size==0)
     {
         yWarning ("Path queue is empty!");
-        planner_status=IDLE;
+        planner_status = navigation_status_idle;
         return;
     }
     //get the next waypoint from the list
@@ -457,14 +475,14 @@ void PlannerThread::startNewPath(cell target)
     std::swap(computed_path, empty );
     std::queue<cell> empty2;
     std::swap( computed_simplified_path, empty2 );
-    planner_status = THINKING;
+    planner_status = navigation_status_thinking;
 
     //search for a path
     bool b = map.findPath(map.processed_map, start , target, computed_path);
     if (!b)
     {
         yError ("path not found");
-        planner_status = ABORTED;
+        planner_status = navigation_status_aborted;
         return;
     }
     double t2 = yarp::os::Time::now();
@@ -485,14 +503,14 @@ void PlannerThread::startNewPath(cell target)
 
     //just set the status to moving, do not set position commands.
     //The wayypoint ist set in the main 'run' loop.
-    planner_status = MOVING;
+    planner_status = navigation_status_moving;
 }
 
 void PlannerThread::setNewAbsTarget(yarp::sig::Vector target)
 {
-    if (planner_status != IDLE &&
-        planner_status != REACHED &&
-        planner_status != ABORTED)
+    if (planner_status != navigation_status_idle &&
+        planner_status != navigation_status_goal_reached &&
+        planner_status != navigation_status_aborted)
     {
         yError ("Not in idle state, send a 'stop' first\n");
         return;
@@ -509,9 +527,9 @@ void PlannerThread::setNewAbsTarget(yarp::sig::Vector target)
 
 void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 {
-    if (planner_status != IDLE &&
-        planner_status != REACHED &&
-        planner_status != ABORTED)
+    if (planner_status != navigation_status_idle &&
+        planner_status != navigation_status_goal_reached &&
+        planner_status != navigation_status_aborted)
     {
         yError ("Not in idle state, send a 'stop' first");
         return;
@@ -533,9 +551,9 @@ void PlannerThread::stopMovement()
     port_commands_output.write(cmd1,ans1);
 
     //stop the outer navigation loop
-    planner_status=IDLE;
+    planner_status = navigation_status_idle;
 
-    if (planner_status != IDLE)
+    if (planner_status != navigation_status_idle)
     {
         yInfo ("Navigation stopped");
     }
@@ -561,7 +579,7 @@ void PlannerThread::printStats()
 
 string PlannerThread::getNavigationStatus()
 {
-    string s= planner_status.getStatusAsString();
+    string s = getStatusAsString(planner_status);
     return s;
 }
 

@@ -152,7 +152,8 @@ public:
                 reply.addString("quit");
             }
 
-            else if (command.get(0).asString()=="gotoAbs")
+            else if ((command.get(0).isString() && command.get(0).asString() == "gotoAbs") ||
+                     (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOABS))
             {
                 yarp::sig::Vector v;
                 v.push_back(command.get(1).asDouble());
@@ -162,7 +163,8 @@ public:
                 reply.addString("new absolute target received");
             }
 
-            else if (command.get(0).asString()=="gotoRel")
+            else if ((command.get(0).isString() && command.get(0).asString() == "gotoRel") ||
+                     (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOREL))
             {
                 yarp::sig::Vector v;
                 v.push_back(command.get(1).asDouble());
@@ -180,12 +182,14 @@ public:
                     reply.addString(s.c_str());
                 }
             }
-            else if (command.get(0).asString()=="stop")
+            else if ((command.get(0).isString() && command.get(0).asString() == "stop") ||
+                (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_STOP))
             {
                 plannerThread->stopMovement();
                 reply.addString("Stopping movement.");
             }
-            else if (command.get(0).asString()=="pause")
+            else if ((command.get(0).isString() && command.get(0).asString() == "pause") ||
+                (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_SUSPEND))
             {
                 double time = -1;
                 if (command.size() > 1)
@@ -193,7 +197,8 @@ public:
                 plannerThread->pauseMovement(time);
                 reply.addString("Pausing.");
             }
-            else if (command.get(0).asString()=="resume")
+            else if ((command.get(0).isString() && command.get(0).asString() == "resume") ||
+                (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_RESUME))
             {
                 plannerThread->resumeMovement();
                 reply.addString("Resuming.");

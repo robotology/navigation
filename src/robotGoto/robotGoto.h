@@ -36,10 +36,9 @@
 #include <yarp/os/LockGuard.h>
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/dev/INavigation2D.h>
 #include <string>
 #include <math.h>
-
-#include "status.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -185,7 +184,7 @@ class GotoThread: public yarp::os::RateThread
     target_type         target_data;
     laser_type*         laser_data;
     yarp::sig::Vector   control_out;
-    status_type         status;
+    NavigationStatusEnum  status;
     int                 retreat_counter;
     bool                use_odometry;
     bool                use_localization_from_port;
@@ -225,7 +224,7 @@ class GotoThread: public yarp::os::RateThread
                RateThread(_period),     rf(_rf),
                robotCtrl_options (options)
     {
-        status = IDLE;
+        status = navigation_status_idle;
         loc_timeout_counter = TIMEOUT_MAX;
         odm_timeout_counter = TIMEOUT_MAX;
         las_timeout_counter = TIMEOUT_MAX;
