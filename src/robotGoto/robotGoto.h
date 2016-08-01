@@ -346,9 +346,6 @@ class GotoThread: public yarp::os::RateThread
         if (btmp.check("speed_reduction_factor"))
             speed_reduction_factor = btmp.check("speed_reduction_factor",Value(0.70)).asDouble();
 
-        enable_retreat = false;
-        retreat_duration = 300;
-
         //open module ports
         string localName = "/robotGoto";
         port_commands_output.open((localName+"/control:o").c_str());
@@ -420,10 +417,13 @@ class GotoThread: public yarp::os::RateThread
         laser_angle_of_view = fabs(min_laser_angle) + fabs(max_laser_angle);
 
         //automatic connections for debug
-        yarp::os::Network::connect("/robot/laser:o","/yarpLaserScannerGui/laser:i");
-        yarp::os::Network::connect("/robotGoto/gui:o","/yarpLaserScannerGui/nav_display:i");
+        bool b = true;
+        b = yarp::os::Network::connect("/robot/laser:o","/yarpLaserScannerGui/laser:i");
+        b = yarp::os::Network::connect("/robotGoto/gui:o","/yarpLaserScannerGui/nav_display:i");
 
         //automatic port connections
+        b= yarp::os::Network::connect("/baseControl/odometry:o", localName+"/odometry:i");
+
         /*
         b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
         if (!b) {yError ("Unable to connect the output command port!"); return false;}
