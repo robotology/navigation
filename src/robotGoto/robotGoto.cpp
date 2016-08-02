@@ -200,7 +200,7 @@ void GotoThread::run()
         yarp::sig::Vector pose;
         iv.resize(6,0.0);
         pose.resize(6, 0.0);
-        bool r = iTf->transformPose(frame_map_id, frame_robot_id, iv, pose);
+        bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
         if (r)
         {
             localization_data[0] = pose[0]; //x
