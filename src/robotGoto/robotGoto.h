@@ -39,6 +39,7 @@
 #include <yarp/dev/INavigation2D.h>
 #include <string>
 #include <math.h>
+#include <visualization_msgs_MarkerArray.h>
 
 using namespace std;
 using namespace yarp::os;

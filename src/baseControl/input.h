@@ -26,7 +26,7 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Subscriber.h>
 #include <yarp/os/Node.h>
-#include "include/geometry_msgs_Twist.h"
+#include <geometry_msgs_Twist.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
