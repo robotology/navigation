@@ -48,6 +48,7 @@ protected:
     double              thread_period;
     std::vector<double> F;
     std::vector<int>    board_control_modes;
+    std::vector<int>    board_control_modes_last;
     int                 thread_timeout_counter;
 
     double              max_motor_pwm;
