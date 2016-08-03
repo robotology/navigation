@@ -176,7 +176,7 @@ void GotoThread::run()
 {
     mutex.wait();
     
-    //data is formatted as follows: x, y, angle
+    //data is formatted as follows: x, y, angle (in degrees)
     yarp::sig::Vector *loc = 0;
     
     if (use_localization_from_port)
@@ -185,7 +185,6 @@ void GotoThread::run()
         if (loc)
         {
             localization_data = *loc;
-            localization_data[2] = localization_data[2] * DEG2RAD;
             loc_timeout_counter = 0;
         }
         else
@@ -203,9 +202,10 @@ void GotoThread::run()
         bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
         if (r)
         {
-            localization_data[0] = pose[0]; //x
-            localization_data[1] = pose[1]; //y
-            localization_data[2] = -pose[5]; //theta //@@@@@ BEWARE the minus sign is a temp fix!!!
+            //data is formatted as follows: x, y, angle (in degrees)
+            localization_data[0] = pose[0];
+            localization_data[1] = pose[1];
+            localization_data[2] = pose[5] * RAD2DEG;
             loc_timeout_counter = 0;
         }
         else
@@ -269,7 +269,7 @@ void GotoThread::run()
     double unwrapped_localization_angle = (localization_data[2]<0)?localization_data[2]+360:localization_data[2];
     double unwrapped_target_angle = (target_data[2]<0)?target_data[2]+360:target_data[2];      
     //double gamma  = localization_data[2]-target_data[2];
-    double gamma  = unwrapped_localization_angle-unwrapped_target_angle;
+    double gamma = unwrapped_target_angle - unwrapped_localization_angle;
     if      (gamma >  180) gamma -= 360;
     else if (gamma < -180) gamma += 360;
 
@@ -398,7 +398,8 @@ void GotoThread::run()
             }
             else
             {
-                 //check if the goal has been reached in both position and orientation
+                //check if the goal has been reached in both position and orientation
+                //yDebug() << fabs(distance) << fabs(gamma);
                 if (fabs(distance) < goal_tolerance_lin && fabs(gamma) < goal_tolerance_ang) 
                 {
                     status = navigation_status_goal_reached;
@@ -545,17 +546,18 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
 
 void GotoThread::setNewRelTarget(yarp::sig::Vector target)
 {
-    //data is formatted as follows: x, y, angle
+    //target and localization data are formatted as follows: x, y, angle (in degrees)
     target_data.weak_angle=false;
     if (target.size()==2) 
     {
         target.push_back(0.0);
         target_data.weak_angle=true;
     }
-    double a = localization_data[2]/180.0*M_PI;
-    target_data[0]=target[1] * cos (a) - (-target[0]) * sin (a) + localization_data[0] ;
-    target_data[1]=target[1] * sin (a) + (-target[0]) * cos (a) + localization_data[1] ;
-    target_data[2]=-target[2] + localization_data[2];
+    double a = localization_data[2] * DEG2RAD;
+    //this is the inverse of the tranformation matrix from world to robot
+    target_data[0] = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
+    target_data[1] = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
+    target_data[2]=  target[2] + localization_data[2];
     status = navigation_status_moving;
     yInfo ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
     retreat_counter = retreat_duration;

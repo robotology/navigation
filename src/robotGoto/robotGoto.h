@@ -422,7 +422,8 @@ class GotoThread: public yarp::os::RateThread
         b = yarp::os::Network::connect("/robotGoto/gui:o","/yarpLaserScannerGui/nav_display:i");
 
         //automatic port connections
-        b= yarp::os::Network::connect("/baseControl/odometry:o", localName+"/odometry:i");
+        b = yarp::os::Network::connect("/baseControl/odometry:o", localName+"/odometry:i");
+        b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i");
 
         /*
         b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
