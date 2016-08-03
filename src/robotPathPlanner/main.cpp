@@ -144,8 +144,8 @@ public:
             {
                 reply.addVocab(Vocab::encode("many"));
                 reply.addString("Available commands are:");
-                reply.addString("gotoAbs <x> <y> <angle>");
-                reply.addString("gotoRel <x> <y> <angle>");
+                reply.addString("gotoAbs <x> <y> <angle in degrees>");
+                reply.addString("gotoRel <x> <y> <angle in degrees>");
                 reply.addString("stop");
                 reply.addString("pause");
                 reply.addString("resume");

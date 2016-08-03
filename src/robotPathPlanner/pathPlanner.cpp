@@ -120,7 +120,6 @@ void PlannerThread::run()
         if (loc)
         {
             localization_data = *loc;
-            localization_data[2] = localization_data[2] * DEG2RAD;
             loc_timeout_counter = 0;
         }
         else
@@ -148,9 +147,10 @@ void PlannerThread::run()
         bool r = false;
         if (r)
         {
+            //data is formatted as follows: x, y, angle (in degrees)
             localization_data[0] = pose[0]; //x
             localization_data[1] = pose[1]; //y
-            localization_data[2] = -pose[5]; //theta //@@@@@ BEWARE the minus sign is a temp fix!!!
+            localization_data[2] = pose[5] * RAD2DEG; 
             //yDebug() << pose[0] << pose[1] << pose[2] << pose[3] << pose[4] << pose[5];
             loc_timeout_counter = 0;
         }
@@ -527,6 +527,7 @@ void PlannerThread::setNewAbsTarget(yarp::sig::Vector target)
 
 void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 {
+    //target and localization data are formatted as follows: x, y, angle (in degrees)
     if (planner_status != navigation_status_idle &&
         planner_status != navigation_status_goal_reached &&
         planner_status != navigation_status_aborted)
@@ -535,10 +536,11 @@ void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
         return;
     }
 
-    double a = localization_data[2]/180.0*M_PI;
-    goal_data[0]=target[1] * cos (a) - (-target[0]) * sin (a) + localization_data[0] ;
-    goal_data[1]=target[1] * sin (a) + (-target[0]) * cos (a) + localization_data[1] ;
-    goal_data[2]=-target[2] + localization_data[2];
+    double a = localization_data[2] * DEG2RAD;
+    //this is the inverse of the tranformation matrix from world to robot
+    goal_data[0] = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
+    goal_data[1] = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
+    goal_data[2] = target[2] + localization_data[2];
     cell goal = map.world2cell(goal_data);
     startNewPath(goal);
 }
