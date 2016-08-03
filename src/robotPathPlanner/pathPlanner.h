@@ -40,6 +40,7 @@
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/INavigation2D.h>
 #include <string>
+#include <visualization_msgs_MarkerArray.h>
 
 #include "map.h"
 
@@ -50,6 +51,9 @@ using namespace yarp::dev;
 #ifndef M_PI
 #define M_PI 3.14159265
 #endif
+
+const double RAD2DEG = 180.0 / M_PI;
+const double DEG2RAD = M_PI / 180.0;
 
 #define TIMEOUT_MAX 100
 
