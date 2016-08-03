@@ -74,15 +74,18 @@ bool CER_MotorControl::check_motors_on()
 
 void CER_MotorControl::updateControlMode()
 {
+    board_control_modes_last = board_control_modes;
     icmd->getControlMode(0, &board_control_modes[0]);
     icmd->getControlMode(1, &board_control_modes[1]);
     
-    for (int i=0; i<2; i++)
-    if (board_control_modes[i]==VOCAB_CM_IDLE)
+    for (int i = 0; i < 2; i++)
     {
-        yWarning ("One motor is in idle state. Turning off control.");
-        //turn_off_control();
-        break;
+        if (board_control_modes[i] == VOCAB_CM_HW_FAULT && board_control_modes_last[i] != VOCAB_CM_HW_FAULT)
+        {
+            yWarning("One motor is in fault status. Turning off control.");
+            set_control_idle();
+            break;
+        }
     }
 }
 
@@ -159,6 +162,7 @@ CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : 
 
     F.resize(2, 0.0);
     board_control_modes.resize(2, 0);
+    board_control_modes_last.resize(2, 0);
 
     thread_period = _period;
 }
