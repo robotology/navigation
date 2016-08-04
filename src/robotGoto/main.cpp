@@ -137,6 +137,7 @@ public:
             reply.addString("pause");
             reply.addString("resume");
             reply.addString("quit");
+            reply.addString("reset_params");
             reply.addString("set linear_tol <m>");
             reply.addString("set linear_ang <deg>");
             reply.addString("set max_lin_speed <m/s>");
@@ -146,7 +147,10 @@ public:
             reply.addString("set obstacle_stop");
             reply.addString("set obstacle_avoidance");
         }
-
+        else if (command.get(0).isString() && command.get(0).asString() == "reset_params")
+        {
+            gotoThread->resetParamsToDefaultValue();
+        }
         else if ((command.get(0).isString() && command.get(0).asString()=="gotoAbs") ||
                  (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOABS))
         {
@@ -172,32 +176,32 @@ public:
         {
             if (command.get(1).asString()=="linear_tol")
             {
-                gotoThread->goal_tolerance_lin=command.get(2).asDouble();
+                gotoThread->m_goal_tolerance_lin = command.get(2).asDouble();
                 reply.addString("linear_tol set.");
             }
             else if (command.get(1).asString()=="angular_tol")
             {
-                gotoThread->goal_tolerance_ang=command.get(2).asDouble();
+                gotoThread->m_goal_tolerance_ang = command.get(2).asDouble();
                 reply.addString("angular_tol set.");
             }
             else if (command.get(1).asString()=="max_lin_speed")
             {
-                gotoThread->max_lin_speed=command.get(2).asDouble();
+                gotoThread->m_max_lin_speed = command.get(2).asDouble();
                 reply.addString("max_lin_speed set.");
             }
             else if (command.get(1).asString()=="max_ang_speed")
             {
-                gotoThread->max_ang_speed=command.get(2).asDouble();
+                gotoThread->m_max_ang_speed = command.get(2).asDouble();
                 reply.addString("max_ang_speed set.");
             }
             else if (command.get(1).asString()=="min_lin_speed")
             {
-                gotoThread->min_lin_speed=command.get(2).asDouble();
+                gotoThread->m_min_lin_speed=command.get(2).asDouble();
                 reply.addString("min_lin_speed set.");
             }
             else if (command.get(1).asString()=="min_ang_speed")
             {
-                gotoThread->min_ang_speed=command.get(2).asDouble();
+                gotoThread->m_min_ang_speed = command.get(2).asDouble();
                 reply.addString("min_ang_speed set.");
             }
             else if (command.get(1).asString()=="obstacle_avoidance")
