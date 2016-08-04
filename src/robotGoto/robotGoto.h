@@ -136,22 +136,36 @@ class GotoThread: public yarp::os::RateThread
 
     public:
     bool   enable_retreat;
-    double goal_tolerance_lin;  //m 
-    double goal_tolerance_ang;  //deg
+    int    retreat_duration;
 
     public:
-    //configuration parameters
-    double k_ang_gain;
-    double k_lin_gain;
-    double max_lin_speed;       //m/s
-    double max_ang_speed;       //deg/s
-    double min_lin_speed;       //m/s
-    double min_ang_speed;       //deg/s
+
+    //robot properties
+    double robot_is_holonomic;
     double robot_radius;        //m
     double robot_laser_x;       //m
     double robot_laser_y;       //m
     double robot_laser_t;       //deg
-    int    retreat_duration; 
+
+    //configuration parameters
+    double m_max_gamma_angle;
+    double m_gain_lin;
+    double m_gain_ang;
+    double m_goal_tolerance_lin;  //m 
+    double m_goal_tolerance_ang;  //deg
+    double m_max_lin_speed;       //m/s
+    double m_max_ang_speed;       //deg/s
+    double m_min_lin_speed;       //m/s
+    double m_min_ang_speed;       //deg/s
+    double m_default_max_gamma_angle;
+    double m_default_gain_lin;
+    double m_default_gain_ang;
+    double m_default_goal_tolerance_lin;  //m 
+    double m_default_goal_tolerance_ang;  //deg
+    double m_default_max_lin_speed;       //m/s
+    double m_default_max_ang_speed;       //deg/s
+    double m_default_min_lin_speed;       //m/s
+    double m_default_min_ang_speed;       //deg/s
 
     int    loc_timeout_counter;
     int    odm_timeout_counter;
@@ -240,8 +254,6 @@ class GotoThread: public yarp::os::RateThread
         control_out.resize(3,0.0);
         pause_start = 0;
         pause_duration = 0;
-        goal_tolerance_lin = 0.05;
-        goal_tolerance_ang = 0.6;
         max_obstacle_wating_time = 60.0;
         max_obstacle_distance = 0.8;
         frontal_blind_angle = 25.0;
@@ -263,23 +275,40 @@ class GotoThread: public yarp::os::RateThread
     virtual bool threadInit()
     {
         //read configuration parametes
-        k_ang_gain = 0.05;
-        k_lin_gain = 0.1;
-        max_lin_speed = 0.9;  //m/s
-        max_ang_speed = 10.0; //deg/s
-        min_lin_speed = 0.0;  //m/s
-        min_ang_speed = 0.0; //deg/s
+        robot_is_holonomic = false;
+        m_default_max_gamma_angle = m_max_gamma_angle = 5;
+        m_default_gain_ang = m_gain_ang = 0.05;
+        m_default_gain_lin = m_gain_lin = 0.1;
+        m_default_max_lin_speed = m_max_lin_speed = 0.9;  //m/s
+        m_default_max_ang_speed = m_max_ang_speed = 10.0; //deg/s
+        m_default_max_ang_speed = m_min_lin_speed = 0.0;  //m/s
+        m_default_max_ang_speed = m_min_ang_speed = 0.0; //deg/s
+        m_default_goal_tolerance_lin = m_goal_tolerance_lin = 0.05;
+        m_default_goal_tolerance_lin = m_goal_tolerance_ang = 0.6;
+
         use_odometry = true;
         use_localization_from_port = false;
         use_localization_from_tf = false;
-        yInfo ("Using following paramters: %s", rf.toString().c_str());
-        if (rf.check("ang_speed_gain"))     {k_ang_gain = rf.find("ang_speed_gain").asDouble();}
-        if (rf.check("lin_speed_gain"))     {k_lin_gain = rf.find("lin_speed_gain").asDouble();}
-        if (rf.check("max_lin_speed"))      {max_lin_speed = rf.find("max_lin_speed").asDouble();}
-        if (rf.check("max_ang_speed"))      {max_ang_speed = rf.find("max_ang_speed").asDouble();}
-        if (rf.check("min_lin_speed"))      {min_lin_speed = rf.find("min_lin_speed").asDouble();}
-        if (rf.check("min_ang_speed"))      {min_ang_speed = rf.find("min_ang_speed").asDouble();}
-        
+        yInfo("Using following paramters: %s", rf.toString().c_str());
+
+        Bottle trajectory_group = rf.findGroup("ROBOT_TRAJECTORY");
+        if (trajectory_group.isNull())
+        {
+            yError() << "Missing ROBOT_TRAJECTORY group!";
+            return false;
+        }
+
+        if (trajectory_group.check("robot_is_holonomic")) { robot_is_holonomic = trajectory_group.find("robot_is_holonomic").asInt()==1; }
+        if (trajectory_group.check("max_gamma_angle"))    { m_default_max_gamma_angle = m_max_gamma_angle = trajectory_group.find("max_gamma_angle").asDouble(); }
+        if (trajectory_group.check("ang_speed_gain"))     { m_default_gain_ang = m_gain_ang = trajectory_group.find("ang_speed_gain").asDouble(); }
+        if (trajectory_group.check("lin_speed_gain"))     { m_default_gain_lin = m_gain_lin = trajectory_group.find("lin_speed_gain").asDouble(); }
+        if (trajectory_group.check("max_lin_speed"))      { m_default_max_lin_speed = m_max_lin_speed = trajectory_group.find("max_lin_speed").asDouble(); }
+        if (trajectory_group.check("max_ang_speed"))      { m_default_max_ang_speed = m_max_ang_speed = trajectory_group.find("max_ang_speed").asDouble(); }
+        if (trajectory_group.check("min_lin_speed"))      { m_default_max_ang_speed = m_min_lin_speed = trajectory_group.find("min_lin_speed").asDouble(); }
+        if (trajectory_group.check("min_ang_speed"))      { m_default_max_ang_speed = m_min_ang_speed = trajectory_group.find("min_ang_speed").asDouble(); }
+        if (trajectory_group.check("goal_tolerance_lin")) { m_default_goal_tolerance_lin = m_goal_tolerance_lin = trajectory_group.find("goal_tolerance_lin").asDouble(); }
+        if (trajectory_group.check("goal_tolerance_ang")) { m_default_goal_tolerance_lin = m_goal_tolerance_ang = trajectory_group.find("goal_tolerance_ang").asDouble(); }
+
         Bottle geometry_group = rf.findGroup("ROBOT_GEOMETRY");
         if (geometry_group.isNull())
         {
@@ -311,8 +340,6 @@ class GotoThread: public yarp::os::RateThread
             return false;
         }
 
-        if (rf.check("goal_tolerance_lin")) {goal_tolerance_lin = rf.find("goal_tolerance_lin").asDouble();}
-        if (rf.check("goal_tolerance_ang")) {goal_tolerance_ang = rf.find("goal_tolerance_ang").asDouble();}
         if (localization_group.check("use_odometry"))       { use_odometry = (localization_group.find("use_odometry").asInt() == 1); }
         if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
         if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
@@ -438,6 +465,7 @@ class GotoThread: public yarp::os::RateThread
 
     void setNewAbsTarget(yarp::sig::Vector target);
     void setNewRelTarget(yarp::sig::Vector target);
+    void resetParamsToDefaultValue();
     void stopMovement();
     void pauseMovement (double secs);
     void resumeMovement();

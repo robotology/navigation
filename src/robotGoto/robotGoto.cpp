@@ -301,37 +301,37 @@ void GotoThread::run()
     if (tmp1>180 && tmp1<360)
         tmp1 = tmp1-360;//ADDED LATER
     //yDebug ("%f \n", control[0]);
-    control_out[1] =  k_lin_gain * distance;
-    control_out[2] =  k_ang_gain * gamma;
+    control_out[1] = m_gain_lin * distance;
+    control_out[2] = m_gain_ang * gamma;
     control_out[0] = tmp1;
 
     //control saturation
     //yDebug ("%f %f ", control_out[2], control_out[1]);
     if (control_out[2] > 0 )
     {
-      if (control_out[2] > +max_ang_speed) control_out[2] = +max_ang_speed;
-      if (control_out[2] < +min_ang_speed) control_out[2] = +min_ang_speed; 
+        if (control_out[2] > +m_max_ang_speed) control_out[2] = +m_max_ang_speed;
+      if (control_out[2] < +m_min_ang_speed) control_out[2] = +m_min_ang_speed;
     }
     else
     {
-      if (control_out[2] < -max_ang_speed) control_out[2] = -max_ang_speed;
-      if (control_out[2] > -min_ang_speed) control_out[2] = -min_ang_speed;
+        if (control_out[2] < -m_max_ang_speed) control_out[2] = -m_max_ang_speed;
+        if (control_out[2] > -m_min_ang_speed) control_out[2] = -m_min_ang_speed;
     }
    
     if (control_out[1] > 0 )
     {
-      if (control_out[1] > +max_lin_speed) control_out[1] = +max_lin_speed;
-      if (control_out[1] < +min_lin_speed) control_out[1] = +min_lin_speed; 
+        if (control_out[1] > +m_max_lin_speed) control_out[1] = +m_max_lin_speed;
+        if (control_out[1] < +m_min_lin_speed) control_out[1] = +m_min_lin_speed;
     }
     else
     {
-      if (control_out[1] < -max_lin_speed) control_out[1] = -max_lin_speed;
-      if (control_out[1] > -min_lin_speed) control_out[1] = -min_lin_speed;
+        if (control_out[1] < -m_max_lin_speed) control_out[1] = -m_max_lin_speed;
+        if (control_out[1] > -m_min_lin_speed) control_out[1] = -m_min_lin_speed;
     }
     //yDebug ("%f %f \n", control_out[2], control_out[1]);
     
     //check for large rotations: inhibit linear movement, to allow a rotation on place
-    if (fabs(gamma)>25.0)
+    if (fabs(gamma)>m_max_gamma_angle)
     {
         control_out[1] = 0;
     }
@@ -380,7 +380,7 @@ void GotoThread::run()
             //Update the safety coefficient only if your are MOVING.
             //If you are WAITING_OBSTACLE, use the last valid safety_coeff until the 
             //obstacle has been removed.
-            safety_coeff = control_out[1]/max_lin_speed;
+            safety_coeff = control_out[1] / m_max_lin_speed;
 
             //compute the speed ramp after the removal of an obstacle
             speed_ramp = (speed_ramp > 1.0) ? 1.0 : speed_ramp;
@@ -390,7 +390,7 @@ void GotoThread::run()
             if (target_data.weak_angle)
             {
                 //check if the goal has been reached in position but not in orientation
-                if (fabs(distance) < goal_tolerance_lin)
+                if (fabs(distance) < m_goal_tolerance_lin)
                 {
                     status = navigation_status_goal_reached;
                     yInfo ("Goal reached!");
@@ -400,7 +400,7 @@ void GotoThread::run()
             {
                 //check if the goal has been reached in both position and orientation
                 //yDebug() << fabs(distance) << fabs(gamma);
-                if (fabs(distance) < goal_tolerance_lin && fabs(gamma) < goal_tolerance_ang) 
+                if (fabs(distance) < m_goal_tolerance_lin && fabs(gamma) < m_goal_tolerance_ang) 
                 {
                     status = navigation_status_goal_reached;
                     yInfo("Goal reached!");
@@ -542,6 +542,19 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
     yDebug ( "current pos: abs(%.3f %.3f %.2f)", localization_data[0], localization_data[1], localization_data[2]);
     yDebug ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
     retreat_counter = retreat_duration;
+}
+
+void GotoThread::resetParamsToDefaultValue()
+{
+    m_max_gamma_angle = m_default_max_gamma_angle;
+    m_gain_lin = m_default_gain_lin;
+    m_gain_ang = m_default_gain_ang;
+    m_goal_tolerance_lin = m_default_goal_tolerance_lin;
+    m_goal_tolerance_ang = m_default_goal_tolerance_ang;
+    m_max_lin_speed = m_default_max_lin_speed;
+    m_max_ang_speed = m_default_max_ang_speed;
+    m_min_lin_speed = m_default_min_lin_speed;
+    m_min_ang_speed = m_default_min_ang_speed;
 }
 
 void GotoThread::setNewRelTarget(yarp::sig::Vector target)
