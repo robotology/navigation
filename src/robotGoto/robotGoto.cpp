@@ -274,28 +274,13 @@ void GotoThread::run()
     else if (gamma < -180) gamma += 360;
 
     //beta is the angle between the current robot position and the target position
-    double old_beta = atan2 (localization_data[1]-target_data[1],localization_data[0]-target_data[0])*180.0/M_PI;
-    double beta = -atan2 (target_data[1]-localization_data[1],target_data[0]-localization_data[0])*180.0/M_PI;
+    double beta = atan2 (localization_data[1]-target_data[1],localization_data[0]-target_data[0])*180.0/M_PI;
 
     //distance is the distance between the current robot position and the target position
     double distance = sqrt(pow(target_data[0]-localization_data[0],2) +  pow(target_data[1]-localization_data[1],2));
 
     //compute the control law
-//    control_out[0] = -beta;
-//    control_out[0] = -beta-localization_data[2]; //CHECKME
-//    control_out[0] = -(beta-localization_data[2]); //CHECKME -180
-//    control_out[0] = -(beta+localization_data[2]); //CHECKME -90
-//    control_out[0] = +beta+localization_data[2]-90; //CHECKME -90
-//    control_out[0] = +beta-localization_data[2]-90; //CHECKME -90
-//    control_out[0] = -beta+localization_data[2]-90; //CHECKME -90
-//    control_out[0] = -beta-localization_data[2]-90; //CHECKME -90
-//    control_out[0] = -beta-localization_data[2]+90; //CHECKME -90
-//    control_out[0] = -beta+localization_data[2]+90; //CHECKME -90
-//    control_out[0] = +beta+localization_data[2]+90; //CHECKME -90
-//    control_out[0] = +beta-localization_data[2]+90; //CHECKME -90
-//    control_out[0] = -beta+localization_data[2]; //CHECKME -90
-//    control_out[0] =  beta-localization_data[2]; //CHECKME -90
-    double tmp1=  180-(old_beta-localization_data[2]);
+    double tmp1= -180+(beta-localization_data[2]);
     if (tmp1>360) 
         tmp1-=360;
     if (tmp1>180 && tmp1<360)
