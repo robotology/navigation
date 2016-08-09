@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("cer");
+    rf.setDefaultContext("navigation");
     rf.setDefaultConfigFile("baseCtrl.ini");
     rf.configure(argc,argv);
 
