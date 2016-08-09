@@ -26,8 +26,10 @@ bool iKart_MotorControl::set_control_openloop()
     yInfo ("Setting openloop mode");
     icmd->setOpenLoopMode(0);
     icmd->setOpenLoopMode(1);
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
+    icmd->setOpenLoopMode(2);
+    iopl->setRefOutput(0, 0);
+    iopl->setRefOutput(1, 0);
+    iopl->setRefOutput(2, 0);
     return true;
 }
 
@@ -36,8 +38,10 @@ bool iKart_MotorControl::set_control_velocity()
     yInfo ("Setting velocity mode");
     icmd->setVelocityMode(0);
     icmd->setVelocityMode(1);
-    ivel->velocityMove(0,0);
-    ivel->velocityMove(1,0);
+    icmd->setVelocityMode(2);
+    ivel->velocityMove(0, 0);
+    ivel->velocityMove(1, 0);
+    ivel->velocityMove(2, 0);
     return true;
 }
 
@@ -172,9 +176,9 @@ void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_
     //wheel contribution calculation
     double wheels_off = 0;
 
-    F[0] = appl_linear_speed * cos((150.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
-    F[1] = appl_linear_speed * cos((030.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
-    F[2] = appl_linear_speed * cos((270.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
+    F[0] = appl_linear_speed * cos((150.0 + appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
+    F[1] = appl_linear_speed * cos((030.0 + appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
+    F[2] = appl_linear_speed * cos((270.0 + appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
 }
 
 void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -188,9 +192,9 @@ void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_des
     }
 
     //Apply the commands
-    ivel->velocityMove(0, -F[0]);
-    ivel->velocityMove(1, -F[1]);
-    ivel->velocityMove(2, -F[2]);
+    ivel->velocityMove(0, F[0]);
+    ivel->velocityMove(1, F[1]);
+    ivel->velocityMove(2, F[2]);
 }
 
 void iKart_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -205,9 +209,9 @@ void iKart_MotorControl::execute_openloop(double appl_linear_speed, double appl_
     }
 
     //Apply the commands
-    iopl->setRefOutput(0, -F[0]);
-    iopl->setRefOutput(1, -F[1]);
-    iopl->setRefOutput(1, -F[2]);
+    iopl->setRefOutput(0, F[0]);
+    iopl->setRefOutput(1, F[1]);
+    iopl->setRefOutput(1, F[2]);
 }
 
 void iKart_MotorControl::execute_none()
