@@ -41,12 +41,12 @@ using namespace yarp::dev;
 
 std::string getStatusAsString(NavigationStatusEnum status)
 {
-    if (status == navigation_status_idle) return std::string("navigation_status_idle");
-    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    if      (status == navigation_status_idle)             return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving)           return std::string("navigation_status_moving");
     else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
-    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
-    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
-    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+    else if (status == navigation_status_goal_reached)     return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted)          return std::string("navigation_status_aborted");
+    else if (status == navigation_status_paused)           return std::string("navigation_status_paused");
 
     yError("Unknown status of inner controller: '%d'!", status);
     return std::string("unknown");
@@ -56,10 +56,13 @@ std::string getStatusAsString(NavigationStatusEnum status)
 int GotoThread::pnpoly(int nvert, double *vertx, double *verty, double testx, double testy)
 {
   int i, j, c = 0;
-  for (i = 0, j = nvert-1; i < nvert; j = i++) {
-    if ( ((verty[i]>testy) != (verty[j]>testy)) &&
-     (testx < (vertx[j]-vertx[i]) * (testy-verty[i]) / (verty[j]-verty[i]) + vertx[i]) )
+  for (i = 0, j = nvert-1; i < nvert; j = i++)
+  {
+    if (( (verty[i]>testy) != (verty[j]>testy) ) &&
+          (testx < (vertx[j]-vertx[i]) * (testy-verty[i]) / (verty[j]-verty[i]) + vertx[i]) )
+    {
        c = !c;
+    }
   }
   return c;
 }
@@ -77,17 +80,19 @@ bool GotoThread::compute_obstacle_avoidance()
     }
 
     size_t las_size = laser_data->size();
-    for (size_t i = 0; i<las_size; i++)
+
+    for (size_t i = 0; i < las_size; i++)
     {
-        double curr_d = laser_data->get_distance(i);
+        double curr_d     = laser_data->get_distance(i);
         double curr_angle = laser_data->get_angle(i);
-        size_t angle_t = (size_t)(4.0 * frontal_blind_angle);
+        size_t angle_t    = (size_t)(4.0 * frontal_blind_angle);
+
         if (i>=540-angle_t && i<=540+angle_t) continue; //skip frontalobstacles
 
         if (curr_d < min_distance)
         {
             min_distance = curr_d;
-            min_angle = curr_angle;
+            min_angle    = curr_angle;
         }
     }
 
@@ -100,29 +105,33 @@ bool GotoThread::compute_obstacle_avoidance()
 
 bool GotoThread::check_obstacles_in_path()
 {
-    int laser_obstacles = 0;
+    int laser_obstacles  = 0;
     double goal_distance = 1000; //TO BE COMPLETED
 
     //compute the polygon
     double vertx[4];
     double verty[4];
-    double theta = 0.0;
-    double ctheta = cos(theta);
-    double stheta = sin(theta);
+    double theta              = 0.0;
+    double ctheta             = cos(theta);
+    double stheta             = sin(theta);
     double detection_distance = 1.5;
+
     if(enable_dynamic_max_distance)
         detection_distance = max_detection_distance * safety_coeff;
     else
         detection_distance = max_detection_distance;
-    if (detection_distance<min_detection_distance) detection_distance=min_detection_distance;
-    vertx[0]=(-robot_radius) * ctheta + detection_distance * (-stheta);
-    verty[0]=(-robot_radius) * stheta + detection_distance * ctheta;
-    vertx[1]=(+robot_radius) * ctheta + detection_distance * (-stheta);
-    verty[1]=(+robot_radius) * stheta + detection_distance * ctheta;
-    vertx[2]= +robot_radius * ctheta;
-    verty[2]= +robot_radius * stheta;
-    vertx[3]= -robot_radius * ctheta;
-    verty[3]= -robot_radius * stheta;
+
+    if (detection_distance<min_detection_distance)
+        detection_distance = min_detection_distance;
+
+    vertx[0] = (-robot_radius) * ctheta + detection_distance * (-stheta);
+    verty[0] = (-robot_radius) * stheta + detection_distance * ctheta;
+    vertx[1] = (+robot_radius) * ctheta + detection_distance * (-stheta);
+    verty[1] = (+robot_radius) * stheta + detection_distance * ctheta;
+    vertx[2] =  +robot_radius  * ctheta;
+    verty[2] =  +robot_radius  * stheta;
+    vertx[3] =  -robot_radius  * ctheta;
+    verty[3] =  -robot_radius  * stheta;
 
     if (laser_data == 0)
     {
@@ -131,10 +140,12 @@ bool GotoThread::check_obstacles_in_path()
     }
 
     size_t las_size = laser_data->size();
-    for (size_t i = 0; i<las_size; i++)
+
+    for (size_t i = 0; i < las_size; i++)
     {
         double d = laser_data->get_distance(i);
-        if (d < robot_radius) 
+
+        if (d < robot_radius)
         {
             laser_obstacles++;
             yError("obstacles on the platform");
@@ -143,11 +154,13 @@ bool GotoThread::check_obstacles_in_path()
 
         double px = laser_data->get_x(i);
         double py = laser_data->get_y(i);
+
         if (pnpoly(4,vertx,verty,px,py)>0)
         {
             double d = laser_data->get_distance(i);
-            if (d < goal_distance)
+
             //if (laser_data.get_distance(i) < goal_distance)
+            if (d < goal_distance)
             {
                 laser_obstacles++;
                 //yError("obstacles on the path");
@@ -182,9 +195,10 @@ void GotoThread::run()
     if (use_localization_from_port)
     {
         loc = port_localization_input.read(false);
+
         if (loc)
         {
-            localization_data = *loc;
+            localization_data   = *loc;
             loc_timeout_counter = 0;
         }
         else
@@ -200,13 +214,14 @@ void GotoThread::run()
         iv.resize(6,0.0);
         pose.resize(6, 0.0);
         bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
+
         if (r)
         {
             //data is formatted as follows: x, y, angle (in degrees)
             localization_data[0] = pose[0];
             localization_data[1] = pose[1];
             localization_data[2] = pose[5] * RAD2DEG;
-            loc_timeout_counter = 0;
+            loc_timeout_counter  = 0;
         }
         else
         {
@@ -219,7 +234,7 @@ void GotoThread::run()
         yWarning() << "Localization disabled";
     }
 
-    if (loc_timeout_counter>=TIMEOUT_MAX)
+    if (loc_timeout_counter >= TIMEOUT_MAX)
     {
         if (status == navigation_status_moving)
         {
@@ -229,12 +244,21 @@ void GotoThread::run()
     }
 
     yarp::sig::Vector *odm = port_odometry_input.read(false);
-    if (odm) {odometry_data = *odm; odm_timeout_counter=0;}
+
+    if (odm)
+    {
+        odometry_data       = *odm;
+        odm_timeout_counter = 0;
+    }
     else
     {
-        if (use_odometry) odm_timeout_counter++;
-        if (odm_timeout_counter>TIMEOUT_MAX) odm_timeout_counter=TIMEOUT_MAX;
+        if (use_odometry)
+            odm_timeout_counter++;
+
+        if (odm_timeout_counter > TIMEOUT_MAX)
+            odm_timeout_counter = TIMEOUT_MAX;
     }
+
     if (odm_timeout_counter>=TIMEOUT_MAX)
     {
         if (status == navigation_status_moving)
@@ -246,6 +270,7 @@ void GotoThread::run()
 
     yarp::sig::Vector scan;
     bool ret = iLaser->getMeasurementData(scan);
+
     if (ret)
     {
         if (laser_data == 0)
@@ -266,25 +291,39 @@ void GotoThread::run()
     control_out.zero();
 
     //gamma is the angle between the current robot heading and the target heading
-    double unwrapped_localization_angle = (localization_data[2]<0)?localization_data[2]+360:localization_data[2];
-    double unwrapped_target_angle = (target_data[2]<0)?target_data[2]+360:target_data[2];      
+    double unwrapped_localization_angle = (localization_data[2] < 0) ? localization_data[2] + 360 : localization_data[2];
+    double unwrapped_target_angle       = (target_data[2] < 0)       ? target_data[2]       + 360  : target_data[2];
+
     //double gamma  = localization_data[2]-target_data[2];
     double gamma = unwrapped_target_angle - unwrapped_localization_angle;
-    if      (gamma >  180) gamma -= 360;
-    else if (gamma < -180) gamma += 360;
+    if      (gamma >  180)
+    {
+        gamma -= 360;
+    }
+    else if (gamma < -180)
+    {
+        gamma += 360;
+    }
 
     //beta is the angle between the current robot position and the target position
-    double beta = atan2 (localization_data[1]-target_data[1],localization_data[0]-target_data[0])*180.0/M_PI;
+    double beta = atan2 (localization_data[1] - target_data[1], localization_data[0] - target_data[0]) * 180.0 / M_PI;
 
     //distance is the distance between the current robot position and the target position
-    double distance = sqrt(pow(target_data[0]-localization_data[0],2) +  pow(target_data[1]-localization_data[1],2));
+    double distance = sqrt(pow(target_data[0] - localization_data[0], 2) + pow(target_data[1] - localization_data[1], 2));
 
     //compute the control law
-    double tmp1= -180+(beta-localization_data[2]);
-    if (tmp1>360) 
+    double tmp1 = -180 + (beta - localization_data[2]);
+
+    if (tmp1>360)
+    {
         tmp1-=360;
+    }
+
     if (tmp1>180 && tmp1<360)
+    {
         tmp1 = tmp1-360;//ADDED LATER
+    }
+
     //yDebug ("%f \n", control[0]);
     control_out[1] = m_gain_lin * distance;
     control_out[2] = m_gain_ang * gamma;
@@ -295,7 +334,7 @@ void GotoThread::run()
     if (control_out[2] > 0 )
     {
         if (control_out[2] > +m_max_ang_speed) control_out[2] = +m_max_ang_speed;
-      if (control_out[2] < +m_min_ang_speed) control_out[2] = +m_min_ang_speed;
+        if (control_out[2] < +m_min_ang_speed) control_out[2] = +m_min_ang_speed;
     }
     else
     {
@@ -323,24 +362,34 @@ void GotoThread::run()
 
     //check for obstacles, always performed
     bool obstacles_in_path = false;
-    if (las_timeout_counter < 300) 
+
+    if (las_timeout_counter < 300)
     {
         obstacles_in_path = check_obstacles_in_path();
         compute_obstacle_avoidance();
+
         double correction = angle_f;
-        if (correction<0) correction+=180;
-        else correction-=180;
+
+        if (correction<0) correction += 180;
+        else correction -= 180;
+
         double w_f_sat = w_f;
+
         if (w_f_sat>0.3) w_f_sat=0.3;
-        double goal = control_out[0];
+
+        double goal           = control_out[0];
         double goal_corrected = goal * (1-w_f_sat) + correction * (w_f_sat);
+
         if (enable_obstacles_avoidance)
         {
             //direction is modified in proximity of the obstacles
-            control_out[0] = goal_corrected;
+            control_out[0]  = goal_corrected;
+
             //speed is reduced in proximity of the obstacles
             double w_f_sat2 = w_f*2.2;
-            if (w_f_sat2>0.85) w_f_sat2= speed_reduction_factor; //CHECK 0.85, put it config file
+
+            if (w_f_sat2>0.85) w_f_sat2 = speed_reduction_factor; //CHECK 0.85, put it config file
+
             control_out[1] = control_out[1] * (1.0-w_f_sat2);
         }
         else
@@ -357,7 +406,7 @@ void GotoThread::run()
     }
 
     double current_time = yarp::os::Time::now();
-    double speed_ramp = (current_time-obstacle_removal_time)/2.0;
+    double speed_ramp   = (current_time-obstacle_removal_time)/2.0;
 
     switch (status)
     {
@@ -365,10 +414,10 @@ void GotoThread::run()
             //Update the safety coefficient only if your are MOVING.
             //If you are WAITING_OBSTACLE, use the last valid safety_coeff until the 
             //obstacle has been removed.
-            safety_coeff = control_out[1] / m_max_lin_speed;
+            safety_coeff    = control_out[1] / m_max_lin_speed;
 
             //compute the speed ramp after the removal of an obstacle
-            speed_ramp = (speed_ramp > 1.0) ? 1.0 : speed_ramp;
+            speed_ramp      = (speed_ramp > 1.0) ? 1.0 : speed_ramp;
             control_out[1] *= speed_ramp;
             control_out[2] *= speed_ramp;
 
@@ -397,13 +446,15 @@ void GotoThread::run()
             if  (enable_obstacles_emergency_stop && obstacles_in_path)
             {
                 yInfo ("Obstacles detected, stopping");
-                status = navigation_status_waiting_obstacle;
+                Bottle b, tmp;
+
+                status        = navigation_status_waiting_obstacle;
                 obstacle_time = current_time;
-                Bottle b;
+
                 b.addString("Obstacles detected");
-                Bottle tmp = port_speak_output.prepare();
+                tmp = port_speak_output.prepare();
                 tmp.clear();
-                tmp=b;
+                tmp = b;
                 port_speak_output.write();
             }
         break;
@@ -411,22 +462,24 @@ void GotoThread::run()
         case navigation_status_waiting_obstacle:
             if (!obstacles_in_path)
             {   
-                if (fabs(current_time-obstacle_time)>1.0)
+                if (fabs(current_time-obstacle_time) > 1.0)
                 {
+
                     yInfo ("Obstacles removed, thank you");
+                    Bottle b, tmp;
                     status = navigation_status_moving;
-                    Bottle b;
+
                     b.addString("Obstacles removed, thank you");
-                    Bottle tmp = port_speak_output.prepare();
+                    tmp = port_speak_output.prepare();
                     tmp.clear();
-                    tmp=b;
+                    tmp = b;
                     port_speak_output.write();
                     obstacle_removal_time = yarp::os::Time::now();
                 }
             }
             else
             {
-                if (fabs(current_time-obstacle_time)>max_obstacle_wating_time)
+                if (fabs(current_time - obstacle_time) > max_obstacle_wating_time)
                 {
                     yError ("failed to recover from obstacle, goal aborted");
                     status = navigation_status_aborted;
@@ -447,14 +500,14 @@ void GotoThread::run()
 
     if (status != navigation_status_moving)
     {
-       control_out[0]=control_out[1]=control_out[2] = 0.0;
+       control_out[0] = control_out[1] = control_out[2] = 0.0;
     }
 
     if (enable_retreat && retreat_counter >0)
     {
-        control_out[0]=180;
-        control_out[1]=0.4;
-        control_out[2]=0;
+        control_out[0] = 180;
+        control_out[1] = 0.4;
+        control_out[2] = 0;
         retreat_counter--;
     }
 
@@ -469,7 +522,7 @@ void GotoThread::sendOutput()
     //send the motors commands and the status to the yarp ports
     if (port_commands_output.getOutputCount()>0)
     {
-        Bottle &b=port_commands_output.prepare();
+        Bottle &b = port_commands_output.prepare();
         port_commands_output.setEnvelope(stamp);
         b.clear();
         b.addInt(2);                    // polar commands
@@ -481,18 +534,19 @@ void GotoThread::sendOutput()
 
     if (port_status_output.getOutputCount()>0)
     {
-        string string_out;
+        string     string_out;
         string_out = getStatusAsString(status);
-        Bottle &b=port_status_output.prepare();
+        Bottle &b  = port_status_output.prepare();
+
         port_status_output.setEnvelope(stamp);
         b.clear();
         b.addString(string_out.c_str());
         port_status_output.write();
     }
 
-    if(port_gui_output.getOutputCount()>0)
+    if(port_gui_output.getOutputCount() > 0)
     {
-        Bottle &b=port_gui_output.prepare();
+        Bottle &b = port_gui_output.prepare();
         port_gui_output.setEnvelope(stamp);
         b.clear();
         b.addDouble(control_out[0]);
@@ -511,54 +565,58 @@ void GotoThread::sendOutput()
 void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
 {
     //data is formatted as follows: x, y, angle
-    target_data.weak_angle=false;
-    if (target.size()==2) 
+    target_data.weak_angle = false;
+    if (target.size() == 2)
     {
         //if the angle information is missing use as final orientation the direction in which the robot has to move
-        double beta = atan2 (localization_data[1]-target[1],localization_data[0]-target[0])*180.0/M_PI;
+        double beta  = atan2 (localization_data[1]-target[1],localization_data[0]-target[0])*180.0/M_PI;
         double beta2 = beta-180;
-        if (beta2>+180) beta2=360-beta2;
-        if (beta2<-180) beta2=360+beta2;
+
+        if (beta2>+180) beta2 = 360 - beta2;
+
+        if (beta2<-180) beta2 = 360 + beta2;
+
         target.push_back(beta2);
-        target_data.weak_angle=true;
+        target_data.weak_angle = true;
     }
-    target_data.target=target;
-    status = navigation_status_moving;
+    target_data.target = target;
+    status             = navigation_status_moving;
+    retreat_counter    = retreat_duration;
+
     yDebug ( "current pos: abs(%.3f %.3f %.2f)", localization_data[0], localization_data[1], localization_data[2]);
     yDebug ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
-    retreat_counter = retreat_duration;
 }
 
 void GotoThread::resetParamsToDefaultValue()
 {
-    m_max_gamma_angle = m_default_max_gamma_angle;
-    m_gain_lin = m_default_gain_lin;
-    m_gain_ang = m_default_gain_ang;
+    m_max_gamma_angle    = m_default_max_gamma_angle;
+    m_gain_lin           = m_default_gain_lin;
+    m_gain_ang           = m_default_gain_ang;
     m_goal_tolerance_lin = m_default_goal_tolerance_lin;
     m_goal_tolerance_ang = m_default_goal_tolerance_ang;
-    m_max_lin_speed = m_default_max_lin_speed;
-    m_max_ang_speed = m_default_max_ang_speed;
-    m_min_lin_speed = m_default_min_lin_speed;
-    m_min_ang_speed = m_default_min_ang_speed;
+    m_max_lin_speed      = m_default_max_lin_speed;
+    m_max_ang_speed      = m_default_max_ang_speed;
+    m_min_lin_speed      = m_default_min_lin_speed;
+    m_min_ang_speed      = m_default_min_ang_speed;
 }
 
 void GotoThread::setNewRelTarget(yarp::sig::Vector target)
 {
     //target and localization data are formatted as follows: x, y, angle (in degrees)
-    target_data.weak_angle=false;
-    if (target.size()==2) 
+    target_data.weak_angle = false;
+    if (target.size() == 2)
     {
         target.push_back(0.0);
-        target_data.weak_angle=true;
+        target_data.weak_angle = true;
     }
-    double a = localization_data[2] * DEG2RAD;
+    double a        = localization_data[2] * DEG2RAD;
     //this is the inverse of the tranformation matrix from world to robot
-    target_data[0] = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
-    target_data[1] = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
-    target_data[2]=  target[2] + localization_data[2];
-    status = navigation_status_moving;
-    yInfo ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
+    target_data[0]  = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
+    target_data[1]  = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
+    target_data[2]  =  target[2] + localization_data[2];
+    status          = navigation_status_moving;
     retreat_counter = retreat_duration;
+    yInfo ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
 }
 
 void GotoThread::pauseMovement(double secs)
@@ -584,7 +642,7 @@ void GotoThread::pauseMovement(double secs)
         yInfo( "asked to pause");
         pause_duration = 10000000;
     }
-    status = navigation_status_paused;
+    status      = navigation_status_paused;
     pause_start = yarp::os::Time::now();
 }
 
