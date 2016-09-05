@@ -58,7 +58,7 @@ struct target_type
     yarp::sig::Vector target;
     bool              weak_angle;
 
-    target_type() {weak_angle=false; target.resize(3,0.0);}
+    target_type() {weak_angle = false; target.resize(3,0.0);}
     double& operator[] (const int& i) { return target[i]; }
 };
 
@@ -67,31 +67,32 @@ class laser_type
     yarp::os::Mutex  m_mutex;
     unsigned int     m_data_size;
     double           m_laser_angle_of_view;
-    double* m_laser_x;
-    double* m_laser_y;
-    double* m_distances;
-    double* m_angles;
-    double  m_laser_pos_x;
-    double  m_laser_pos_y;
-    double  m_laser_pos_t;
+    double*          m_laser_x;
+    double*          m_laser_y;
+    double*          m_distances;
+    double*          m_angles;
+    double           m_laser_pos_x;
+    double           m_laser_pos_y;
+    double           m_laser_pos_t;
     
     public:
     laser_type(size_t data_size, double laser_angle_of_view)
     {
-        m_data_size = data_size;
+        unsigned int i        = 0;
+        m_data_size           = data_size;
         m_laser_angle_of_view = laser_angle_of_view;
-        unsigned int i = 0;
-        m_laser_x = new double[m_data_size];
-        m_laser_y = new double[m_data_size];
-        m_distances = new double[m_data_size];
-        m_angles = new double[m_data_size];
-        for (i = 0; i<data_size; i++) m_laser_x[i] = 0.0;
-        for (i = 0; i<data_size; i++) m_laser_y[i] = 0.0;
-        for (i = 0; i<data_size; i++) m_distances[i] = 0.0;
-        for (i = 0; i<data_size; i++) m_angles[i] = 0.0;
-        m_laser_pos_x = 0;
-        m_laser_pos_y = 0;
-        m_laser_pos_t = 0;
+        m_laser_x             = new double[m_data_size];
+        m_laser_y             = new double[m_data_size];
+        m_distances           = new double[m_data_size];
+        m_angles              = new double[m_data_size];
+        m_laser_pos_x         = 0;
+        m_laser_pos_y         = 0;
+        m_laser_pos_t         = 0;
+
+        memset(m_laser_x,   0, m_data_size*sizeof(double));
+        memset(m_laser_y,   0, m_data_size*sizeof(double));
+        memset(m_distances, 0, m_data_size*sizeof(double));
+        memset(m_angles,    0, m_data_size*sizeof(double));
     }
 
     ~laser_type()
@@ -112,13 +113,14 @@ class laser_type
     {
         yarp::os::LockGuard lock (m_mutex);
         size_t scansize = laser_map.size();
+
         for (unsigned int i = 0; i<scansize; i++)
         {
-            double angle = (i / double(scansize) * m_laser_angle_of_view - m_laser_pos_t)* DEG2RAD;
-            m_laser_x[i] = laser_map[i] * cos(angle) + m_laser_pos_x;
-            m_laser_y[i] = laser_map[i] * sin(angle) + m_laser_pos_y;
+            double angle   = (i / double(scansize) * m_laser_angle_of_view - m_laser_pos_t) * DEG2RAD;
+            m_laser_x[i]   = laser_map[i] * cos(angle) + m_laser_pos_x;
+            m_laser_y[i]   = laser_map[i] * sin(angle) + m_laser_pos_y;
             m_distances[i] = sqrt(m_laser_x[i] * m_laser_x[i] + m_laser_y[i] * m_laser_y[i]);
-            m_angles[i] = atan2(double(m_laser_x[i]), double(m_laser_y[i]))*RAD2DEG;
+            m_angles[i]    = atan2(double(m_laser_x[i]), double(m_laser_y[i])) * RAD2DEG;
         }
     }
 
@@ -192,103 +194,104 @@ class GotoThread: public yarp::os::RateThread
     BufferedPort<yarp::os::Bottle>  port_speak_output;
     BufferedPort<yarp::os::Bottle>  port_gui_output;
     
-    Property            robotCtrl_options;
-    ResourceFinder      &rf;
-    yarp::sig::Vector   localization_data;
-    yarp::sig::Vector   odometry_data;
-    target_type         target_data;
-    laser_type*         laser_data;
-    yarp::sig::Vector   control_out;
-    NavigationStatusEnum  status;
-    int                 retreat_counter;
-    bool                use_odometry;
-    bool                use_localization_from_port;
-    bool                use_localization_from_tf;
-    string              frame_robot_id;
-    string              frame_map_id;
-    double              min_laser_angle;
-    double              max_laser_angle;
-    double              laser_angle_of_view;
+    Property             robotCtrl_options;
+    ResourceFinder       &rf;
+    yarp::sig::Vector    localization_data;
+    yarp::sig::Vector    odometry_data;
+    target_type          target_data;
+    laser_type*          laser_data;
+    yarp::sig::Vector    control_out;
+    NavigationStatusEnum status;
+    int                  retreat_counter;
+    bool                 use_odometry;
+    bool                 use_localization_from_port;
+    bool                 use_localization_from_tf;
+    string               frame_robot_id;
+    string               frame_map_id;
+    double               min_laser_angle;
+    double               max_laser_angle;
+    double               laser_angle_of_view;
 
     //obstacles_emergency_stop block
     public:
-    bool                enable_obstacles_emergency_stop;
-    bool                enable_dynamic_max_distance;
-    double              obstacle_time;
-    double              max_obstacle_wating_time;
-    double              safety_coeff;
-    double              max_detection_distance;
-    double              min_detection_distance;
-    double              obstacle_removal_time;
+    bool                 enable_obstacles_emergency_stop;
+    bool                 enable_dynamic_max_distance;
+    double               obstacle_time;
+    double               max_obstacle_wating_time;
+    double               safety_coeff;
+    double               max_detection_distance;
+    double               min_detection_distance;
+    double               obstacle_removal_time;
 
     //obstacle avoidance block
     public:
-    bool                enable_obstacles_avoidance;
-    double              max_obstacle_distance;
-    double              frontal_blind_angle;
-    double              speed_reduction_factor;
-    double              angle_f;
-    double              angle_t;
-    double              angle_g;
-    double              w_f;
-    double              w_t;
-    double              w_g;
+    bool                 enable_obstacles_avoidance;
+    double               max_obstacle_distance;
+    double               frontal_blind_angle;
+    double               speed_reduction_factor;
+    double               angle_f;
+    double               angle_t;
+    double               angle_g;
+    double               w_f;
+    double               w_t;
+    double               w_g;
 
     public:
     GotoThread(unsigned int _period, ResourceFinder &_rf, Property options) :
-               RateThread(_period),     rf(_rf),
+               RateThread(_period),
+               rf(_rf),
                robotCtrl_options (options)
     {
-        status = navigation_status_idle;
-        loc_timeout_counter = TIMEOUT_MAX;
-        odm_timeout_counter = TIMEOUT_MAX;
-        las_timeout_counter = TIMEOUT_MAX;
+        status                          = navigation_status_idle;
+        loc_timeout_counter             = TIMEOUT_MAX;
+        odm_timeout_counter             = TIMEOUT_MAX;
+        las_timeout_counter             = TIMEOUT_MAX;
         localization_data.resize(3,0.0);
-        retreat_counter = 0;
-        safety_coeff = 1.0;
+        retreat_counter                 = 0;
+        safety_coeff                    = 1.0;
         enable_obstacles_emergency_stop = false;
         enable_obstacles_avoidance      = false;
         enable_dynamic_max_distance     = false;
         enable_retreat                  = false;
         retreat_duration                = 300;
         control_out.resize(3,0.0);
-        pause_start = 0;
-        pause_duration = 0;
-        max_obstacle_wating_time = 60.0;
-        max_obstacle_distance = 0.8;
-        frontal_blind_angle = 25.0;
-        speed_reduction_factor = 0.70;
-        max_detection_distance = 1.5;
-        min_detection_distance = 0.4;
-        obstacle_removal_time = 0.0;
-        iLaser = 0;
-        iTf = 0;
-        min_laser_angle = 0;
-        max_laser_angle = 0;
-        robot_radius = 0;
-        robot_laser_x = 0;
-        robot_laser_y = 0;
-        robot_laser_t = 0;
-        laser_data = 0;
+        pause_start                     = 0;
+        pause_duration                  = 0;
+        max_obstacle_wating_time        = 60.0;
+        max_obstacle_distance           = 0.8;
+        frontal_blind_angle             = 25.0;
+        speed_reduction_factor          = 0.70;
+        max_detection_distance          = 1.5;
+        min_detection_distance          = 0.4;
+        obstacle_removal_time           = 0.0;
+        iLaser                          = 0;
+        iTf                             = 0;
+        min_laser_angle                 = 0;
+        max_laser_angle                 = 0;
+        robot_radius                    = 0;
+        robot_laser_x                   = 0;
+        robot_laser_y                   = 0;
+        robot_laser_t                   = 0;
+        laser_data                      = 0;
     }
 
     virtual bool threadInit()
     {
         //read configuration parametes
-        robot_is_holonomic = false;
-        m_default_max_gamma_angle = m_max_gamma_angle = 5;
-        m_default_gain_ang = m_gain_ang = 0.05;
-        m_default_gain_lin = m_gain_lin = 0.1;
-        m_default_max_lin_speed = m_max_lin_speed = 0.9;  //m/s
-        m_default_max_ang_speed = m_max_ang_speed = 10.0; //deg/s
-        m_default_max_ang_speed = m_min_lin_speed = 0.0;  //m/s
-        m_default_max_ang_speed = m_min_ang_speed = 0.0; //deg/s
+        robot_is_holonomic           = false;
+        m_default_max_gamma_angle    = m_max_gamma_angle    = 5;
+        m_default_gain_ang           = m_gain_ang           = 0.05;
+        m_default_gain_lin           = m_gain_lin           = 0.1;
+        m_default_max_lin_speed      = m_max_lin_speed      = 0.9;  //m/s
+        m_default_max_ang_speed      = m_max_ang_speed      = 10.0; //deg/s
+        m_default_max_ang_speed      = m_min_lin_speed      = 0.0;  //m/s
+        m_default_max_ang_speed      = m_min_ang_speed      = 0.0; //deg/s
         m_default_goal_tolerance_lin = m_goal_tolerance_lin = 0.05;
         m_default_goal_tolerance_lin = m_goal_tolerance_ang = 0.6;
 
-        use_odometry = true;
-        use_localization_from_port = false;
-        use_localization_from_tf = false;
+        use_odometry                 = true;
+        use_localization_from_port   = false;
+        use_localization_from_tf     = false;
         yInfo("Using following paramters: %s", rf.toString().c_str());
 
         Bottle trajectory_group = rf.findGroup("ROBOT_TRAJECTORY");
@@ -298,14 +301,14 @@ class GotoThread: public yarp::os::RateThread
             return false;
         }
 
-        if (trajectory_group.check("robot_is_holonomic")) { robot_is_holonomic = trajectory_group.find("robot_is_holonomic").asInt()==1; }
-        if (trajectory_group.check("max_gamma_angle"))    { m_default_max_gamma_angle = m_max_gamma_angle = trajectory_group.find("max_gamma_angle").asDouble(); }
-        if (trajectory_group.check("ang_speed_gain"))     { m_default_gain_ang = m_gain_ang = trajectory_group.find("ang_speed_gain").asDouble(); }
-        if (trajectory_group.check("lin_speed_gain"))     { m_default_gain_lin = m_gain_lin = trajectory_group.find("lin_speed_gain").asDouble(); }
-        if (trajectory_group.check("max_lin_speed"))      { m_default_max_lin_speed = m_max_lin_speed = trajectory_group.find("max_lin_speed").asDouble(); }
-        if (trajectory_group.check("max_ang_speed"))      { m_default_max_ang_speed = m_max_ang_speed = trajectory_group.find("max_ang_speed").asDouble(); }
-        if (trajectory_group.check("min_lin_speed"))      { m_default_max_ang_speed = m_min_lin_speed = trajectory_group.find("min_lin_speed").asDouble(); }
-        if (trajectory_group.check("min_ang_speed"))      { m_default_max_ang_speed = m_min_ang_speed = trajectory_group.find("min_ang_speed").asDouble(); }
+        if (trajectory_group.check("robot_is_holonomic")) { robot_is_holonomic           = trajectory_group.find("robot_is_holonomic").asInt()==1; }
+        if (trajectory_group.check("max_gamma_angle"))    { m_default_max_gamma_angle    = m_max_gamma_angle    = trajectory_group.find("max_gamma_angle").asDouble(); }
+        if (trajectory_group.check("ang_speed_gain"))     { m_default_gain_ang           = m_gain_ang           = trajectory_group.find("ang_speed_gain").asDouble(); }
+        if (trajectory_group.check("lin_speed_gain"))     { m_default_gain_lin           = m_gain_lin           = trajectory_group.find("lin_speed_gain").asDouble(); }
+        if (trajectory_group.check("max_lin_speed"))      { m_default_max_lin_speed      = m_max_lin_speed      = trajectory_group.find("max_lin_speed").asDouble(); }
+        if (trajectory_group.check("max_ang_speed"))      { m_default_max_ang_speed      = m_max_ang_speed      = trajectory_group.find("max_ang_speed").asDouble(); }
+        if (trajectory_group.check("min_lin_speed"))      { m_default_max_ang_speed      = m_min_lin_speed      = trajectory_group.find("min_lin_speed").asDouble(); }
+        if (trajectory_group.check("min_ang_speed"))      { m_default_max_ang_speed      = m_min_ang_speed      = trajectory_group.find("min_ang_speed").asDouble(); }
         if (trajectory_group.check("goal_tolerance_lin")) { m_default_goal_tolerance_lin = m_goal_tolerance_lin = trajectory_group.find("goal_tolerance_lin").asDouble(); }
         if (trajectory_group.check("goal_tolerance_ang")) { m_default_goal_tolerance_lin = m_goal_tolerance_ang = trajectory_group.find("goal_tolerance_ang").asDouble(); }
 
@@ -329,7 +332,7 @@ class GotoThread: public yarp::os::RateThread
 
         if (ff)
         {
-            robot_radius = geometry_group.find("robot_radius").asDouble();
+            robot_radius  = geometry_group.find("robot_radius").asDouble();
             robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
             robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
             robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
@@ -340,11 +343,11 @@ class GotoThread: public yarp::os::RateThread
             return false;
         }
 
-        if (localization_group.check("use_odometry"))       { use_odometry = (localization_group.find("use_odometry").asInt() == 1); }
+        if (localization_group.check("use_odometry"))               { use_odometry               = (localization_group.find("use_odometry").asInt() == 1); }
         if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
-        if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
-        if (localization_group.check("robot_frame_id"))             { this->frame_robot_id = localization_group.find("robot_frame_id").asString(); }
-        if (localization_group.check("map_frame_id"))               { this->frame_map_id = localization_group.find("map_frame_id").asString(); }
+        if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf   = (localization_group.find("use_localization_from_tf").asInt() == 1); }
+        if (localization_group.check("robot_frame_id"))             { this->frame_robot_id       = localization_group.find("robot_frame_id").asString(); }
+        if (localization_group.check("map_frame_id"))               { this->frame_map_id         = localization_group.find("map_frame_id").asString(); }
         if (use_localization_from_port == true && use_localization_from_tf == true)
         {
             yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
@@ -353,29 +356,38 @@ class GotoThread: public yarp::os::RateThread
 
         Bottle btmp;
         btmp = rf.findGroup("RETREAT_OPTION");
-        if (btmp.check("enable_retreat",Value(0)).asInt()==1)
+
+        if (btmp.check("enable_retreat",Value(0)).asInt() == 1)
             enable_retreat = true;
+
         retreat_duration = btmp.check("retreat_duration",Value(300)).asInt();
 
         btmp = rf.findGroup("OBSTACLES_EMERGENCY_STOP");
+
         if (btmp.check("enable_obstacles_emergency_stop",Value(0)).asInt()==1)
             enable_obstacles_emergency_stop = true;
+
         if (btmp.check("enable_dynamic_max_distance",Value(0)).asInt()==1)
             enable_dynamic_max_distance = true;
+
         max_obstacle_wating_time = btmp.check("max_wating_time",Value(60.0)).asDouble();
         max_detection_distance   = btmp.check("max_detection_distance",Value(1.5)).asDouble();
         min_detection_distance   = btmp.check("min_detection_distance",Value(0.4)).asDouble();
         
         btmp = rf.findGroup("OBSTACLES_AVOIDANCE");
+
         if (btmp.check("enable_obstacles_avoidance",Value(0)).asInt()==1)
             enable_obstacles_avoidance = true;
+
         if (btmp.check("frontal_blind_angle"))
             frontal_blind_angle = btmp.check("frontal_blind_angle",Value(25.0)).asDouble();
+
         if (btmp.check("speed_reduction_factor"))
             speed_reduction_factor = btmp.check("speed_reduction_factor",Value(0.70)).asDouble();
 
         //open module ports
         string localName = "/robotGoto";
+
         port_commands_output.open((localName+"/control:o").c_str());
         port_status_output.open((localName+"/status:o").c_str());
         port_odometry_input.open((localName+"/odometry:i").c_str());
@@ -394,12 +406,15 @@ class GotoThread: public yarp::os::RateThread
             options.put("device", "transformClient");
             options.put("local", "/robotGoto/localizationTfClient");
             options.put("remote", "/transformServer");
+
             if (ptf.open(options) == false)
             {
                 yError() << "Unable to open transform client";
                 return false;
             }
+
             ptf.view(iTf);
+
             if (iTf == 0)
             {
                 yError() << "Unable to view iTransform interface";
@@ -409,16 +424,19 @@ class GotoThread: public yarp::os::RateThread
 
         //open the laser interface
         Bottle laserBottle = rf.findGroup("LASER");
+
         if (laserBottle.isNull())
         {
             yError("LASER group not found,closing");
             return false;
         }
+
         if (laserBottle.check("laser_port") == false)
         {
             yError("laser_port param not found,closing");
             return false;
         }
+
         string laser_remote_port = laserBottle.find("laser_port").asString();
 
         Property options;
@@ -426,32 +444,37 @@ class GotoThread: public yarp::os::RateThread
         options.put("local", "/robotGoto/laser:i");
         options.put("remote", laser_remote_port);
         options.put("period", 10);
+
         if (pLas.open(options) == false)
         {
             yError() << "Unable to open laser driver";
             return false;
         }
+
         pLas.view(iLaser);
+
         if (iLaser == 0)
         {
             yError() << "Unable to open laser interface";
             return false;
         }
+
         if (iLaser->getScanLimits(min_laser_angle, max_laser_angle) == false)
         {
             yError() << "Unable to obtain laser scan limits";
             return false;
         }
+
         laser_angle_of_view = fabs(min_laser_angle) + fabs(max_laser_angle);
 
         //automatic connections for debug
         bool b = true;
-        b = yarp::os::Network::connect("/robot/laser:o","/yarpLaserScannerGui/laser:i");
-        b = yarp::os::Network::connect("/robotGoto/gui:o","/yarpLaserScannerGui/nav_display:i");
+        b      = yarp::os::Network::connect("/robot/laser:o","/yarpLaserScannerGui/laser:i");
+        b      = yarp::os::Network::connect("/robotGoto/gui:o","/yarpLaserScannerGui/nav_display:i");
 
         //automatic port connections
-        b = yarp::os::Network::connect("/baseControl/odometry:o", localName+"/odometry:i");
-        b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i");
+        b      = yarp::os::Network::connect("/baseControl/odometry:o", localName+"/odometry:i");
+        b      = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i");
 
         /*
         b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
@@ -463,18 +486,19 @@ class GotoThread: public yarp::os::RateThread
 
     virtual void run();
 
-    void setNewAbsTarget(yarp::sig::Vector target);
-    void setNewRelTarget(yarp::sig::Vector target);
-    void resetParamsToDefaultValue();
-    void stopMovement();
-    void pauseMovement (double secs);
-    void resumeMovement();
+    void   setNewAbsTarget(yarp::sig::Vector target);
+    void   setNewRelTarget(yarp::sig::Vector target);
+    void   resetParamsToDefaultValue();
+    void   stopMovement();
+    void   pauseMovement (double secs);
+    void   resumeMovement();
     string getNavigationStatus();
 
     virtual void threadRelease()
     {   
         if (ptf.isValid()) ptf.close();
         if (pLas.isValid()) pLas.close();
+
         port_localization_input.interrupt();
         port_localization_input.close();
         port_target_input.interrupt();
