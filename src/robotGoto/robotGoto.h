@@ -23,6 +23,8 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
+#include <yarp/os/Subscriber.h>
+#include <yarp/os/Node.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
@@ -40,10 +42,13 @@
 #include <string>
 #include <math.h>
 #include <visualization_msgs_MarkerArray.h>
+#include <geometry_msgs_PoseStamped.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+
+typedef yarp::os::Subscriber<geometry_msgs_PoseStamped> rosGoalTypePort;
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -193,6 +198,8 @@ class GotoThread: public yarp::os::RateThread
     BufferedPort<yarp::os::Bottle>  port_status_output;
     BufferedPort<yarp::os::Bottle>  port_speak_output;
     BufferedPort<yarp::os::Bottle>  port_gui_output;
+    yarp::os::Node*                 rosNode;
+    rosGoalTypePort                 rosGoalPort;
     
     Property             robotCtrl_options;
     ResourceFinder       &rf;
@@ -206,6 +213,7 @@ class GotoThread: public yarp::os::RateThread
     bool                 use_odometry;
     bool                 use_localization_from_port;
     bool                 use_localization_from_tf;
+    bool                 useGoalFromRosTopic;
     string               frame_robot_id;
     string               frame_map_id;
     double               min_laser_angle;
@@ -273,6 +281,7 @@ class GotoThread: public yarp::os::RateThread
         robot_laser_y                   = 0;
         robot_laser_t                   = 0;
         laser_data                      = 0;
+        rosNode                         = 0;
     }
 
     virtual bool threadInit()
@@ -292,7 +301,51 @@ class GotoThread: public yarp::os::RateThread
         use_odometry                 = true;
         use_localization_from_port   = false;
         use_localization_from_tf     = false;
+        useGoalFromRosTopic          = false;
         yInfo("Using following paramters: %s", rf.toString().c_str());
+
+        Bottle ros_group = rf.findGroup("ROS");
+        if (ros_group.isNull())
+        {
+            yInfo() << "Missing ROS group in configuration file. ros functionality will be deactivated";
+        }
+
+        if (ros_group.check("useGoalFromRosTopic"))
+        {
+            useGoalFromRosTopic = ros_group.find("useGoalFromRosTopic").asBool();
+
+            if(!useGoalFromRosTopic)
+            {
+                yInfo() << "goal from ros topic deactivated";
+            }
+
+            yInfo() << "activating ros goal input";
+
+            if(ros_group.check("rosNodeName"))
+            {
+                string nodeName = ros_group.find("rosNodeName").asString();
+                rosNode         = new yarp::os::Node(nodeName);
+
+                if (ros_group.check("goalTopicName"))
+                {
+                    string goalTopicName = ros_group.find("goalTopicName").asString();
+                    if(!rosGoalPort.topic(goalTopicName))
+                    {
+                        yInfo() << "error while opening goal subscriber";
+                        useGoalFromRosTopic = false;
+                    }
+                }
+                else
+                {
+                    yInfo() << "Missing goalTopicName parameters in configuration file. ros functionality will be deactivated";
+                    useGoalFromRosTopic = false;
+                }
+            }
+            else
+            {
+                yInfo() << "Missing rosNodeName parameters in configuration file. ros functionality will be deactivated";
+            }
+        }
 
         Bottle trajectory_group = rf.findGroup("ROBOT_TRAJECTORY");
         if (trajectory_group.isNull())

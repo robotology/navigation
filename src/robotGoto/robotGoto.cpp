@@ -32,6 +32,7 @@
 #include <yarp/dev/IRangefinder2D.h>
 #include <string>
 #include <math.h>
+#include <yarp/math/Math.h>
 
 #include "robotGoto.h"
 
@@ -189,6 +190,28 @@ void GotoThread::run()
 {
     mutex.wait();
     
+    if(useGoalFromRosTopic)
+    {
+        geometry_msgs_PoseStamped* rosGoalData = rosGoalPort.read(false);
+
+        if(rosGoalData != 0)
+        {
+            yInfo() << "received a goal from ros topic";
+            yarp::sig::Vector v(3);
+            yarp::sig::Vector q(4);
+
+            q[0] = rosGoalData->pose.orientation.w;
+            q[1] = rosGoalData->pose.orientation.x;
+            q[2] = rosGoalData->pose.orientation.y;
+            q[3] = rosGoalData->pose.orientation.z;
+
+            v[0] = rosGoalData->pose.position.x;
+            v[1] = rosGoalData->pose.position.y;
+            v[2] = yarp::math::dcm2rpy(yarp::math::quat2dcm(q))[2];
+
+            setNewAbsTarget(v);
+        }
+    }
     //data is formatted as follows: x, y, angle (in degrees)
     yarp::sig::Vector *loc = 0;
     
@@ -226,7 +249,7 @@ void GotoThread::run()
         else
         {
             loc_timeout_counter++;
-            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+            if (loc_timeout_counter > TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
         }
     }
     else
