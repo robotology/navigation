@@ -207,7 +207,7 @@ void GotoThread::run()
 
             v[0] = rosGoalData->pose.position.x;
             v[1] = rosGoalData->pose.position.y;
-            v[2] = yarp::math::dcm2rpy(yarp::math::quat2dcm(q))[2];
+            v[2] = -yarp::math::dcm2rpy(yarp::math::quat2dcm(q))[2];
 
             setNewAbsTarget(v);
         }
