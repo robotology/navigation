@@ -7,8 +7,8 @@
 set(PROJECTNAME robotGoto)
 project(${PROJECTNAME})
 
-file(GLOB folder_source *.cpp)
-file(GLOB folder_header *.h)
+file(GLOB folder_source main.cpp robotGoto.cpp)
+file(GLOB folder_header robotGoto.h)
 
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
