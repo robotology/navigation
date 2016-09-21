@@ -290,7 +290,8 @@ public:
     void   stopMovement();
     void   pauseMovement (double secs);
     void   resumeMovement();
-    string getNavigationStatus();
+    string getNavigationStatusAsString();
+    int    getNavigationStatusAsInt();
     void   printStats();
     bool   check_obstacles_in_path();
     bool   compute_obstacle_avoidance();

@@ -331,7 +331,8 @@ class PlannerThread: public yarp::os::RateThread
     void stopMovement();
     void pauseMovement (double secs);
     void resumeMovement();
-    string getNavigationStatus();
+    string getNavigationStatusAsString();
+    int getNavigationStatusAsInt();
     void select_optimized_path(bool b);
 
     virtual void threadRelease()

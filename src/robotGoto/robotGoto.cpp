@@ -1201,9 +1201,14 @@ void GotoThread::stopMovement()
     status = navigation_status_idle;
 }
 
-string GotoThread::getNavigationStatus()
+string GotoThread::getNavigationStatusAsString()
 {
     return getStatusAsString(status);
+}
+
+int GotoThread::getNavigationStatusAsInt()
+{
+    return status;
 }
 
 void GotoThread::printStats()

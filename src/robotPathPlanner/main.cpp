@@ -20,6 +20,7 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
+#include <yarp/dev/ControlBoardInterfaces.h>
 
 #include "pathPlanner.h"
 #include <math.h>
@@ -115,6 +116,114 @@ public:
         return true; 
     }
 
+    bool parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+    {
+        if (command.get(0).isString() && command.get(0).asString() == "gotoAbs")
+        {
+            yarp::sig::Vector v;
+            v.push_back(command.get(1).asDouble());
+            v.push_back(command.get(2).asDouble());
+            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            plannerThread->setNewAbsTarget(v);
+            reply.addString("new absolute target received");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "gotoRel")
+        {
+            yarp::sig::Vector v;
+            v.push_back(command.get(1).asDouble());
+            v.push_back(command.get(2).asDouble());
+            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            plannerThread->setNewRelTarget(v);
+            reply.addString("new relative target received");
+        }
+
+        else if (command.get(0).asString() == "get")
+        {
+            if (command.get(1).asString() == "navigation_status")
+            {
+                string s = plannerThread->getNavigationStatusAsString();
+                reply.addString(s.c_str());
+            }
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "stop")
+           
+        {
+            plannerThread->stopMovement();
+            reply.addString("Stopping movement.");
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "pause")
+        {
+            double time = -1;
+            if (command.size() > 1)
+                time = command.get(1).asDouble();
+            plannerThread->pauseMovement(time);
+            reply.addString("Pausing.");
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "resume")
+        {
+            plannerThread->resumeMovement();
+            reply.addString("Resuming.");
+        }
+        else
+        {
+            reply.addString("Unknown command.");
+        }
+        return true;
+    }
+
+    bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+    {
+        if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOABS)
+        {
+            yarp::sig::Vector v;
+            v.push_back(command.get(1).asDouble());
+            v.push_back(command.get(2).asDouble());
+            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            plannerThread->setNewAbsTarget(v);
+            reply.addVocab(VOCAB_OK);
+        }
+
+        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOREL)
+        {
+            yarp::sig::Vector v;
+            v.push_back(command.get(1).asDouble());
+            v.push_back(command.get(2).asDouble());
+            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            plannerThread->setNewRelTarget(v);
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GET_STATUS)
+        {
+            int nav_status = plannerThread->getNavigationStatusAsInt();
+            reply.addVocab(VOCAB_OK);
+            reply.addInt(nav_status);
+        }
+        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_STOP)
+        {
+            plannerThread->stopMovement();
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_SUSPEND)
+        {
+            double time = -1;
+            if (command.size() > 1)
+                time = command.get(1).asDouble();
+            plannerThread->pauseMovement(time);
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_RESUME)
+        {
+            plannerThread->resumeMovement();
+            reply.addVocab(VOCAB_OK);
+        }
+        else
+        {
+            reply.addVocab(VOCAB_ERR);
+        }
+        return true;
+    }
+
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
     {
         reply.clear(); 
@@ -151,61 +260,13 @@ public:
                 reply.addString("resume");
                 reply.addString("quit");
             }
-
-            else if ((command.get(0).isString() && command.get(0).asString() == "gotoAbs") ||
-                     (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOABS))
+            else if (command.get(0).isString())
             {
-                yarp::sig::Vector v;
-                v.push_back(command.get(1).asDouble());
-                v.push_back(command.get(2).asDouble());
-                if (command.size()==4) v.push_back(command.get(3).asDouble());
-                plannerThread->setNewAbsTarget(v);
-                reply.addString("new absolute target received");
+                parse_respond_string(command, reply);
             }
-
-            else if ((command.get(0).isString() && command.get(0).asString() == "gotoRel") ||
-                     (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOREL))
+            else if (command.get(0).isVocab())
             {
-                yarp::sig::Vector v;
-                v.push_back(command.get(1).asDouble());
-                v.push_back(command.get(2).asDouble());
-                if (command.size()==4) v.push_back(command.get(3).asDouble());
-                plannerThread->setNewRelTarget(v);
-                reply.addString("new relative target received");
-            }
-
-            else if (command.get(0).asString()=="get")
-            {
-                if (command.get(1).asString()=="navigation_status")
-                {
-                    string s = plannerThread->getNavigationStatus();
-                    reply.addString(s.c_str());
-                }
-            }
-            else if ((command.get(0).isString() && command.get(0).asString() == "stop") ||
-                (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_STOP))
-            {
-                plannerThread->stopMovement();
-                reply.addString("Stopping movement.");
-            }
-            else if ((command.get(0).isString() && command.get(0).asString() == "pause") ||
-                (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_SUSPEND))
-            {
-                double time = -1;
-                if (command.size() > 1)
-                    time = command.get(1).asDouble();
-                plannerThread->pauseMovement(time);
-                reply.addString("Pausing.");
-            }
-            else if ((command.get(0).isString() && command.get(0).asString() == "resume") ||
-                (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_RESUME))
-            {
-                plannerThread->resumeMovement();
-                reply.addString("Resuming.");
-            }
-            else
-            {
-                reply.addString("Unknown command.");
+                parse_respond_vocab(command, reply);
             }
         }
         plannerThread->mutex.post();

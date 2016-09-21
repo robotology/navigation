@@ -579,7 +579,12 @@ void PlannerThread::printStats()
 {
 }
 
-string PlannerThread::getNavigationStatus()
+int PlannerThread::getNavigationStatusAsInt()
+{
+    return planner_status;
+}
+
+string PlannerThread::getNavigationStatusAsString()
 {
     string s = getStatusAsString(planner_status);
     return s;
