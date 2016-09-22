@@ -31,11 +31,17 @@ bool NavTestModule::close()
 bool NavTestModule::configure(ResourceFinder& rf)
 {
     bool            okClient, okView;
-    Property        navTestCfg;
+    Property        navTestCfg, pLocationServer_cfg;
 
-    navTestCfg.put("device", "Navigation2DClient");
-    navTestCfg.put("local", "/navigationTest");
-    navTestCfg.put("remote", "/navigationServer");
+    pLocationServer_cfg.put("device", "locationsServer");
+    pLocationServer_cfg.put("local", "locationServer");
+    bool ok_location = ddLocServer.open(pLocationServer_cfg);
+    if(ok_location){yInfo() << "ddLocationServer open reported successful";};
+
+    navTestCfg.put("device",         "Navigation2DClient");
+    navTestCfg.put("local",          "/navigationTest");
+    navTestCfg.put("remote",         "/navigationServer");
+    navTestCfg.put("locationRemote", "/locationServer");
 
     iNav            = 0;
     okClient        = ddNavClient.open(navTestCfg);
@@ -77,7 +83,6 @@ bool NavTestModule::executeStep(navStep s)
 
     for(i = 0; i < s.frames.size(); i++)
     {
-
         navFrame& f = s.frames[i];
         iNav->gotoTargetByRelativeLocation(f.x,f.y,f.t);
         time = Time::now();

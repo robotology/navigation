@@ -40,6 +40,7 @@ private:
     double                     period;
     yarp::dev::INavigation2D*  iNav;
     yarp::dev::PolyDriver      ddNavClient;
+    yarp::dev::PolyDriver      ddLocServer;
     std::vector<navStep>       stepVector;
     unsigned int               currentGoal;
     double                     linToll;
