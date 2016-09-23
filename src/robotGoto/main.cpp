@@ -52,7 +52,7 @@ public:
             return false;
         }
 
-        rpcPort.open("/robotGoto/rpc:i");
+        rpcPort.open("/robotGoto/rpc");
         attach(rpcPort);
         //attachTerminal();
 
@@ -245,45 +245,47 @@ public:
 
     bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
-        if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOABS)
+
+        int request = command.get(1).asVocab();
+
+        if (request == VOCAB_NAV_GOTOABS)
         {
             yarp::sig::Vector v;
-            v.push_back(command.get(1).asDouble());
             v.push_back(command.get(2).asDouble());
-            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            v.push_back(command.get(3).asDouble());
+            if (command.size() == 5) v.push_back(command.get(4).asDouble());
             gotoThread->setNewAbsTarget(v);
             reply.addVocab(VOCAB_OK);
         }
-
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOREL)
+        else if (request == VOCAB_NAV_GOTOREL)
         {
             yarp::sig::Vector v;
-            v.push_back(command.get(1).asDouble());
             v.push_back(command.get(2).asDouble());
-            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            v.push_back(command.get(3).asDouble());
+            if (command.size() == 5) v.push_back(command.get(4).asDouble());
             gotoThread->setNewRelTarget(v);
             reply.addVocab(VOCAB_OK);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GET_STATUS)
+        else if (request == VOCAB_NAV_GET_STATUS)
         {
             int nav_status = gotoThread->getNavigationStatusAsInt();
             reply.addVocab(VOCAB_OK);
             reply.addInt(nav_status);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_STOP)
+        else if (request == VOCAB_NAV_STOP)
         {
             gotoThread->stopMovement();
             reply.addVocab(VOCAB_OK);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_SUSPEND)
+        else if (request == VOCAB_NAV_SUSPEND)
         {
             double time = -1;
-            if (command.size() > 1)
-                time = command.get(1).asDouble();
+            if (command.size() > 2)
+                time = command.get(2).asDouble();
             gotoThread->pauseMovement(time);
             reply.addVocab(VOCAB_OK);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_RESUME)
+        else if (request == VOCAB_NAV_RESUME)
         {
             gotoThread->resumeMovement();
             reply.addVocab(VOCAB_OK);
@@ -332,7 +334,14 @@ public:
         }
         else if (command.get(0).isVocab())
         {
-            parse_respond_vocab(command,reply);
+            if(command.get(0).asVocab() == VOCAB_INAVIGATION && command.get(1).isVocab())
+            {
+                parse_respond_vocab(command,reply);
+            }
+            else
+            {
+                reply.addVocab(VOCAB_ERR);
+            }
         }
 
         gotoThread->mutex.post();
