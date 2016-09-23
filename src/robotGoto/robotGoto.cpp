@@ -1165,6 +1165,7 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
     status          = navigation_status_moving;
     retreat_counter = retreat_duration;
     yInfo ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
+    sendCurrentGoal();
 }
 
 void GotoThread::pauseMovement(double secs)
