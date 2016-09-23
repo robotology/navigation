@@ -4,7 +4,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace std;
 #define PERIOD  0
-#define TIMEOUT 60
+#define TIMEOUT 600
 NavTestModule::NavTestModule()
 {
     period          = PERIOD;
@@ -32,15 +32,16 @@ bool NavTestModule::configure(ResourceFinder& rf)
 {
     bool            okClient, okView;
     Property        navTestCfg, pLocationServer_cfg;
+    Time::now();
 
     pLocationServer_cfg.put("device", "locationsServer");
-    pLocationServer_cfg.put("local", "locationServer");
+    pLocationServer_cfg.put("local", "/locationServer");
     bool ok_location = ddLocServer.open(pLocationServer_cfg);
     if(ok_location){yInfo() << "ddLocationServer open reported successful";};
 
-    navTestCfg.put("device",         "Navigation2DClient");
+    navTestCfg.put("device",         "navigation2DClient");
     navTestCfg.put("local",          "/navigationTest");
-    navTestCfg.put("remote",         "/navigationServer");
+    navTestCfg.put("remote",         "/robotGoto");
     navTestCfg.put("locationRemote", "/locationServer");
 
     iNav            = 0;
@@ -140,6 +141,7 @@ bool NavTestModule::updateModule()
             if(!executeStep(s))
             {
                 yError() << "step " << s.label << " failed";
+                iNav->stopNavigation();
                 return false;
             }
         }
