@@ -823,7 +823,7 @@ void GotoThread::run()
     control_out.zero();
 
     //gamma is the angle between the current robot heading and the target heading
-    double unwrapped_localization_angle = (localization_data[ANGLE] < 0) ? localization_data[ANGLE] + 360 : localization_data[ANGLE];
+    double unwrapped_localization_angle = (localization_data[ANGLE] < 0) ? localization_data[ANGLE] + 360  : localization_data[ANGLE];
     double unwrapped_target_angle       = (target_data[ANGLE] < 0)       ? target_data[ANGLE]       + 360  : target_data[ANGLE];
     double gamma                        = unwrapped_target_angle - unwrapped_localization_angle;
 
@@ -855,6 +855,11 @@ void GotoThread::run()
         tmp1 = tmp1-360;//ADDED LATER
     }
 
+    if (tmp1<-180 && tmp1>-360)
+    {
+        tmp1 = tmp1+360;//ADDED LATER
+    }
+
     //yDebug ("%f \n", control[0]);
     control_out[LIN_VEL] = m_gain_lin * distance;
     if(distance <= m_goal_tolerance_lin)
@@ -864,7 +869,7 @@ void GotoThread::run()
     }
     else
     {
-        control_out[ANG_VEL] = m_gain_ang * (beta - localization_data[ANGLE]);
+        control_out[ANG_VEL] = m_gain_ang * (tmp1);
     }
     control_out[ANG_MOM] = tmp1;
 
