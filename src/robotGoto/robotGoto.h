@@ -284,6 +284,8 @@ public:
     virtual void run();
     virtual void threadRelease();
 
+    void   getCurrentPos(yarp::sig::Vector& v);
+    string getMapId();
     void   setNewAbsTarget(yarp::sig::Vector target);
     void   setNewRelTarget(yarp::sig::Vector target);
     void   resetParamsToDefaultValue();

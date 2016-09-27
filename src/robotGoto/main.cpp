@@ -290,6 +290,17 @@ public:
             gotoThread->resumeMovement();
             reply.addVocab(VOCAB_OK);
         }
+        else if (request == VOCAB_NAV_GET_CURRENT_POS)
+        {
+            yarp::sig::Vector position;
+
+            gotoThread->getCurrentPos(position);
+            reply.addVocab(VOCAB_OK);
+            reply.addDouble(position[0]);
+            reply.addDouble(position[1]);
+            reply.addDouble(position[2]);
+            reply.addString(gotoThread->getMapId());
+        }
         else
         {
             reply.addVocab(VOCAB_ERR);

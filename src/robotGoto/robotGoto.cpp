@@ -811,6 +811,17 @@ void GotoThread::publishLocalPlan()
 
 }
 
+void GotoThread::getCurrentPos(yarp::sig::Vector& v)
+{
+    v.resize(localization_data.size());
+    v = localization_data;
+}
+
+string GotoThread::getMapId()
+{
+    return frame_map_id;
+}
+
 void GotoThread::run()
 {
     mutex.wait();
