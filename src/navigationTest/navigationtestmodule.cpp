@@ -4,7 +4,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace std;
 #define PERIOD  0
-#define TIMEOUT 600
+#define TIMEOUT 6000
 NavTestModule::NavTestModule()
 {
     period          = PERIOD;
@@ -110,7 +110,7 @@ bool NavTestModule::updateModule()
 {
     static size_t        i;
     NavigationStatusEnum status;
-    double               time;
+    static double        time;
 
     //storing location
     if(!locationsStored)
@@ -147,13 +147,14 @@ bool NavTestModule::updateModule()
         }
 
         locationsStored = true;
+        iNav->stopNavigation();
         i = 0;
         currentGoal = stepVector.size()-1;
     }
 
     //navigating trough location
     iNav->getNavigationStatus(status);
-    if(status == navigation_status_goal_reached)
+    if(status == navigation_status_goal_reached || status == navigation_status_idle)
     {
         if(!checkCurrentGoalReached())
         {
@@ -162,6 +163,7 @@ bool NavTestModule::updateModule()
 
         currentGoal = i%stepVector.size();
         iNav->gotoTargetByLocationName(stepVector[currentGoal].label);
+        yDebug() << "heading towards goal " << stepVector[currentGoal].label;
         time = Time::now();
         i++;
     }
