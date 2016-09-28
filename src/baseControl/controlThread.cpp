@@ -242,7 +242,7 @@ void ControlThread::run()
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
-        pidout_linear_throttle = input_linear_speed * odometry_handler->get_vlin_coeff() * 180.0 / M_PI * exec_pwm_gain;
+        pidout_linear_throttle = input_linear_speed * odometry_handler->get_vlin_coeff() * exec_pwm_gain;
         pidout_angular_throttle = input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain;
         pidout_direction     = input_desired_direction;
         this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
