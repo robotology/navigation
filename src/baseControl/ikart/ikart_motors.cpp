@@ -183,6 +183,7 @@ void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_
 
 void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
+    MotorControl::execute_speed(appl_linear_speed, appl_desired_direction, appl_angular_speed);
     decouple(appl_linear_speed, appl_desired_direction,appl_angular_speed);
     //Use a low pass filter to obtain smooth control
     //Use a low pass filter to obtain smooth control

@@ -36,6 +36,9 @@
 #include <string>
 #include <math.h>
 #include <vector>
+#include <geometry_msgs_Twist.h>
+#include <yarp/os/Node.h>
+#include <yarp/os/Publisher.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -67,6 +70,12 @@ protected:
     IAmplifierControl *iamp;
     IOpenLoopControl  *iopl;
     IControlMode2     *icmd;
+
+    //ros
+    bool                                         enable_ROS;
+    bool                                         enable_ROS_OUTPUT_GROUP;
+    std::string                                  rosTopicName_cmd_twist;
+    yarp::os::Publisher<geometry_msgs_Twist>     rosPublisherPort_cmd_twist;
 
 public:
 
