@@ -157,6 +157,16 @@ void Odometry::close()
     port_odometer.close();
     port_vels.interrupt();
     port_vels.close();
+
+    if (enable_ROS)
+    {
+        rosPublisherPort_footprint.interrupt();
+        rosPublisherPort_footprint.close();
+        rosPublisherPort_odometry.interrupt();
+        rosPublisherPort_odometry.close();
+        rosPublisherPort_tf.interrupt();
+        rosPublisherPort_tf.close();
+    }
 }
 
 void Odometry::broadcast()

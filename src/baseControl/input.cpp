@@ -81,13 +81,12 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
         {
             yarp::os::Bottle rin_group = ctrl_options.findGroup("ROS_INPUT");
             if (rin_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
-            
             rosTopicName_twist = rin_group.find("topic_name").asString();
+            enable_ROS_INPUT_GROUP = true;
         }
         else
         {
-            yError() << "Missing [ROS_INPUT] section";
-            return false;
+            enable_ROS_INPUT_GROUP = false;
         }
         
         if (!rosSubscriberPort_twist.topic(rosTopicName_twist))

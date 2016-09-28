@@ -93,6 +93,7 @@ protected:
     Subscriber<geometry_msgs_Twist>   rosSubscriberPort_twist;
     string                            rosTopicName_twist;
     bool                              useRos;
+    bool                              enable_ROS_INPUT_GROUP;
     BufferedPort<Bottle>              port_auxiliary_control;
     BufferedPort<Bottle>              port_joystick_control;
     string                            localName;
