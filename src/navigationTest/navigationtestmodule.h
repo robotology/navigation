@@ -46,6 +46,7 @@ private:
     double                     linToll;
     double                     angToll;
     bool                       checkCurrentGoalReached();
+    void                       printRegisteredLocations();
 
     bool executeStep(navStep s);
 public:
