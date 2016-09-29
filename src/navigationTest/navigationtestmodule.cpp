@@ -85,6 +85,7 @@ bool NavTestModule::executeStep(navStep s)
     for(i = 0; i < s.frames.size(); i++)
     {
         navFrame& f = s.frames[i];
+        yDebug() << "reaching location" << s.label << ". heading towards step n." << i << "located in (relative) x:" << f.x << "y:" << f.y << "th:" << f.t;
         iNav->gotoTargetByRelativeLocation(f.x,f.y,f.t);
         time = Time::now();
         while (status != navigation_status_goal_reached)
@@ -102,8 +103,39 @@ bool NavTestModule::executeStep(navStep s)
         }
     }
 
-    iNav->storeCurrentPosition(s.label);
+    if(!iNav->storeCurrentPosition(s.label))
+    {
+        yDebug() << "error storing location" << s.label;
+    }
     return true;
+}
+
+void NavTestModule::printRegisteredLocations()
+{
+    std::vector<yarp::os::ConstString> locations;
+    if(!iNav->getLocationsList(locations))
+    {
+        yDebug() << "error retrieving location list";
+    }
+
+    if(locations.size() == 0)
+    {
+        yDebug() << "no locations registered";
+    }
+
+    for(size_t i = 0; i < locations.size(); i++)
+    {
+        yarp::dev::Map2DLocation l;
+        if(!iNav->getLocation(locations[i], l))
+        {
+            yDebug() << "error retrieving location" << locations[i];
+        }
+        else
+        {
+            yDebug() << locations[i] << " is located in x: " << l.x << " y: " << l.y << " and theta: " << l.theta;
+        }
+    }
+
 }
 
 bool NavTestModule::updateModule()
@@ -116,24 +148,40 @@ bool NavTestModule::updateModule()
     if(!locationsStored)
     {
         navStep step;
+        yarp::dev::Map2DLocation initialPos;
+        iNav->getCurrentPosition(initialPos);
 
-        step.frames.push_back(navFrame(0,  -0.5, 0));
-        step.frames.push_back(navFrame(0,   0,   90));
-        step.frames.push_back(navFrame(0.5, 0,   0));
-        step.absPos = navFrame(0.5, -0.5, 0);
+        //quick version
+        step.frames.push_back(navFrame(1, 0, 0));
+        step.absPos = navFrame(initialPos.x + 1, initialPos.y + 0, initialPos.theta);
         step.label  = "NE";
         stepVector.push_back(step);
+        step.frames.clear();
 
-        step.frames.push_back(navFrame(0, 1, 0));
-        step.absPos = navFrame(0.5, 0.5, 0);
+        step.frames.push_back(navFrame(1, 0, 0));
+        step.absPos = navFrame(initialPos.x + 2, initialPos.y + 0, initialPos.theta);
+        step.label  = "NE";
+        stepVector.push_back(step);
+        //long version
+        /*step.frames.push_back(navFrame(0, -0.5, 0));
+        step.frames.push_back(navFrame(0.5, 0, 0));
+        step.absPos = navFrame(initialPos.x + 0.5, initialPos.y + -0.5, initialPos.theta);
+        step.label  = "NE";
+        stepVector.push_back(step);
+        step.frames.clear();
+
+        step.frames.push_back(navFrame(0, 1, 90));
+        step.absPos = navFrame(initialPos.x + 0.5, initialPos.y + 0.5, initialPos.theta + 90);
         step.label  = "NW";
         stepVector.push_back(step);
-        step.absPos = navFrame(-0.5, 0.5, 0);
+
+        step.absPos = navFrame(initialPos.x - 0.5, initialPos.y + 0.5, -initialPos.theta);
         step.label = "SW";
         stepVector.push_back(step);
-        step.absPos = navFrame(-0.5, -0.5, 0);
+
+        step.absPos = navFrame(initialPos.x - 0.5, initialPos.y - 0.5, initialPos.theta - 90);
         step.label = "SE";
-        stepVector.push_back(step);
+        stepVector.push_back(step);*/
 
         for(i = 0; i < stepVector.size(); i++)
         {
@@ -148,6 +196,7 @@ bool NavTestModule::updateModule()
 
         locationsStored = true;
         iNav->stopNavigation();
+        printRegisteredLocations();
         i = 0;
         currentGoal = stepVector.size()-1;
     }

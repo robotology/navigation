@@ -296,10 +296,11 @@ public:
 
             gotoThread->getCurrentPos(position);
             reply.addVocab(VOCAB_OK);
+            reply.addString(gotoThread->getMapId());
             reply.addDouble(position[0]);
             reply.addDouble(position[1]);
             reply.addDouble(position[2]);
-            reply.addString(gotoThread->getMapId());
+
         }
         else
         {
