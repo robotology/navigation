@@ -68,14 +68,13 @@ CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry
 
     traveled_distance=0;
     traveled_angle=0;
-    geom_r = 320.0 / 2 / 1000.0;     //m  320 diametro
-    odom_z = geom_r;                    
-    geom_L = 338 /1000.0;            //m  338 distanza centro ruota
     encvel_estimator =new iCub::ctrl::AWLinEstimator(2,1.0);
     encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
     enc.resize(2);
     encv.resize(2);
     rosMsgCounter=0;
+    geom_r = 0;
+    geom_L = 0;
 }
 
 bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
@@ -113,6 +112,26 @@ bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
     {
         yError() << "Error in Odometry::open()"; return false;
     }
+
+    //get robot geometry
+    Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
+    if (geometry_group.isNull())
+    {
+        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        return false;
+    }
+    if (!geometry_group.check("geom_r"))
+    {
+        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("geom_L"))
+    {
+        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    geom_r = geometry_group.find("geom_r").asDouble();
+    geom_L = geometry_group.find("geom_L").asDouble();
 
     return true;
 }

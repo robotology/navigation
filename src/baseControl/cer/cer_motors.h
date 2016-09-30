@@ -43,9 +43,13 @@ using namespace yarp::dev;
 
 class CER_MotorControl : public MotorControl
 {
+    //robot geometry
+    double              geom_r;
+    double              geom_L;
+
 public:
     CER_MotorControl(unsigned int _period, PolyDriver* _driver);
-    ~CER_MotorControl();
+    virtual ~CER_MotorControl();
     bool set_control_velocity();
     bool set_control_openloop();
     bool set_control_idle();
@@ -60,7 +64,8 @@ public:
     void updateControlMode();
     void printStats();
     void set_motors_filter(int b) {motors_filter_enabled=b;}
- 
+    double get_vlin_coeff();
+    double get_vang_coeff();
 };
 
 #endif

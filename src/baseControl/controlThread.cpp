@@ -39,7 +39,6 @@ void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_s
         //the adaptive limiter will be used (current ratio)
         double coeff = 0.0;
         if (lin_ang_ratio>0.0) coeff = (tot-100.0)/100.0;
-        double angular_speed_A, angular_speed_B, linear_speed_A, linear_speed_B;
 
         angular_speed = angular_speed *(1-lin_ang_ratio);
         linear_speed  = linear_speed * lin_ang_ratio;
@@ -234,16 +233,16 @@ void ControlThread::run()
     if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
-        pidout_linear_throttle = input_linear_speed * odometry_handler->get_vlin_coeff() *  exec_pwm_gain;
-        pidout_angular_throttle = input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain;
+        pidout_linear_throttle = input_linear_speed * exec_pwm_gain;
+        pidout_angular_throttle = input_angular_speed * exec_pwm_gain;
         pidout_direction = input_desired_direction;
         this->motor_handler->execute_openloop(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
-        pidout_linear_throttle = input_linear_speed * odometry_handler->get_vlin_coeff() * exec_pwm_gain;
-        pidout_angular_throttle = input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain;
+        pidout_linear_throttle = input_linear_speed ;
+        pidout_angular_throttle = input_angular_speed * exec_pwm_gain;
         pidout_direction     = input_desired_direction;
         this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
@@ -251,16 +250,16 @@ void ControlThread::run()
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
         apply_control_openloop_pid(pidout_linear_throttle, pidout_angular_throttle,
-            (input_linear_speed * odometry_handler->get_vlin_coeff() * exec_pwm_gain),
-            (input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain));
+            (input_linear_speed * exec_pwm_gain),
+            (input_angular_speed * exec_pwm_gain));
         this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
         apply_control_speed_pid(pidout_linear_throttle, pidout_angular_throttle,
-            (input_linear_speed * odometry_handler->get_vlin_coeff() * 180.0 / M_PI * exec_pwm_gain),
-            (input_angular_speed * odometry_handler->get_vang_coeff() * exec_pwm_gain));
+            (input_linear_speed * exec_pwm_gain),
+            (input_angular_speed * exec_pwm_gain));
         this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else
@@ -413,8 +412,9 @@ bool ControlThread::threadInit()
         odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new CER_MotorControl((int)(thread_period), control_board_driver);
         input_handler    = new Input((int)(thread_period), control_board_driver);
-        
-        
+        yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
+        robot_geom.put("geom_r", 320.0 / 2 / 1000.0);
+        robot_geom.put("geom_L", 338 / 1000.0);
     }
     else if (robot_type_s == "ikart_V1")
     {
@@ -423,6 +423,10 @@ bool ControlThread::threadInit()
         odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
         input_handler    = new Input((int)(thread_period), control_board_driver);
+        yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
+        robot_geom.put("geom_r", 62.5 / 1000.0);
+        robot_geom.put("geom_L", 297.16 / 1000.0);
+        robot_geom.put("g_angle", 0.0);
     }
     else if (robot_type_s == "ikart_V2")
     {
@@ -431,6 +435,10 @@ bool ControlThread::threadInit()
         odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
         input_handler    = new Input((int)(thread_period), control_board_driver);
+        yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
+        robot_geom.put("geom_r", 76.15 / 1000.0);
+        robot_geom.put("geom_L", 297.16 / 1000.0);
+        robot_geom.put("g_angle", 45.0);
     }
     else
     {
