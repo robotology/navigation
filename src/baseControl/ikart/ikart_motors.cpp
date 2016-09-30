@@ -130,6 +130,12 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
         motors_filter_enabled=0;
     }
 
+    //the base class open
+    if (!MotorControl::open(_rf, _options))
+    {
+        yError() << "Error in MotorControl::open()"; return false;
+    }
+
     // open the interfaces for the control boards
     bool ok = true;
     ok = ok & control_board_driver->view(ivel);
