@@ -44,6 +44,18 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+#ifndef M_PI
+#define M_PI 3.14159265
+#endif
+
+#ifndef RAD2DEG
+#define RAD2DEG 180.0/3.14159
+#endif 
+
+#ifndef DEG2RAD
+#define DEG2RAD 3.14159/180.0
+#endif
+
 class MotorControl
 {
 protected:
@@ -85,7 +97,7 @@ public:
     virtual bool set_control_openloop() = 0;
     virtual bool set_control_idle() = 0;
 
-    bool open(ResourceFinder &_rf, Property &_options);
+    virtual bool open(ResourceFinder &_rf, Property &_options);
     virtual void close();
     virtual void execute_none() = 0;
     virtual void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;

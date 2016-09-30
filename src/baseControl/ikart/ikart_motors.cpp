@@ -144,6 +144,32 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
         return false;
     }
 
+    //get robot geometry
+    Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
+    if (geometry_group.isNull())
+    {
+        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        return false;
+    }
+    if (!geometry_group.check("geom_r"))
+    {
+        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("geom_L"))
+    {
+        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("g_angle"))
+    {
+        yError("Missing param g_angle in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    geom_r = geometry_group.find("geom_r").asDouble();
+    geom_L = geometry_group.find("geom_L").asDouble();
+    g_angle = geometry_group.find("g_angle").asDouble();
+
     if (!ctrl_options.check("GENERAL"))
     {
         yError() << "Missing [GENERAL] section";
@@ -169,6 +195,9 @@ iKart_MotorControl::iKart_MotorControl(unsigned int _period, PolyDriver* _driver
     board_control_modes_last.resize(3, 0);
 
     thread_period = _period;
+    geom_r = 0;
+    geom_L = 0;
+    g_angle = 0;
 }
 
 void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -184,8 +213,11 @@ void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_
 void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
     MotorControl::execute_speed(appl_linear_speed, appl_desired_direction, appl_angular_speed);
-    decouple(appl_linear_speed, appl_desired_direction,appl_angular_speed);
-    //Use a low pass filter to obtain smooth control
+    
+    double appl_angular_speed_to_wheels = appl_angular_speed * this->get_vang_coeff();
+    double appl_linear_speed_to_wheels = appl_linear_speed * this->get_vlin_coeff();
+    decouple(appl_linear_speed_to_wheels, appl_desired_direction, appl_angular_speed_to_wheels);
+
     //Use a low pass filter to obtain smooth control
     for (size_t i=0; i < F.size(); i++)
     {
@@ -220,4 +252,15 @@ void iKart_MotorControl::execute_none()
     iopl->setRefOutput(0,0);
     iopl->setRefOutput(1,0);
     iopl->setRefOutput(2,0);
+}
+
+double iKart_MotorControl::get_vlin_coeff()
+{
+    return (360 / (geom_r * 2 * M_PI));
+}
+
+double iKart_MotorControl::get_vang_coeff()
+{
+    return geom_L / geom_r; 
+    //return geom_L / (3 * geom_r);
 }

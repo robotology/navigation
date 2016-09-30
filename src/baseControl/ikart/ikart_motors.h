@@ -43,6 +43,11 @@ using namespace yarp::dev;
 
 class iKart_MotorControl : public MotorControl
 {
+    //robot geometry
+    double              geom_r;
+    double              geom_L;
+    double              g_angle;
+
 public:
     iKart_MotorControl(unsigned int _period, PolyDriver* _driver);
     ~iKart_MotorControl();
@@ -60,7 +65,8 @@ public:
     void updateControlMode();
     void printStats();
     void set_motors_filter(int b) {motors_filter_enabled=b;}
- 
+    double get_vlin_coeff();
+    double get_vang_coeff();
 };
 
 #endif

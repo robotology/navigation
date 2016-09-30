@@ -20,6 +20,7 @@
 #include "../filters.h"
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+#include <limits>
 
 bool CER_MotorControl::set_control_openloop()
 {
@@ -147,6 +148,26 @@ bool CER_MotorControl::open(ResourceFinder &_rf, Property &_options)
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
 
+    //get robot geometry
+    Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
+    if (geometry_group.isNull())
+    {
+        yError("CER_MotorControl::open Unable to find ROBOT_GEOMETRY group!");
+        return false;
+    }
+    if (!geometry_group.check("geom_r"))
+    {
+        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("geom_L"))
+    {
+        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    geom_r = geometry_group.find("geom_r").asDouble();
+    geom_L = geometry_group.find("geom_L").asDouble();
+
     motors_filter_enabled = general_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
 
     localName = ctrl_options.find("local").asString();
@@ -165,6 +186,8 @@ CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : 
     board_control_modes_last.resize(2, 0);
 
     thread_period = _period;
+    geom_r = 0;
+    geom_L = 0;
 }
 
 void CER_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -177,7 +200,12 @@ void CER_MotorControl::decouple(double appl_linear_speed, double appl_desired_di
 void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
     MotorControl::execute_speed(appl_linear_speed, appl_desired_direction, appl_angular_speed);
-    decouple(appl_linear_speed, appl_desired_direction, appl_angular_speed);
+
+    double appl_angular_speed_to_wheels = appl_angular_speed * this->get_vang_coeff();
+    double appl_linear_speed_to_wheels = appl_linear_speed * this->get_vlin_coeff();
+    decouple(appl_linear_speed_to_wheels, appl_desired_direction, appl_angular_speed_to_wheels);
+
+    //yDebug() << appl_linear_speed << appl_linear_speed_to_wheels;
     //Use a low pass filter to obtain smooth control
     for (size_t i=0; i < F.size(); i++)
     {
@@ -208,4 +236,15 @@ void CER_MotorControl::execute_none()
 {
     iopl->setRefOutput(0,0);
     iopl->setRefOutput(1,0);
+}
+
+double CER_MotorControl::get_vlin_coeff()
+{
+    return (360 / (geom_r * 2 * M_PI));
+}
+
+double CER_MotorControl::get_vang_coeff()
+{
+    return geom_L / (geom_r);
+    //return geom_L / (2 * geom_r);
 }
