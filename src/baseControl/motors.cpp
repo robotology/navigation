@@ -166,6 +166,7 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
             yError() << " opening " << rosTopicName_cmd_twist << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
+        yInfo () << "ROS_OUTPUT param found. Enabling topic "<<rosTopicName_cmd_twist;
     }
 
 
