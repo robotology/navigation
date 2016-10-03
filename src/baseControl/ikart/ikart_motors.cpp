@@ -39,6 +39,9 @@ bool iKart_MotorControl::set_control_velocity()
     icmd->setVelocityMode(0);
     icmd->setVelocityMode(1);
     icmd->setVelocityMode(2);
+    ivel->setRefAcceleration(0, 1000000);
+    ivel->setRefAcceleration(1, 1000000);
+    ivel->setRefAcceleration(2, 1000000);
     ivel->velocityMove(0, 0);
     ivel->velocityMove(1, 0);
     ivel->velocityMove(2, 0);

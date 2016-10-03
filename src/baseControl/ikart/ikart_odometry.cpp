@@ -251,6 +251,9 @@ void iKart_Odometry::compute()
         odom_vel_theta  = atan2(odom_vel_x,odom_vel_y)*RAD2DEG;
         base_vel_theta = atan2(base_vel_x,base_vel_y)*RAD2DEG;
     }
+    //convert from radians back to degrees
+    odom_theta       *= RAD2DEG;
+    traveled_angle   *= RAD2DEG;
 
     //the integration step
     odom_x=odom_x + (odom_vel_x * period/1000.0);
@@ -280,13 +283,7 @@ void iKart_Odometry::compute()
                 (-sin(odom_theta)-si3p)*encB + 
                 (sin(odom_theta)-si3m)*encC
                 );
-    */
-
-    //convert from radians back to degrees
-    odom_theta       *= RAD2DEG;
-    base_vel_theta   *= RAD2DEG;
-    odom_vel_theta   *= RAD2DEG;
-    traveled_angle   *= RAD2DEG;
+    */  
 
     mutex.post();
 }
