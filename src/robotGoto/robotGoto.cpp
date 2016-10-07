@@ -205,10 +205,10 @@ bool GotoThread::threadInit()
     m_default_gain_lin = m_gain_lin = 0.1;
     m_default_max_lin_speed         = m_max_lin_speed = 0.9;  //m/s
     m_default_max_ang_speed         = m_max_ang_speed = 10.0; //deg/s
-    m_default_max_ang_speed         = m_min_lin_speed = 0.0;  //m/s
+    m_default_max_lin_speed         = m_min_lin_speed = 0.0;  //m/s
     m_default_max_ang_speed         = m_min_ang_speed = 0.0; //deg/s
     m_default_goal_tolerance_lin    = m_goal_tolerance_lin = 0.05;
-    m_default_goal_tolerance_lin    = m_goal_tolerance_ang = 0.6;
+    m_default_goal_tolerance_ang    = m_goal_tolerance_ang = 0.6;
 
     use_odometry               = true;
     use_localization_from_port = false;

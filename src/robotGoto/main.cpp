@@ -251,9 +251,9 @@ public:
         if (request == VOCAB_NAV_GOTOABS)
         {
             yarp::sig::Vector v;
-            v.push_back(command.get(2).asDouble());
             v.push_back(command.get(3).asDouble());
-            if (command.size() == 5) v.push_back(command.get(4).asDouble());
+            v.push_back(command.get(4).asDouble());
+            if (command.size() == 6) v.push_back(command.get(5).asDouble());
             gotoThread->setNewAbsTarget(v);
             reply.addVocab(VOCAB_OK);
         }
