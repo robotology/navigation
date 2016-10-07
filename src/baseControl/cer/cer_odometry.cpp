@@ -117,7 +117,7 @@ bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
     Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        yError("cer_Odometry::open Unable to find ROBOT_GEOMETRY group!");
         return false;
     }
     if (!geometry_group.check("geom_r"))
