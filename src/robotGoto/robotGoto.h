@@ -284,19 +284,21 @@ public:
     virtual void run();
     virtual void threadRelease();
 
-    void   getCurrentPos(yarp::sig::Vector& v);
-    string getMapId();
-    void   setNewAbsTarget(yarp::sig::Vector target);
-    void   setNewRelTarget(yarp::sig::Vector target);
-    void   resetParamsToDefaultValue();
-    void   stopMovement();
-    void   pauseMovement (double secs);
-    void   resumeMovement();
-    string getNavigationStatusAsString();
-    int    getNavigationStatusAsInt();
-    void   printStats();
-    bool   check_obstacles_in_path();
-    bool   compute_obstacle_avoidance();
+    void          getCurrentPos(yarp::sig::Vector& v);
+    string        getMapId();
+    void          setNewAbsTarget(yarp::sig::Vector target);
+    void          setNewRelTarget(yarp::sig::Vector target);
+    void          resetParamsToDefaultValue();
+    void          stopMovement();
+    void          pauseMovement (double secs);
+    void          resumeMovement();
+    string        getNavigationStatusAsString();
+    int           getNavigationStatusAsInt();
+    Map2DLocation getCurrentAbsTarget();
+    Map2DLocation getCurrentRelTarget();
+    void          printStats();
+    bool          check_obstacles_in_path();
+    bool          compute_obstacle_avoidance();
     
 private:
     bool        rosInit(const yarp::os::Bottle& ros_group);

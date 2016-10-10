@@ -1137,13 +1137,22 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
         target.push_back(beta2);
         target_data.weak_angle = true;
     }
-    target_data.target = target;
-    status             = navigation_status_moving;
-    retreat_counter    = retreat_duration;
+    target_data.target   = target;
+    status               = navigation_status_moving;
+    retreat_counter      = retreat_duration;
 
     yDebug ( "current pos: abs(%.3f %.3f %.2f)", localization_data[0], localization_data[1], localization_data[2]);
     yDebug ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
     sendCurrentGoal();
+}
+Map2DLocation GotoThread::getCurrentAbsTarget()
+{
+    return Map2DLocation(frame_map_id, target_data[0], target_data[1], target_data[2]);
+}
+
+Map2DLocation GotoThread::getCurrentRelTarget()
+{
+    return Map2DLocation(frame_robot_id, target_data[0]-localization_data[0], target_data[1]-localization_data[1], target_data[2]-localization_data[2]);
 }
 
 void GotoThread::resetParamsToDefaultValue()

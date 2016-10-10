@@ -302,6 +302,17 @@ public:
             reply.addDouble(position[2]);
 
         }
+        else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
+        {
+            Map2DLocation loc = request == VOCAB_NAV_GET_ABS_TARGET ? gotoThread->getCurrentAbsTarget() : gotoThread->getCurrentRelTarget();
+            reply.addVocab(VOCAB_OK);
+
+            if(request == VOCAB_NAV_GET_ABS_TARGET) reply.addString(loc.map_id);
+
+            reply.addDouble(loc.x);
+            reply.addDouble(loc.y);
+            reply.addDouble(loc.theta);
+        }
         else
         {
             reply.addVocab(VOCAB_ERR);
