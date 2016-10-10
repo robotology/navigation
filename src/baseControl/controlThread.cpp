@@ -272,7 +272,7 @@ void ControlThread::run()
 void ControlThread::printStats()
 {
     yInfo ("* Control thread:\n");
-    yInfo ("Input command: %+5.0f %+5.0f %+5.0f  %+5.0f      ", input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
+    yInfo ("Input command: %+5.2f %+5.2f %+5.2f  %+5.2f      ", input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
 }
 
 bool ControlThread::set_control_type (string s)
