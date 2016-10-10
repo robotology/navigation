@@ -47,8 +47,9 @@ private:
     double                     angToll;
     bool                       checkCurrentGoalReached();
     void                       printRegisteredLocations();
-
-    bool executeStep(navStep s);
+    bool                       executeStep(navStep s);
+    inline void                absLocationTest();
+    inline void                suspResumeTest();
 public:
                     NavTestModule();
                     ~NavTestModule();
