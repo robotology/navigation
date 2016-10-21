@@ -32,8 +32,17 @@ bool NavTestModule::configure(ResourceFinder& rf)
 {
     bool            okClient, okView;
     Property        navTestCfg, pLocationServer_cfg;
+    string          navServerRoot;
     Time::now();
 
+    if(rf.check("navServerRoot"))
+    {
+        navServerRoot = rf.find("navServerRoot").asString();
+    }
+    else
+    {
+        navServerRoot = "/robotGoto";
+    }
     pLocationServer_cfg.put("device", "locationsServer");
     pLocationServer_cfg.put("local", "/locationServer");
     pLocationServer_cfg.put("ROS_enabled", "");
@@ -42,7 +51,7 @@ bool NavTestModule::configure(ResourceFinder& rf)
 
     navTestCfg.put("device",         "navigation2DClient");
     navTestCfg.put("local",          "/navigationTest");
-    navTestCfg.put("remote",         "/robotGoto");
+    navTestCfg.put("remote",         navServerRoot);
     navTestCfg.put("locationRemote", "/locationServer");
 
     iNav            = 0;
@@ -51,7 +60,7 @@ bool NavTestModule::configure(ResourceFinder& rf)
 
     if(okClient)
     {
-        yInfo("ddNavClinet device open reported successful");
+        yInfo("ddNavClient device open reported successful");
         if(okView)
         {
             yInfo("INavigation2D interface open reported successful");
