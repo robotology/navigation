@@ -425,7 +425,7 @@ bool ControlThread::threadInit()
         input_handler    = new Input((int)(thread_period), control_board_driver);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 62.5 / 1000.0);
-        robot_geom.put("geom_L", 297.16 / 1000.0);
+        robot_geom.put("geom_L", 273 / 1000.0);
         robot_geom.put("g_angle", 0.0);
     }
     else if (robot_type_s == "ikart_V2")
@@ -437,7 +437,7 @@ bool ControlThread::threadInit()
         input_handler    = new Input((int)(thread_period), control_board_driver);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 76.15 / 1000.0);
-        robot_geom.put("geom_L", 297.16 / 1000.0);
+        robot_geom.put("geom_L", 273 / 1000.0);
         robot_geom.put("g_angle", 45.0);
     }
     else
