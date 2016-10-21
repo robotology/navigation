@@ -413,8 +413,6 @@ bool GotoThread::threadInit()
     b = yarp::os::Network::connect("/baseControl/odometry:o", localName + "/odometry:i");
     b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i");
 
-    yarp::os::Time::delay(0.5);
-
     /*
     b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
     if (!b) {yError ("Unable to connect the output command port!"); return false;}
@@ -756,7 +754,7 @@ void GotoThread::sendCurrentGoal()
 void GotoThread::publishLocalPlan()
 {
 
-    if(control_out[LIN_VEL] == 0 && control_out[ANG_VEL] == 0)
+    if(status != navigation_status_moving || (control_out[LIN_VEL] == 0 && control_out[ANG_VEL] == 0))
     {
         return;
     }
@@ -826,7 +824,6 @@ void GotoThread::run()
 {
     mutex.wait();
     evaluateGoalFromTopic();
-    yarp::os::Time::delay(0.05);
     evaluateLocalization();
     getLaserData();
 
@@ -835,7 +832,7 @@ void GotoThread::run()
 
     //gamma is the angle between the current robot heading and the target heading
     double unwrapped_localization_angle = (localization_data[ANGLE] < 0) ? localization_data[ANGLE] + 360  : localization_data[ANGLE];
-    double unwrapped_target_angle       = (target_data[ANGLE] < 0)       ? target_data[ANGLE]       + 360  : target_data[ANGLE];
+    double unwrapped_target_angle       = (target_data[ANGLE]       < 0) ? target_data[ANGLE]       + 360  : target_data[ANGLE];
     double gamma                        = unwrapped_target_angle - unwrapped_localization_angle;
 
     if      (gamma >  180)
@@ -854,35 +851,50 @@ void GotoThread::run()
     double distance = sqrt(pow(target_data[X] - localization_data[X], 2) + pow(target_data[Y] - localization_data[Y], 2));
 
     //compute the control law
-    double tmp1 = (beta - localization_data[ANGLE]);
+    double delta = (beta - localization_data[ANGLE]);
 
-    if (tmp1>360)
+    if (delta>360)
     {
-        tmp1-=360;
+        delta-=360;
     }
 
-    if (tmp1>180 && tmp1<360)
+    if (delta>180 && delta<360)
     {
-        tmp1 = tmp1-360;//ADDED LATER
+        delta = delta-360;//ADDED LATER
     }
 
-    if (tmp1<-180 && tmp1>-360)
+    if (delta<-180 && delta>-360)
     {
-        tmp1 = tmp1+360;//ADDED LATER
+        delta = delta+360;//ADDED LATER
     }
 
     //yDebug ("%f \n", control[0]);
+
+    static bool   onTarget   = false;
+    static double linearToll = onTarget ? m_goal_tolerance_lin : m_goal_tolerance_lin / 2;
+
     control_out[LIN_VEL] = m_gain_lin * distance;
-    if(distance <= m_goal_tolerance_lin)
+    if(distance <= linearToll)
     {
+        onTarget             = true;
+        delta                = gamma;
         control_out[ANG_VEL] = m_gain_ang * gamma;
         control_out[LIN_VEL] = 0;
     }
     else
     {
-        control_out[ANG_VEL] = m_gain_ang * (tmp1);
+        onTarget = false;
+        if(robot_is_holonomic && distance < 2)
+        {
+            double angle;
+            angle = gamma * (fabs(gamma) / 180) + delta * (fabs(delta) / 180);
+        }
+        else
+        {
+            control_out[ANG_VEL] =  m_gain_ang * delta;
+        }
     }
-    control_out[ANG_MOM] = tmp1;
+    control_out[ANG_MOM] = delta;
 
     //control saturation
     //yDebug ("%f %f ", control_out[ANG_VEL], control_out[LIN_VEL]);
@@ -908,11 +920,11 @@ void GotoThread::run()
         if (control_out[LIN_VEL] > -m_min_lin_speed) control_out[LIN_VEL] = -m_min_lin_speed;
     }
     //yDebug ("%f %f \n", control_out[ANG_VEL], control_out[LIN_VEL]);
-    
     //check for large rotations: inhibit linear movement, to allow a rotation on place
     if (fabs(beta - localization_data[ANGLE])>m_max_gamma_angle)
     {
         control_out[LIN_VEL] = 0;
+        control_out[ANG_VEL] = m_gain_ang * delta;
     }
 
     //check for obstacles, always performed
@@ -966,7 +978,6 @@ void GotoThread::run()
     switch (status)
     {
     case navigation_status_moving:
-        int a;
         //Update the safety coefficient only if your are MOVING.
         //If you are WAITING_OBSTACLE, use the last valid safety_coeff until the
         //obstacle has been removed.
@@ -1145,6 +1156,7 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
     yDebug ( "received new target: abs(%.3f %.3f %.2f)", target_data[0], target_data[1], target_data[2]);
     sendCurrentGoal();
 }
+
 Map2DLocation GotoThread::getCurrentAbsTarget()
 {
     return Map2DLocation(frame_map_id, target_data[0], target_data[1], target_data[2]);
