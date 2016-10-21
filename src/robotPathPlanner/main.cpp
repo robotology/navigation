@@ -47,7 +47,7 @@ public:
 
         plannerThread = new PlannerThread(20,rf,p);
 
-        rpcPort.open("/robotPathPlanner/rpc:i");
+        rpcPort.open("/robotPathPlanner/rpc");
         attach(rpcPort);
         //attachTerminal();
 
@@ -174,37 +174,38 @@ public:
 
     bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
-        if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOABS)
+        int request = command.get(1).asVocab();
+        if (request == VOCAB_NAV_GOTOABS)
         {
             yarp::sig::Vector v;
-            v.push_back(command.get(1).asDouble());
-            v.push_back(command.get(2).asDouble());
-            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            v.push_back(command.get(3).asDouble());
+            v.push_back(command.get(4).asDouble());
+            if (command.size() == 6) v.push_back(command.get(5).asDouble());
             plannerThread->setNewAbsTarget(v);
             reply.addVocab(VOCAB_OK);
         }
 
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GOTOREL)
+        else if (request == VOCAB_NAV_GOTOREL)
         {
             yarp::sig::Vector v;
-            v.push_back(command.get(1).asDouble());
             v.push_back(command.get(2).asDouble());
-            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            v.push_back(command.get(3).asDouble());
+            if (command.size() == 5) v.push_back(command.get(4).asDouble());
             plannerThread->setNewRelTarget(v);
             reply.addVocab(VOCAB_OK);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_GET_STATUS)
+        else if (request == VOCAB_NAV_GET_STATUS)
         {
             int nav_status = plannerThread->getNavigationStatusAsInt();
             reply.addVocab(VOCAB_OK);
             reply.addInt(nav_status);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_STOP)
+        else if (request == VOCAB_NAV_STOP)
         {
             plannerThread->stopMovement();
             reply.addVocab(VOCAB_OK);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_SUSPEND)
+        else if (request == VOCAB_NAV_SUSPEND)
         {
             double time = -1;
             if (command.size() > 1)
@@ -212,10 +213,33 @@ public:
             plannerThread->pauseMovement(time);
             reply.addVocab(VOCAB_OK);
         }
-        else if (command.get(0).isVocab() && command.get(0).asVocab() == VOCAB_NAV_RESUME)
+        else if (request == VOCAB_NAV_RESUME)
         {
             plannerThread->resumeMovement();
             reply.addVocab(VOCAB_OK);
+        }
+        else if (request == VOCAB_NAV_GET_CURRENT_POS)
+        {
+            yarp::sig::Vector position;
+
+            plannerThread->getCurrentPos(position);
+            reply.addVocab(VOCAB_OK);
+            reply.addString(plannerThread->getMapId());
+            reply.addDouble(position[0]);
+            reply.addDouble(position[1]);
+            reply.addDouble(position[2]);
+
+        }
+        else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
+        {
+            Map2DLocation loc = request == VOCAB_NAV_GET_ABS_TARGET ? plannerThread->getCurrentAbsTarget() : plannerThread->getCurrentRelTarget();
+            reply.addVocab(VOCAB_OK);
+
+            if(request == VOCAB_NAV_GET_ABS_TARGET) reply.addString(loc.map_id);
+
+            reply.addDouble(loc.x);
+            reply.addDouble(loc.y);
+            reply.addDouble(loc.theta);
         }
         else
         {
@@ -238,6 +262,15 @@ public:
                 v.push_back(command.get(2).asDouble());
                 plannerThread->setNewAbsTarget(v);
                 reply.addString("new absolute target received from gui");
+            }
+            else if(command.get(0).asVocab() == VOCAB_INAVIGATION && command.get(1).isVocab())
+            {
+                parse_respond_vocab(command,reply);
+            }
+            else
+            {
+                yError() << "Invalid vocab received";
+                reply.addVocab(VOCAB_ERR);
             }
         }
     
@@ -264,10 +297,10 @@ public:
             {
                 parse_respond_string(command, reply);
             }
-            else if (command.get(0).isVocab())
-            {
-                parse_respond_vocab(command, reply);
-            }
+        }
+        else
+        {
+            yError() << "Invalid command type";
         }
         plannerThread->mutex.post();
         return true;

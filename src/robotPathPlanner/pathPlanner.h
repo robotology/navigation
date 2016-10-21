@@ -137,6 +137,7 @@ class PlannerThread: public yarp::os::RateThread
         planner_status = navigation_status_idle;
         inner_status = navigation_status_idle;
         localization_data.resize(3,0.0);
+        goal_data.resize(3, 0.0);
         loc_timeout_counter = 0;
         laser_timeout_counter = 0;
         laser_data = 0;
@@ -162,6 +163,7 @@ class PlannerThread: public yarp::os::RateThread
         robot_laser_t = 0;
         use_localization_from_port = false;
         use_localization_from_tf = false;
+
     }
 
     virtual bool threadInit()
@@ -323,6 +325,11 @@ class PlannerThread: public yarp::os::RateThread
     }
 
     virtual void run();
+
+    void          getCurrentPos(yarp::sig::Vector& v);
+    Map2DLocation getCurrentAbsTarget();
+    Map2DLocation getCurrentRelTarget();
+    string        getMapId();
 
     void setNewAbsTarget(yarp::sig::Vector target);
     void setNewRelTarget(yarp::sig::Vector target);
