@@ -50,15 +50,15 @@ NavigationStatusEnum string2status(string s)
 {
     //enum status_type {IDLE=0, MOVING, WAITING_OBSTACLE, REACHED, ABORTED, PAUSED};
     NavigationStatusEnum status;
-    if (s == "IDLE")     status = navigation_status_idle;
-    else if (s == "MOVING")   status = navigation_status_moving;
-    else if (s == "WAITING_OBSTACLE")  status = navigation_status_waiting_obstacle;
-    else if (s == "REACHED")  status = navigation_status_goal_reached;
-    else if (s == "ABORTED")  status = navigation_status_aborted;
-    else if (s == "PAUSED")   status = navigation_status_paused;
+    if (s == "navigation_status_idle")     status = navigation_status_idle;
+    else if (s == "navigation_status_moving")   status = navigation_status_moving;
+    else if (s == "navigation_status_waiting_obstacle")  status = navigation_status_waiting_obstacle;
+    else if (s == "navigation_status_goal_reached")  status = navigation_status_goal_reached;
+    else if (s == "navigation_status_aborted")  status = navigation_status_aborted;
+    else if (s == "navigation_status_paused")   status = navigation_status_paused;
     else 
     {
-        yError("Unknown status of inner controller: '%s'!", s.c_str());
+        yError("PlannerThread::string2status(): Unknown status of inner controller: '%s'!", s.c_str());
         status = navigation_status_idle;
     }
     return status;
@@ -73,7 +73,7 @@ std::string getStatusAsString(NavigationStatusEnum status)
     else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
     else if (status == navigation_status_paused) return std::string("navigation_status_paused");
 
-    yError("Unknown status of inner controller: '%d'!", status);
+    yError("PlannerThread::getStatusAsString(): Unknown status of inner controller: '%d'!", status);
     return std::string("unknown");
 }
 
@@ -92,6 +92,28 @@ void PlannerThread::select_optimized_path(bool b)
         current_path=&computed_path;
     }
 }
+
+Map2DLocation PlannerThread::getCurrentAbsTarget()
+{
+    return Map2DLocation(frame_map_id, goal_data[0], goal_data[1], goal_data[2]);
+}
+
+Map2DLocation PlannerThread::getCurrentRelTarget()
+{
+    return Map2DLocation(frame_robot_id, goal_data[0]-localization_data[0], goal_data[1]-localization_data[1], goal_data[2]-localization_data[2]);
+}
+
+void PlannerThread::getCurrentPos(yarp::sig::Vector& v)
+{
+    v.resize(localization_data.size());
+    v = localization_data;
+}
+
+string PlannerThread::getMapId()
+{
+    return frame_map_id;
+}
+
 void PlannerThread::run()
 {
     mutex.wait();
@@ -134,30 +156,19 @@ void PlannerThread::run()
         yarp::sig::Vector pose;
         iv.resize(6, 0.0);
         pose.resize(6, 0.0);
-#if 0
-        string sss;
-        iTf->allFramesAsString(sss);
-        yDebug() << "All Frames:" <<  sss;
-#endif
-        iTf->transformPose("mobile_base_body", "map", iv, pose);
-        iTf->transformPose("mobile_base_body", "odom", iv, pose);
-        iTf->transformPose("odom", "map", iv, pose);
-
-        //bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
-        bool r = false;
+        bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
         if (r)
         {
             //data is formatted as follows: x, y, angle (in degrees)
-            localization_data[0] = pose[0]; //x
-            localization_data[1] = pose[1]; //y
-            localization_data[2] = pose[5] * RAD2DEG; 
-            //yDebug() << pose[0] << pose[1] << pose[2] << pose[3] << pose[4] << pose[5];
+            localization_data[0]     = pose[0];
+            localization_data[1]     = pose[1];
+            localization_data[2]     = pose[5] * RAD2DEG;
             loc_timeout_counter = 0;
         }
         else
         {
             loc_timeout_counter++;
-            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+            if (loc_timeout_counter > TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
         }
     }
     else
@@ -182,11 +193,12 @@ void PlannerThread::run()
             double angle = (i / double(scansize)*laser_angle_of_view + robot_laser_t)* DEG2RAD;
             laser_data[i].x = scan[i] * cos(angle) + robot_laser_x;
             laser_data[i].y = scan[i] * sin(angle) + robot_laser_y;
+
             yarp::sig::Vector v(2);
-            double cs = cos (localization_data[2]);
-            double ss = sin (localization_data[2]);
-            v[0] = laser_data[i].x*cs - laser_data[i].y*ss + localization_data[0] ;
-            v[1] = laser_data[i].x*ss + laser_data[i].y*cs + localization_data[1] ;
+            double ss = cos (localization_data[2] * DEG2RAD);
+            double cs = sin (localization_data[2] * DEG2RAD);
+            v[0] = laser_data[i].x*cs - laser_data[i].y*ss + localization_data[0];
+            v[1] = laser_data[i].x*ss + laser_data[i].y*cs + localization_data[1];
             cell tmp_cell = map.world2cell(v);
             laser_map_cell.push_back(tmp_cell);
         }
@@ -527,6 +539,11 @@ void PlannerThread::setNewAbsTarget(yarp::sig::Vector target)
 
 void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 {
+    if(target.size() != 3)
+    {
+        yError() << "PlannerThread::setNewRelTarget invalid target vector size";
+        return;
+    }
     //target and localization data are formatted as follows: x, y, angle (in degrees)
     if (planner_status != navigation_status_idle &&
         planner_status != navigation_status_goal_reached &&
@@ -535,8 +552,10 @@ void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
         yError ("Not in idle state, send a 'stop' first");
         return;
     }
+    yDebug() << "received new relative target at:" << target[0] << target[1] << target[2];
 
     double a = localization_data[2] * DEG2RAD;
+    yDebug() << "current position:" << localization_data[0] << localization_data[1] << localization_data[2];
     //this is the inverse of the tranformation matrix from world to robot
     goal_data[0] = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
     goal_data[1] = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
@@ -553,10 +572,11 @@ void PlannerThread::stopMovement()
     port_commands_output.write(cmd1,ans1);
 
     //stop the outer navigation loop
-    planner_status = navigation_status_idle;
+
 
     if (planner_status != navigation_status_idle)
     {
+        planner_status = navigation_status_idle;
         yInfo ("Navigation stopped");
     }
     else
@@ -567,12 +587,43 @@ void PlannerThread::stopMovement()
 
 void PlannerThread::resumeMovement()
 {
-    yError ("Not yet implemented");
+    //resuming the inner navigation loop
+    Bottle cmd1, ans1;
+    cmd1.addString("resume");
+    port_commands_output.write(cmd1,ans1);
+
+    //stop the outer navigation loop
+
+
+    if (planner_status != navigation_status_moving)
+    {
+        planner_status = navigation_status_moving;
+        yInfo ("Navigation resumed");
+    }
+    else
+    {
+        yWarning ("Already moving!");
+    }
 }
 
 void PlannerThread::pauseMovement(double d)
 {
-    yError ("Not yet implemented");
+    //pausing the inner navigation loop
+    Bottle cmd1, ans1;
+    cmd1.addString("pause");
+    port_commands_output.write(cmd1,ans1);
+
+    //stop the outer navigation loop
+
+    if (planner_status != navigation_status_paused)
+    {
+        planner_status = navigation_status_paused;
+        yInfo ("Navigation stopped");
+    }
+    else
+    {
+        yWarning ("Already paused");
+    }
 }
 
 void PlannerThread::printStats()
