@@ -36,7 +36,6 @@
 #include <yarp/math/Math.h>
 #include <yarp/os/Stamp.h>
 #include <string>
-#include <math.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
 #include "../odometry.h"

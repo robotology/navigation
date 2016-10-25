@@ -199,8 +199,8 @@ CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : 
 void CER_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
     //wheel contribution calculation
-    F[0] = appl_linear_speed * cos(appl_desired_direction / 180.0 * 3.14159265) - appl_angular_speed;
-    F[1] = appl_linear_speed * cos(appl_desired_direction / 180.0 * 3.14159265) + appl_angular_speed;
+    F[0] = appl_linear_speed * cos(appl_desired_direction / 180.0 * M_PI) - appl_angular_speed;
+    F[1] = appl_linear_speed * cos(appl_desired_direction / 180.0 * M_PI) + appl_angular_speed;
 }
 
 void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)

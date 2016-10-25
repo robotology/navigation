@@ -59,8 +59,19 @@ void ControlThread::apply_acceleration_limiter(double& linear_speed, double& ang
 {
     double period = this->getRate()/1000;
     angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc*period);
+#if 0
     linear_speed = control_filters::ratelim_filter_0(linear_speed, 8, max_linear_acc*period);
-    //desired_direction does not use any filtering
+    //the following line is not numerically correct because of max_linear_acc, but it prevents jerky motions
+    desired_direction = control_filters::ratelim_filter_0(desired_direction, 9, max_linear_acc*period);
+#else
+    double xcomp = linear_speed * sin(desired_direction*DEG2RAD);
+    double ycomp = linear_speed * cos(desired_direction*DEG2RAD);
+    xcomp = control_filters::ratelim_filter_0(xcomp, 8, max_linear_acc*period);
+    ycomp = control_filters::ratelim_filter_0(ycomp, 9, max_linear_acc*period);
+    linear_speed = sqrt(xcomp * xcomp+ ycomp * ycomp);
+    desired_direction = atan2(xcomp, ycomp) * 180.0 / M_PI;
+#endif
+
     #if DEBUG_LIMTER
     yDebug()<<angular_speed<<linear_speed;
     #endif
@@ -205,6 +216,19 @@ void ControlThread::run()
     //read inputs (input_linear_speed in m/s, input_angular_speed in deg/s...)
     this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
 
+    if (input_linear_speed < 0)
+    {
+        static int print_counter = 0;
+        if (print_counter++ == 10)
+        {
+            yWarning() << "Performance warning: input_angular_speed <0. This should not happen!";
+            print_counter = 0;
+        }
+        input_linear_speed = -input_linear_speed;
+        input_desired_direction += 180.0;
+        if (input_desired_direction >= 360.0) input_desired_direction -= 360.0;
+    }
+
     //low pass filter
     apply_input_filter(input_linear_speed, input_angular_speed, input_desired_direction);
 
@@ -241,7 +265,7 @@ void ControlThread::run()
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
-        pidout_linear_throttle = input_linear_speed ;
+        pidout_linear_throttle = input_linear_speed * exec_pwm_gain;
         pidout_angular_throttle = input_angular_speed * exec_pwm_gain;
         pidout_direction     = input_desired_direction;
         this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
@@ -319,7 +343,7 @@ bool ControlThread::threadInit()
     
     control_type          = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
     input_filter_enabled  = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt();
-    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt();
+    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt()==1;
     lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
     robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
     useRos                = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();

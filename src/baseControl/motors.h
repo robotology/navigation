@@ -40,20 +40,19 @@
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-#ifndef M_PI
-#define M_PI 3.14159265
-#endif
-
 #ifndef RAD2DEG
-#define RAD2DEG 180.0/3.14159
+#define RAD2DEG 180.0/M_PI
 #endif 
 
 #ifndef DEG2RAD
-#define DEG2RAD 3.14159/180.0
+#define DEG2RAD M_PI/180.0
 #endif
 
 class MotorControl

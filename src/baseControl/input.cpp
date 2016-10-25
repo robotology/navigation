@@ -21,6 +21,9 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 void Input::printStats()
 {
     yInfo( "* Input thread:\n");
@@ -167,7 +170,7 @@ void Input::read_percent_cart(const Bottle *b, double& des_dir, double& lin_spd,
     double y_speed = b->get(2).asDouble();
     double t_speed = b->get(3).asDouble();
     pwm_gain       = b->get(4).asDouble();
-    des_dir        = atan2(y_speed,x_speed) * 180.0 / 3.14159265;
+    des_dir        = atan2(y_speed, x_speed) * 180.0 / M_PI;
     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
     ang_spd        = t_speed;
     pwm_gain       = (pwm_gain<+100) ? pwm_gain : +100;
@@ -179,7 +182,9 @@ void Input::read_speed_polar(const Bottle *b, double& des_dir, double& lin_spd, 
     des_dir  = b->get(1).asDouble();
     lin_spd  = b->get(2).asDouble();
     ang_spd  = b->get(3).asDouble();
-    pwm_gain = 100;
+    pwm_gain = b->get(4).asDouble();
+    pwm_gain = (pwm_gain<+100) ? pwm_gain : +100;
+    pwm_gain = (pwm_gain>0) ? pwm_gain : 0;
 }
 
 void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
@@ -187,10 +192,12 @@ void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, d
     double x_speed = b->get(1).asDouble();
     double y_speed = b->get(2).asDouble();
     double t_speed = b->get(3).asDouble();
-    des_dir        = atan2(y_speed,x_speed) * 180.0 / 3.14159265;
+    des_dir        = atan2(y_speed, x_speed) * 180.0 / M_PI;
     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
     ang_spd        = t_speed;
-    pwm_gain       = 100;
+    pwm_gain = b->get(4).asDouble();
+    pwm_gain = (pwm_gain<+100) ? pwm_gain : +100;
+    pwm_gain = (pwm_gain>0) ? pwm_gain : 0;
 }
 
 void Input::read_inputs(double *linear_speed,double *angular_speed,double *desired_direction, double *pwm_gain)
@@ -210,6 +217,40 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         {
             //received a joystick command.
             read_percent_polar(b, joy_desired_direction,joy_linear_speed,joy_angular_speed,joy_pwm_gain);
+            joy_linear_speed = (joy_linear_speed > 100) ? 100 : joy_linear_speed;
+            joy_angular_speed = (joy_angular_speed > 100) ? 100 : joy_angular_speed;
+            joy_linear_speed = (joy_linear_speed < -100) ? -100 : joy_linear_speed;
+            joy_angular_speed = (joy_angular_speed < -100) ? -100 : joy_angular_speed;
+            joy_linear_speed = joy_linear_speed / 100 * linear_vel_at_100_joy;
+            joy_angular_speed = joy_angular_speed / 100 * angular_vel_at_100_joy;
+            wdt_old_joy_cmd = wdt_joy_cmd;
+            wdt_joy_cmd = Time::now();
+
+            //Joystick commands have higher priorty respect to movement commands.
+            //this make the joystick to take control for 100*20 ms
+            if (joy_pwm_gain>10) joystick_received = 100;
+        }
+        else if (b->get(0).asInt() == 2)
+        {
+            //received a joystick command.
+            read_speed_polar(b, joy_desired_direction, joy_linear_speed, joy_angular_speed, joy_pwm_gain);
+            joy_linear_speed = (joy_linear_speed > 100) ? 100 : joy_linear_speed;
+            joy_angular_speed = (joy_angular_speed > 100) ? 100 : joy_angular_speed;
+            joy_linear_speed = (joy_linear_speed < -100) ? -100 : joy_linear_speed;
+            joy_angular_speed = (joy_angular_speed < -100) ? -100 : joy_angular_speed;
+            joy_linear_speed = joy_linear_speed / 100 * linear_vel_at_100_joy;
+            joy_angular_speed = joy_angular_speed / 100 * angular_vel_at_100_joy;
+            wdt_old_joy_cmd = wdt_joy_cmd;
+            wdt_joy_cmd = Time::now();
+
+            //Joystick commands have higher priorty respect to movement commands.
+            //this make the joystick to take control for 100*20 ms
+            if (joy_pwm_gain>10) joystick_received = 100;
+        }
+        else if (b->get(0).asInt() == 3)
+        {
+            //received a joystick command.
+            read_speed_cart(b, joy_desired_direction, joy_linear_speed, joy_angular_speed, joy_pwm_gain);
             joy_linear_speed = (joy_linear_speed > 100) ? 100 : joy_linear_speed;
             joy_angular_speed = (joy_angular_speed > 100) ? 100 : joy_angular_speed;
             joy_linear_speed = (joy_linear_speed < -100) ? -100 : joy_linear_speed;
@@ -291,7 +332,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         b.addInt(3);
         b.addDouble(rosTwist->linear.x);
         b.addDouble(rosTwist->linear.y);
-        b.addDouble(rosTwist->angular.z*180/3.14);
+        b.addDouble(rosTwist->angular.z * 180 / M_PI);
         read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
         wdt_old_ros_cmd   = wdt_ros_cmd;
         wdt_ros_cmd       = Time::now();

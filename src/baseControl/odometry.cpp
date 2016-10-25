@@ -20,8 +20,8 @@
 #include <yarp/os/LogStream.h>
 #include <limits>
 
-#define RAD2DEG 180.0/3.14159
-#define DEG2RAD 3.14159/180.0
+#define RAD2DEG 180.0/M_PI
+#define DEG2RAD M_PI/180.0
 
 inline TickTime normalizeSecNSec(double yarpTimeStamp)
 {
