@@ -113,7 +113,6 @@ class PlannerThread: public yarp::os::RateThread
         double y;
         lasermap_type() {x=y=0.0;}
     };
-    lasermap_type*      laser_data;
     std::vector<cell>   laser_map_cell;
     cell                current_waypoint;
 
@@ -140,7 +139,6 @@ class PlannerThread: public yarp::os::RateThread
         goal_data.resize(3, 0.0);
         loc_timeout_counter = 0;
         laser_timeout_counter = 0;
-        laser_data = 0;
         inner_status_timeout_counter = 0;
         goal_tolerance_lin = 0.05;
         goal_tolerance_ang = 0.6;
@@ -344,7 +342,6 @@ class PlannerThread: public yarp::os::RateThread
 
     virtual void threadRelease()
     {
-        if (laser_data != 0) { delete [] laser_data; laser_data = 0; }
         if (ptf.isValid()) ptf.close();
         if (pLas.isValid()) pLas.close();
         port_localization_input.interrupt();

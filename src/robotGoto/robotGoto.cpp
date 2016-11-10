@@ -90,7 +90,6 @@ GotoThread::GotoThread(unsigned int _period, ResourceFinder &_rf, Property optio
     robot_laser_x                   = 0;
     robot_laser_y                   = 0;
     robot_laser_t                   = 0;
-    laser_data                      = 0;
     rosNode                         = 0;
 }
 
@@ -481,21 +480,21 @@ bool GotoThread::compute_obstacle_avoidance()
     double min_distance = max_obstacle_distance;
     double min_angle    = 0.0;
 
-    if (laser_data == 0)
+    size_t las_size = laser_data.size();
+    if (las_size == 0)
     {
         yError() << "Internal error, invalid laser data struct!";
         return false;
     }
 
-    size_t las_size = laser_data->size();
-
     for (size_t i = 0; i < las_size; i++)
     {
-        double curr_d     = laser_data->get_distance(i);
-        double curr_angle = laser_data->get_angle(i);
-        size_t angle_t    = (size_t)(4.0 * frontal_blind_angle);
+        double curr_d = 0;
+        double curr_angle = 0;
+        laser_data[i].get_polar(curr_d, curr_angle);
 
-        if (i>=540-angle_t && i<=540+angle_t) continue; //skip frontalobstacles
+        if (curr_angle >= 0 - frontal_blind_angle*DEG2RAD &&
+            curr_angle <= 0 + frontal_blind_angle*DEG2RAD) continue; //skip frontalobstacles
 
         if (curr_d < min_distance)
         {
@@ -541,17 +540,19 @@ bool GotoThread::check_obstacles_in_path()
     vertx[3] =  -robot_radius  * ctheta;
     verty[3] =  -robot_radius  * stheta;
 
-    if (laser_data == 0)
+    size_t las_size = laser_data.size();
+
+    if (las_size == 0)
     {
         yError() << "Internal error, invalid laser data struct!";
         return false;
     }
 
-    size_t las_size = laser_data->size();
-
     for (size_t i = 0; i < las_size; i++)
     {
-        double d = laser_data->get_distance(i);
+        double d = 0;
+        double angle = 0;
+        laser_data[i].get_polar(d,angle);
 
         if (d < robot_radius)
         {
@@ -560,14 +561,12 @@ bool GotoThread::check_obstacles_in_path()
             continue;
         }
 
-        double px = laser_data->get_x(i);
-        double py = laser_data->get_y(i);
+        double px = 0;
+        double py = 0;
+        laser_data[i].get_cartesian(px,py);
 
         if (pnpoly(4,vertx,verty,px,py)>0)
         {
-            double d = laser_data->get_distance(i);
-
-            //if (laser_data.get_distance(i) < goal_distance)
             if (d < goal_distance)
             {
                 laser_obstacles++;
@@ -704,16 +703,10 @@ void GotoThread::evaluateGoalFromTopic()
 void GotoThread::getLaserData()
 {
     yarp::sig::Vector scan;
-    bool ret = iLaser->getMeasurementData(scan);
+    bool ret = iLaser->getLaserMeasurement(laser_data);
 
     if (ret)
     {
-        if (laser_data == 0)
-        {
-            laser_data = new laser_type(scan.size(), this->laser_angle_of_view);
-            laser_data->set_laser_position(robot_laser_x, robot_laser_y, robot_laser_t);
-        }
-        laser_data->set_cartesian_laser_data(scan);
         las_timeout_counter = 0;
     }
     else

@@ -474,10 +474,13 @@ void map_class::drawPath(IplImage *map, cell current_position, cell current_targ
     };
 }
 
-void map_class::drawCurrentPosition(IplImage *map, cell current, const CvScalar& color)
+void map_class::drawCurrentPosition(IplImage *map, cell current, double angle, const CvScalar& color)
 {
     if (map==0) return;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
+    int orient_x = current.x + 6 * sin(angle);
+    int orient_y = current.y + 6 * cos(angle);
+    cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
 }
 
 void map_class::drawLaserScan(IplImage *map, std::vector <cell>& laser_scan, const CvScalar& color)

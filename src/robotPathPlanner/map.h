@@ -87,7 +87,7 @@ class map_class
 
     //draw stuff on the map
     void drawPath(IplImage *map, cell current_position, cell current_target, std::queue<cell> path, const CvScalar& color);
-    void drawCurrentPosition(IplImage *map, cell current, const CvScalar& color);
+    void drawCurrentPosition(IplImage *map, cell current, double angle, const CvScalar& color);
     void drawLaserScan(IplImage *map, std::vector <cell>& laser_scan, const CvScalar& color);
 
     //compute the path
