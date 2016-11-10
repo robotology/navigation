@@ -177,28 +177,23 @@ void PlannerThread::run()
     }
 
     //read the laser data
-    yarp::sig::Vector scan;
-    bool ret = iLaser->getMeasurementData(scan);
+    std::vector<LaserMeasurementData> scan;
+    bool ret = iLaser->getLaserMeasurement(scan);
 
     if (ret)
     {
         laser_map_cell.clear();
         unsigned int scansize = scan.size();
-        if (laser_data == 0)
-        {
-            laser_data = new lasermap_type[scansize];
-        }
         for (unsigned int i = 0; i<scansize; i++)
         {
-            double angle = (i / double(scansize)*laser_angle_of_view + robot_laser_t)* DEG2RAD;
-            laser_data[i].x = scan[i] * cos(angle) + robot_laser_x;
-            laser_data[i].y = scan[i] * sin(angle) + robot_laser_y;
-
+            double las_x = 0;
+            double las_y = 0;
+            scan[i].get_cartesian(las_x, las_y);
             yarp::sig::Vector v(2);
             double ss = cos (localization_data[2] * DEG2RAD);
             double cs = sin (localization_data[2] * DEG2RAD);
-            v[0] = laser_data[i].x*cs - laser_data[i].y*ss + localization_data[0];
-            v[1] = laser_data[i].x*ss + laser_data[i].y*cs + localization_data[1];
+            v[0] = las_x*cs - las_y*ss + localization_data[0];
+            v[1] = las_x*ss + las_y*cs + localization_data[1];
             cell tmp_cell = map.world2cell(v);
             laser_map_cell.push_back(tmp_cell);
         }
@@ -410,7 +405,7 @@ void PlannerThread::run()
         //map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color2);
     }
 
-    map.drawCurrentPosition(map.processed_map_with_scan,start,blue_color);
+    map.drawCurrentPosition(map.processed_map_with_scan, start, localization_data[2]*DEG2RAD,blue_color);
     static IplImage* map_with_path = 0;
     if (map_with_path==0) map_with_path = cvCloneImage(map.processed_map_with_scan);
     else cvCopyImage(map.processed_map_with_scan,map_with_path);

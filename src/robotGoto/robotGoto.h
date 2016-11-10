@@ -95,75 +95,6 @@ struct target_type
     double& operator[] (const int& i) { return target[i]; }
 };
 
-class laser_type
-{
-    yarp::os::Mutex  m_mutex;
-    unsigned int     m_data_size;
-    double           m_laser_angle_of_view;
-    double*          m_laser_x;
-    double*          m_laser_y;
-    double*          m_distances;
-    double*          m_angles;
-    double           m_laser_pos_x;
-    double           m_laser_pos_y;
-    double           m_laser_pos_t;
-    
-    public:
-    laser_type(size_t data_size, double laser_angle_of_view)
-    {
-        unsigned int i        = 0;
-        m_data_size           = data_size;
-        m_laser_angle_of_view = laser_angle_of_view;
-        m_laser_x             = new double[m_data_size];
-        m_laser_y             = new double[m_data_size];
-        m_distances           = new double[m_data_size];
-        m_angles              = new double[m_data_size];
-        m_laser_pos_x         = 0;
-        m_laser_pos_y         = 0;
-        m_laser_pos_t         = 0;
-
-        memset(m_laser_x,   0, m_data_size*sizeof(double));
-        memset(m_laser_y,   0, m_data_size*sizeof(double));
-        memset(m_distances, 0, m_data_size*sizeof(double));
-        memset(m_angles,    0, m_data_size*sizeof(double));
-    }
-
-    ~laser_type()
-    {
-        if (m_laser_x)   { delete [] m_laser_x; m_laser_x = 0; }
-        if (m_laser_y)   { delete [] m_laser_y; m_laser_y = 0; }
-        if (m_distances) { delete [] m_distances; m_distances = 0; }
-        if (m_angles)    { delete [] m_angles; m_angles = 0; }
-    }
-
-    size_t size()
-    {
-        yarp::os::LockGuard lock(m_mutex);
-        return m_data_size;
-    }
-
-    void set_cartesian_laser_data (const yarp::sig::Vector laser_map)
-    {
-        yarp::os::LockGuard lock (m_mutex);
-        size_t scansize = laser_map.size();
-
-        for (unsigned int i = 0; i<scansize; i++)
-        {
-            double angle   = (i / double(scansize) * m_laser_angle_of_view - m_laser_pos_t) * DEG2RAD;
-            m_laser_x[i]   = laser_map[i] * cos(angle) + m_laser_pos_x;
-            m_laser_y[i]   = laser_map[i] * sin(angle) + m_laser_pos_y;
-            m_distances[i] = sqrt(m_laser_x[i] * m_laser_x[i] + m_laser_y[i] * m_laser_y[i]);
-            m_angles[i]    = atan2(double(m_laser_x[i]), double(m_laser_y[i])) * RAD2DEG;
-        }
-    }
-
-    inline const double& get_distance(int i) { yarp::os::LockGuard lock(m_mutex); return m_distances[i]; }
-    inline const double& get_angle(int i) { yarp::os::LockGuard lock(m_mutex); return m_angles[i]; }
-    inline const double& get_x(int i) { yarp::os::LockGuard lock(m_mutex); return m_laser_x[i]; }
-    inline const double& get_y(int i) { yarp::os::LockGuard lock(m_mutex); return m_laser_y[i]; }
-    inline void set_laser_position(double x, double y, double t) { yarp::os::LockGuard lock(m_mutex); m_laser_pos_x = x; m_laser_pos_y = y; m_laser_pos_t = t; }
-};
-
 class GotoThread: public yarp::os::RateThread
 {
     /////////////////////////////////////
@@ -257,7 +188,7 @@ protected:
     yarp::sig::Vector    localization_data;
     yarp::sig::Vector    odometry_data;
     target_type          target_data;
-    laser_type*          laser_data;
+    std::vector<LaserMeasurementData>  laser_data;
     yarp::sig::Vector    control_out;
     NavigationStatusEnum status;
     int                  retreat_counter;
