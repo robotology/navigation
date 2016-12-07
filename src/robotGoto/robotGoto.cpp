@@ -33,6 +33,7 @@
 #include <string>
 #include <math.h>
 #include <yarp/math/Math.h>
+#include <yarp/math/Quaternion.h>
 
 #include "robotGoto.h"
 
@@ -684,16 +685,16 @@ void GotoThread::evaluateGoalFromTopic()
         {
             yInfo() << "received a goal from ros topic";
             yarp::sig::Vector v(3);
-            yarp::sig::Vector q(4);
+            yarp::math::Quaternion q;
 
-            q[0] = rosGoalData->pose.orientation.w;
-            q[1] = rosGoalData->pose.orientation.x;
-            q[2] = rosGoalData->pose.orientation.y;
-            q[3] = rosGoalData->pose.orientation.z;
+            q.w() = rosGoalData->pose.orientation.w;
+            q.x() = rosGoalData->pose.orientation.x;
+            q.y() = rosGoalData->pose.orientation.y;
+            q.z() = rosGoalData->pose.orientation.z;
 
             v[0] = rosGoalData->pose.position.x;
             v[1] = rosGoalData->pose.position.y;
-            v[2] = -yarp::math::dcm2rpy(yarp::math::quat2dcm(q))[2] * RAD2DEG;
+            v[2] = -yarp::math::dcm2rpy(q.toRotationMatrix())[2] * RAD2DEG;
 
             setNewAbsTarget(v);
         }
@@ -724,21 +725,23 @@ void GotoThread::sendCurrentGoal()
     }
     geometry_msgs_PoseStamped& goal = rosCurrentGoal.prepare();
     static int        seq;
-    yarp::sig::Vector q(4);
+    yarp::math::Quaternion q;
     yarp::sig::Vector rpy(3);
+    yarp::sig::Matrix m;
 
     rpy[0]                  = rpy[1] = 0;
     rpy[2]                  = target_data[ANGLE] * DEG2RAD;
-    q                       = yarp::math::dcm2quat(yarp::math::SE3inv(yarp::math::rpy2dcm(rpy)));
+    m                       = yarp::math::SE3inv(yarp::math::rpy2dcm(rpy)); 
+    q.fromRotationMatrix(m);
     goal.header.frame_id    = frame_map_id;
     goal.header.seq         = seq;
     goal.pose.position.x    = target_data[X];
     goal.pose.position.y    = target_data[Y];
     goal.pose.position.z    = 0;
-    goal.pose.orientation.w = q[0];
-    goal.pose.orientation.x = q[1];
-    goal.pose.orientation.y = q[2];
-    goal.pose.orientation.z = q[3];
+    goal.pose.orientation.w = q.w();
+    goal.pose.orientation.x = q.x();
+    goal.pose.orientation.y = q.y();
+    goal.pose.orientation.z = q.z();
 
     rosCurrentGoal.write();
     seq++;
