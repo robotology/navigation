@@ -68,6 +68,7 @@ class map_class
     IplImage*                               loaded_map;
     IplImage*                               processed_map;
     IplImage*                               processed_map_with_scan;
+    CvFont                                  font;
     
     public:
     map_class();
@@ -89,6 +90,7 @@ class map_class
     void drawPath(IplImage *map, cell current_position, cell current_target, std::queue<cell> path, const CvScalar& color);
     void drawCurrentPosition(IplImage *map, cell current, double angle, const CvScalar& color);
     void drawLaserScan(IplImage *map, std::vector <cell>& laser_scan, const CvScalar& color);
+    void drawInfo(IplImage *map, cell current, double loc_x, double loc_y, double loc_angle, const CvScalar& color);
 
     //compute the path
     bool findPath(IplImage *img, cell start, cell goal, std::queue<cell>& path);

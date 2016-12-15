@@ -161,7 +161,6 @@ class PlannerThread: public yarp::os::RateThread
         robot_laser_t = 0;
         use_localization_from_port = false;
         use_localization_from_tf = false;
-
     }
 
     virtual bool threadInit()

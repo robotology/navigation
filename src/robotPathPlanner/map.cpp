@@ -49,6 +49,7 @@ map_class::map_class()
     crop_y        = 0;
     crop_w        = 0;
     crop_h        = 0;
+    cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.28, 0.28);
 }
 
 bool map_class::sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send)
@@ -478,9 +479,23 @@ void map_class::drawCurrentPosition(IplImage *map, cell current, double angle, c
 {
     if (map==0) return;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
-    int orient_x = current.x + 6 * sin(angle);
-    int orient_y = current.y + 6 * cos(angle);
+    int orient_x = current.x + 6 * cos(-angle);
+    int orient_y = current.y + 6 * sin(-angle);
     cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+}
+
+void map_class::drawInfo(IplImage *map, cell current, double loc_x, double loc_y, double loc_angle, const CvScalar& color)
+{
+    char txt[255];
+    sprintf(txt,"%.1f %.1f %.1f",loc_x, loc_y, loc_angle);
+    cell orig   = this->world2cell(yarp::sig::Vector(2,0.0));
+    yarp::sig::Vector vx(2); vx[0]=2; vx[1]=0;
+    yarp::sig::Vector vy(2); vy[0]=0; vy[1]=2;
+    cell x_axis = this->world2cell(vx);
+    cell y_axis = this->world2cell(vy);
+    cvPutText(map, txt, cvPoint(current.x, current.y), &font, color);
+    cvLine(map, cvPoint(orig.x, orig.y), cvPoint(x_axis.x, x_axis.y), cvScalar(211,0,0));
+    cvLine(map, cvPoint(orig.x, orig.y), cvPoint(y_axis.x, y_axis.y), cvScalar(0,211,0));
 }
 
 void map_class::drawLaserScan(IplImage *map, std::vector <cell>& laser_scan, const CvScalar& color)
