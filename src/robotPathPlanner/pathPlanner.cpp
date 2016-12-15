@@ -28,6 +28,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/IRangefinder2D.h>
+#include <yarp/math/Math.h>
 #include <string>
 
 #define _USE_MATH_DEFINES
@@ -41,6 +42,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::math;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180
@@ -190,8 +192,8 @@ void PlannerThread::run()
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
             yarp::sig::Vector v(2);
-            double ss = cos (localization_data[2] * DEG2RAD);
-            double cs = sin (localization_data[2] * DEG2RAD);
+            double ss = sin (localization_data[2] * DEG2RAD);
+            double cs = cos (localization_data[2] * DEG2RAD);
             v[0] = las_x*cs - las_y*ss + localization_data[0];
             v[1] = las_x*ss + las_y*cs + localization_data[1];
             cell tmp_cell = map.world2cell(v);
@@ -406,6 +408,10 @@ void PlannerThread::run()
     }
 
     map.drawCurrentPosition(map.processed_map_with_scan, start, localization_data[2]*DEG2RAD,blue_color);
+#ifdef DRAW_INFO
+    map.drawInfo(map.processed_map_with_scan, start, localization_data[0], localization_data[1], localization_data[2],blue_color);
+#endif
+
     static IplImage* map_with_path = 0;
     if (map_with_path==0) map_with_path = cvCloneImage(map.processed_map_with_scan);
     else cvCopyImage(map.processed_map_with_scan,map_with_path);
@@ -496,7 +502,7 @@ void PlannerThread::startNewPath(cell target)
 
     //search for an simpler path (waypoint optimization)
     map.simplifyPath(map.processed_map, computed_path, computed_simplified_path);
-    yInfo ("path size:%d simplified path size:%d time: %.2f", computed_path.size(), computed_simplified_path.size(), t2-t1);
+    yInfo ("path size:%d simplified path size:%d time: %.2f", (int)computed_path.size(), (int)computed_simplified_path.size(), t2-t1);
 
     //choose the path to use
     if (use_optimized_path)
