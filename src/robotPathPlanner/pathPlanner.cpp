@@ -28,7 +28,6 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/IRangefinder2D.h>
-#include <yarp/math/Math.h>
 #include <string>
 
 #define _USE_MATH_DEFINES
@@ -42,7 +41,6 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
-using namespace yarp::math;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180
@@ -124,10 +122,10 @@ void PlannerThread::run()
     yarp::os::Bottle *gui_targ = port_yarpview_target_input.read(false);
     if (gui_targ)
     {
-        cell c;
+        MapGrid2D::XYCell c;
         c.x=(*gui_targ).get(0).asInt();
         c.y=(*gui_targ).get(1).asInt();
-        yarp::sig::Vector v = map.cell2world(c);
+        yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_map.cell2World(c));
         yInfo ("selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
         yarp::os::Bottle& out = port_yarpview_target_output.prepare();
         out.clear();
@@ -184,7 +182,7 @@ void PlannerThread::run()
 
     if (ret)
     {
-        laser_map_cell.clear();
+        m_laser_map_cells.clear();
         unsigned int scansize = scan.size();
         for (unsigned int i = 0; i<scansize; i++)
         {
@@ -192,12 +190,11 @@ void PlannerThread::run()
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
             yarp::sig::Vector v(2);
-            double ss = sin (localization_data[2] * DEG2RAD);
-            double cs = cos (localization_data[2] * DEG2RAD);
+            double ss = cos (localization_data[2] * DEG2RAD);
+            double cs = sin (localization_data[2] * DEG2RAD);
             v[0] = las_x*cs - las_y*ss + localization_data[0];
             v[1] = las_x*ss + las_y*cs + localization_data[1];
-            cell tmp_cell = map.world2cell(v);
-            laser_map_cell.push_back(tmp_cell);
+            m_laser_map_cells.push_back(m_map.world2Cell(v));
         }
         laser_timeout_counter=0;
     }
@@ -397,24 +394,24 @@ void PlannerThread::run()
     //draw the map
     static CvScalar blue_color  = cvScalar(0,0,200);
     static CvScalar blue_color2 = cvScalar(80,80,200);
-    cell start = map.world2cell(localization_data);
+    MapGrid2D::XYCell start = m_map.world2Cell(MapGrid2D::XYWorld(localization_data[0], localization_data[1]));
 
-    cvCopyImage(map.processed_map, map.processed_map_with_scan);
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
+    m_map.getMapImage(map_image);
+    static IplImage*   processed_map_with_scan = 0;
+    if (processed_map_with_scan == 0) processed_map_with_scan = cvCloneImage((const IplImage*)map_image.getIplImage());
+    cvCopyImage(map_image.getIplImage(), processed_map_with_scan);
     if (laser_timeout_counter<TIMEOUT_MAX)
     {
-        map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color);
+        drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
         //map.enlargeScan(laser_map_cell,6);
         //map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color2);
     }
 
-    map.drawCurrentPosition(map.processed_map_with_scan, start, localization_data[2]*DEG2RAD,blue_color);
-#ifdef DRAW_INFO
-    map.drawInfo(map.processed_map_with_scan, start, localization_data[0], localization_data[1], localization_data[2],blue_color);
-#endif
-
+    drawCurrentPosition(processed_map_with_scan, start, localization_data[2]*DEG2RAD,blue_color);
     static IplImage* map_with_path = 0;
-    if (map_with_path==0) map_with_path = cvCloneImage(map.processed_map_with_scan);
-    else cvCopyImage(map.processed_map_with_scan,map_with_path);
+    if (map_with_path==0) map_with_path = cvCloneImage(processed_map_with_scan);
+    else cvCopyImage(processed_map_with_scan,map_with_path);
 
     CvScalar color = cvScalar(0,200,0);
     CvScalar color2 = cvScalar(0,200,100);
@@ -422,10 +419,10 @@ void PlannerThread::run()
     if (planner_status != navigation_status_idle && planner_status != navigation_status_goal_reached)
     {
 #ifdef DRAW_BOTH_PATHS
-        map.drawPath(map_with_path, start, computed_path, color); 
-        map.drawPath(map_with_path, start, computed_simplified_path, color2);
+        drawPath(map_with_path, start, computed_path, color); 
+        drawPath(map_with_path, start, computed_simplified_path, color2);
 #else
-        map.drawPath(map_with_path, start, current_waypoint, *current_path, color); 
+        drawPath(map_with_path, start, current_waypoint, *current_path, color); 
 #endif
     }
 
@@ -433,9 +430,7 @@ void PlannerThread::run()
     if (map_with_location == 0) map_with_location = cvCloneImage(map_with_path);
     else cvCopyImage(map_with_path, map_with_location);
 
-
-
-    map.sendToPort(&port_map_output,map_with_location);
+    sendToPort(&port_map_output,map_with_location);
     mutex.post();
 }
 
@@ -453,8 +448,8 @@ void PlannerThread::sendWaypoint()
     current_path->pop();
     //send the waypoint to the inner controller
     Bottle cmd1, ans1;
-    cmd1.addString("gotoAbs"); 
-    yarp::sig::Vector v = map.cell2world(current_waypoint);
+    cmd1.addString("gotoAbs");
+    yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_map.cell2World(current_waypoint));
     cmd1.addDouble(v[0]);
     cmd1.addDouble(v[1]);
     if (path_size==1 && goal_data.size()==3)
@@ -475,23 +470,23 @@ void PlannerThread::sendWaypoint()
     inner_status = string2status(ans2.toString().c_str());
 }
 
-void PlannerThread::startNewPath(cell target)
+void PlannerThread::startNewPath(MapGrid2D::XYCell target)
 {
-    cell start = map.world2cell(localization_data);
+    MapGrid2D::XYCell start = m_map.world2Cell(localization_data);
 #ifdef DEBUG_WITH_CELLS
     start.x = 150;//&&&&&
     start.y = 150;//&&&&&
 #endif
     double t1 = yarp::os::Time::now();
     //clear the memory 
-    std::queue<cell> empty;
+    std::queue<MapGrid2D::XYCell> empty;
     std::swap(computed_path, empty );
-    std::queue<cell> empty2;
+    std::queue<MapGrid2D::XYCell> empty2;
     std::swap( computed_simplified_path, empty2 );
     planner_status = navigation_status_thinking;
 
     //search for a path
-    bool b = map.findPath(map.processed_map, start , target, computed_path);
+    bool b = findPath(m_map, start , target, computed_path);
     if (!b)
     {
         yError ("path not found");
@@ -501,8 +496,8 @@ void PlannerThread::startNewPath(cell target)
     double t2 = yarp::os::Time::now();
 
     //search for an simpler path (waypoint optimization)
-    map.simplifyPath(map.processed_map, computed_path, computed_simplified_path);
-    yInfo ("path size:%d simplified path size:%d time: %.2f", (int)computed_path.size(), (int)computed_simplified_path.size(), t2-t1);
+    simplifyPath(m_map, computed_path, computed_simplified_path);
+    yInfo ("path size:%d simplified path size:%d time: %.2f", computed_path.size(), computed_simplified_path.size(), t2-t1);
 
     //choose the path to use
     if (use_optimized_path)
@@ -530,7 +525,7 @@ void PlannerThread::setNewAbsTarget(yarp::sig::Vector target)
     }
 
     goal_data = target;
-    cell goal = map.world2cell(target);
+    MapGrid2D::XYCell goal = m_map.world2Cell(target);
 #ifdef DEBUG_WITH_CELLS
     goal.x = (int)target_data[0]; //&&&&&
     goal.y = (int)target_data[1]; //&&&&&
@@ -561,7 +556,7 @@ void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     goal_data[0] = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
     goal_data[1] = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
     goal_data[2] = target[2] + localization_data[2];
-    cell goal = map.world2cell(goal_data);
+    MapGrid2D::XYCell goal = m_map.world2Cell(goal_data);
     startNewPath(goal);
 }
 
