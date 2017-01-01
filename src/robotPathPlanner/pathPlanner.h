@@ -33,6 +33,8 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/IRangefinder2D.h>
+#include <yarp/dev/IMap2D.h>
+#include <yarp/dev/MapGrid2D.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/RpcClient.h>
@@ -79,7 +81,8 @@ class PlannerThread: public yarp::os::RateThread
     double    robot_laser_x;       //m
     double    robot_laser_y;       //m
     double    robot_laser_t;       //deg
-    map_class map;
+    //map_class map;
+    yarp::dev::MapGrid2D m_map;
     bool      use_optimized_path;
     double    min_laser_angle;
     double    max_laser_angle;
@@ -92,7 +95,9 @@ class PlannerThread: public yarp::os::RateThread
     //ports
     PolyDriver                                             ptf;
     PolyDriver                                             pLas;
+    PolyDriver                                             pMap;
     IRangefinder2D*                                        iLaser;
+    IMap2D*                                                iMap;
     IFrameTransform*                                       iTf;
     BufferedPort<yarp::sig::Vector>                        port_localization_input;
     BufferedPort<yarp::os::Bottle>                         port_status_input;
@@ -107,18 +112,12 @@ class PlannerThread: public yarp::os::RateThread
     ResourceFinder      &rf;
     yarp::sig::Vector   localization_data;
     yarp::sig::Vector   goal_data;
-    struct lasermap_type
-    {
-        double x;
-        double y;
-        lasermap_type() {x=y=0.0;}
-    };
-    std::vector<cell>   laser_map_cell;
-    cell                current_waypoint;
+    std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
+    yarp::dev::MapGrid2D::XYCell                current_waypoint;
 
-    std::queue<cell>    computed_path;
-    std::queue<cell>    computed_simplified_path;
-    std::queue<cell>*   current_path;
+    std::queue<yarp::dev::MapGrid2D::XYCell>    computed_path;
+    std::queue<yarp::dev::MapGrid2D::XYCell>    computed_simplified_path;
+    std::queue<yarp::dev::MapGrid2D::XYCell>*   current_path;
     NavigationStatusEnum   planner_status;
     NavigationStatusEnum   inner_status;
 
@@ -253,6 +252,23 @@ class PlannerThread: public yarp::os::RateThread
             }
         }
 
+        //open the map interface
+        Property map_options;
+        map_options.put("device", "map2DClient");
+        map_options.put("local", "/robotPathPlanner/mapClient");
+        map_options.put("remote", "/mapServer");
+        if (pMap.open(map_options) == false)
+        {
+            yError() << "Unable to open mapClient";
+            return false;
+        }
+        pMap.view(iMap);
+        if (iMap == 0)
+        {
+            yError() << "Unable to open map interface";
+            return false;
+        }
+
         //open the laser interface
         Bottle laserBottle = rf.findGroup("LASER");
         if (laserBottle.isNull())
@@ -267,12 +283,12 @@ class PlannerThread: public yarp::os::RateThread
         }
         string laser_remote_port = laserBottle.find("laser_port").asString();
 
-        Property options;
-        options.put("device", "Rangefinder2DClient");
-        options.put("local", "/robotPathPlanner/laser:i");
-        options.put("remote", laser_remote_port);
-        options.put("period", "10");
-        if (pLas.open(options) == false)
+        Property las_options;
+        las_options.put("device", "Rangefinder2DClient");
+        las_options.put("local", "/robotPathPlanner/laser:i");
+        las_options.put("remote", laser_remote_port);
+        las_options.put("period", "10");
+        if (pLas.open(las_options) == false)
         {
             yError() << "Unable to open laser driver";
             return false;
@@ -312,12 +328,14 @@ class PlannerThread: public yarp::os::RateThread
         }
         map_filename = mapBottle.find("file_name").asString();
 
-        if (!map.loadMap(map_filename))
+        if (!m_map.loadFromFile(map_filename))
         {
             yError("map file not found, closing");
             return false;
         }
-
+        m_map.enlargeObstacles(6);
+        iMap->store_map(m_map);
+        
         return true;
     }
 
@@ -331,7 +349,7 @@ class PlannerThread: public yarp::os::RateThread
     void setNewAbsTarget(yarp::sig::Vector target);
     void setNewRelTarget(yarp::sig::Vector target);
     void sendWaypoint();
-    void startNewPath(cell target);
+    void startNewPath(MapGrid2D::XYCell target);
     void stopMovement();
     void pauseMovement (double secs);
     void resumeMovement();
