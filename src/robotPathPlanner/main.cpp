@@ -89,22 +89,25 @@ public:
     { 
         if (isStopping())
         {
-            plannerThread->stop();   
+            plannerThread->stop();
             return false;
         }
         
+        int loc, las, sta;
+        plannerThread->getTimeouts(loc,las,sta);
+
         bool err = false;
-        if (plannerThread->laser_timeout_counter>TIMEOUT_MAX)
+        if (las>TIMEOUT_MAX)
         {
             yError("timeout, no laser data received!\n");
             err= true;
         }
-        if (plannerThread->loc_timeout_counter>TIMEOUT_MAX)
+        if (loc>TIMEOUT_MAX)
         {
             yError(" timeout, no localization data received!\n");
             err= true;
         }
-        if (plannerThread->inner_status_timeout_counter>TIMEOUT_MAX)
+        if (sta>TIMEOUT_MAX)
         {
             yError("timeout, no status info received!\n");
             err= true;
@@ -120,11 +123,12 @@ public:
     {
         if (command.get(0).isString() && command.get(0).asString() == "gotoAbs")
         {
-            yarp::sig::Vector v;
-            v.push_back(command.get(1).asDouble());
-            v.push_back(command.get(2).asDouble());
-            if (command.size() == 4) v.push_back(command.get(3).asDouble());
-            plannerThread->setNewAbsTarget(v);
+            yarp::dev::Map2DLocation loc;
+            loc.x = command.get(1).asDouble();
+            loc.y = command.get(2).asDouble();
+            //loc.theta == //???
+            loc.map_id = plannerThread->getCurrentMapId();
+            plannerThread->setNewAbsTarget(loc);
             reply.addString("new absolute target received");
         }
 
@@ -177,11 +181,12 @@ public:
         int request = command.get(1).asVocab();
         if (request == VOCAB_NAV_GOTOABS)
         {
-            yarp::sig::Vector v;
-            v.push_back(command.get(3).asDouble());
-            v.push_back(command.get(4).asDouble());
-            if (command.size() == 6) v.push_back(command.get(5).asDouble());
-            plannerThread->setNewAbsTarget(v);
+            yarp::dev::Map2DLocation loc;
+            loc.map_id = command.get(2).asString();
+            loc.x = command.get(3).asDouble();
+            loc.y = command.get(4).asDouble();
+            loc.theta = command.get(5).asDouble();
+            plannerThread->setNewAbsTarget(loc);
             reply.addVocab(VOCAB_OK);
         }
 
@@ -220,14 +225,13 @@ public:
         }
         else if (request == VOCAB_NAV_GET_CURRENT_POS)
         {
-            yarp::sig::Vector position;
-
-            plannerThread->getCurrentPos(position);
+            yarp::dev::Map2DLocation loc;
+            plannerThread->getCurrentPos(loc);
             reply.addVocab(VOCAB_OK);
-            reply.addString(plannerThread->getMapId());
-            reply.addDouble(position[0]);
-            reply.addDouble(position[1]);
-            reply.addDouble(position[2]);
+            reply.addString(loc.map_id);
+            reply.addDouble(loc.x);
+            reply.addDouble(loc.y);
+            reply.addDouble(loc.theta);
 
         }
         else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
@@ -252,18 +256,10 @@ public:
     {
         reply.clear(); 
 
-        plannerThread->mutex.wait();
+        plannerThread->m_mutex.wait();
         if (command.get(0).isVocab())
         {
-            if (command.get(0).asVocab() == VOCAB3('p','n','t'))
-            {
-                yarp::sig::Vector v;
-                v.push_back(command.get(1).asDouble());
-                v.push_back(command.get(2).asDouble());
-                plannerThread->setNewAbsTarget(v);
-                reply.addString("new absolute target received from gui");
-            }
-            else if(command.get(0).asVocab() == VOCAB_INAVIGATION && command.get(1).isVocab())
+            if(command.get(0).asVocab() == VOCAB_INAVIGATION && command.get(1).isVocab())
             {
                 parse_respond_vocab(command,reply);
             }
@@ -273,12 +269,11 @@ public:
                 reply.addVocab(VOCAB_ERR);
             }
         }
-    
         else if (command.get(0).isString())
         {
             if (command.get(0).asString()=="quit")
             {
-                plannerThread->mutex.post();
+                plannerThread->m_mutex.post();
                 return false;
             }
 
@@ -302,7 +297,7 @@ public:
         {
             yError() << "Invalid command type";
         }
-        plannerThread->mutex.post();
+        plannerThread->m_mutex.post();
         return true;
     }
 };
