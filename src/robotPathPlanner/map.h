@@ -47,34 +47,6 @@ using namespace yarp::dev;
 #define M_PI 3.14159265
 #endif
 
-
-/*
-class map_class
-{
-    public:
-    int m_size_x;
-    int m_size_y;
-    int m_crop_x;
-    int m_crop_y;
-    int m_crop_w;
-    int m_crop_h;
-    double                                  m_resolution;
-    yarp::sig::Vector                       m_origin;
-    IplImage*                               m_loaded_map;
-
-    
-    public:
-    map_class();
-
-    bool loadMap(string filename);
-    bool crop(IplImage* img, IplImage* &imgOrig);
-    bool enlargeScan(std::vector <cell>& laser_scan, unsigned int times, double max_dist);
-    
-
-
-};
-*/
-
 //draw stuff on the map
 void drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color);
 void drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);

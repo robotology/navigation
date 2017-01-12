@@ -37,6 +37,7 @@
 #include <highgui.h> 
 
 #include "pathPlanner.h"
+#include "pathPlannerHelpers.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -46,139 +47,102 @@ using namespace yarp::dev;
 #define DEG2RAD M_PI/180
 #endif
 
-NavigationStatusEnum string2status(string s)
+void PlannerThread::readTargetFromYarpView()
 {
-    //enum status_type {IDLE=0, MOVING, WAITING_OBSTACLE, REACHED, ABORTED, PAUSED};
-    NavigationStatusEnum status;
-    if (s == "navigation_status_idle")     status = navigation_status_idle;
-    else if (s == "navigation_status_moving")   status = navigation_status_moving;
-    else if (s == "navigation_status_waiting_obstacle")  status = navigation_status_waiting_obstacle;
-    else if (s == "navigation_status_goal_reached")  status = navigation_status_goal_reached;
-    else if (s == "navigation_status_aborted")  status = navigation_status_aborted;
-    else if (s == "navigation_status_paused")   status = navigation_status_paused;
-    else 
-    {
-        yError("PlannerThread::string2status(): Unknown status of inner controller: '%s'!", s.c_str());
-        status = navigation_status_idle;
-    }
-    return status;
-}
-
-std::string getStatusAsString(NavigationStatusEnum status)
-{
-    if (status == navigation_status_idle) return std::string("navigation_status_idle");
-    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
-    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
-    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
-    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
-    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
-
-    yError("PlannerThread::getStatusAsString(): Unknown status of inner controller: '%d'!", status);
-    return std::string("unknown");
-}
-
-void PlannerThread::select_optimized_path(bool b)
-{
-    if (b)
-    {
-        yInfo ("using optimized path planning");
-        use_optimized_path = true;
-        current_path=&computed_simplified_path;
-    }
-    else
-    {
-        yInfo("using raw path planning");
-        use_optimized_path = false;
-        current_path=&computed_path;
-    }
-}
-
-Map2DLocation PlannerThread::getCurrentAbsTarget()
-{
-    return Map2DLocation(frame_map_id, goal_data[0], goal_data[1], goal_data[2]);
-}
-
-Map2DLocation PlannerThread::getCurrentRelTarget()
-{
-    return Map2DLocation(frame_robot_id, goal_data[0]-localization_data[0], goal_data[1]-localization_data[1], goal_data[2]-localization_data[2]);
-}
-
-void PlannerThread::getCurrentPos(yarp::sig::Vector& v)
-{
-    v.resize(localization_data.size());
-    v = localization_data;
-}
-
-string PlannerThread::getMapId()
-{
-    return frame_map_id;
-}
-
-void PlannerThread::run()
-{
-    mutex.wait();
-
-    //read a target set from a yarpview
-    yarp::os::Bottle *gui_targ = port_yarpview_target_input.read(false);
+    yarp::os::Bottle *gui_targ = m_port_yarpview_target_input.read(false);
     if (gui_targ)
     {
-        MapGrid2D::XYCell c;
-        c.x=(*gui_targ).get(0).asInt();
-        c.y=(*gui_targ).get(1).asInt();
-        yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_map.cell2World(c));
-        yInfo ("selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
-        yarp::os::Bottle& out = port_yarpview_target_output.prepare();
-        out.clear();
-        out.addString("gotoAbs");
-        out.addDouble(v[0]);
-        out.addDouble(v[1]);
-        port_yarpview_target_output.write();
-    }
-
-    //read the localization data
-    if (use_localization_from_port)
-    {
-        yarp::sig::Vector *loc = port_localization_input.read(false);
-        if (loc)
+        if (gui_targ->size() == 2)
         {
-            localization_data = *loc;
-            loc_timeout_counter = 0;
+            MapGrid2D::XYCell c_start;
+            c_start.x = (*gui_targ).get(0).asInt();
+            c_start.y = (*gui_targ).get(1).asInt();
+            yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_start));
+            yInfo("selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
+            yarp::os::Bottle& out = m_port_yarpview_target_output.prepare();
+            out.clear();
+            out.addString("gotoAbs");
+            out.addDouble(v[0]);
+            out.addDouble(v[1]);
+            m_port_yarpview_target_output.write();
+        }
+        else if (gui_targ->size() == 4)
+        {
+            MapGrid2D::XYCell c_start;
+            MapGrid2D::XYCell c_end;
+            c_start.x = (*gui_targ).get(0).asInt();
+            c_start.y = (*gui_targ).get(1).asInt();
+            c_end.x = (*gui_targ).get(2).asInt();
+            c_end.y = (*gui_targ).get(3).asInt();
+            double angle = atan2(c_end.x - c_start.x, c_end.y - c_start.y) * 180.0 / M_PI;
+            yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_start));
+            yInfo("selected point is located at (%6.3f, %6.3f), angle:", v[0], v[1], angle);
+            yarp::os::Bottle& out = m_port_yarpview_target_output.prepare();
+            out.clear();
+            out.addString("gotoAbs");
+            out.addDouble(v[0]);
+            out.addDouble(v[1]);
+            out.addDouble(angle);
+            m_port_yarpview_target_output.write();
         }
         else
         {
-            loc_timeout_counter++;
-            if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+            yError() << "Received data with an invalid format.";
         }
     }
-    else if (use_localization_from_tf)
+}
+
+void  PlannerThread::readLocalizationData()
+{
+    if (m_use_localization_from_port)
+    {
+        yarp::sig::Vector *loc = m_port_localization_input.read(false);
+        if (loc)
+        {
+            m_localization_data.x = loc->data()[0];
+            m_localization_data.y = loc->data()[1];
+            m_localization_data.theta = loc->data()[2];
+            m_localization_data.map_id = m_current_map.m_map_name;
+            m_loc_timeout_counter = 0;
+        }
+        else
+        {
+            m_loc_timeout_counter++;
+            if (m_loc_timeout_counter>TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
+        }
+    }
+    else if (m_use_localization_from_tf)
     {
         yarp::sig::Vector iv;
         yarp::sig::Vector pose;
         iv.resize(6, 0.0);
         pose.resize(6, 0.0);
-        bool r = iTf->transformPose(frame_robot_id, frame_map_id, iv, pose);
+        bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
         if (r)
         {
             //data is formatted as follows: x, y, angle (in degrees)
-            localization_data[0]     = pose[0];
-            localization_data[1]     = pose[1];
-            localization_data[2]     = pose[5] * RAD2DEG;
-            loc_timeout_counter = 0;
+            m_localization_data.map_id = m_current_map.m_map_name;
+            m_localization_data.x = pose[0];
+            m_localization_data.y = pose[1];
+            m_localization_data.theta = pose[5] * RAD2DEG;
+            m_loc_timeout_counter = 0;
         }
         else
         {
-            loc_timeout_counter++;
-            if (loc_timeout_counter > TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
+            m_loc_timeout_counter++;
+            if (m_loc_timeout_counter > TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
         }
     }
     else
     {
         yWarning() << "Localization disabled";
     }
+}
 
-    //read the laser data
+void  PlannerThread::readLaserData()
+{
     std::vector<LaserMeasurementData> scan;
-    bool ret = iLaser->getLaserMeasurement(scan);
+    bool ret = m_iLaser->getLaserMeasurement(scan);
 
     if (ret)
     {
@@ -190,49 +154,92 @@ void PlannerThread::run()
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
             yarp::sig::Vector v(2);
-            double ss = cos (localization_data[2] * DEG2RAD);
-            double cs = sin (localization_data[2] * DEG2RAD);
-            v[0] = las_x*cs - las_y*ss + localization_data[0];
-            v[1] = las_x*ss + las_y*cs + localization_data[1];
-            m_laser_map_cells.push_back(m_map.world2Cell(v));
+            double ss = cos(m_localization_data.theta * DEG2RAD);
+            double cs = sin(m_localization_data.theta * DEG2RAD);
+            v[0] = las_x*cs - las_y*ss + m_localization_data.x;
+            v[1] = las_x*ss + las_y*cs + m_localization_data.y;
+            m_laser_map_cells.push_back(m_current_map.world2Cell(v));
         }
-        laser_timeout_counter=0;
+        m_laser_timeout_counter = 0;
     }
     else
     {
-        laser_timeout_counter++;
+        m_laser_timeout_counter++;
     }
+}
+
+void PlannerThread::draw_map()
+{
+    static CvScalar blue_color = cvScalar(0, 0, 200);
+    static CvScalar blue_color2 = cvScalar(80, 80, 200);
+    MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
+
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
+    m_current_map.getMapImage(map_image);
+    static IplImage*   processed_map_with_scan = 0;
+    if (processed_map_with_scan == 0) processed_map_with_scan = cvCloneImage((const IplImage*)map_image.getIplImage());
+    cvCopyImage(map_image.getIplImage(), processed_map_with_scan);
+    if (m_laser_timeout_counter<TIMEOUT_MAX)
+    {
+        drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
+        //map.enlargeScan(laser_map_cell,6);
+        //map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color2);
+    }
+
+    drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, blue_color);
+    static IplImage* map_with_path = 0;
+    if (map_with_path == 0) map_with_path = cvCloneImage(processed_map_with_scan);
+    else cvCopyImage(processed_map_with_scan, map_with_path);
+
+    CvScalar color = cvScalar(0, 200, 0);
+    CvScalar color2 = cvScalar(0, 200, 100);
+
+    if (m_planner_status != navigation_status_idle && m_planner_status != navigation_status_goal_reached)
+    {
+#ifdef DRAW_BOTH_PATHS
+        drawPath(map_with_path, start, computed_path, color);
+        drawPath(map_with_path, start, computed_simplified_path, color2);
+#else
+        drawPath(map_with_path, start, m_current_waypoint, *m_current_path, color);
+#endif
+    }
+
+    static IplImage* map_with_location = 0;
+    if (map_with_location == 0) map_with_location = cvCloneImage(map_with_path);
+    else cvCopyImage(map_with_path, map_with_location);
+
+    sendToPort(&m_port_map_output, map_with_location);
+}
+
+void PlannerThread::run()
+{
+    m_mutex.wait();
+    readTargetFromYarpView();
+    readLocalizationData();
+    readLaserData();
 
     //read the internal navigation status
     Bottle cmd1, ans1;
     cmd1.addString("get"); 
     cmd1.addString("navigation_status");
-    port_commands_output.write(cmd1,ans1);
+    m_port_commands_output.write(cmd1, ans1);
     string s = ans1.get(0).toString().c_str();
-    inner_status = string2status(s);
-    /*yarp::os::Bottle *st = port_status_input.read(true);
-    if (st)
-    {
-        string s = st->get(0).toString().c_str();
-        inner_status_timeout_counter=0;
-        //convet s to inner status
-        inner_status = string2status(s);
-    }
-    else inner_status_timeout_counter++;
-    */
+    m_inner_status = pathPlannerHelpers::string2status(s);
 
-    //check if the next waypoint has to be sent
-    int path_size = current_path->size();
-    if (planner_status == navigation_status_moving)
+    /////////////////////////////
+    // the finite-state-machine
+    /////////////////////////////
+    int path_size = m_current_path->size();
+    if (m_planner_status == navigation_status_moving)
     {
-        if (inner_status == navigation_status_goal_reached)
+        if (m_inner_status == navigation_status_goal_reached)
         {
             yInfo ("waypoint reached");
             if (path_size == 0)
             {
                 //navigation is complete
                 yInfo("navigation complete");
-                planner_status = navigation_status_goal_reached;
+                m_planner_status = navigation_status_goal_reached;
             }
             else if (path_size == 1)
             {
@@ -243,21 +250,21 @@ void PlannerThread::run()
                 Bottle cmd1, ans1;
                 cmd1.addString("set"); 
                 cmd1.addString("linear_tol");
-                cmd1.addDouble(goal_tolerance_lin);
-                port_commands_output.write(cmd1,ans1);
+                cmd1.addDouble(m_goal_tolerance_lin);
+                m_port_commands_output.write(cmd1, ans1);
 
                 Bottle cmd2, ans2;
                 cmd2.addString("set"); 
                 cmd2.addString("angular_tol");
-                cmd2.addDouble(goal_tolerance_ang);
-                port_commands_output.write(cmd2,ans2);
+                cmd2.addDouble(m_goal_tolerance_ang);
+                m_port_commands_output.write(cmd2, ans2);
 
                 //last waypoint ha minimum linear speed = 0
                 Bottle cmd3, ans3;
                 cmd3.addString("set"); 
                 cmd3.addString("min_lin_speed");
                 cmd3.addDouble(0.0);
-                port_commands_output.write(cmd3,ans3);
+                m_port_commands_output.write(cmd3, ans3);
 
                 sendWaypoint();
             }
@@ -271,34 +278,34 @@ void PlannerThread::run()
                     Bottle cmd, ans;
                     cmd.addString("set"); 
                     cmd.addString("min_lin_speed");
-                    cmd.addDouble(max_lin_speed);
-                    port_commands_output.write(cmd,ans);
+                    cmd.addDouble(m_max_lin_speed);
+                    m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set"); 
                     cmd.addString("max_lin_speed");
-                    cmd.addDouble(max_lin_speed);
-                    port_commands_output.write(cmd,ans);
+                    cmd.addDouble(m_max_lin_speed);
+                    m_port_commands_output.write(cmd, ans);
                 }
             }
         }
-        else if (inner_status == navigation_status_moving)
+        else if (m_inner_status == navigation_status_moving)
         {
             //do nothing, just wait
         }
-        else if (inner_status == navigation_status_waiting_obstacle)
+        else if (m_inner_status == navigation_status_waiting_obstacle)
         {
             //do nothing, just wait
         }
-        else if (inner_status == navigation_status_aborted)
+        else if (m_inner_status == navigation_status_aborted)
         {
             //terminate navigation
-            planner_status = navigation_status_aborted;
+            m_planner_status = navigation_status_aborted;
             yError ("unable to reach next waypoint, aborting navigation");
             //current_path.clear();
         }
-        else if (inner_status == navigation_status_idle)
+        else if (m_inner_status == navigation_status_idle)
         {
             //send the first waypoint
             yInfo ("sending the first waypoint");
@@ -308,32 +315,32 @@ void PlannerThread::run()
                 Bottle cmd1, ans1;
                 cmd1.addString("set"); 
                 cmd1.addString("linear_tol");
-                cmd1.addDouble(waypoint_tolerance_lin);
-                port_commands_output.write(cmd1,ans1);
+                cmd1.addDouble(m_waypoint_tolerance_lin);
+                m_port_commands_output.write(cmd1, ans1);
             }
 
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("angular_tol");
-                cmd.addDouble(waypoint_tolerance_ang);
-                port_commands_output.write(cmd,ans);
+                cmd.addDouble(m_waypoint_tolerance_ang);
+                m_port_commands_output.write(cmd, ans);
             }
 
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("max_lin_speed");
-                cmd.addDouble(max_lin_speed);
-                port_commands_output.write(cmd,ans);
+                cmd.addDouble(m_max_lin_speed);
+                m_port_commands_output.write(cmd, ans);
             }
 
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("max_ang_speed");
-                cmd.addDouble(max_ang_speed);
-                port_commands_output.write(cmd,ans);
+                cmd.addDouble(m_max_ang_speed);
+                m_port_commands_output.write(cmd, ans);
             }
 
             {
@@ -341,138 +348,106 @@ void PlannerThread::run()
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("min_lin_speed");
-                cmd.addDouble(max_lin_speed);
-                port_commands_output.write(cmd,ans);
+                cmd.addDouble(m_max_lin_speed);
+                m_port_commands_output.write(cmd, ans);
             }
 
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("min_ang_speed");
-                cmd.addDouble(min_ang_speed);
-                port_commands_output.write(cmd,ans);
+                cmd.addDouble(m_min_ang_speed);
+                m_port_commands_output.write(cmd, ans);
                 sendWaypoint();
             }
         }
         else
         {
-            yError ("unrecognized inner status: %d", inner_status);
+            yError("unrecognized inner status: %d", m_inner_status);
         }
     }
-    else if (planner_status == navigation_status_goal_reached)
+    else if (m_planner_status == navigation_status_goal_reached)
     {
         //do nothing, just wait
     }
-    else if (planner_status == navigation_status_idle)
+    else if (m_planner_status == navigation_status_idle)
     {
         //do nothing, just wait
     }
-    else if (planner_status == navigation_status_thinking)
+    else if (m_planner_status == navigation_status_thinking)
     {
         //do nothing, just wait
     }
-    else if (planner_status == navigation_status_aborted)
+    else if (m_planner_status == navigation_status_aborted)
     {
         //do nothing, just wait
     }
     else
     {
         //unknown status
-        yError ("unknown status:%d", planner_status);
+        yError("unknown status:%d", m_planner_status);
     }
 
     //broadcast the planner status
-    if (port_status_output.getOutputCount()>0)
+    if (m_port_status_output.getOutputCount()>0)
     {
-        string s = getStatusAsString(planner_status);
-        Bottle &b=this->port_status_output.prepare();
+        string s = pathPlannerHelpers::getStatusAsString(m_planner_status);
+        Bottle &b = m_port_status_output.prepare();
         b.clear();
         b.addString(s.c_str());
-        port_status_output.write();
+        m_port_status_output.write();
     }
     
-    //draw the map
-    static CvScalar blue_color  = cvScalar(0,0,200);
-    static CvScalar blue_color2 = cvScalar(80,80,200);
-    MapGrid2D::XYCell start = m_map.world2Cell(MapGrid2D::XYWorld(localization_data[0], localization_data[1]));
-
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
-    m_map.getMapImage(map_image);
-    static IplImage*   processed_map_with_scan = 0;
-    if (processed_map_with_scan == 0) processed_map_with_scan = cvCloneImage((const IplImage*)map_image.getIplImage());
-    cvCopyImage(map_image.getIplImage(), processed_map_with_scan);
-    if (laser_timeout_counter<TIMEOUT_MAX)
-    {
-        drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
-        //map.enlargeScan(laser_map_cell,6);
-        //map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color2);
-    }
-
-    drawCurrentPosition(processed_map_with_scan, start, localization_data[2]*DEG2RAD,blue_color);
-    static IplImage* map_with_path = 0;
-    if (map_with_path==0) map_with_path = cvCloneImage(processed_map_with_scan);
-    else cvCopyImage(processed_map_with_scan,map_with_path);
-
-    CvScalar color = cvScalar(0,200,0);
-    CvScalar color2 = cvScalar(0,200,100);
-
-    if (planner_status != navigation_status_idle && planner_status != navigation_status_goal_reached)
-    {
-#ifdef DRAW_BOTH_PATHS
-        drawPath(map_with_path, start, computed_path, color); 
-        drawPath(map_with_path, start, computed_simplified_path, color2);
-#else
-        drawPath(map_with_path, start, current_waypoint, *current_path, color); 
-#endif
-    }
-
-    static IplImage* map_with_location = 0;
-    if (map_with_location == 0) map_with_location = cvCloneImage(map_with_path);
-    else cvCopyImage(map_with_path, map_with_location);
-
-    sendToPort(&port_map_output,map_with_location);
-    mutex.post();
+    draw_map();
+    m_mutex.post();
 }
 
 void PlannerThread::sendWaypoint()
 {
-    int path_size = current_path->size();
+    int path_size = m_current_path->size();
     if (path_size==0)
     {
         yWarning ("Path queue is empty!");
-        planner_status = navigation_status_idle;
+        m_planner_status = navigation_status_idle;
         return;
     }
     //get the next waypoint from the list
-    current_waypoint = current_path->front();
-    current_path->pop();
+    m_current_waypoint = m_current_path->front();
+    m_current_path->pop();
     //send the waypoint to the inner controller
     Bottle cmd1, ans1;
     cmd1.addString("gotoAbs");
-    yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_map.cell2World(current_waypoint));
+    yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(m_current_waypoint));
     cmd1.addDouble(v[0]);
     cmd1.addDouble(v[1]);
-    if (path_size==1 && goal_data.size()==3)
+    if (path_size == 1 && std::isnan(m_final_goal.theta) == false)
     {
         //add the orientation to the last waypoint
-        cmd1.addDouble(goal_data[2]);
+        cmd1.addDouble(m_final_goal.theta);
     }
     yDebug ("sending command: %s", cmd1.toString().c_str());
-    port_commands_output.write(cmd1,ans1);
+    m_port_commands_output.write(cmd1, ans1);
     //yDebug ("received answer: %s", ans1.toString().c_str());
 
     Bottle cmd2, ans2;
     cmd2.addString("get");
     cmd2.addString("navigation_status");
     //yDebug ("sending command: %s", cmd2.toString().c_str());
-    port_commands_output.write(cmd2,ans2);
+    m_port_commands_output.write(cmd2, ans2);
     //yDebug ("received answer: %s", ans2.toString().c_str());
-    inner_status = string2status(ans2.toString().c_str());
+    m_inner_status = pathPlannerHelpers::string2status(ans2.toString().c_str());
 }
 
-void PlannerThread::startNewPath(MapGrid2D::XYCell target)
+void PlannerThread::startPath()
 {
-    MapGrid2D::XYCell start = m_map.world2Cell(localization_data);
+    yarp::math::Vec2D<double> start_vec;
+    yarp::math::Vec2D<double> goal_vec;
+    start_vec.x= m_localization_data.x;
+    start_vec.y= m_localization_data.y;
+    goal_vec.x = m_sequence_of_goals.front().x;
+    goal_vec.y = m_sequence_of_goals.front().y;
+    MapGrid2D::XYCell goal = m_current_map.world2Cell(goal_vec);
+    MapGrid2D::XYCell start = m_current_map.world2Cell(start_vec);
 #ifdef DEBUG_WITH_CELLS
     start.x = 150;//&&&&&
     start.y = 150;//&&&&&
@@ -480,160 +455,37 @@ void PlannerThread::startNewPath(MapGrid2D::XYCell target)
     double t1 = yarp::os::Time::now();
     //clear the memory 
     std::queue<MapGrid2D::XYCell> empty;
-    std::swap(computed_path, empty );
+    std::swap(m_computed_path, empty);
     std::queue<MapGrid2D::XYCell> empty2;
-    std::swap( computed_simplified_path, empty2 );
-    planner_status = navigation_status_thinking;
+    std::swap(m_computed_simplified_path, empty2);
+    m_planner_status = navigation_status_thinking;
 
     //search for a path
-    bool b = findPath(m_map, start , target, computed_path);
+    bool b = findPath(m_current_map, start, goal, m_computed_path);
     if (!b)
     {
         yError ("path not found");
-        planner_status = navigation_status_aborted;
+        m_planner_status = navigation_status_aborted;
         return;
     }
     double t2 = yarp::os::Time::now();
 
     //search for an simpler path (waypoint optimization)
-    simplifyPath(m_map, computed_path, computed_simplified_path);
-    yInfo ("path size:%d simplified path size:%d time: %.2f", computed_path.size(), computed_simplified_path.size(), t2-t1);
+    simplifyPath(m_current_map, m_computed_path, m_computed_simplified_path);
+    yInfo("path size:%d simplified path size:%d time: %.2f", m_computed_path.size(), m_computed_simplified_path.size(), t2 - t1);
 
     //choose the path to use
-    if (use_optimized_path)
+    if (m_use_optimized_path)
     {
-        current_path=&computed_simplified_path;
+        m_current_path = &m_computed_simplified_path;
     }
     else
     {
-        current_path=&computed_path;
+        m_current_path = &m_computed_path;
     }
 
     //just set the status to moving, do not set position commands.
     //The wayypoint ist set in the main 'run' loop.
-    planner_status = navigation_status_moving;
-}
-
-void PlannerThread::setNewAbsTarget(yarp::sig::Vector target)
-{
-    if (planner_status != navigation_status_idle &&
-        planner_status != navigation_status_goal_reached &&
-        planner_status != navigation_status_aborted)
-    {
-        yError ("Not in idle state, send a 'stop' first\n");
-        return;
-    }
-
-    goal_data = target;
-    MapGrid2D::XYCell goal = m_map.world2Cell(target);
-#ifdef DEBUG_WITH_CELLS
-    goal.x = (int)target_data[0]; //&&&&&
-    goal.y = (int)target_data[1]; //&&&&&
-#endif
-    startNewPath(goal);
-}
-
-void PlannerThread::setNewRelTarget(yarp::sig::Vector target)
-{
-    if(target.size() != 3)
-    {
-        yError() << "PlannerThread::setNewRelTarget invalid target vector size";
-        return;
-    }
-    //target and localization data are formatted as follows: x, y, angle (in degrees)
-    if (planner_status != navigation_status_idle &&
-        planner_status != navigation_status_goal_reached &&
-        planner_status != navigation_status_aborted)
-    {
-        yError ("Not in idle state, send a 'stop' first");
-        return;
-    }
-    yDebug() << "received new relative target at:" << target[0] << target[1] << target[2];
-
-    double a = localization_data[2] * DEG2RAD;
-    yDebug() << "current position:" << localization_data[0] << localization_data[1] << localization_data[2];
-    //this is the inverse of the tranformation matrix from world to robot
-    goal_data[0] = +target[0] * cos(a) - target[1] * sin(a) + localization_data[0];
-    goal_data[1] = +target[0] * sin(a) + target[1] * cos(a) + localization_data[1];
-    goal_data[2] = target[2] + localization_data[2];
-    MapGrid2D::XYCell goal = m_map.world2Cell(goal_data);
-    startNewPath(goal);
-}
-
-void PlannerThread::stopMovement()
-{
-    //stop the inner navigation loop
-    Bottle cmd1, ans1;
-    cmd1.addString("stop"); 
-    port_commands_output.write(cmd1,ans1);
-
-    //stop the outer navigation loop
-
-
-    if (planner_status != navigation_status_idle)
-    {
-        planner_status = navigation_status_idle;
-        yInfo ("Navigation stopped");
-    }
-    else
-    {
-        yWarning ("Already not moving");
-    }
-}
-
-void PlannerThread::resumeMovement()
-{
-    //resuming the inner navigation loop
-    Bottle cmd1, ans1;
-    cmd1.addString("resume");
-    port_commands_output.write(cmd1,ans1);
-
-    //stop the outer navigation loop
-
-
-    if (planner_status != navigation_status_moving)
-    {
-        planner_status = navigation_status_moving;
-        yInfo ("Navigation resumed");
-    }
-    else
-    {
-        yWarning ("Already moving!");
-    }
-}
-
-void PlannerThread::pauseMovement(double d)
-{
-    //pausing the inner navigation loop
-    Bottle cmd1, ans1;
-    cmd1.addString("pause");
-    port_commands_output.write(cmd1,ans1);
-
-    //stop the outer navigation loop
-
-    if (planner_status != navigation_status_paused)
-    {
-        planner_status = navigation_status_paused;
-        yInfo ("Navigation stopped");
-    }
-    else
-    {
-        yWarning ("Already paused");
-    }
-}
-
-void PlannerThread::printStats()
-{
-}
-
-int PlannerThread::getNavigationStatusAsInt()
-{
-    return planner_status;
-}
-
-string PlannerThread::getNavigationStatusAsString()
-{
-    string s = getStatusAsString(planner_status);
-    return s;
+    m_planner_status = navigation_status_moving;
 }
 
