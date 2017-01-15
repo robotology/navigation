@@ -45,12 +45,16 @@ protected:
     Input*          input;
     Controller*     control;
     Port            rpcPort;
+    bool            m_publish_tf_enable;
+    bool            m_publish_port_enable;
 
 public:
     CtrlModule() 
     {
         input=0;
         control = 0;
+        m_publish_port_enable = true;
+        m_publish_tf_enable = false;
     }
 
     virtual bool configure(ResourceFinder &rf)
@@ -200,7 +204,8 @@ public:
         double pwm = 0;
         input->read_inputs(&linear_speed, &angular_speed, &desired_dir, &pwm);
         control->apply_control(linear_speed, angular_speed, desired_dir, pwm);
-        control->publish();
+        if (m_publish_port_enable) control->publish_port();
+        if (m_publish_tf_enable) control->publish_tf();
 
         static int life_counter=0;
         if (life_counter % 100 == 0)

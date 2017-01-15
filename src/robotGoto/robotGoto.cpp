@@ -98,16 +98,16 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
 {
     if(ros_group.check("useGoalFromRosTopic") || ros_group.check("publishRosStuff"))
     {
-        useGoalFromRosTopic  = ros_group.find("useGoalFromRosTopic").asBool();
-        publishRosStuff      = ros_group.find("publishRosStuff").asBool();
+        m_useGoalFromRosTopic  = ros_group.find("useGoalFromRosTopic").asBool();
+        m_publishRosStuff      = ros_group.find("publishRosStuff").asBool();
 
-        if(useGoalFromRosTopic || publishRosStuff)
+        if(m_useGoalFromRosTopic || m_publishRosStuff)
         {
             if (ros_group.check("rosNodeName"))
             {
                 rosNode = new yarp::os::Node( ros_group.find("rosNodeName").asString() );
 
-                if (!useGoalFromRosTopic)
+                if (!m_useGoalFromRosTopic)
                 {
                     yInfo() << "goal from ros topic deactivated";
                 }
@@ -131,7 +131,7 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
                     }
                 }
 
-                if (!publishRosStuff)
+                if (!m_publishRosStuff)
                 {
                     yInfo() << "Path and current goal publication deactivated";
                 }
@@ -210,11 +210,11 @@ bool GotoThread::threadInit()
     m_default_goal_tolerance_lin    = m_goal_tolerance_lin = 0.05;
     m_default_goal_tolerance_ang    = m_goal_tolerance_ang = 0.6;
 
-    use_odometry               = true;
-    use_localization_from_port = false;
-    use_localization_from_tf   = false;
-    useGoalFromRosTopic        = false;
-    publishRosStuff            = false;
+    m_use_odometry               = true;
+    m_use_localization_from_port = false;
+    m_use_localization_from_tf   = false;
+    m_useGoalFromRosTopic        = false;
+    m_publishRosStuff            = false;
     yInfo("Using following paramters: %s", rf.toString().c_str());
 
     Bottle ros_group = rf.findGroup("ROS");
@@ -280,12 +280,12 @@ bool GotoThread::threadInit()
         return false;
     }
 
-    if (localization_group.check("use_odometry"))               { use_odometry               = (localization_group.find("use_odometry").asInt() == 1); }
-    if (localization_group.check("use_localization_from_port")) { use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
-    if (localization_group.check("use_localization_from_tf"))   { use_localization_from_tf   = (localization_group.find("use_localization_from_tf").asInt() == 1); }
+    if (localization_group.check("use_odometry"))               { m_use_odometry = (localization_group.find("use_odometry").asInt() == 1); }
+    if (localization_group.check("use_localization_from_port")) { m_use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
+    if (localization_group.check("use_localization_from_tf"))   { m_use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
     if (localization_group.check("robot_frame_id"))             { this->frame_robot_id       = localization_group.find("robot_frame_id").asString(); }
     if (localization_group.check("map_frame_id"))               { this->frame_map_id         = localization_group.find("map_frame_id").asString(); }
-    if (use_localization_from_port == true && use_localization_from_tf == true)
+    if (m_use_localization_from_port == true && m_use_localization_from_tf == true)
     {
         yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
         return false;
@@ -332,12 +332,12 @@ bool GotoThread::threadInit()
     port_gui_output.open((localName + "/gui:o").c_str());
 
     //localization
-    if (use_localization_from_port)
+    if (m_use_localization_from_port)
     {
         port_localization_input.open((localName + "/localization:i").c_str());
     }
 
-    if (use_localization_from_tf)
+    if (m_use_localization_from_tf)
     {
         Property options;
         options.put("device", "transformClient");
@@ -598,7 +598,7 @@ void GotoThread::evaluateLocalization()
     //data is formatted as follows: x, y, angle (in degrees)
     yarp::sig::Vector *loc = 0;
 
-    if (use_localization_from_port)
+    if (m_use_localization_from_port)
     {
         loc = port_localization_input.read(false);
 
@@ -613,7 +613,7 @@ void GotoThread::evaluateLocalization()
             if (loc_timeout_counter>TIMEOUT_MAX) loc_timeout_counter = TIMEOUT_MAX;
         }
     }
-    else if (use_localization_from_tf)
+    else if (m_use_localization_from_tf)
     {
         yarp::sig::Vector iv;
         yarp::sig::Vector pose;
@@ -658,7 +658,7 @@ void GotoThread::evaluateLocalization()
     }
     else
     {
-        if (use_odometry)
+        if (m_use_odometry)
             odm_timeout_counter++;
 
         if (odm_timeout_counter > TIMEOUT_MAX)
@@ -677,27 +677,24 @@ void GotoThread::evaluateLocalization()
 
 void GotoThread::evaluateGoalFromTopic()
 {
-    if (useGoalFromRosTopic)
+    geometry_msgs_PoseStamped* rosGoalData = rosGoalInputPort.read(false);
+
+    if (rosGoalData != 0)
     {
-        geometry_msgs_PoseStamped* rosGoalData = rosGoalInputPort.read(false);
+        yInfo() << "received a goal from ros topic";
+        yarp::sig::Vector v(3);
+        yarp::math::Quaternion q;
 
-        if (rosGoalData != 0)
-        {
-            yInfo() << "received a goal from ros topic";
-            yarp::sig::Vector v(3);
-            yarp::math::Quaternion q;
+        q.w() = rosGoalData->pose.orientation.w;
+        q.x() = rosGoalData->pose.orientation.x;
+        q.y() = rosGoalData->pose.orientation.y;
+        q.z() = rosGoalData->pose.orientation.z;
 
-            q.w() = rosGoalData->pose.orientation.w;
-            q.x() = rosGoalData->pose.orientation.x;
-            q.y() = rosGoalData->pose.orientation.y;
-            q.z() = rosGoalData->pose.orientation.z;
+        v[0] = rosGoalData->pose.position.x;
+        v[1] = rosGoalData->pose.position.y;
+        v[2] = -yarp::math::dcm2rpy(q.toRotationMatrix())[2] * RAD2DEG;
 
-            v[0] = rosGoalData->pose.position.x;
-            v[1] = rosGoalData->pose.position.y;
-            v[2] = -yarp::math::dcm2rpy(q.toRotationMatrix())[2] * RAD2DEG;
-
-            setNewAbsTarget(v);
-        }
+        setNewAbsTarget(v);
     }
 }
 
@@ -719,7 +716,7 @@ void GotoThread::getLaserData()
 
 void GotoThread::sendCurrentGoal()
 {
-    if(!publishRosStuff)
+    if (!m_publishRosStuff)
     {
         return;
     }
@@ -749,6 +746,11 @@ void GotoThread::sendCurrentGoal()
 
 void GotoThread::publishLocalPlan()
 {
+    if (iTf == 0)
+    {
+        yError() << "iTf not initialized";
+        return;
+    }
 
     if(status != navigation_status_moving || (control_out[LIN_VEL] == 0 && control_out[ANG_VEL] == 0))
     {
@@ -819,7 +821,7 @@ string GotoThread::getMapId()
 void GotoThread::run()
 {
     mutex.wait();
-    evaluateGoalFromTopic();
+    if (m_useGoalFromRosTopic) evaluateGoalFromTopic();
     evaluateLocalization();
     getLaserData();
 
@@ -1074,7 +1076,7 @@ void GotoThread::run()
         retreat_counter--;
     }
 
-    publishLocalPlan();
+    if (m_publishRosStuff) publishLocalPlan();
     sendOutput();
     mutex.post();
 }

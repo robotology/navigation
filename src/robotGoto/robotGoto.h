@@ -192,11 +192,11 @@ protected:
     yarp::sig::Vector    control_out;
     NavigationStatusEnum status;
     int                  retreat_counter;
-    bool                 use_odometry;
-    bool                 use_localization_from_port;
-    bool                 use_localization_from_tf;
-    bool                 useGoalFromRosTopic;
-    bool                 publishRosStuff;
+    bool                 m_use_odometry;
+    bool                 m_use_localization_from_port;
+    bool                 m_use_localization_from_tf;
+    bool                 m_useGoalFromRosTopic;
+    bool                 m_publishRosStuff;
     string               frame_robot_id;
     string               frame_map_id;
     double               min_laser_angle;

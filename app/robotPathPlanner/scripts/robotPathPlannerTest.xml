@@ -95,6 +95,12 @@
 </connection>
 
 <connection>
+  <from>/fakeMobileBaseTest/odometry:o</from>
+  <to>/robotGoto/localization:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
   <from>/mapClick:o</from>
   <to>/robotPathPlanner/yarpviewTarget:i</to>
   <protocol>tcp</protocol>

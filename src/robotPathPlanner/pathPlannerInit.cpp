@@ -22,8 +22,8 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf, Property options) :
-        RateThread(_period), m_rf(_rf),   m_robotCtrl_options(options)
+PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
+        RateThread(_period), m_rf(_rf)
 {
     m_planner_status = navigation_status_idle;
     m_inner_status = navigation_status_idle;
@@ -51,11 +51,13 @@ PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf, Property
     m_robot_laser_t = 0;
     m_use_localization_from_port = false;
     m_use_localization_from_tf = false;
+    m_imagemap_refresh_time = 0.033;
 }
 
 bool PlannerThread::threadInit()
 {
     //read configuration parametes
+    std::string debug_rf = m_rf.toString();
     if (m_rf.check("waypoint_tolerance_lin")) { m_waypoint_tolerance_lin = m_rf.find("waypoint_tolerance_lin").asDouble(); }
     if (m_rf.check("waypoint_tolerance_ang")) { m_waypoint_tolerance_ang = m_rf.find("waypoint_tolerance_ang").asDouble(); }
     if (m_rf.check("goal_tolerance_lin"))     { m_goal_tolerance_lin = m_rf.find("goal_tolerance_lin").asDouble(); }
@@ -66,6 +68,7 @@ bool PlannerThread::threadInit()
     if (m_rf.check("min_lin_speed"))          { m_min_lin_speed = m_rf.find("min_lin_speed").asDouble(); }
     if (m_rf.check("min_ang_speed"))          { m_min_ang_speed = m_rf.find("min_ang_speed").asDouble(); }
     if (m_rf.check("min_waypoint_distance"))  { m_min_waypoint_distance = m_rf.find("min_waypoint_distance").asInt(); }
+    if (m_rf.check("publish_map_image_Hz"))  { m_imagemap_refresh_time = 1/(m_rf.find("publish_map_image_Hz").asDouble()); }
 
     Bottle geometry_group = m_rf.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
