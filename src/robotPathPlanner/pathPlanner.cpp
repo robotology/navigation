@@ -154,8 +154,8 @@ void  PlannerThread::readLaserData()
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
             yarp::sig::Vector v(2);
-            double ss = cos(m_localization_data.theta * DEG2RAD);
-            double cs = sin(m_localization_data.theta * DEG2RAD);
+            double ss = sin(m_localization_data.theta * DEG2RAD);
+            double cs = cos(m_localization_data.theta * DEG2RAD);
             v[0] = las_x*cs - las_y*ss + m_localization_data.x;
             v[1] = las_x*ss + las_y*cs + m_localization_data.y;
             m_laser_map_cells.push_back(m_current_map.world2Cell(v));
@@ -170,6 +170,8 @@ void  PlannerThread::readLaserData()
 
 void PlannerThread::draw_map()
 {
+    CvFont font;
+    cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.28, 0.28);
     static CvScalar blue_color = cvScalar(0, 0, 200);
     static CvScalar blue_color2 = cvScalar(80, 80, 200);
     MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
@@ -187,6 +189,16 @@ void PlannerThread::draw_map()
     }
 
     drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, blue_color);
+#define DRAW_INFO
+#ifdef DRAW_INFO
+    MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
+    MapGrid2D::XYWorld w_y_axis; w_y_axis.x = 0; w_y_axis.y = 2;
+    MapGrid2D::XYWorld w_orig; w_orig.x = 0; w_orig.y = 0;
+    MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
+    MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
+    MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
+    drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, m_localization_data, font, blue_color);
+#endif
     static IplImage* map_with_path = 0;
     if (map_with_path == 0) map_with_path = cvCloneImage(processed_map_with_scan);
     else cvCopyImage(processed_map_with_scan, map_with_path);
