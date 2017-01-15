@@ -251,9 +251,18 @@ void drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle,
 {
     if (map==0) return;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
-    int orient_x = int(current.x + 6 * sin(angle));
-    int orient_y = int(current.y + 6 * cos(angle));
+    int orient_x = current.x + 6 * cos(-angle);
+    int orient_y = current.y + 6 * sin(-angle);
     cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+}
+
+void drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
+{
+    char txt[255];
+    sprintf(txt, "%.1f %.1f %.1f", localiz.x, localiz.y, localiz.theta);
+    cvPutText(map, txt, cvPoint(current.x, current.y), &font, color);
+    cvLine(map, cvPoint(orig.x, orig.y), cvPoint(x_axis.x, x_axis.y), cvScalar(211, 0, 0));
+    cvLine(map, cvPoint(orig.x, orig.y), cvPoint(y_axis.x, y_axis.y), cvScalar(0, 211, 0));
 }
 
 void drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color)

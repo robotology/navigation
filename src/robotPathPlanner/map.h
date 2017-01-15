@@ -29,6 +29,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Image.h>
 #include <yarp/sig/ImageDraw.h>
+#include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/MapGrid2D.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
@@ -48,6 +49,7 @@ using namespace yarp::dev;
 #endif
 
 //draw stuff on the map
+void drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
 void drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color);
 void drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
 void drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color);
