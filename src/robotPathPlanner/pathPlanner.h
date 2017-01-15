@@ -92,6 +92,7 @@ class PlannerThread: public yarp::os::RateThread
     bool      m_use_localization_from_tf;
     string    m_frame_robot_id;
     string    m_frame_map_id;
+    double    m_imagemap_refresh_time;
 
     //ports
     PolyDriver                                             m_ptf;
@@ -108,7 +109,6 @@ class PlannerThread: public yarp::os::RateThread
     BufferedPort<yarp::os::Bottle>                         m_port_status_output;
     RpcClient                                              m_port_commands_output;
 
-    Property                               m_robotCtrl_options;
     ResourceFinder                         &m_rf;
     yarp::dev::Map2DLocation               m_localization_data;
     yarp::dev::Map2DLocation               m_final_goal;
@@ -158,7 +158,7 @@ class PlannerThread: public yarp::os::RateThread
     void          draw_map();
 
     public:
-    PlannerThread(unsigned int _period, ResourceFinder &_rf, Property options);
+    PlannerThread(unsigned int _period, ResourceFinder &_rf);
     virtual bool threadInit();
     virtual void threadRelease();
     void printStats();

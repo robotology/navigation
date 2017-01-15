@@ -41,11 +41,7 @@ public:
     {
         yarp::os::Time::turboBoost();
 
-        Property p;
-        ConstString configFile = rf.findFile("from");
-        if (configFile!="") p.fromConfigFile(configFile.c_str());
-
-        plannerThread = new PlannerThread(20,rf,p);
+        plannerThread = new PlannerThread(20,rf);
 
         rpcPort.open("/robotPathPlanner/rpc");
         attach(rpcPort);
@@ -316,7 +312,8 @@ int main(int argc, char *argv[])
     rf.setDefaultConfigFile("robotPathPlanner.ini");           //overridden by --from parameter
     rf.setDefaultContext("robotPathPlanner");                  //overridden by --context parameter
     rf.configure(argc,argv);
-    
+    std::string debug_rf = rf.toString();
+
     robotPlannerModule robotPlanner;
 
     return robotPlanner.runModule(rf);

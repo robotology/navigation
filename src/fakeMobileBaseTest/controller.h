@@ -59,10 +59,11 @@ private:
 public:
     Controller();
     ~Controller();
-    void   apply_control(double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   apply_control(double& lin_spd , double& ang_spd, double& des_dir, double& pwm_gain);
     void   get_odometry(double& x, double& y, double& theta);
     void   reset();
-    void   publish();
+    void   publish_tf();
+    void   publish_port();
     bool   init();
 };
 

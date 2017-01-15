@@ -398,7 +398,13 @@ void PlannerThread::run()
         m_port_status_output.write();
     }
     
-    draw_map();
+    static double last_drawn = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_drawn > m_imagemap_refresh_time)
+    {
+        draw_map();
+        last_drawn = yarp::os::Time::now();
+    }
+    
     m_mutex.post();
 }
 

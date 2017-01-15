@@ -61,14 +61,14 @@ public:
 
     virtual bool interruptModule()
     {
-        rpcPort.interrupt();
+       // rpcPort.interrupt();
 
         return true;
     }
 
     virtual bool close()
     {
-        rpcPort.interrupt();
+        //rpcPort.interrupt();
         rpcPort.close();
 
         //gotoThread->shutdown();

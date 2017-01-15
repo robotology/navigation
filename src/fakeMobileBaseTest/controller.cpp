@@ -23,6 +23,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#define DEG2RAD 3.14/180.0
+
 Controller::Controller()
 {
 
@@ -61,17 +63,20 @@ Controller::~Controller()
     port_odometer.close();
 }
 
-void  Controller::publish()
+void  Controller::publish_tf()
 {
     yarp::sig::Matrix m1;
     m1.resize(4, 4);
-    double a = m_current_theta;
+    double a = m_current_theta*DEG2RAD;
     m1[0][0] = cos(a);   m1[0][1] = -sin(a);  m1[0][2] = 0; m1[0][3] = m_current_x;
     m1[1][0] = sin(a);   m1[1][1] = cos(a);   m1[1][2] = 0; m1[1][3] = m_current_y;
     m1[2][0] = 0;        m1[2][1] = 0;        m1[2][2] = 1; m1[2][3] = 0;
     m1[3][0] = 0;        m1[3][1] = 0;        m1[3][2] = 0; m1[3][3] = 1;
     m_iTf->setTransform("mobile_base_body", "map", m1);
+}
 
+void  Controller::publish_port()
+{
     timeStamp.update();
     if (port_odometry.getOutputCount()>0)
     {
@@ -101,12 +106,12 @@ void  Controller::publish()
     }
 }
 
-void  Controller::apply_control(double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
+void  Controller::apply_control(double& lin_spd, double& ang_spd, double& des_dir, double& pwm_gain)
 {
-    double dt = 1000;
+    double dt = 0.01;
     m_current_theta = m_current_theta + ang_spd*dt;
-    m_current_x = m_current_x + lin_spd*dt*sin(des_dir);
-    m_current_y = m_current_y + lin_spd*dt*cos(des_dir);
+    m_current_x = m_current_x + lin_spd*dt*cos(des_dir*DEG2RAD);
+    m_current_y = m_current_y + lin_spd*dt*sin(des_dir*DEG2RAD);
 }
 
 void  Controller::get_odometry(double& x, double& y, double& theta)
