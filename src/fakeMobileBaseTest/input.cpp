@@ -59,7 +59,7 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
 
     if (!ctrl_options.check("GENERAL"))
     {
-        yError() << "Missing [GENERAL] section";
+        yWarning() << "Missing [GENERAL] section";
         //return false;
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
@@ -67,12 +67,12 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
 
     if (!general_options.check("max_linear_vel"))
     {
-        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
+        yWarning("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
         //return false;
     }
     if (!general_options.check("max_angular_vel"))
     {
-        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
+        yWarning("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
         //return false;
     }
    
