@@ -110,8 +110,8 @@ void  Controller::apply_control(double& lin_spd, double& ang_spd, double& des_di
 {
     double dt = 0.01;
     m_current_theta = m_current_theta + ang_spd*dt;
-    m_current_x = m_current_x + lin_spd*dt*cos(des_dir*DEG2RAD);
-    m_current_y = m_current_y + lin_spd*dt*sin(des_dir*DEG2RAD);
+    m_current_x = m_current_x + lin_spd*dt*cos((des_dir + m_current_theta)*DEG2RAD);
+    m_current_y = m_current_y + lin_spd*dt*sin((des_dir + m_current_theta)*DEG2RAD);
 }
 
 void  Controller::get_odometry(double& x, double& y, double& theta)
@@ -123,7 +123,7 @@ void  Controller::get_odometry(double& x, double& y, double& theta)
 
 void Controller::reset()
 {
-    m_current_theta = 0;
+    m_current_theta = 45;
     m_current_x = 0;
     m_current_y = 0;
 }

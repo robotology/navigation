@@ -48,6 +48,14 @@ protected:
     bool            m_publish_tf_enable;
     bool            m_publish_port_enable;
 
+    struct
+    {
+        double          m_command_time;
+        double          m_command_lin_dir;
+        double          m_command_lin_vel;
+        double          m_command_ang_vel;
+    } m_command;
+
 public:
     CtrlModule() 
     {
@@ -101,7 +109,7 @@ public:
 
         //set the thread rate
         int period = rf.check("period",Value(20)).asInt();
-        yInfo("baseCtrl thread rate: %d ms.",period);
+        yInfo("fakeMobileBaseTest thread rate: %d ms.",period);
         input = new Input();
         if (input->open(rf, ctrl_options) ==false)
         {
@@ -146,6 +154,11 @@ public:
         rpcPort.open((localName+"/rpc").c_str());
         attach(rpcPort);
 
+        m_command.m_command_lin_dir = 0;
+        m_command.m_command_lin_vel = 0;
+        m_command.m_command_ang_vel = 0;
+        m_command.m_command_time = 0;
+
         return true;
     }
 
@@ -157,6 +170,7 @@ public:
             reply.addVocab(Vocab::encode("many"));
             reply.addString("Available commands are:");
             reply.addString("reset_odometry");
+            reply.addString("go <dir> <vel_lin> <vel_ang>");
             return true;
         }
         else if (command.get(0).asString()=="reset_odometry")
@@ -166,6 +180,15 @@ public:
                 control->reset();
                 reply.addString("Odometry reset done.");
             }
+            return true;
+        }
+        else if (command.get(0).asString() == "go")
+        {
+            m_command.m_command_lin_dir = command.get(1).asDouble();
+            m_command.m_command_lin_vel = command.get(2).asDouble();
+            m_command.m_command_ang_vel = command.get(3).asDouble();
+            m_command.m_command_time = yarp::os::Time::now();
+            reply.addString("ok");
             return true;
         }
         reply.addString("Unknown command.");
@@ -203,6 +226,13 @@ public:
         double desired_dir = 0;
         double pwm = 0;
         input->read_inputs(&linear_speed, &angular_speed, &desired_dir, &pwm);
+        if (yarp::os::Time::now() - m_command.m_command_time < 10.0)
+        {
+            linear_speed = m_command.m_command_lin_vel;
+            angular_speed = m_command.m_command_ang_vel;
+            desired_dir = m_command.m_command_lin_dir;
+            pwm = 100;
+        }
         control->apply_control(linear_speed, angular_speed, desired_dir, pwm);
         if (m_publish_port_enable) control->publish_port();
         if (m_publish_tf_enable) control->publish_tf();
