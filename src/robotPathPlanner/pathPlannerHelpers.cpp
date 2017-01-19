@@ -32,6 +32,8 @@ NavigationStatusEnum pathPlannerHelpers::string2status(string s)
     else if (s == "navigation_status_goal_reached")  status = navigation_status_goal_reached;
     else if (s == "navigation_status_aborted")  status = navigation_status_aborted;
     else if (s == "navigation_status_paused")   status = navigation_status_paused;
+    else if (s == "navigation_status_preparing_before_move")   status = navigation_status_preparing_before_move;
+    else if (s == "navigation_status_thinking") status = navigation_status_thinking;
     else 
     {
         yError("PlannerThread::string2status(): Unknown status of inner controller: '%s'!", s.c_str());
@@ -48,7 +50,8 @@ std::string pathPlannerHelpers::getStatusAsString(NavigationStatusEnum status)
     else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
     else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
     else if (status == navigation_status_paused) return std::string("navigation_status_paused");
-
+    else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
+    else if (status == navigation_status_thinking) return std::string("navigation_thinking");
     yError("PlannerThread::getStatusAsString(): Unknown status of inner controller: '%d'!", status);
     return std::string("unknown");
 }
