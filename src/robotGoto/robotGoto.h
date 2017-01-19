@@ -45,6 +45,7 @@
 #include <visualization_msgs_MarkerArray.h>
 #include <geometry_msgs_PoseStamped.h>
 #include <nav_msgs_Path.h>
+#include "obstacles.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -69,19 +70,6 @@ typedef yarp::os::Publisher<nav_msgs_Path>              rosPathPublisher;
 #ifndef ANGLE
 #define ANGLE 2
 #endif
-
-#ifndef LIN_VEL
-#define LIN_VEL 1
-#endif
-
-#ifndef ANG_VEL
-#define ANG_VEL 2
-#endif
-
-#ifndef ANG_MOM
-#define ANG_MOM 0
-#endif
-
 #define TIMEOUT_MAX 300
 const double RAD2DEG  = 180.0/M_PI;
 const double DEG2RAD  = M_PI/180.0;
@@ -101,18 +89,20 @@ class GotoThread: public yarp::os::RateThread
     //PROPERTIES
     ////////////////////////////////////
 public:
-    bool   enable_retreat;
-    int    retreat_duration;
+    bool   m_enable_retreat;
+    int    m_retreat_duration;
 
     //robot properties
-    double robot_is_holonomic;
-    double robot_radius;        //m
-    double robot_laser_x;       //m
-    double robot_laser_y;       //m
-    double robot_laser_t;       //deg
+    bool   m_robot_is_holonomic;
+    bool   m_enable_obstacles_emergency_stop;
+    bool   m_enable_obstacles_avoidance;
+    double m_robot_radius;        //m
+    double m_robot_laser_x;       //m
+    double m_robot_laser_y;       //m
+    double m_robot_laser_t;       //deg
 
     //configuration parameters
-    double m_max_gamma_angle;
+    double m_beta_angle_threshold;
     double m_gain_lin;
     double m_gain_ang;
     double m_goal_tolerance_lin;  //m 
@@ -121,7 +111,7 @@ public:
     double m_max_ang_speed;       //deg/s
     double m_min_lin_speed;       //m/s
     double m_min_ang_speed;       //deg/s
-    double m_default_max_gamma_angle;
+    double m_default_beta_angle_threshold;
     double m_default_gain_lin;
     double m_default_gain_ang;
     double m_default_goal_tolerance_lin;  //m 
@@ -137,28 +127,6 @@ public:
 
     //semaphore
     Semaphore mutex;
-
-    //obstacles_emergency_stop block
-    bool                 enable_obstacles_emergency_stop;
-    bool                 enable_dynamic_max_distance;
-    double               obstacle_time;
-    double               max_obstacle_wating_time;
-    double               safety_coeff;
-    double               max_detection_distance;
-    double               min_detection_distance;
-    double               obstacle_removal_time;
-
-    //obstacle avoidance block
-    bool                 enable_obstacles_avoidance;
-    double               max_obstacle_distance;
-    double               frontal_blind_angle;
-    double               speed_reduction_factor;
-    double               angle_f;
-    double               angle_t;
-    double               angle_g;
-    double               w_f;
-    double               w_t;
-    double               w_g;
 
 protected:
     //pause info
@@ -184,24 +152,35 @@ protected:
     rosPathPublisher                globalPlan;
     
     Property             robotCtrl_options;
-    ResourceFinder       &rf;
-    yarp::sig::Vector    localization_data;
-    yarp::sig::Vector    odometry_data;
-    target_type          target_data;
-    std::vector<LaserMeasurementData>  laser_data;
-    yarp::sig::Vector    control_out;
-    NavigationStatusEnum status;
-    int                  retreat_counter;
+    ResourceFinder       &m_rf;
+    yarp::sig::Vector    m_localization_data;
+    yarp::sig::Vector    m_odometry_data;
+    target_type          m_target_data;
+    std::vector<LaserMeasurementData>  m_laser_data;
+    struct
+    {
+       double linear_vel;
+       double linear_dir;
+       double angular_vel;
+       void zero() { linear_vel = 0; linear_dir = 0; angular_vel = 0; }
+    }
+    m_control_out;
+    NavigationStatusEnum m_status;
+    int                  m_retreat_counter;
     bool                 m_use_odometry;
     bool                 m_use_localization_from_port;
     bool                 m_use_localization_from_tf;
     bool                 m_useGoalFromRosTopic;
     bool                 m_publishRosStuff;
-    string               frame_robot_id;
-    string               frame_map_id;
-    double               min_laser_angle;
-    double               max_laser_angle;
-    double               laser_angle_of_view;
+    string               m_frame_robot_id;
+    string               m_frame_map_id;
+    double               m_min_laser_angle;
+    double               m_max_laser_angle;
+    double               m_laser_angle_of_view;
+    double               m_time_of_obstacle_detection;
+    double               m_time_ob_obstacle_removal;
+
+    obstacles_class*     m_obstacle_handler;
 
     
     
@@ -228,18 +207,16 @@ public:
     Map2DLocation getCurrentAbsTarget();
     Map2DLocation getCurrentRelTarget();
     void          printStats();
-    bool          check_obstacles_in_path();
-    bool          compute_obstacle_avoidance();
     
 private:
     bool        rosInit(const yarp::os::Bottle& ros_group);
-    int         pnpoly(int nvert, double *vertx, double *verty, double testx, double testy);
     void        sendOutput();
     void inline evaluateLocalization();
     void inline evaluateGoalFromTopic();
     void inline getLaserData();
     void inline sendCurrentGoal();
     void inline publishLocalPlan();
+    void inline saturateRobotControls();
 
 };
 

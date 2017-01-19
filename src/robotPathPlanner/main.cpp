@@ -122,7 +122,8 @@ public:
             yarp::dev::Map2DLocation loc;
             loc.x = command.get(1).asDouble();
             loc.y = command.get(2).asDouble();
-            //loc.theta == //???
+            if   (command.size() == 4) { loc.theta = command.get(3).asDouble(); }
+            else                       { loc.theta = nan(""); }
             loc.map_id = plannerThread->getCurrentMapId();
             plannerThread->setNewAbsTarget(loc);
             reply.addString("new absolute target received");
@@ -133,7 +134,8 @@ public:
             yarp::sig::Vector v;
             v.push_back(command.get(1).asDouble());
             v.push_back(command.get(2).asDouble());
-            if (command.size() == 4) v.push_back(command.get(3).asDouble());
+            if (command.size() == 4) { v.push_back(command.get(3).asDouble()); }
+            else                     { v.push_back(nan("")); }
             plannerThread->setNewRelTarget(v);
             reply.addString("new relative target received");
         }

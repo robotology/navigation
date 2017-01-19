@@ -177,27 +177,27 @@ public:
             }
             else if (command.get(1).asString() == "obstacle_avoidance")
             {
-                if (gotoThread->enable_obstacles_avoidance)
+                if (gotoThread->m_enable_obstacles_avoidance)
                 {
                     reply.addString("enable_obstacles_avoidance=false");
-                    gotoThread->enable_obstacles_avoidance = false;
+                    gotoThread->m_enable_obstacles_avoidance = false;
                 }
                 else
                 {
-                    gotoThread->enable_obstacles_avoidance = true;
+                    gotoThread->m_enable_obstacles_avoidance = true;
                     reply.addString("enable_obstacles_avoidance=true");
                 }
             }
             else if (command.get(1).asString() == "obstacle_stop")
             {
-                if (gotoThread->enable_obstacles_avoidance)
+                if (gotoThread->m_enable_obstacles_avoidance)
                 {
                     reply.addString("enable_obstacle_stop=false");
-                    gotoThread->enable_obstacles_emergency_stop = false;
+                    gotoThread->m_enable_obstacles_emergency_stop = false;
                 }
                 else
                 {
-                    gotoThread->enable_obstacles_emergency_stop = true;
+                    gotoThread->m_enable_obstacles_emergency_stop = true;
                     reply.addString("enable_obstacle_stop=true");
                 }
             }

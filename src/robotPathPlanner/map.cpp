@@ -251,9 +251,21 @@ void drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle,
 {
     if (map==0) return;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
-    int orient_x = current.x + 6 * cos(-angle);
-    int orient_y = current.y + 6 * sin(-angle);
+    int orient_x = current.x + 12 * cos(-angle);
+    int orient_y = current.y + 12 * sin(-angle);
     cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+}
+
+void drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
+{
+    if (map == 0) return;
+    cvCircle(map, cvPoint(current.x, current.y), 3, color);
+    if (isnan(angle)==false)
+    {
+        int orient_x = current.x + 6 * cos(-angle);
+        int orient_y = current.y + 6 * sin(-angle);
+        cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+    }
 }
 
 void drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)

@@ -68,14 +68,18 @@ void PlannerThread::readTargetFromYarpView()
         }
         else if (gui_targ->size() == 4)
         {
-            MapGrid2D::XYCell c_start;
-            MapGrid2D::XYCell c_end;
-            c_start.x = (*gui_targ).get(0).asInt();
-            c_start.y = (*gui_targ).get(1).asInt();
-            c_end.x = (*gui_targ).get(2).asInt();
-            c_end.y = (*gui_targ).get(3).asInt();
-            double angle = atan2(c_end.x - c_start.x, c_end.y - c_start.y) * 180.0 / M_PI;
-            yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_start));
+            MapGrid2D::XYCell c_start_gui;
+            MapGrid2D::XYCell c_end_gui;
+            MapGrid2D::XYWorld c_start_world;
+            MapGrid2D::XYWorld c_end_world;
+            c_start_gui.x = (*gui_targ).get(0).asInt();
+            c_start_gui.y = (*gui_targ).get(1).asInt();
+            c_end_gui.x = (*gui_targ).get(2).asInt();
+            c_end_gui.y = (*gui_targ).get(3).asInt();
+            c_start_world = (m_current_map.cell2World(c_start_gui));
+            c_end_world = (m_current_map.cell2World(c_end_gui));
+            double angle = atan2(c_end_world.y - c_start_world.y, c_end_world.x - c_start_world.x) * 180.0 / M_PI;
+            yarp::sig::Vector v = static_cast<yarp::sig::Vector>(c_start_world);
             yInfo("selected point is located at (%6.3f, %6.3f), angle:", v[0], v[1], angle);
             yarp::os::Bottle& out = m_port_yarpview_target_output.prepare();
             out.clear();
@@ -153,12 +157,13 @@ void  PlannerThread::readLaserData()
             double las_x = 0;
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
-            yarp::sig::Vector v(2);
+            //performs a rotation from the robot to the world reference frame
+            MapGrid2D::XYWorld world;
             double ss = sin(m_localization_data.theta * DEG2RAD);
             double cs = cos(m_localization_data.theta * DEG2RAD);
-            v[0] = las_x*cs - las_y*ss + m_localization_data.x;
-            v[1] = las_x*ss + las_y*cs + m_localization_data.y;
-            m_laser_map_cells.push_back(m_current_map.world2Cell(v));
+            world.x = las_x*cs - las_y*ss + m_localization_data.x;
+            world.y = las_x*ss + las_y*cs + m_localization_data.y;
+            m_laser_map_cells.push_back(m_current_map.world2Cell(world));
         }
         m_laser_timeout_counter = 0;
     }
@@ -172,9 +177,12 @@ void PlannerThread::draw_map()
 {
     CvFont font;
     cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.28, 0.28);
-    static CvScalar blue_color = cvScalar(0, 0, 200);
+    static CvScalar red_color   = cvScalar(200, 80, 80);
+    static CvScalar green_color = cvScalar(80, 200, 80);
+    static CvScalar blue_color  = cvScalar(0, 0, 200);
     static CvScalar blue_color2 = cvScalar(80, 80, 200);
     MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
+    MapGrid2D::XYCell final_goal = m_current_map.world2Cell(yarp::dev::MapGrid2D::XYWorld(m_final_goal.x, m_final_goal.y));
 
     yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
     m_current_map.getMapImage(map_image);
@@ -188,7 +196,26 @@ void PlannerThread::draw_map()
         //map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color2);
     }
 
-    drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, blue_color);
+    //draw goal
+    switch (m_planner_status)
+    {
+        case navigation_status_preparing_before_move:
+        case navigation_status_moving:
+        case navigation_status_waiting_obstacle:
+        case navigation_status_aborted:
+        case navigation_status_paused:
+        case navigation_status_thinking:
+            drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, red_color);
+        break;
+        case navigation_status_goal_reached:
+            drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, green_color);
+        break;
+        case navigation_status_idle:
+        default:
+            //do nothing
+        break;
+    }
+    drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, blue_color2);
 #define DRAW_INFO
 #ifdef DRAW_INFO
     MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
@@ -301,6 +328,10 @@ void PlannerThread::run()
                     m_port_commands_output.write(cmd, ans);
                 }
             }
+        }
+        else if (m_inner_status == navigation_status_preparing_before_move)
+        {
+            //do nothing, just wait
         }
         else if (m_inner_status == navigation_status_moving)
         {
