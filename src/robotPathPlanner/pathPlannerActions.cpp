@@ -34,13 +34,20 @@ bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
 
     m_final_goal = target;
 
-    if (target.map_id == m_current_map.m_map_name)
+    if (target.map_id == m_current_map.getMapName())
     {
         std::queue<yarp::dev::Map2DLocation> empty;
         std::swap(m_sequence_of_goals, empty);
         m_sequence_of_goals.push(m_final_goal);
-        startPath();
-        return true;
+        if (startPath())
+        {
+            return true;
+        }
+        else
+        {
+            yError() << "PlannerThread::setNewAbsTarget() Unable to start path";
+            return false;
+        }
     }
     else
     {
@@ -61,7 +68,7 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 {
     if(target.size() != 3)
     {
-        yError() << "PlannerThread::setNewRelTarget invalid target vector size";
+        yError() << "PlannerThread::setNewRelTarget() invalid target vector size";
         return false;
     }
     //target and localization data are formatted as follows: x, y, angle (in degrees)
@@ -84,8 +91,15 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     std::queue<yarp::dev::Map2DLocation> empty;
     std::swap(m_sequence_of_goals, empty);
     m_sequence_of_goals.push(m_final_goal);
-    startPath();
-    return true;
+    if (startPath())
+    {
+        return true;
+    }
+    else
+    {
+        yError() << "PlannerThread::setNewRelTarget() Unable to start path";
+        return false;
+    }
 }
 
 void PlannerThread::stopMovement()

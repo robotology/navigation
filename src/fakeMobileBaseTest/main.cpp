@@ -80,6 +80,9 @@ public:
         ctrlName=rf.check("local",Value("fakeMobileBaseTest")).asString();
         robotName=rf.check("robot",Value("fakeRobot")).asString();
         partName = rf.check("part", Value("mobile_base")).asString();
+        bool holonomic = rf.check("holonomic");
+        if (holonomic) yInfo() << "Robot is holonomic";
+        else           yInfo() << "Robot is not holonomic";
 
         remoteName=slash+robotName+slash+partName;
         localName=slash+ctrlName;
@@ -118,7 +121,7 @@ public:
         }
 
         control = new Controller();
-        if (control->init() == false)
+        if (control->init(holonomic) == false)
         {
             yError() << "Module failed to launch";
             return false;
@@ -170,6 +173,7 @@ public:
             reply.addVocab(Vocab::encode("many"));
             reply.addString("Available commands are:");
             reply.addString("reset_odometry");
+            reply.addString("relocalize <x> <y> <theta>");
             reply.addString("go <dir> <vel_lin> <vel_ang>");
             return true;
         }
@@ -178,6 +182,15 @@ public:
             if (control)
             {
                 control->reset();
+                reply.addString("Odometry reset done.");
+            }
+            return true;
+        }
+        else if (command.get(0).asString() == "relocalize")
+        {
+            if (control)
+            {
+                control->reset(command.get(1).asDouble(), command.get(2).asDouble(), command.get(3).asDouble());
                 reply.addString("Odometry reset done.");
             }
             return true;
@@ -263,11 +276,8 @@ int main(int argc, char *argv[])
     {
         yInfo("Possible options: ");
         yInfo("'rate <r>' sets the threads rate (default 20ms).");
-        yInfo("'no_filter' disables command filtering.");
-        yInfo("'no_motors' motor interface will not be opened.");
-        yInfo("'no_start' do not automatically enables pwm.");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
-        yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
+        yInfo("'holonomic' if setjo, the robot will be holonomic");
         return 0;
     }
 

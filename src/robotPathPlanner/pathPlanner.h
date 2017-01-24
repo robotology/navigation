@@ -115,7 +115,6 @@ class PlannerThread: public yarp::os::RateThread
     std::queue<yarp::dev::Map2DLocation>   m_sequence_of_goals;
 
     std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
-    yarp::dev::MapGrid2D::XYCell                m_current_waypoint;
 
     std::queue<MapGrid2D::XYCell>                 m_computed_path;
     std::queue<MapGrid2D::XYCell>                 m_computed_simplified_path;
@@ -150,12 +149,13 @@ class PlannerThread: public yarp::os::RateThread
     void          getTimeouts(int& localiz, int& laser, int& inner_status);
 
     private:
-    void          startPath();
+    bool          startPath();
     void          sendWaypoint();
     void          readTargetFromYarpView();
     void          readLocalizationData();
     void          readLaserData();
     void          draw_map();
+    bool          getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const;
 
     public:
     PlannerThread(unsigned int _period, ResourceFinder &_rf);

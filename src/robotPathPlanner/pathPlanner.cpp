@@ -106,7 +106,7 @@ void  PlannerThread::readLocalizationData()
             m_localization_data.x = loc->data()[0];
             m_localization_data.y = loc->data()[1];
             m_localization_data.theta = loc->data()[2];
-            m_localization_data.map_id = m_current_map.m_map_name;
+            m_localization_data.map_id = m_current_map.getMapName();
             m_loc_timeout_counter = 0;
         }
         else
@@ -125,7 +125,7 @@ void  PlannerThread::readLocalizationData()
         if (r)
         {
             //data is formatted as follows: x, y, angle (in degrees)
-            m_localization_data.map_id = m_current_map.m_map_name;
+            m_localization_data.map_id = m_current_map.getMapName();
             m_localization_data.x = pose[0];
             m_localization_data.y = pose[1];
             m_localization_data.theta = pose[5] * RAD2DEG;
@@ -233,13 +233,19 @@ void PlannerThread::draw_map()
     CvScalar color = cvScalar(0, 200, 0);
     CvScalar color2 = cvScalar(0, 200, 100);
 
-    if (m_planner_status != navigation_status_idle && m_planner_status != navigation_status_goal_reached)
+    if (m_planner_status != navigation_status_idle &&
+        m_planner_status != navigation_status_goal_reached &&
+        m_planner_status != navigation_status_aborted)
     {
 #ifdef DRAW_BOTH_PATHS
         drawPath(map_with_path, start, computed_path, color);
         drawPath(map_with_path, start, computed_simplified_path, color2);
 #else
-        drawPath(map_with_path, start, m_current_waypoint, *m_current_path, color);
+        MapGrid2D::XYCell current_path;
+        if (getCurrentWaypoint(current_path))
+        {
+            drawPath(map_with_path, start, current_path, *m_current_path, color);
+        }
 #endif
     }
 
@@ -282,36 +288,41 @@ void PlannerThread::run()
             }
             else if (path_size == 1)
             {
-                 //send the next waypoint
+                //remove the current waypoint, just reached
+                m_current_path->pop();
+                //send the next waypoint
                 yInfo("sending the last waypoint");
-
-                //send the tolerance to the inner controller
-                Bottle cmd1, ans1;
-                cmd1.addString("set"); 
-                cmd1.addString("linear_tol");
-                cmd1.addDouble(m_goal_tolerance_lin);
-                m_port_commands_output.write(cmd1, ans1);
-
-                Bottle cmd2, ans2;
-                cmd2.addString("set"); 
-                cmd2.addString("angular_tol");
-                cmd2.addDouble(m_goal_tolerance_ang);
-                m_port_commands_output.write(cmd2, ans2);
-
-                //last waypoint ha minimum linear speed = 0
-                Bottle cmd3, ans3;
-                cmd3.addString("set"); 
-                cmd3.addString("min_lin_speed");
-                cmd3.addDouble(0.0);
-                m_port_commands_output.write(cmd3, ans3);
-
+                {
+                    //send the tolerance to the inner controller
+                    Bottle cmd1, ans1;
+                    cmd1.addString("set");
+                    cmd1.addString("linear_tol");
+                    cmd1.addDouble(m_goal_tolerance_lin);
+                    m_port_commands_output.write(cmd1, ans1);
+                }
+                {
+                    Bottle cmd2, ans2;
+                    cmd2.addString("set");
+                    cmd2.addString("angular_tol");
+                    cmd2.addDouble(m_goal_tolerance_ang);
+                    m_port_commands_output.write(cmd2, ans2);
+                }
+                {
+                    //last waypoint ha minimum linear speed = 0
+                    Bottle cmd3, ans3;
+                    cmd3.addString("set");
+                    cmd3.addString("min_lin_speed");
+                    cmd3.addDouble(0.0);
+                    m_port_commands_output.write(cmd3, ans3);
+                }
                 sendWaypoint();
             }
             else
             {
+                //remove the current waypoint, just reached
+                m_current_path->pop();
                 //send the next waypoint
                 yInfo("sending the next waypoint");
-                sendWaypoint();
                 {
                     //here I send min_lin_speed = max_lin_speed to have constant velocity
                     Bottle cmd, ans;
@@ -327,6 +338,7 @@ void PlannerThread::run()
                     cmd.addDouble(m_max_lin_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
+                sendWaypoint();
             }
         }
         else if (m_inner_status == navigation_status_preparing_before_move)
@@ -352,7 +364,6 @@ void PlannerThread::run()
         {
             //send the first waypoint
             yInfo ("sending the first waypoint");
-
             //send the tolerance to the inner controller
             {
                 Bottle cmd1, ans1;
@@ -361,7 +372,6 @@ void PlannerThread::run()
                 cmd1.addDouble(m_waypoint_tolerance_lin);
                 m_port_commands_output.write(cmd1, ans1);
             }
-
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
@@ -369,7 +379,6 @@ void PlannerThread::run()
                 cmd.addDouble(m_waypoint_tolerance_ang);
                 m_port_commands_output.write(cmd, ans);
             }
-
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
@@ -377,7 +386,6 @@ void PlannerThread::run()
                 cmd.addDouble(m_max_lin_speed);
                 m_port_commands_output.write(cmd, ans);
             }
-
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
@@ -385,7 +393,6 @@ void PlannerThread::run()
                 cmd.addDouble(m_max_ang_speed);
                 m_port_commands_output.write(cmd, ans);
             }
-
             {
                 //here I send min_lin_speed = max_lin_speed to have constant velocity
                 Bottle cmd, ans;
@@ -394,15 +401,14 @@ void PlannerThread::run()
                 cmd.addDouble(m_max_lin_speed);
                 m_port_commands_output.write(cmd, ans);
             }
-
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("min_ang_speed");
                 cmd.addDouble(m_min_ang_speed);
                 m_port_commands_output.write(cmd, ans);
-                sendWaypoint();
             }
+            sendWaypoint();
         }
         else
         {
@@ -451,6 +457,22 @@ void PlannerThread::run()
     m_mutex.post();
 }
 
+bool PlannerThread::getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const
+{
+    if (m_current_path == NULL)
+    {
+        yError() << "PlannerThread::getCurrentWaypoint() m_current_path is NULL";
+        return false;
+    }
+    if (m_current_path->size() == 0)
+    {
+        yError() << "PlannerThread::getCurrentWaypoint() m_current_path is empty (size==0)";
+        return false;
+    }
+    c = m_current_path->front();
+    return true;
+}
+
 void PlannerThread::sendWaypoint()
 {
     int path_size = m_current_path->size();
@@ -460,13 +482,19 @@ void PlannerThread::sendWaypoint()
         m_planner_status = navigation_status_idle;
         return;
     }
-    //get the next waypoint from the list
-    m_current_waypoint = m_current_path->front();
-    m_current_path->pop();
+    //get the current waypoint from the list
+    MapGrid2D::XYCell current_waypoint;
+    if (getCurrentWaypoint(current_waypoint)==false)
+    {
+        yError("getCurrentWaypoint failed!");
+        m_planner_status = navigation_status_idle;
+        return;
+    }
+
     //send the waypoint to the inner controller
     Bottle cmd1, ans1;
     cmd1.addString("gotoAbs");
-    yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(m_current_waypoint));
+    yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(current_waypoint));
     cmd1.addDouble(v[0]);
     cmd1.addDouble(v[1]);
     if (path_size == 1 && std::isnan(m_final_goal.theta) == false)
@@ -487,7 +515,7 @@ void PlannerThread::sendWaypoint()
     m_inner_status = pathPlannerHelpers::string2status(ans2.toString().c_str());
 }
 
-void PlannerThread::startPath()
+bool PlannerThread::startPath()
 {
     yarp::math::Vec2D<double> start_vec;
     yarp::math::Vec2D<double> goal_vec;
@@ -495,6 +523,16 @@ void PlannerThread::startPath()
     start_vec.y= m_localization_data.y;
     goal_vec.x = m_sequence_of_goals.front().x;
     goal_vec.y = m_sequence_of_goals.front().y;
+    if (m_current_map.isInsideMap(start_vec) == false)
+    {
+        yError() << "PlannerThread::startPath() current robot location (" << start_vec.toString() << ")is not inside map" << m_current_map.getMapName();
+        return false;
+    }
+    if (m_current_map.isInsideMap(goal_vec) == false)
+    {
+        yError() << "PlannerThread::startPath() requested goal (" << goal_vec.toString() << ") is not inside map" << m_current_map.getMapName();
+        return false;
+    }
     MapGrid2D::XYCell goal = m_current_map.world2Cell(goal_vec);
     MapGrid2D::XYCell start = m_current_map.world2Cell(start_vec);
 #ifdef DEBUG_WITH_CELLS
@@ -515,7 +553,7 @@ void PlannerThread::startPath()
     {
         yError ("path not found");
         m_planner_status = navigation_status_aborted;
-        return;
+        return false;
     }
     double t2 = yarp::os::Time::now();
 
@@ -536,5 +574,6 @@ void PlannerThread::startPath()
     //just set the status to moving, do not set position commands.
     //The wayypoint ist set in the main 'run' loop.
     m_planner_status = navigation_status_moving;
+    return true;
 }
 

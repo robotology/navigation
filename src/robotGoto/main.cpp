@@ -366,6 +366,11 @@ public:
                 reply.addVocab(VOCAB_ERR);
             }
         }
+        else
+        {
+            yError() << "Invalid command type";
+            reply.addVocab(VOCAB_ERR);
+        }
 
         gotoThread->mutex.post();
         return true;
