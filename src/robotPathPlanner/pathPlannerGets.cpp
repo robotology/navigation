@@ -77,7 +77,7 @@ string PlannerThread::getFinalMapId()
 
 string PlannerThread::getCurrentMapId()
 {
-    return m_current_map.m_map_name;
+    return m_current_map.getMapName();
 }
 
 void  PlannerThread::getTimeouts(int& localiz, int& laser, int& inner_status)

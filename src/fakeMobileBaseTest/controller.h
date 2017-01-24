@@ -47,24 +47,25 @@ using namespace yarp::dev;
 class Controller
 {
 private:
-    yarp::os::Stamp     timeStamp;
-    PolyDriver    m_ptf;
-    IFrameTransform*  m_iTf;
-    double m_current_theta;
-    double m_current_x;
-    double m_current_y;
-    BufferedPort<Bottle>            port_odometry;
-    BufferedPort<Bottle>            port_odometer;
+    yarp::os::Stamp           m_timeStamp;
+    PolyDriver                m_ptf;
+    IFrameTransform*          m_iTf;
+    double                    m_current_theta;
+    double                    m_current_x;
+    double                    m_current_y;
+    BufferedPort<Bottle>      m_port_odometry;
+    BufferedPort<Bottle>      m_port_odometer;
+    bool                      m_is_holonomic;
 
 public:
     Controller();
     ~Controller();
     void   apply_control(double& lin_spd , double& ang_spd, double& des_dir, double& pwm_gain);
     void   get_odometry(double& x, double& y, double& theta);
-    void   reset();
+    void   reset(double x = 0, double y = 0, double t = 0);
     void   publish_tf();
     void   publish_port();
-    bool   init();
+    bool   init(bool holonomic);
 };
 
 #endif

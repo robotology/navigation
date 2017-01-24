@@ -30,8 +30,9 @@ Controller::Controller()
 
 }
 
-bool Controller::init()
+bool Controller::init(bool holonomic)
 {
+    m_is_holonomic = holonomic;
     reset();
     m_iTf = 0;
 
@@ -51,16 +52,16 @@ bool Controller::init()
         return false;
     }
 
-    port_odometry.open("/fakeMobileBaseTest/odometry:o");
-    port_odometer.open("/fakeMobileBaseTest/odometer:o");
+    m_port_odometry.open("/fakeMobileBaseTest/odometry:o");
+    m_port_odometer.open("/fakeMobileBaseTest/odometer:o");
     return true;
 }
 
 Controller::~Controller()
 {
     m_ptf.close();
-    port_odometry.close();
-    port_odometer.close();
+    m_port_odometry.close();
+    m_port_odometer.close();
 }
 
 void  Controller::publish_tf()
@@ -77,11 +78,11 @@ void  Controller::publish_tf()
 
 void  Controller::publish_port()
 {
-    timeStamp.update();
-    if (port_odometry.getOutputCount()>0)
+    m_timeStamp.update();
+    if (m_port_odometry.getOutputCount()>0)
     {
-        port_odometry.setEnvelope(timeStamp);
-        Bottle &b = port_odometry.prepare();
+        m_port_odometry.setEnvelope(m_timeStamp);
+        Bottle &b = m_port_odometry.prepare();
         b.clear();
         b.addDouble(m_current_x); //position in the odom reference frame
         b.addDouble(m_current_y);
@@ -92,17 +93,17 @@ void  Controller::publish_port()
         b.addDouble(0); //velocity in the odom reference frame
         b.addDouble(0);
         b.addDouble(0);
-        port_odometry.write();
+        m_port_odometry.write();
     }
 
-    if (port_odometer.getOutputCount()>0)
+    if (m_port_odometer.getOutputCount()>0)
     {
-        port_odometer.setEnvelope(timeStamp);
-        Bottle &t = port_odometer.prepare();
+        m_port_odometer.setEnvelope(m_timeStamp);
+        Bottle &t = m_port_odometer.prepare();
         t.clear();
         t.addDouble(0);
         t.addDouble(0);
-        port_odometer.write();
+        m_port_odometer.write();
     }
 }
 
@@ -111,7 +112,15 @@ void  Controller::apply_control(double& lin_spd, double& ang_spd, double& des_di
     double dt = 0.01;
     m_current_theta = m_current_theta + ang_spd*dt;
     m_current_x = m_current_x + lin_spd*dt*cos((des_dir + m_current_theta)*DEG2RAD);
-    m_current_y = m_current_y + lin_spd*dt*sin((des_dir + m_current_theta)*DEG2RAD);
+    if (m_is_holonomic)
+    {
+        m_current_y = m_current_y + lin_spd*dt*sin((des_dir + m_current_theta)*DEG2RAD);
+    }
+    else
+    {
+        //do nothing
+        m_current_y = m_current_y;
+    }
 }
 
 void  Controller::get_odometry(double& x, double& y, double& theta)
@@ -121,10 +130,10 @@ void  Controller::get_odometry(double& x, double& y, double& theta)
     theta = m_current_theta;
 }
 
-void Controller::reset()
+void Controller::reset( double x , double y, double t)
 {
-    m_current_theta = 45;
-    m_current_x = 0;
-    m_current_y = 0;
+    m_current_theta = t;
+    m_current_x = x;
+    m_current_y = y;
 }
 

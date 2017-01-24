@@ -294,6 +294,7 @@ public:
         else
         {
             yError() << "Invalid command type";
+            reply.addVocab(VOCAB_ERR);
         }
         plannerThread->m_mutex.post();
         return true;
