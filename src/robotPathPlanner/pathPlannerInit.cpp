@@ -42,15 +42,13 @@ PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
     m_current_path = &m_computed_simplified_path;
     m_min_waypoint_distance = 0;
     m_iLaser = 0;
-    m_iTf = 0;
+    m_iLoc = 0;
     m_min_laser_angle = 0;
     m_max_laser_angle = 0;
     m_robot_radius = 0;
     m_robot_laser_x = 0;
     m_robot_laser_y = 0;
     m_robot_laser_t = 0;
-    m_use_localization_from_port = false;
-    m_use_localization_from_tf = false;
     m_imagemap_refresh_time = 0.033;
 }
 
@@ -88,15 +86,8 @@ bool PlannerThread::threadInit()
     ff &= geometry_group.check("laser_pos_y");
     ff &= geometry_group.check("laser_pos_theta");
 
-    if (localization_group.check("use_localization_from_port")) { m_use_localization_from_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
-    if (localization_group.check("use_localization_from_tf"))   { m_use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
     if (localization_group.check("robot_frame_id"))             { m_frame_robot_id = localization_group.find("robot_frame_id").asString(); }
     if (localization_group.check("map_frame_id"))               { m_frame_map_id = localization_group.find("map_frame_id").asString(); }
-    if (m_use_localization_from_port == true && m_use_localization_from_tf == true)
-    {
-        yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
-        return false;
-    }
 
     if (ff)
     {
@@ -121,28 +112,20 @@ bool PlannerThread::threadInit()
     m_port_yarpview_target_output.open((localName + "/yarpviewTarget:o").c_str());
 
     //localization
-    if (m_use_localization_from_port)
+    Property loc_options;
+    loc_options.put("device", "localization2DClient");
+    loc_options.put("local", "/robotPathPlanner/localizationClient");
+    loc_options.put("remote", "/localizationServer");
+    if (m_pLoc.open(loc_options) == false)
     {
-        m_port_localization_input.open((localName + "/localization:i").c_str());
+        yError() << "Unable to open localization driver";
+        return false;
     }
-
-    if (m_use_localization_from_tf)
+    m_pLoc.view(m_iLoc);
+    if (m_pLoc.isValid() == false || m_iLoc == 0)
     {
-        Property options;
-        options.put("device", "transformClient");
-        options.put("local", "/robotPathPlanner/localizationTfClient");
-        options.put("remote", "/transformServer");
-        if (m_ptf.open(options) == false)
-        {
-            yError() << "Unable to open transform client";
-            return false;
-        }
-        m_ptf.view(m_iTf);
-        if (m_ptf.isValid() == false || m_iTf == 0)
-        {
-            yError() << "Unable to view iTransform interface";
-            return false;
-        }
+        yError() << "Unable to view localization interface";
+        return false;
     }
 
     //open the map interface
@@ -199,6 +182,8 @@ bool PlannerThread::threadInit()
     }
     m_laser_angle_of_view = fabs(m_min_laser_angle) + fabs(m_max_laser_angle);
 
+#if 0
+    /////DEPRECATED!!!
     //read the map
     string map_filename;
     //yarp::os::ResourceFinder mapFinder;
@@ -219,25 +204,25 @@ bool PlannerThread::threadInit()
         yError("map_file param not found,closing");
         return false;
     }
-    map_filename = mapBottle.find("file_name").asString();
+    map_filename = mapBottle.find("map_name").asString();
 
     if (!m_current_map.loadFromFile(map_filename))
     {
         yError("map file not found, closing");
         return false;
     }
-    m_current_map.enlargeObstacles(6);
+    m_current_map.enlargeObstacles(m_robot_radius);
     m_iMap->store_map(m_current_map);
-        
+#endif
+
     return true;
 }
 
 void PlannerThread :: threadRelease()
 {
+    if (m_pLoc.isValid()) m_pLoc.close();
     if (m_ptf.isValid()) m_ptf.close();
     if (m_pLas.isValid()) m_pLas.close();
-    m_port_localization_input.interrupt();
-    m_port_localization_input.close();
     m_port_map_output.interrupt();
     m_port_map_output.close();
     m_port_status_input.interrupt();

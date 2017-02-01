@@ -110,7 +110,7 @@ public:
         }
         
         if (err==false)
-        yInfo ("module running, ALL ok");
+            yInfo() << "module running, ALL ok. Navigation status:" << plannerThread->getNavigationStatusAsString();
 
         return true; 
     }

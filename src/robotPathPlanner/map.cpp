@@ -39,16 +39,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
-/*
-map_class::map_class()
-{
-    m_origin.resize(3, 0.0);
-    m_crop_x = 0;
-    m_crop_y = 0;
-    m_crop_w = 0;
-    m_crop_h = 0;
-}
-*/
+
 bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send)
 {
     if (port!=0 && port->getOutputCount()>0)
@@ -62,20 +53,6 @@ bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, I
         return true;
     }
     return false;
-}
-
-inline bool pixel_is_free(const cv::Vec3b& pix)
-{
-    //static cv::Vec3b white (254,254,254);
-    //if (pix[0] == 0   && pix[1] == 0   && pix[2] == 0)   return false;
-    //if (pix[0] == 36  && pix[1] == 36  && pix[2] == 36)  return false;
-    //if (pix[0] == 205 && pix[1] == 205 && pix[2] == 205) return false;
-    //if (pix[0] == 255 && pix[1] == 0   && pix[2] ==0)    return false;
-    if (pix[0] == 0   )   return false;
-    if (pix[0] == 36  )  return false;
-    if (pix[0] == 205 ) return false;
-    if (pix[0] == 255 )    return false;
-    return true;
 }
 
 bool enlargeScan(std::vector <MapGrid2D::XYCell>& laser_scan, unsigned int times, double max_dist)
@@ -99,87 +76,7 @@ bool enlargeScan(std::vector <MapGrid2D::XYCell>& laser_scan, unsigned int times
     }
     return true;
 }
-/*
-bool map_class::loadMap(string filename)
-{
-    string pgm_file = filename+".pgm";
-    string yaml_file = filename+".yaml";
 
-    m_loaded_map = cvLoadImage(pgm_file.c_str());
-    if (m_loaded_map == 0)
-    {
-        yError("unable to load pgm map file %s\n", filename.c_str());
-        return false;
-    }
-
-    m_crop_x = 0;
-    m_crop_y = 0;
-    m_crop_w = m_size_x = m_loaded_map->width;
-    m_crop_h = m_size_y = m_loaded_map->height;
-
-    FILE * pFile=0;
-    pFile = fopen (yaml_file.c_str(),"r");
-    char buff[255];
-    char tmp[255];
-    if (pFile!=NULL)
-    {
-        yInfo ("opening yaml map file %s", filename.c_str()); 
-        //read here resolution, origin, size
-        while (1)
-        {
-            int ret = fscanf(pFile,"%s", buff);
-            if (ret==EOF) break;
-
-            if (strcmp(buff,"resolution:")==0)
-                {
-                    fscanf(pFile,"%s",tmp);
-                    m_resolution = atof(tmp);
-                    yInfo("map resolution: %f",resolution);
-                }
-            if (strcmp(buff,"origin:")==0) 
-                {
-                    fscanf(pFile,"%s",tmp);
-                    m_origin[0] = atof(tmp + 1);
-                    fscanf(pFile,"%s",tmp);
-                    m_origin[1] = atof(tmp);
-                    fscanf(pFile,"%s",tmp);
-                    m_origin[2] = atof(tmp);
-                    yInfo("map origin: [%s]", m_origin.toString().c_str());
-                } 
-        }
-        yInfo("\n");
-        fclose (pFile);
-    }
-    else
-    {
-        yError("unable to load yaml map file %s\n", filename.c_str());
-        return false;
-    }
-
-    
-    IplImage *cropped_map = 0;
-    
-    crop(m_loaded_map, cropped_map);
-    cvReleaseImage(&m_loaded_map);
-    m_loaded_map = cropped_map;
-
-    IplImage*  tmp1 = cvCloneImage(m_loaded_map);
-    m_processed_map = cvCloneImage(m_loaded_map);
-    m_processed_map_with_scan = cvCloneImage(m_loaded_map);
-
-    
-    //use this block to perform skeletonziation and wall enlargement
-    //skeletonize     (loaded_map, tmp1);
-    //enlargeObstacles(tmp1, processed_map, 6); //@@@ remove magic number
-    
-    
-    //use this block to perform wall enlargment only
-    enlargeObstacles(m_loaded_map, m_processed_map, 6); //@@@ remove magic number
-
-    cvReleaseImage (&tmp1);
-    return true;
-}
-*/
 bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path)
 {
     unsigned int path_size = input_path.size();

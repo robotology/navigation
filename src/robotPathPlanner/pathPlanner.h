@@ -40,7 +40,7 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/IFrameTransform.h>
-#include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/ILocalization2D.h>
 #include <string>
 #include <visualization_msgs_MarkerArray.h>
 
@@ -88,20 +88,18 @@ class PlannerThread: public yarp::os::RateThread
     double    m_min_laser_angle;
     double    m_max_laser_angle;
     double    m_laser_angle_of_view;
-    bool      m_use_localization_from_port;
-    bool      m_use_localization_from_tf;
     string    m_frame_robot_id;
     string    m_frame_map_id;
     double    m_imagemap_refresh_time;
 
     //ports
     PolyDriver                                             m_ptf;
+    PolyDriver                                             m_pLoc;
     PolyDriver                                             m_pLas;
     PolyDriver                                             m_pMap;
     IRangefinder2D*                                        m_iLaser;
     IMap2D*                                                m_iMap;
-    IFrameTransform*                                       m_iTf;
-    BufferedPort<yarp::sig::Vector>                        m_port_localization_input;
+    ILocalization2D*                                       m_iLoc;
     BufferedPort<yarp::os::Bottle>                         m_port_status_input;
     BufferedPort<yarp::os::Bottle>                         m_port_yarpview_target_input;
     BufferedPort<yarp::os::Bottle>                         m_port_yarpview_target_output;
@@ -152,8 +150,9 @@ class PlannerThread: public yarp::os::RateThread
     bool          startPath();
     void          sendWaypoint();
     void          readTargetFromYarpView();
-    void          readLocalizationData();
+    bool          readLocalizationData();
     void          readLaserData();
+    bool          readInnerNavigationStatus();
     void          draw_map();
     bool          getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const;
 

@@ -39,7 +39,7 @@
 #include <yarp/os/LockGuard.h>
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/ILocalization2D.h>
 #include <string>
 #include <math.h>
 #include <visualization_msgs_MarkerArray.h>
@@ -59,28 +59,16 @@ typedef yarp::os::Publisher<nav_msgs_Path>              rosPathPublisher;
 #define M_PI 3.14159265
 #endif
 
-#ifndef X
-#define X 0
-#endif
-
-#ifndef Y
-#define Y 1
-#endif
-
-#ifndef ANGLE
-#define ANGLE 2
-#endif
 #define TIMEOUT_MAX 300
 const double RAD2DEG  = 180.0/M_PI;
 const double DEG2RAD  = M_PI/180.0;
 
 struct target_type
 {
-    yarp::sig::Vector target;
-    bool              weak_angle;
+    yarp::dev::Map2DLocation target;
+    bool                     weak_angle;
 
-    target_type() {weak_angle = false; target.resize(3,0.0);}
-    double& operator[] (const int& i) { return target[i]; }
+    target_type() {weak_angle = false;}
 };
 
 class GotoThread: public yarp::os::RateThread
@@ -121,39 +109,37 @@ public:
     double m_default_min_lin_speed;       //m/s
     double m_default_min_ang_speed;       //deg/s
 
-    int    loc_timeout_counter;
-    int    odm_timeout_counter;
-    int    las_timeout_counter;
+    int    m_loc_timeout_counter;
+    int    m_las_timeout_counter;
 
     //semaphore
-    Semaphore mutex;
+    Semaphore m_mutex;
 
 protected:
     //pause info
-    double pause_start;
-    double pause_duration;
+    double m_pause_start;
+    double m_pause_duration;
 
     //ports
-    PolyDriver                      ptf;
-    PolyDriver                      pLas;
-    IRangefinder2D*                 iLaser;
-    IFrameTransform*                iTf;
-    BufferedPort<yarp::sig::Vector> port_odometry_input;
-    BufferedPort<yarp::sig::Vector> port_localization_input;
-    BufferedPort<yarp::sig::Vector> port_target_input;
-    BufferedPort<yarp::os::Bottle>  port_commands_output;
-    BufferedPort<yarp::os::Bottle>  port_status_output;
-    BufferedPort<yarp::os::Bottle>  port_speak_output;
-    BufferedPort<yarp::os::Bottle>  port_gui_output;
-    yarp::os::Node*                 rosNode;
-    rosGoalSubscriber               rosGoalInputPort;
-    rosGoalPublisher                rosCurrentGoal;
-    rosPathPublisher                localPlan;
-    rosPathPublisher                globalPlan;
+    PolyDriver                      m_ptf;
+    PolyDriver                      m_pLas;
+    PolyDriver                      m_pLoc;
+    IRangefinder2D*                 m_iLaser;
+    ILocalization2D*                m_iLoc;
+    BufferedPort<yarp::sig::Vector> m_port_target_input;
+    BufferedPort<yarp::os::Bottle>  m_port_commands_output;
+    BufferedPort<yarp::os::Bottle>  m_port_status_output;
+    BufferedPort<yarp::os::Bottle>  m_port_speak_output;
+    BufferedPort<yarp::os::Bottle>  m_port_gui_output;
+    yarp::os::Node*                 m_rosNode;
+    rosGoalSubscriber               m_rosGoalInputPort;
+    rosGoalPublisher                m_rosCurrentGoal;
+    rosPathPublisher                m_localPlan;
+    rosPathPublisher                m_globalPlan;
     
-    Property             robotCtrl_options;
+    Property             m_robotCtrl_options;
     ResourceFinder       &m_rf;
-    yarp::sig::Vector    m_localization_data;
+    yarp::dev::Map2DLocation    m_localization_data;
     yarp::sig::Vector    m_odometry_data;
     target_type          m_target_data;
     std::vector<LaserMeasurementData>  m_laser_data;
@@ -167,9 +153,6 @@ protected:
     m_control_out;
     NavigationStatusEnum m_status;
     int                  m_retreat_counter;
-    bool                 m_use_odometry;
-    bool                 m_use_localization_from_port;
-    bool                 m_use_localization_from_tf;
     bool                 m_useGoalFromRosTopic;
     bool                 m_publishRosStuff;
     string               m_frame_robot_id;
@@ -194,7 +177,7 @@ public:
     virtual void run();
     virtual void threadRelease();
 
-    void          getCurrentPos(yarp::sig::Vector& v);
+    void          getCurrentPos(yarp::dev::Map2DLocation& loc);
     string        getMapId();
     void          setNewAbsTarget(yarp::sig::Vector target);
     void          setNewRelTarget(yarp::sig::Vector target);
@@ -211,7 +194,7 @@ public:
 private:
     bool        rosInit(const yarp::os::Bottle& ros_group);
     void        sendOutput();
-    void inline evaluateLocalization();
+    bool inline evaluateLocalization();
     void inline evaluateGoalFromTopic();
     void inline getLaserData();
     void inline sendCurrentGoal();

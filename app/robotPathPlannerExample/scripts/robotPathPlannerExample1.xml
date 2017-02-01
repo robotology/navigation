@@ -1,18 +1,18 @@
 <application>
-<name>PathPlanner TEST with fake robot</name>
+<name>robotPathPlanner EXAMPLE1</name>
 
 <dependencies>
 </dependencies>
 
 <module>
    <name>fakeMobileBaseTest</name>
-   <parameters></parameters>
+   <parameters>--holonomic</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device map2DServer</parameters>
+   <parameters>--device map2DServer --mapCollection mapsExample</parameters>
    <node>console</node>
 </module>
 
@@ -30,25 +30,37 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test no_obstacles</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test map_test --map_file C:\\software\\maps\\map_test.yaml</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>robotGoto</name>
-   <parameters>--from C:\software\navigation\app\robotGoto\conf\robotGoto_ikart.ini</parameters>
+   <parameters>--context robotPathPlannerExample --from robotGoto_ikart.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>robotPathPlanner</name>
-   <parameters>--from C:\software\navigation\app\robotPathPlanner\conf\robotPathPlanner_ikart.ini </parameters>
+   <parameters>--context robotPathPlannerExample --from robotPathPlanner_ikart.ini </parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpview</name>
-   <parameters>--name /plannerView:i --out /mapClick:o</parameters>
+   <parameters>--name /plannerView:i</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>localizationServer</name>
+   <parameters>--context robotPathPlannerExample --from localizationServer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotPathPlannerExample</name>
+   <parameters></parameters>
    <node>console</node>
 </module>
 
@@ -82,33 +94,17 @@
   <protocol>tcp</protocol>
 </connection>
 
-<connection>
-  <from>/fakeMobileBaseTest/odometry:o</from>
-  <to>/robotGoto/odometry:i</to>
-  <protocol>udp</protocol>
-</connection>
 
-<connection>
-  <from>/fakeMobileBaseTest/odometry:o</from>
-  <to>/robotPathPlanner/localization:i</to>
-  <protocol>udp</protocol>
-</connection>
-
-<connection>
-  <from>/fakeMobileBaseTest/odometry:o</from>
-  <to>/robotGoto/localization:i</to>
-  <protocol>udp</protocol>
-</connection>
-
-<connection>
-  <from>/mapClick:o</from>
-  <to>/robotPathPlanner/yarpviewTarget:i</to>
-  <protocol>tcp</protocol>
-</connection>
 
 <connection>
   <from>/robotPathPlanner/yarpviewTarget:o</from>
   <to>/robotPathPlanner/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/fakeMobileBaseTest/odometry:o</from>
+  <to>/fakeLaser/location:i</to>
   <protocol>tcp</protocol>
 </connection>
 

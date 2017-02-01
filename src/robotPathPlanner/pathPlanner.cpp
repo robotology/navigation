@@ -96,51 +96,64 @@ void PlannerThread::readTargetFromYarpView()
     }
 }
 
-void  PlannerThread::readLocalizationData()
+bool  PlannerThread::readLocalizationData()
 {
-    if (m_use_localization_from_port)
+    bool ret = m_iLoc->getCurrentPosition(m_localization_data);
+    if (ret)
     {
-        yarp::sig::Vector *loc = m_port_localization_input.read(false);
-        if (loc)
-        {
-            m_localization_data.x = loc->data()[0];
-            m_localization_data.y = loc->data()[1];
-            m_localization_data.theta = loc->data()[2];
-            m_localization_data.map_id = m_current_map.getMapName();
-            m_loc_timeout_counter = 0;
-        }
-        else
-        {
-            m_loc_timeout_counter++;
-            if (m_loc_timeout_counter>TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
-        }
-    }
-    else if (m_use_localization_from_tf)
-    {
-        yarp::sig::Vector iv;
-        yarp::sig::Vector pose;
-        iv.resize(6, 0.0);
-        pose.resize(6, 0.0);
-        bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
-        if (r)
-        {
-            //data is formatted as follows: x, y, angle (in degrees)
-            m_localization_data.map_id = m_current_map.getMapName();
-            m_localization_data.x = pose[0];
-            m_localization_data.y = pose[1];
-            m_localization_data.theta = pose[5] * RAD2DEG;
-            m_loc_timeout_counter = 0;
-        }
-        else
-        {
-            m_loc_timeout_counter++;
-            if (m_loc_timeout_counter > TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
-        }
+        m_loc_timeout_counter = 0;
     }
     else
     {
-        yWarning() << "Localization disabled";
+        m_loc_timeout_counter++;
+        if (m_loc_timeout_counter>TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
+        return false;
     }
+
+    if (m_localization_data.map_id != m_current_map.getMapName())
+    {
+        yWarning() << "Current map name != m_localization_data.map_id";
+        yInfo() << "Asking the map to the MAP server";
+        bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
+        if (map_get_succesfull)
+        {
+            yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
+            m_current_map.enlargeObstacles(0.6);
+        }
+        else
+        {
+            yError() << "Unable to get map '" << m_localization_data.map_id << "' from map server";
+            std::vector<string> names_vector;
+            m_iMap->get_map_names(names_vector);
+            string names = "Known maps are:" ;
+            for (auto it = names_vector.begin(); it != names_vector.end(); it++)
+            {
+                names = names + " " + (*it);
+            }
+            yInfo() << names;
+            yarp::os::Time::delay(1.0);
+            return true; //consider changing this to false
+        }
+    }
+    return true;
+}
+
+bool  PlannerThread::readInnerNavigationStatus()
+{
+    //read the internal navigation status
+    Bottle cmd1, ans1;
+    cmd1.addString("get");
+    cmd1.addString("navigation_status");
+    m_port_commands_output.write(cmd1, ans1);
+    string s = ans1.get(0).toString().c_str();
+    m_inner_status = pathPlannerHelpers::string2status(s);
+    if (m_inner_status == navigation_status_error)
+    {
+        yError() << "Inner status = error"; 
+        yarp::os::Time::delay(1.0);
+        return false;
+    }
+    return true;
 }
 
 void  PlannerThread::readLaserData()
@@ -235,7 +248,8 @@ void PlannerThread::draw_map()
 
     if (m_planner_status != navigation_status_idle &&
         m_planner_status != navigation_status_goal_reached &&
-        m_planner_status != navigation_status_aborted)
+        m_planner_status != navigation_status_aborted &&
+        m_planner_status != navigation_status_error)
     {
 #ifdef DRAW_BOTH_PATHS
         drawPath(map_with_path, start, computed_path, color);
@@ -262,14 +276,13 @@ void PlannerThread::run()
     readTargetFromYarpView();
     readLocalizationData();
     readLaserData();
-
-    //read the internal navigation status
-    Bottle cmd1, ans1;
-    cmd1.addString("get"); 
-    cmd1.addString("navigation_status");
-    m_port_commands_output.write(cmd1, ans1);
-    string s = ans1.get(0).toString().c_str();
-    m_inner_status = pathPlannerHelpers::string2status(s);
+    if (readInnerNavigationStatus() == false)
+    {
+        m_planner_status = navigation_status_error;
+        //yError() << "Error status";
+        //yarp::os::Time::delay(1.0);
+        //return;
+    }
 
     /////////////////////////////
     // the finite-state-machine
@@ -360,6 +373,11 @@ void PlannerThread::run()
             yError ("unable to reach next waypoint, aborting navigation");
             //current_path.clear();
         }
+        else if (m_inner_status == navigation_status_error)
+        {
+            yError("PathPlanner in error status");
+            m_planner_status = navigation_status_error;
+        }
         else if (m_inner_status == navigation_status_idle)
         {
             //send the first waypoint
@@ -431,10 +449,18 @@ void PlannerThread::run()
     {
         //do nothing, just wait
     }
+    else if (m_planner_status == navigation_status_error)
+    {
+        if (m_inner_status != navigation_status_error)
+        {
+            m_planner_status = navigation_status_aborted;
+        }
+    }
     else
     {
         //unknown status
         yError("unknown status:%d", m_planner_status);
+        m_planner_status = navigation_status_error;
     }
 
     //broadcast the planner status
