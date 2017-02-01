@@ -94,19 +94,14 @@ public:
         }
         
         bool err = false;
-        if (gotoThread->las_timeout_counter>TIMEOUT_MAX)
+        if (gotoThread->m_las_timeout_counter>TIMEOUT_MAX)
         {
             yError (" timeout, no laser data received!");
             err= true;
         }
-        if (gotoThread->loc_timeout_counter>TIMEOUT_MAX)
+        if (gotoThread->m_loc_timeout_counter>TIMEOUT_MAX)
         {
             yError(" timeout, no localization data receive");
-            err= true;
-        }
-        if (gotoThread->odm_timeout_counter>TIMEOUT_MAX)
-        {
-            yError(" timeout, no odometry data received!");
             err= true;
         }
         
@@ -292,15 +287,13 @@ public:
         }
         else if (request == VOCAB_NAV_GET_CURRENT_POS)
         {
-            yarp::sig::Vector position;
-
+            Map2DLocation position;
             gotoThread->getCurrentPos(position);
             reply.addVocab(VOCAB_OK);
-            reply.addString(gotoThread->getMapId());
-            reply.addDouble(position[0]);
-            reply.addDouble(position[1]);
-            reply.addDouble(position[2]);
-
+            reply.addString(position.map_id);
+            reply.addDouble(position.x);
+            reply.addDouble(position.y);
+            reply.addDouble(position.theta);
         }
         else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
         {
@@ -324,10 +317,10 @@ public:
     {
         reply.clear(); 
 
-        gotoThread->mutex.wait();
+        gotoThread->m_mutex.wait();
         if (command.get(0).asString()=="quit")
         {
-            gotoThread->mutex.post();
+            gotoThread->m_mutex.post();
             return false;
         }
 
@@ -372,7 +365,7 @@ public:
             reply.addVocab(VOCAB_ERR);
         }
 
-        gotoThread->mutex.post();
+        gotoThread->m_mutex.post();
         return true;
     }
 };

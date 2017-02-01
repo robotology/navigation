@@ -1,0 +1,13 @@
+<application>
+<name>Localization</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>localization</name>
+   <parameters></parameters>
+   <node>console</node>
+</module>
+
+</application>

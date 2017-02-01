@@ -9,7 +9,9 @@ add_subdirectory(forceGuidance)
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
 add_subdirectory(fakeMobileBaseTest)
-
+add_subdirectory(localizationServer)
 
 
 add_subdirectory(navigationTest)
+add_subdirectory(robotPathPlannerExample)
+add_subdirectory(robotGotoExample)
