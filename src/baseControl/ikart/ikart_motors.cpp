@@ -24,10 +24,10 @@
 bool iKart_MotorControl::set_control_openloop()
 {
     yInfo ("Setting openloop mode");
-    icmd->setOpenLoopMode(0);
-    icmd->setOpenLoopMode(1);
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
+    icmd->setControlMode(0, VOCAB_CM_PWM);
+    icmd->setControlMode(1, VOCAB_CM_PWM);
+    ipwm->setRefDutyCycle(0, 0);
+    ipwm->setRefDutyCycle(1, 0);
     return true;
 }
 
@@ -128,7 +128,7 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
     bool ok = true;
     ok = ok & control_board_driver->view(ivel);
     ok = ok & control_board_driver->view(ienc);
-    ok = ok & control_board_driver->view(iopl);
+    ok = ok & control_board_driver->view(ipwm);
     ok = ok & control_board_driver->view(ipid);
     ok = ok & control_board_driver->view(iamp);
     ok = ok & control_board_driver->view(icmd);
@@ -225,14 +225,14 @@ void iKart_MotorControl::execute_openloop(double appl_linear_speed, double appl_
     }
 
     //Apply the commands
-    iopl->setRefOutput(0, -F[0]);
-    iopl->setRefOutput(1, -F[1]);
-    iopl->setRefOutput(1, -F[2]);
+    ipwm->setRefDutyCycle(0, -F[0]);
+    ipwm->setRefDutyCycle(1, -F[1]);
+    ipwm->setRefDutyCycle(1, -F[2]);
 }
 
 void iKart_MotorControl::execute_none()
 {
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
-    iopl->setRefOutput(2,0);
+    ipwm->setRefDutyCycle(0, 0);
+    ipwm->setRefDutyCycle(1, 0);
+    ipwm->setRefDutyCycle(2, 0);
 }

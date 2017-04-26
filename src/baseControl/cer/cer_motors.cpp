@@ -24,10 +24,10 @@
 bool CER_MotorControl::set_control_openloop()
 {
     yInfo ("Setting openloop mode");
-    icmd->setControlMode(0, VOCAB_CM_OPENLOOP);
-    icmd->setControlMode(1, VOCAB_CM_OPENLOOP);
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
+    icmd->setControlMode(0, VOCAB_CM_PWM);
+    icmd->setControlMode(1, VOCAB_CM_PWM);
+    ipwm->setRefDutyCycle(0, 0);
+    ipwm->setRefDutyCycle(1, 0);
     return true;
 }
 
@@ -127,7 +127,7 @@ bool CER_MotorControl::open(ResourceFinder &_rf, Property &_options)
     bool ok = true;
     ok = ok & control_board_driver->view(ivel);
     ok = ok & control_board_driver->view(ienc);
-    ok = ok & control_board_driver->view(iopl);
+    ok = ok & control_board_driver->view(ipwm);
     ok = ok & control_board_driver->view(ipid);
     ok = ok & control_board_driver->view(iamp);
     ok = ok & control_board_driver->view(icmd);
@@ -217,12 +217,12 @@ void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_de
     }
 
     //Apply the commands
-    iopl->setRefOutput(0, F[0]);
-    iopl->setRefOutput(1, F[1]);
+    ipwm->setRefDutyCycle(0, F[0]);
+    ipwm->setRefDutyCycle(1, F[1]);
 }
 
 void CER_MotorControl::execute_none()
 {
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
+    ipwm->setRefDutyCycle(0, 0);
+    ipwm->setRefDutyCycle(1, 0);
 }

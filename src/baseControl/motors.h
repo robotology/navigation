@@ -67,7 +67,7 @@ protected:
     IVelocityControl  *ivel;
     IEncoders         *ienc;
     IAmplifierControl *iamp;
-    IOpenLoopControl  *iopl;
+    IPWMControl       *ipwm;
     IControlMode2     *icmd;
 
 public:

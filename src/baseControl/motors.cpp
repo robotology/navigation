@@ -65,7 +65,7 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
     bool ok = true;
     ok = ok & control_board_driver->view(ivel);
     ok = ok & control_board_driver->view(ienc);
-    ok = ok & control_board_driver->view(iopl);
+    ok = ok & control_board_driver->view(ipwm);
     ok = ok & control_board_driver->view(ipid);
     ok = ok & control_board_driver->view(iamp);
     ok = ok & control_board_driver->view(icmd);
