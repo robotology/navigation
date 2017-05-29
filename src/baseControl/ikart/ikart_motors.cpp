@@ -29,7 +29,7 @@ bool iKart_MotorControl::set_control_openloop()
     icmd->setControlMode(2, VOCAB_CM_PWM);
     ipwm->setRefDutyCycle(0, 0);
     ipwm->setRefDutyCycle(1, 0);
-    ipwm->setRefDutyCycle(2, 0)
+    ipwm->setRefDutyCycle(2, 0);
     return true;
 }
 
