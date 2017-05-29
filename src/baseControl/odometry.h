@@ -36,29 +36,27 @@
 #include <yarp/math/Math.h>
 #include <yarp/os/Stamp.h>
 #include <string>
-#include <math.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
-#include "include/nav_msgs_Odometry.h"
-#include "include/geometry_msgs_PolygonStamped.h"
-#include "include/geometry_msgs_TransformStamped.h"
-#include "include/tf_tfMessage.h"
+#include <nav_msgs_Odometry.h>
+#include <geometry_msgs_PolygonStamped.h>
+#include <geometry_msgs_TransformStamped.h>
+#include <tf_tfMessage.h>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::math;
 
-#ifndef M_PI
-#define M_PI 3.14159265
-#endif
-
 #ifndef RAD2DEG
-#define RAD2DEG 180.0/3.14159
+#define RAD2DEG 180.0/M_PI
 #endif 
 
 #ifndef DEG2RAD
-#define DEG2RAD 3.14159/180.0
+#define DEG2RAD M_PI/180.0
 #endif
 
 class Odometry
@@ -131,6 +129,8 @@ public:
     virtual void   close();
     virtual double get_base_vel_lin();
     virtual double get_base_vel_theta();
+    virtual double get_vlin_coeff() = 0;
+    virtual double get_vang_coeff() = 0;
 };
 
 #endif

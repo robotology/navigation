@@ -35,9 +35,7 @@
 #include <yarp/dev/IAnalogSensor.h>
 #include <string>
 #include <list>
-
-
-#include "map.h"
+#include <yarp/dev/MapGrid2D.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -52,7 +50,7 @@ class node_type
     double g_score;
     double f_score;
     double s_score;
-    cell came_from;
+    yarp::dev::MapGrid2D::XYCell came_from;
 
     node_type()
     {
@@ -87,20 +85,17 @@ class node_map_type
     int h;
     node_type** nodes;
 
-    node_map_type(IplImage *img)
+    node_map_type(yarp::dev::MapGrid2D& map)
     {
-        w = img->width;
-        h = img->height;
+        w = map.width();
+        h = map.height();
         nodes = new node_type* [w];
         for (int i = 0; i < w; ++i)  nodes[i] = new node_type[h];
-
-        cv::Mat imgMat = img; 
 
         for (int y=0; y<h; y++)
             for (int x=0; x<w; x++)
                 {
-                    //beware: y and x are swapped in imgMat respect to IplImage
-                    if (imgMat.at<cv::Vec3b>(y,x)[0] == 254) //use only the red channel
+                    if (map.isFree(MapGrid2D::XYCell(x, y)))
                         nodes [x][y].empty = true;
                     else
                         nodes [x][y].empty = false;
@@ -195,12 +190,10 @@ class unordered_set_type
     }
 };
 
-bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& path)
+bool find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
 {
-    if (img == 0 ) return false;
-
-    std::vector<cell> inverse_path;
-    node_map_type map(img);
+    std::vector<MapGrid2D::XYCell> inverse_path;
+    node_map_type node_map(map);
     int sx=start.x;
     int sy=start.y;
     int gx=goal.x;
@@ -209,10 +202,10 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
     unordered_set_type closed_set;
     ordered_set_type   open_set;  
 
-    open_set.insert(map.nodes[sx][sy]);
+    open_set.insert(node_map.nodes[sx][sy]);
     
-    map.nodes[sx][sy].g_score=0;
-    map.nodes[sx][sy].f_score = map.nodes[sx][sy].g_score + heuristic_cost_estimate(map.nodes[sx][sy], map.nodes[gx][gy]);
+    node_map.nodes[sx][sy].g_score = 0;
+    node_map.nodes[sx][sy].f_score = node_map.nodes[sx][sy].g_score + heuristic_cost_estimate(node_map.nodes[sx][sy], node_map.nodes[gx][gy]);
 
     int iterations=0;
     while (open_set.size()>0)
@@ -225,7 +218,7 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
         if (curr.x==goal.x &&
             curr.y==goal.y) 
             {
-                cell c;
+                MapGrid2D::XYCell c;
                 c.x=goal.x;
                 c.y=goal.y;
                 while (!(c.x==start.x && c.y==start.y))
@@ -233,8 +226,8 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
                     inverse_path.push_back(c);
                     int old_cx = c.x;
                     int old_cy = c.y;
-                    c.x=map.nodes[old_cx][old_cy].came_from.x;
-                    c.y=map.nodes[old_cx][old_cy].came_from.y;
+                    c.x = node_map.nodes[old_cx][old_cy].came_from.x;
+                    c.y = node_map.nodes[old_cx][old_cy].came_from.y;
                 }
 
                 //reverse the path
@@ -249,27 +242,27 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
 
         list<node_type> neighbors;
         //yDebug ("%d %d \n", curr.x, curr.y);
-        if (map.nodes[curr.x][curr.y+1].empty)   neighbors.push_back(map.nodes[curr.x][curr.y+1]);
-        if (map.nodes[curr.x][curr.y-1].empty)   neighbors.push_back(map.nodes[curr.x][curr.y-1]);
-        if (map.nodes[curr.x+1][curr.y].empty)   neighbors.push_back(map.nodes[curr.x+1][curr.y]);
-        if (map.nodes[curr.x-1][curr.y].empty)   neighbors.push_back(map.nodes[curr.x-1][curr.y]);
-        if (map.nodes[curr.x+1][curr.y+1].empty) neighbors.push_back(map.nodes[curr.x+1][curr.y+1]);
-        if (map.nodes[curr.x+1][curr.y-1].empty) neighbors.push_back(map.nodes[curr.x+1][curr.y-1]);
-        if (map.nodes[curr.x-1][curr.y+1].empty) neighbors.push_back(map.nodes[curr.x-1][curr.y+1]);
-        if (map.nodes[curr.x-1][curr.y-1].empty) neighbors.push_back(map.nodes[curr.x-1][curr.y-1]);
+        if (node_map.nodes[curr.x][curr.y + 1].empty)   neighbors.push_back(node_map.nodes[curr.x][curr.y + 1]);
+        if (node_map.nodes[curr.x][curr.y - 1].empty)   neighbors.push_back(node_map.nodes[curr.x][curr.y - 1]);
+        if (node_map.nodes[curr.x + 1][curr.y].empty)   neighbors.push_back(node_map.nodes[curr.x + 1][curr.y]);
+        if (node_map.nodes[curr.x - 1][curr.y].empty)   neighbors.push_back(node_map.nodes[curr.x - 1][curr.y]);
+        if (node_map.nodes[curr.x + 1][curr.y + 1].empty) neighbors.push_back(node_map.nodes[curr.x + 1][curr.y + 1]);
+        if (node_map.nodes[curr.x + 1][curr.y - 1].empty) neighbors.push_back(node_map.nodes[curr.x + 1][curr.y - 1]);
+        if (node_map.nodes[curr.x - 1][curr.y + 1].empty) neighbors.push_back(node_map.nodes[curr.x - 1][curr.y + 1]);
+        if (node_map.nodes[curr.x - 1][curr.y - 1].empty) neighbors.push_back(node_map.nodes[curr.x - 1][curr.y - 1]);
         /*int cl = curr.x-1>0?curr.x-1:0;
         int cu = curr.y-1>0?curr.y-1:0;
-        int cr = curr.x+1<map.w?curr.x+1:map.w-1;
-        int cd = curr.y+1<map.h?curr.y+1:map.h-1;
+        int cr = curr.x+1<node_map.w?curr.x+1:node_map.w-1;
+        int cd = curr.y+1<node_map.h?curr.y+1:node_map.h-1;
 
-        neighbors.push_back(map.nodes[curr.x][cd]);
-        neighbors.push_back(map.nodes[curr.x][cu]);
-        neighbors.push_back(map.nodes[cr][curr.y]);
-        neighbors.push_back(map.nodes[cl][curr.y]);
-        neighbors.push_back(map.nodes[cr][cd]);
-        neighbors.push_back(map.nodes[cr][cu]);
-        neighbors.push_back(map.nodes[cl][cd]);
-        neighbors.push_back(map.nodes[cl][cd]);*/
+        neighbors.push_back(node_map.nodes[curr.x][cd]);
+        neighbors.push_back(node_map.nodes[curr.x][cu]);
+        neighbors.push_back(node_map.nodes[cr][curr.y]);
+        neighbors.push_back(node_map.nodes[cl][curr.y]);
+        neighbors.push_back(node_map.nodes[cr][cd]);
+        neighbors.push_back(node_map.nodes[cr][cu]);
+        neighbors.push_back(node_map.nodes[cl][cd]);
+        neighbors.push_back(node_map.nodes[cl][cd]);*/
         //yDebug ("%d %d \n", curr.x, curr.y);
 
         while(neighbors.size()>0)
@@ -299,15 +292,15 @@ bool find_astar_path(IplImage *img, cell start, cell goal, std::queue<cell>& pat
                 tentative_g_score = curr.g_score + 1e10 + curr.s_score;
             
             bool b = open_set.find(neighbor);
-            if (!b || tentative_g_score < map.nodes[nx][ny].g_score)
+            if (!b || tentative_g_score < node_map.nodes[nx][ny].g_score)
             {
-                map.nodes[nx][ny].came_from.x = curr.x;
-                map.nodes[nx][ny].came_from.y = curr.y;
-                map.nodes[nx][ny].g_score = tentative_g_score;
-                map.nodes[nx][ny].f_score = map.nodes[nx][ny].g_score + heuristic_cost_estimate( map.nodes[neighbor.x][neighbor.y],  map.nodes[gx][gy]);
+                node_map.nodes[nx][ny].came_from.x = curr.x;
+                node_map.nodes[nx][ny].came_from.y = curr.y;
+                node_map.nodes[nx][ny].g_score = tentative_g_score;
+                node_map.nodes[nx][ny].f_score = node_map.nodes[nx][ny].g_score + heuristic_cost_estimate(node_map.nodes[neighbor.x][neighbor.y], node_map.nodes[gx][gy]);
                 if (!b)
                 {
-                    open_set.insert(map.nodes[nx][ny]);
+                    open_set.insert(node_map.nodes[nx][ny]);
                 }
             }
 

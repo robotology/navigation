@@ -26,8 +26,10 @@ bool iKart_MotorControl::set_control_openloop()
     yInfo ("Setting openloop mode");
     icmd->setControlMode(0, VOCAB_CM_PWM);
     icmd->setControlMode(1, VOCAB_CM_PWM);
+    icmd->setControlMode(2, VOCAB_CM_PWM);
     ipwm->setRefDutyCycle(0, 0);
     ipwm->setRefDutyCycle(1, 0);
+    ipwm->setRefDutyCycle(2, 0);
     return true;
 }
 
@@ -36,8 +38,13 @@ bool iKart_MotorControl::set_control_velocity()
     yInfo ("Setting velocity mode");
     icmd->setVelocityMode(0);
     icmd->setVelocityMode(1);
-    ivel->velocityMove(0,0);
-    ivel->velocityMove(1,0);
+    icmd->setVelocityMode(2);
+    ivel->setRefAcceleration(0, 1000000);
+    ivel->setRefAcceleration(1, 1000000);
+    ivel->setRefAcceleration(2, 1000000);
+    ivel->velocityMove(0, 0);
+    ivel->velocityMove(1, 0);
+    ivel->velocityMove(2, 0);
     return true;
 }
 
@@ -72,18 +79,20 @@ bool iKart_MotorControl::check_motors_on()
 
 void iKart_MotorControl::updateControlMode()
 {
+    board_control_modes_last = board_control_modes;
     icmd->getControlMode(0, &board_control_modes[0]);
     icmd->getControlMode(1, &board_control_modes[1]);
     icmd->getControlMode(2, &board_control_modes[2]);
-    /*
-        for (int i=0; i<3; i++)
-        if (board_control_modes[i]==VOCAB_CM_IDLE)
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (board_control_modes[i] == VOCAB_CM_HW_FAULT && board_control_modes_last[i] != VOCAB_CM_HW_FAULT)
         {
-            yWarning ("One motor is in idle state. Turning off control.");
-            turn_off_control();
+            yWarning("One motor is in fault status. Turning off control.");
+            set_control_idle();
             break;
         }
-    */
+    }
 }
 
 void iKart_MotorControl::printStats()
@@ -124,6 +133,12 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
         motors_filter_enabled=0;
     }
 
+    //the base class open
+    if (!MotorControl::open(_rf, _options))
+    {
+        yError() << "Error in MotorControl::open()"; return false;
+    }
+
     // open the interfaces for the control boards
     bool ok = true;
     ok = ok & control_board_driver->view(ivel);
@@ -138,6 +153,32 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
         return false;
     }
 
+    //get robot geometry
+    Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
+    if (geometry_group.isNull())
+    {
+        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        return false;
+    }
+    if (!geometry_group.check("geom_r"))
+    {
+        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("geom_L"))
+    {
+        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("g_angle"))
+    {
+        yError("Missing param g_angle in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    geom_r = geometry_group.find("geom_r").asDouble();
+    geom_L = geometry_group.find("geom_L").asDouble();
+    g_angle = geometry_group.find("g_angle").asDouble();
+
     if (!ctrl_options.check("GENERAL"))
     {
         yError() << "Missing [GENERAL] section";
@@ -146,23 +187,6 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
     yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
 
     motors_filter_enabled = general_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-
-    if (!general_options.check("max_linear_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
-        return false;
-    }
-    if (!general_options.check("max_angular_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
-        return false;
-    }
-
-    double tmp = 0;
-    tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_ANGULAR_VEL) max_angular_vel = tmp;
-    tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_LINEAR_VEL) max_linear_vel = tmp;
 
     localName = ctrl_options.find("local").asString();
 
@@ -177,11 +201,12 @@ iKart_MotorControl::iKart_MotorControl(unsigned int _period, PolyDriver* _driver
 
     F.resize(3,0.0);
     board_control_modes.resize(3, 0);
-
-    max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
-    max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
+    board_control_modes_last.resize(3, 0);
 
     thread_period = _period;
+    geom_r = 0;
+    geom_L = 0;
+    g_angle = 0;
 }
 
 void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -189,15 +214,19 @@ void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_
     //wheel contribution calculation
     double wheels_off = 0;
 
-    F[0] = appl_linear_speed * cos((150.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
-    F[1] = appl_linear_speed * cos((030.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
-    F[2] = appl_linear_speed * cos((270.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
+    F[0] = - appl_linear_speed * cos((-30 - 120 + appl_desired_direction + wheels_off) / 180.0 * M_PI) - appl_angular_speed;
+    F[1] = - appl_linear_speed * cos((-30 + 0   + appl_desired_direction + wheels_off) / 180.0 * M_PI) - appl_angular_speed;
+    F[2] = - appl_linear_speed * cos((-30 + 120 + appl_desired_direction + wheels_off) / 180.0 * M_PI) - appl_angular_speed;
 }
 
 void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
-    decouple(appl_linear_speed, appl_desired_direction,appl_angular_speed);
-    //Use a low pass filter to obtain smooth control
+    MotorControl::execute_speed(appl_linear_speed, appl_desired_direction, appl_angular_speed);
+    
+    double appl_angular_speed_to_wheels = appl_angular_speed * this->get_vang_coeff();
+    double appl_linear_speed_to_wheels = appl_linear_speed * this->get_vlin_coeff();
+    decouple(appl_linear_speed_to_wheels, appl_desired_direction, appl_angular_speed_to_wheels);
+
     //Use a low pass filter to obtain smooth control
     for (size_t i=0; i < F.size(); i++)
     {
@@ -205,12 +234,9 @@ void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_des
     }
 
     //Apply the commands
-#ifdef  CONTROL_DEBUG
-    yDebug (">**: %+6.6f %+6.6f **** %+6.6f %+6.6f\n",exec_linear_speed,exec_desired_direction,-F_L,-F_R);
-#endif
-    ivel->velocityMove(0, -F[0]);
-    ivel->velocityMove(1, -F[1]);
-    ivel->velocityMove(2, -F[2]);
+    ivel->velocityMove(0, F[0]);
+    ivel->velocityMove(1, F[1]);
+    ivel->velocityMove(2, F[2]);
 }
 
 void iKart_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -235,4 +261,15 @@ void iKart_MotorControl::execute_none()
     ipwm->setRefDutyCycle(0, 0);
     ipwm->setRefDutyCycle(1, 0);
     ipwm->setRefDutyCycle(2, 0);
+}
+
+double iKart_MotorControl::get_vlin_coeff()
+{
+    return (360 / (geom_r * 2 * M_PI));
+}
+
+double iKart_MotorControl::get_vang_coeff()
+{
+    return geom_L / geom_r; 
+    //return geom_L / (3 * geom_r);
 }

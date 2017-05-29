@@ -23,11 +23,34 @@
 
 void MotorControl::close()
 {
+    if (enable_ROS && enable_ROS_OUTPUT_GROUP)
+    {
+        rosPublisherPort_cmd_twist.interrupt();
+        rosPublisherPort_cmd_twist.close();
+    }
 }
 
 MotorControl::~MotorControl()
 {
     close();
+}
+
+void MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
+{
+    if (enable_ROS_OUTPUT_GROUP)
+    {
+        geometry_msgs_Twist &twist = rosPublisherPort_cmd_twist.prepare();
+
+        twist.linear.x = appl_linear_speed * cos(appl_desired_direction*0.0174532925);
+        twist.linear.y = appl_linear_speed * sin(appl_desired_direction*0.0174532925);
+        twist.linear.z = 0;
+
+        twist.angular.x = 0;
+        twist.angular.y = 0;
+        twist.angular.z = appl_angular_speed*0.0174532925;
+
+        rosPublisherPort_cmd_twist.write();
+    }
 }
 
 void  MotorControl::apply_motor_filter(int i)
@@ -47,6 +70,10 @@ void  MotorControl::apply_motor_filter(int i)
     else if (motors_filter_enabled == 8)
     {
         F[i] = control_filters::lp_filter_8Hz(F[i], i);
+    }
+    else if (motors_filter_enabled == 10)
+    {
+        F[i] = control_filters::lp_filter_0_5Hz(F[i], i);
     }
 }
 
@@ -75,33 +102,73 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
         return false;
     }
 
-    if (!ctrl_options.check("GENERAL"))
+    if (ctrl_options.check("GENERAL"))
+    {
+        yarp::os::Bottle g_group = ctrl_options.findGroup("GENERAL");
+        enable_ROS = (g_group.find("use_ROS").asBool() == true);
+        if (enable_ROS) yInfo() << "ROS enabled";
+        else
+            yInfo() << "ROS not enabled";
+    }
+    else
     {
         yError() << "Missing [GENERAL] section";
         return false;
     }
-    yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
 
-    motors_filter_enabled = general_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-
-    if (!general_options.check("max_linear_vel"))
+    if (!ctrl_options.check("MOTORS"))
     {
-        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
+        yError() << "Missing [MOTORS] section";
         return false;
     }
-    if (!general_options.check("max_angular_vel"))
+    yarp::os::Bottle& motors_options = ctrl_options.findGroup("MOTORS");
+
+    if (motors_options.check("motors_filter_enabled") == false)
     {
-        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
+        yError() << "Missing param motors_filter_enabled";
+        return false;
+    }
+    
+    if (motors_options.check("max_motor_pwm") == false)
+    {
+        yError() << "Missing param max_motor_pwm";
         return false;
     }
 
-    double tmp = 0;
-    tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_ANGULAR_VEL) max_angular_vel = tmp;
-    tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_LINEAR_VEL) max_linear_vel = tmp;
+    if (motors_options.check("max_motor_vel") == false)
+    {
+        yError() << "Missing param max_motor_vel";
+        return false;
+    }
+
+    motors_filter_enabled = motors_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+    max_motor_pwm = motors_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
+    max_motor_vel = motors_options.check("max_motor_vel", Value(0), "max_motor_vel").asDouble();
 
     localName = ctrl_options.find("local").asString();
+
+    if (enable_ROS)
+    {
+        if (ctrl_options.check("ROS_OUTPUT"))
+        {
+            yarp::os::Bottle rout_group = ctrl_options.findGroup("ROS_OUTPUT");
+            if (rout_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
+            rosTopicName_cmd_twist = rout_group.find("topic_name").asString();
+            enable_ROS_OUTPUT_GROUP = true;
+        }
+        else
+        {
+            enable_ROS_OUTPUT_GROUP = false;
+        }
+
+        if (!rosPublisherPort_cmd_twist.topic(rosTopicName_cmd_twist))
+        {
+            yError() << " opening " << rosTopicName_cmd_twist << " Topic, check your yarp-ROS network configuration\n";
+            return false;
+        }
+        yInfo () << "ROS_OUTPUT param found. Enabling topic "<<rosTopicName_cmd_twist;
+    }
+
 
     return true;
 }
@@ -112,8 +179,8 @@ MotorControl::MotorControl(unsigned int _period, PolyDriver* _driver)
 
     thread_timeout_counter = 0;
 
-    max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
-    max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
+    max_motor_vel = 0;
+    max_motor_pwm = 0;
 
     thread_period = _period;
 }

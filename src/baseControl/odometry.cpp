@@ -20,8 +20,8 @@
 #include <yarp/os/LogStream.h>
 #include <limits>
 
-#define RAD2DEG 180.0/3.14159
-#define DEG2RAD 3.14159/180.0
+#define RAD2DEG 180.0/M_PI
+#define DEG2RAD M_PI/180.0
 
 inline TickTime normalizeSecNSec(double yarpTimeStamp)
 {
@@ -157,6 +157,16 @@ void Odometry::close()
     port_odometer.close();
     port_vels.interrupt();
     port_vels.close();
+
+    if (enable_ROS)
+    {
+        rosPublisherPort_footprint.interrupt();
+        rosPublisherPort_footprint.close();
+        rosPublisherPort_odometry.interrupt();
+        rosPublisherPort_odometry.close();
+        rosPublisherPort_tf.interrupt();
+        rosPublisherPort_tf.close();
+    }
 }
 
 void Odometry::broadcast()
@@ -168,10 +178,13 @@ void Odometry::broadcast()
         port_odometry.setEnvelope(timeStamp);
         Bottle &b = port_odometry.prepare();
         b.clear();
-        b.addDouble(odom_x);
+        b.addDouble(odom_x); //position in the odom reference frame
         b.addDouble(odom_y);
         b.addDouble(odom_theta);
-        b.addDouble(odom_vel_x);
+        b.addDouble(base_vel_x); //velocity in the robot reference frame
+        b.addDouble(base_vel_y);
+        b.addDouble(base_vel_theta);
+        b.addDouble(odom_vel_x); //velocity in the odom reference frame
         b.addDouble(odom_vel_y);
         b.addDouble(odom_vel_theta);
         port_odometry.write();
@@ -217,12 +230,12 @@ void Odometry::broadcast()
         odom_quat.z = sinYaw;
         odom_quat.w = cosYaw;
         rosData.pose.pose.orientation = odom_quat;
-        rosData.twist.twist.linear.x = odom_vel_x;
-        rosData.twist.twist.linear.y = odom_vel_y;
+        rosData.twist.twist.linear.x = base_vel_x;
+        rosData.twist.twist.linear.y = base_vel_y;
         rosData.twist.twist.linear.z = 0;
         rosData.twist.twist.angular.x = 0;
         rosData.twist.twist.angular.y = 0;
-        rosData.twist.twist.angular.z = odom_vel_theta / 180.0*M_PI;
+        rosData.twist.twist.angular.z = base_vel_theta / 180.0*M_PI;
 
         rosPublisherPort_odometry.write();
     }

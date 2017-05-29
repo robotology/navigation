@@ -8,43 +8,43 @@ cerSrv
 <module>
    <name>robotInterface</name>
    <parameters>--context cer --config conf/cer.ini</parameters>
-   <node>cerSrv</node>
-   <stdio>cerSrv</stdio>
+   <node>r1-base</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>r1-base</node>
 </module>
 
 <module>
    <name>baseCtrl</name>
    <parameters></parameters>
-   <node>cerSrv</node>
-   <stdio>cerSrv</stdio>
+   <node>r1-base</node>
 </module>
 
 <module>
    <name>joystickCtrl</name>
    <parameters>--context joystickCtrl --from conf/cer.ini</parameters>
-   <node>cerSrv</node>
-   <stdio>cerSrv</stdio>
+   <node>r1-base</node>
 </module>
 
 <module>
    <name>yarpMotorGui</name>
    <parameters>--context /cer/conf</parameters>
-   <node>cerSrv</node>
-   <stdio>cerSrv</stdio>
+   <node>r1-console-linux</node>
 </module>
 
 <module>
    <name>laserScannerGui</name>
    <parameters></parameters>
-   <node>cerSrv</node>
-   <stdio>cerSrv</stdio>
+   <node>r1-console-linux</node>
 </module>
 
 <module>
    <name>batteryDisplay</name>
    <parameters></parameters>
-   <node>cerSrv</node>
-   <stdio>cerSrv</stdio>
+   <node>r1-console-linux</node>
 </module>
 
 <connection>
