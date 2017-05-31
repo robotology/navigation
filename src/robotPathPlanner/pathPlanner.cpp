@@ -201,7 +201,7 @@ void PlannerThread::draw_map()
     m_current_map.getMapImage(map_image);
     static IplImage*   processed_map_with_scan = 0;
     if (processed_map_with_scan == 0) processed_map_with_scan = cvCloneImage((const IplImage*)map_image.getIplImage());
-    cvCopyImage(map_image.getIplImage(), processed_map_with_scan);
+    cvCopy(map_image.getIplImage(), processed_map_with_scan);
     if (m_laser_timeout_counter<TIMEOUT_MAX)
     {
         drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
@@ -241,7 +241,7 @@ void PlannerThread::draw_map()
 #endif
     static IplImage* map_with_path = 0;
     if (map_with_path == 0) map_with_path = cvCloneImage(processed_map_with_scan);
-    else cvCopyImage(processed_map_with_scan, map_with_path);
+    else cvCopy(processed_map_with_scan, map_with_path);
 
     CvScalar color = cvScalar(0, 200, 0);
     CvScalar color2 = cvScalar(0, 200, 100);
@@ -265,7 +265,7 @@ void PlannerThread::draw_map()
 
     static IplImage* map_with_location = 0;
     if (map_with_location == 0) map_with_location = cvCloneImage(map_with_path);
-    else cvCopyImage(map_with_path, map_with_location);
+    else cvCopy(map_with_path, map_with_location);
 
     sendToPort(&m_port_map_output, map_with_location);
 }

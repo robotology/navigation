@@ -25,6 +25,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <math.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/INavigation2D.h>

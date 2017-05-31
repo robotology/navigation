@@ -93,7 +93,7 @@ public:
         ConstString configFile=rf.findFile("from");
         if (configFile=="") //--from baseCtrl.ini
         {
-            yError("Cannot find .ini configuration file. By default I'm searching for fakeMobileBaseTest.ini");
+            yWarning("Cannot find .ini configuration file. By default I'm searching for fakeMobileBaseTest.ini");
           //  return false;
         }
         else
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
         yInfo("Possible options: ");
         yInfo("'rate <r>' sets the threads rate (default 20ms).");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
-        yInfo("'holonomic' if setjo, the robot will be holonomic");
+        yInfo("'holonomic' if set, the robot will be holonomic");
         return 0;
     }
 

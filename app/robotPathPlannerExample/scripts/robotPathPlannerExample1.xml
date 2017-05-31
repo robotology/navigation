@@ -30,7 +30,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test map_test --map_file C:\\software\\maps\\map_test.yaml</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\maps\\map_test.yaml</parameters>
    <node>console</node>
 </module>
 

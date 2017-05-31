@@ -23,11 +23,17 @@
 #include <yarp/os/Mutex.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/dev/Polydriver.h>
+#include <yarp/os/Publisher.h>
+#include <yarp/os/Node.h>
+#include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IFrameTransform.h>
+#include <visualization_msgs_MarkerArray.h>
+#include <geometry_msgs_PoseStamped.h>
+#include <geometry_msgs_PoseWithCovarianceStamped.h>
 
 #include <math.h>
 
@@ -38,11 +44,34 @@ using namespace yarp::os;
 #endif
 
 #define RAD2DEG 180/M_PI
+#define DEG2RAD M_PI/180
+
+/**
+ * \section localizationModule
+ * A module which acts as the server side for a Localization2DClient.
+ *
+ *  Parameters required by this device are:
+ * | Parameter name | SubParameter   | Type    | Units          | Default Value      | Required     | Description                                                       | Notes |
+ * |:--------------:|:--------------:|:-------:|:--------------:|:------------------:|:-----------: |:-----------------------------------------------------------------:|:-----:|
+ * | GENERAL        |  module_name   | string  | -              | localizationServer | Yes          | The name of the module use to open ports                          |       |
+ * | GENERAL        |  enable_ros    | int     | 0/1            | -                  | Yes          | If set to 1, the module will open the ROS topic specified by ROS::initialpose_topic parameter     |       |
+ * | INITIAL_POS    |  initial_x     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
+ * | INITIAL_POS    |  initial_y     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
+ * | INITIAL_POS    |  initial_theta | double  | deg            | 0.0                | Yes          | Initial estimation of robot position                              | -     |
+ * | INITIAL_POS    |  initial_map   | string  | -              |   -                | Yes          | Name of the map on which localization is performed                | -     |
+ * | ROS            |  initialpose_topic | string     | -         |   -                | No           | Name of the topic which will be used to publish the initial pose  | -     |
+ * | TF             |  map_frame_id      | string     | -         |   -                | Yes          | Name of the map reference frame                                   | e.g. /map    |
+ * | TF             |  robot_frame_id    | string     | -         |   -                | Yes          | Name of the robot reference frame                                 | e.g. /mobile_base    |
+ * | LOCALIZATION   |  use_localization_from_port    | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a port to receive localization data                         | Incompatible with 'use_localization_from_tf=1'  |
+ * | LOCALIZATION   |  use_localization_from_tf      | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a tfClient to receive localization data                     | Incompatible with 'use_localization_from_port=1 |
+ * | ODOMETRY       |  odometry_broadcast_port       | string   |  -   |   -         | Yes          | Full name of port broadcasting the localization data. The server will connect to this port.  | -    |
+ */
 
 class localizationModule : public yarp::os::RFModule
 {
 protected:
     std::string                  m_module_name;
+    bool                         m_ros_enabled;
     yarp::dev::Map2DLocation     m_initial_loc;
     yarp::dev::Map2DLocation     m_localization_data;
     yarp::dev::PolyDriver        m_ptf;
@@ -59,10 +88,17 @@ protected:
     std::string                  m_frame_robot_id;
     std::string                  m_frame_map_id;
     double                       m_last_statistics_printed;
+    
+    //ros
+    yarp::os::Node*                   m_rosNode;
+    std::string                       m_topic_initial_pose;
+    yarp::os::Publisher<geometry_msgs_PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
 
 public:
     localizationModule()
     {
+        m_rosNode = 0;
+        m_ros_enabled = false;
         m_module_name = "localizationServer";
         m_tf_data_received = -1;
         m_last_odometry_data_received = -1;
@@ -105,6 +141,8 @@ public:
             return false;
         }
 
+        Bottle ros_group = m_rf.findGroup("ROS");
+
         Bottle tf_group = m_rf.findGroup("TF");
         if (tf_group.isNull())
         {
@@ -119,6 +157,43 @@ public:
             return false;
         }
 
+        //general group
+        if (general_group.check("module_name") == false)
+        {
+            yError() << "Missing `module_name` in [GENERAL] group";
+            return false;
+        }
+        m_module_name = general_group.find("module_name").asString();
+
+        if (general_group.check("enable_ros") == false)
+        {
+            yError() << "Missing `ros_enable` in [GENERAL] group";
+            return false;
+        }
+        m_ros_enabled = (general_group.find("enable_ros").asInt()==1);
+
+        //ros group
+        if (m_ros_enabled)
+        {
+            if (ros_group.check ("initialpose_topic")) 
+            {
+                m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
+                {
+                    m_rosNode = new yarp::os::Node("/"+m_module_name);
+                    if (!m_rosPublisher_initial_pose.topic(m_topic_initial_pose))
+                    {
+                        if (m_rosNode)
+                        {
+                            delete m_rosNode;
+                            m_rosNode=0;
+                        }
+                        yError() << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
+                        return false;
+                    }
+                }
+            }
+        }
+
         //localization group
         if (localization_group.check("use_localization_from_port")) { m_use_localization_from_odometry_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
         if (localization_group.check("use_localization_from_tf"))   { m_use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
@@ -128,14 +203,6 @@ public:
             yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
             return false;
         }
-
-        //general group
-        if (general_group.check("module_name") == false)
-        {
-            yError() << "Missing `module_name` in [GENERAL] group";
-            return false;
-        }
-        m_module_name = general_group.find("module_name").asString();
 
         //tf group
         if (tf_group.check("map_frame_id") == false)
@@ -215,6 +282,16 @@ public:
 
     virtual bool close()
     {
+        if (m_rosPublisher_initial_pose.asPort().isOpen())
+        {
+            m_rosPublisher_initial_pose.interrupt();
+            m_rosPublisher_initial_pose.close();
+        }
+        if (m_rosNode)
+        {
+            delete m_rosNode;
+            m_rosNode = 0;
+        }
         m_rpcPort.interrupt();
         m_rpcPort.close();
 
@@ -276,7 +353,7 @@ public:
             }
             if (current_time - m_tf_data_received > 0.1)
             {
-                yWarning() << "No localization data recevied for more than 0.1s!";
+                yWarning() << "No localization data received for more than 0.1s!";
             }
         }
         else
@@ -320,7 +397,31 @@ public:
         m_localization_data.x = loc.x;
         m_localization_data.y = loc.y;
         m_localization_data.theta = loc.theta;
-        //this value has to be sent to the localization algorithm
+        
+        if (m_rosNode)
+        {
+            //send data to ROS localization module
+            geometry_msgs_PoseWithCovarianceStamped& pos = m_rosPublisher_initial_pose.prepare();
+            pos.header.frame_id=m_frame_robot_id;
+            pos.header.seq=0;
+            pos.header.stamp.sec=0;
+            pos.header.stamp.nsec=0;
+            pos.pose.pose.position.x= loc.x;
+            pos.pose.pose.position.y= loc.y;
+            pos.pose.pose.position.z= 0;
+            yarp::math::Quaternion q;
+            yarp::sig::Vector v(4);
+            v[0]=0;
+            v[1]=0;
+            v[2]=1;
+            v[3]=loc.theta*DEG2RAD;
+            q.fromAxisAngle(v);
+            pos.pose.pose.orientation.x = q.x();
+            pos.pose.pose.orientation.y = q.y();
+            pos.pose.pose.orientation.z = q.z();
+            pos.pose.pose.orientation.w = q.w();
+            m_rosPublisher_initial_pose.write();
+        }
         return true;
     }
 

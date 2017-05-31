@@ -46,7 +46,7 @@ bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, I
     {
         yarp::sig::ImageOf<yarp::sig::PixelRgb> *segImg = new yarp::sig::ImageOf<yarp::sig::PixelRgb>;
         segImg->resize(image_to_send->width, image_to_send->height );
-        cvCopyImage(image_to_send, (IplImage*)segImg->getIplImage());
+        cvCopy(image_to_send, (IplImage*)segImg->getIplImage());
         port->prepare() = *segImg;
         port->write();
         delete segImg;
@@ -284,7 +284,7 @@ bool map_class::crop(IplImage *img, IplImage* &dest)
     if (dest != 0)
         cvReleaseImage (&dest);
     dest = cvCreateImage(cvSize(right-left,  bottom-top), IPL_DEPTH_8U, 3 );
-    cvCopyImage(img, dest); 
+    cvCopy(img, dest); 
 
     m_crop_x = left;
     m_crop_y = top;
