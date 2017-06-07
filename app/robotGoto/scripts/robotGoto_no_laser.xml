@@ -6,7 +6,7 @@
 
 <module>
    <name>robotGoto</name>
-   <parameters>--no_stop_on_obstacles --from C:\software\navigation\app\robotGoto\conf\robotGoto_ikart.ini</parameters>
+   <parameters>--context robotGoto --from robotGoto_ikart.ini --no_stop_on_obstacles</parameters>
    <node>console</node>
 </module>
 

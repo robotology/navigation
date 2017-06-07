@@ -6,13 +6,13 @@
 
 <module>
    <name>robotGoto</name>
-   <parameters>--from C:\software\navigation\app\robotGoto\conf\robotGoto_ikart.ini</parameters>
+   <parameters>--context robotGoto --from robotGoto_ikart.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>robotPathPlanner</name>
-   <parameters>--from C:\software\navigation\app\robotPathPlanner\conf\robotPathPlanner_ikart.ini </parameters>
+   <parameters>--context robotPathPlanner --from robotPathPlanner_ikart.ini </parameters>
    <node>console</node>
 </module>
 
