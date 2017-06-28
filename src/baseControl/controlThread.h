@@ -31,6 +31,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IJoypadController.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
@@ -100,6 +101,10 @@ private:
     //ROS node
     yarp::os::Node*     rosNode;
 
+    //IJoypadController
+    PolyDriver          joyPolyDriver;
+    IJoypadController*  joypad;
+
 protected:
     ResourceFinder       &rf;
     PolyDriver           *control_board_driver;
@@ -155,6 +160,7 @@ public:
         max_linear_acc           = 0;
         remoteName               = ctrl_options.find("remote").asString();
         localName                = ctrl_options.find("local").asString();
+        joypad                   = 0;
     }
 
     virtual bool threadInit();

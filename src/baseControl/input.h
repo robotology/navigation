@@ -32,6 +32,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IJoypadController.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
@@ -43,8 +44,33 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+
+
 class Input
 {
+public:
+    struct AxisDescription
+    {
+        unsigned int AxisId;
+        float        AxisFactor;
+        AxisDescription() = default;
+        AxisDescription(unsigned int id, float factor) : AxisId(id), AxisFactor(factor){}
+    };
+
+    struct JoyDescription
+    {
+        AxisDescription xAxis;
+        AxisDescription yAxis;
+        AxisDescription tAxis;
+        AxisDescription gainAxis;
+        JoyDescription() = default;
+        JoyDescription(AxisDescription x, AxisDescription y, AxisDescription t, AxisDescription g) :
+            xAxis(x),
+            yAxis(y),
+            tAxis(t),
+            gainAxis(g)
+        {}
+    }jDescr;
 private:
     Property ctrl_options;
 
@@ -86,6 +112,8 @@ private:
     double              linear_vel_at_100_joy;
     double              angular_vel_at_100_joy;
 
+    IJoypadController*  joypad;
+
 protected:
     //ResourceFinder            rf;
     PolyDriver*                       control_board_driver;
@@ -100,6 +128,7 @@ protected:
 
 public:
 
+    Input(unsigned int _period, PolyDriver* _driver, IJoypadController* const joypad, JoyDescription joydesc);
     Input(unsigned int _period, PolyDriver* _driver);
     ~Input();
 
@@ -113,6 +142,7 @@ public:
     void   read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_speed_cart    (double x_speed, double y_speed, double& des_dir, double& lin_spd, double& pwm_gain);
     //double get_max_linear_vel()   {return max_linear_vel;}
     //double get_max_angular_vel()  {return max_angular_vel;}
 

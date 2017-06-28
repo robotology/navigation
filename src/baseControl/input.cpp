@@ -56,7 +56,10 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
     // open control input ports
     port_movement_control.open((localName+"/control:i").c_str());
     port_auxiliary_control.open((localName+"/aux_control:i").c_str());
-    port_joystick_control.open((localName+"/joystick:i").c_str());
+    if(!joypad)
+    {
+        port_joystick_control.open((localName+"/joystick:i").c_str());
+    }
 
     if (!ctrl_options.check("GENERAL"))
     {
@@ -111,6 +114,15 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
     return true;
 }
 
+Input::Input(unsigned int            _period,
+             PolyDriver*             _driver,
+             IJoypadController*const in_joypad,
+             JoyDescription          joydesc) : Input(_period, _driver)
+{
+    if(in_joypad) joypad = in_joypad;
+    jDescr = joydesc;
+}
+
 Input::Input(unsigned int _period, PolyDriver* _driver)
 {
     useRos                 = false;
@@ -152,6 +164,7 @@ Input::Input(unsigned int _period, PolyDriver* _driver)
     angular_vel_at_100_joy = 0;
 
     thread_period          = _period;
+    joypad                 = 0;
 }
 
 void Input::read_percent_polar(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
@@ -191,11 +204,15 @@ void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, d
 {
     double x_speed = b->get(1).asDouble();
     double y_speed = b->get(2).asDouble();
-    double t_speed = b->get(3).asDouble();
-    des_dir        = atan2(y_speed, x_speed) * 180.0 / M_PI;
-    lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
-    ang_spd        = t_speed;
-    pwm_gain = b->get(4).asDouble();
+    ang_spd        = b->get(3).asDouble();
+    pwm_gain       = b->get(4).asDouble();
+    read_speed_cart(x_speed, y_speed, des_dir, lin_spd, pwm_gain);
+}
+
+void Input::read_speed_cart(double x_speed, double y_speed, double& des_dir, double& lin_spd, double& pwm_gain)
+{
+    des_dir  = atan2(y_speed, x_speed) * 180.0 / M_PI;
+    lin_spd  = sqrt (x_speed*x_speed+y_speed*y_speed);
     pwm_gain = (pwm_gain<+100) ? pwm_gain : +100;
     pwm_gain = (pwm_gain>0) ? pwm_gain : 0;
 }
@@ -211,7 +228,34 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
     static double wdt_joy_cmd     =Time::now();
     static double wdt_aux_cmd     =Time::now();
 
-    if (Bottle *b = port_joystick_control.read(false))
+    if(joypad)
+    {
+        //received a joystick command.
+
+        double x, y;
+        joypad->getAxis(jDescr.xAxis.AxisId, x);
+        joypad->getAxis(jDescr.yAxis.AxisId, y);
+        joypad->getAxis(jDescr.tAxis.AxisId, joy_angular_speed);
+        joypad->getAxis(jDescr.gainAxis.AxisId, joy_pwm_gain);
+        x                 *= jDescr.xAxis.AxisFactor;
+        y                 *= jDescr.yAxis.AxisFactor;
+        joy_angular_speed *= jDescr.tAxis.AxisFactor;
+        joy_pwm_gain      *= jDescr.gainAxis.AxisFactor;
+        read_speed_cart(x, y, joy_desired_direction, joy_linear_speed, joy_pwm_gain);
+        joy_linear_speed = (joy_linear_speed > 100) ? 100 : joy_linear_speed;
+        joy_angular_speed = (joy_angular_speed > 100) ? 100 : joy_angular_speed;
+        joy_linear_speed = (joy_linear_speed < -100) ? -100 : joy_linear_speed;
+        joy_angular_speed = (joy_angular_speed < -100) ? -100 : joy_angular_speed;
+        joy_linear_speed = joy_linear_speed / 100 * linear_vel_at_100_joy;
+        joy_angular_speed = joy_angular_speed / 100 * angular_vel_at_100_joy;
+        wdt_old_joy_cmd = wdt_joy_cmd;
+        wdt_joy_cmd = Time::now();
+
+        //Joystick commands have higher priorty respect to movement commands.
+        //this make the joystick to take control for 100*20 ms
+        if (joy_pwm_gain>10) joystick_received = 100;
+    }
+    else if(Bottle* b = port_joystick_control.read(false))
     {                
         if (b->get(0).asInt()==1)
         {

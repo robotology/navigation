@@ -362,6 +362,75 @@ bool ControlThread::threadInit()
     if (tmp >= 0) { max_linear_acc = tmp; }
     else { yError() << "Invalid max_linear_acc"; return false; }
 
+    Input::JoyDescription joydesc;
+    if (general_options.check("JoypadDevice"))
+    {
+        Value joydev = general_options.find("JoypadDevice");
+        if (!joydev.isString())
+        {
+            yError() << "baseControl: JoypadDevice param is not a string";
+            return false;
+        }
+        vector<tuple<string, unsigned int*, float*> > paramlist;
+        paramlist.push_back(make_tuple("xAxis", &joydesc.xAxis.AxisId, &joydesc.xAxis.AxisFactor));
+        paramlist.push_back(make_tuple("yAxis", &joydesc.yAxis.AxisId, &joydesc.yAxis.AxisFactor));
+        paramlist.push_back(make_tuple("tAxis", &joydesc.tAxis.AxisId, &joydesc.tAxis.AxisFactor));
+        paramlist.push_back(make_tuple("gainAxis", &joydesc.gainAxis.AxisId, &joydesc.gainAxis.AxisFactor));
+
+        for(auto p : paramlist)
+        {
+            string idPar, factorPar;
+            idPar     = std::get<0>(p)+"_id";
+            factorPar = std::get<0>(p)+"_factor";
+            if(!general_options.check(idPar) || !general_options.find(idPar).isInt())
+            {
+                yError() << "baseControl: param" << idPar << "not found or not a int in configuration file";
+                return false;
+            }
+
+            if(!general_options.check(factorPar) || !general_options.find(factorPar).isDouble())
+            {
+                yError() << "baseControl: param" << factorPar << "not found or not a int in configuration file";
+                return false;
+            }
+
+            *std::get<1>(p) = general_options.find(idPar).asInt();
+            *std::get<2>(p) = general_options.find(factorPar).asDouble();
+        }
+        Bottle& joyOptions = ctrl_options.findGroup(joydev.asString()+"_options");
+
+        if (joyOptions.isNull())
+        {
+            yError() << "baseControl:"<< joydev.asString() + "_options" << "group not found";
+            return false;
+        }
+
+        yInfo() << "opening" << joydev.asString() << "device";
+        Property joycfg;
+        joycfg.put("device", joydev.asString());
+        joycfg.fromString(joyOptions.toString(), false);
+
+        if (!joyPolyDriver.open(joycfg))
+        {
+            yError() << "baseControl: could not open the joypad device";
+            return false;
+        }
+
+        joyPolyDriver.view(joypad);
+        if (!joypad)
+        {
+            yError() << "joypad Device must implement the IJoypadController interface";
+            return false;
+        }
+        unsigned int count;
+        joypad->getAxisCount(count);
+        if(count < 4)
+        {
+            yError() << "joypad must have at least 3 axes";
+            return false;
+        }
+
+    }
     // open the control board driver
     yInfo("Opening the motors interface...\n");
 
@@ -435,7 +504,7 @@ bool ControlThread::threadInit()
         robot_type       = ROBOT_TYPE_DIFFERENTIAL;
         odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new CER_MotorControl((int)(thread_period), control_board_driver);
-        input_handler    = new Input((int)(thread_period), control_board_driver);
+        input_handler    = new Input((int)(thread_period), control_board_driver, joypad, joydesc);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 320.0 / 2 / 1000.0);
         robot_geom.put("geom_L", 338 / 1000.0);
