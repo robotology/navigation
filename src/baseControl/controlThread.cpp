@@ -365,12 +365,31 @@ bool ControlThread::threadInit()
     Input::JoyDescription joydesc;
     if (general_options.check("JoypadDevice"))
     {
+        if(!general_options.check("axes_configuration_group"))
+        {
+            yError() << "axes_configuration_group param not found in configuration (under GENERAL group)";
+            return false;
+        }
+        if(!general_options.find("axes_configuration_group").isString())
+        {
+            yError() << "axes_configuration_group param is not a string as it should";
+            return false;
+        }
+        Bottle& axisConf = ctrl_options.findGroup(general_options.find("axes_configuration_group").asString());
+
+        if(axisConf.isNull())
+        {
+            yError() << general_options.find("axes_configuration_group").asString() << "group not found in configuration file";
+            return false;
+        }
+
         Value joydev = general_options.find("JoypadDevice");
         if (!joydev.isString())
         {
             yError() << "baseControl: JoypadDevice param is not a string";
             return false;
         }
+
         vector<tuple<string, unsigned int*, float*> > paramlist;
         paramlist.push_back(make_tuple("xAxis", &joydesc.xAxis.AxisId, &joydesc.xAxis.AxisFactor));
         paramlist.push_back(make_tuple("yAxis", &joydesc.yAxis.AxisId, &joydesc.yAxis.AxisFactor));
@@ -382,21 +401,22 @@ bool ControlThread::threadInit()
             string idPar, factorPar;
             idPar     = std::get<0>(p)+"_id";
             factorPar = std::get<0>(p)+"_factor";
-            if(!general_options.check(idPar) || !general_options.find(idPar).isInt())
+            if(!axisConf.check(idPar) || !axisConf.find(idPar).isInt())
             {
                 yError() << "baseControl: param" << idPar << "not found or not a int in configuration file";
                 return false;
             }
 
-            if(!general_options.check(factorPar) || !general_options.find(factorPar).isDouble())
+            if(!axisConf.check(factorPar) || !axisConf.find(factorPar).isDouble())
             {
                 yError() << "baseControl: param" << factorPar << "not found or not a int in configuration file";
                 return false;
             }
 
-            *std::get<1>(p) = general_options.find(idPar).asInt();
-            *std::get<2>(p) = general_options.find(factorPar).asDouble();
+            *std::get<1>(p) = axisConf.find(idPar).asInt();
+            *std::get<2>(p) = axisConf.find(factorPar).asDouble();
         }
+
         Bottle& joyOptions = ctrl_options.findGroup(joydev.asString()+"_options");
 
         if (joyOptions.isNull())
