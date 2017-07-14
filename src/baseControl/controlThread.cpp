@@ -390,31 +390,60 @@ bool ControlThread::threadInit()
             return false;
         }
 
-        vector<tuple<string, unsigned int*, float*> > paramlist;
-        paramlist.push_back(make_tuple("xAxis", &joydesc.xAxis.AxisId, &joydesc.xAxis.AxisFactor));
-        paramlist.push_back(make_tuple("yAxis", &joydesc.yAxis.AxisId, &joydesc.yAxis.AxisFactor));
-        paramlist.push_back(make_tuple("tAxis", &joydesc.tAxis.AxisId, &joydesc.tAxis.AxisFactor));
-        paramlist.push_back(make_tuple("gainAxis", &joydesc.gainAxis.AxisId, &joydesc.gainAxis.AxisFactor));
+        typedef Input::InputDescription::InputType inputType;
+        vector<tuple<string, unsigned int*, inputType*, float*> > paramlist;
+        paramlist.push_back(make_tuple("x",    &joydesc.xAxis.Id, &joydesc.xAxis.type, &joydesc.xAxis.Factor));
+        paramlist.push_back(make_tuple("y",    &joydesc.yAxis.Id, &joydesc.yAxis.type, &joydesc.yAxis.Factor));
+        paramlist.push_back(make_tuple("t",    &joydesc.tAxis.Id, &joydesc.tAxis.type, &joydesc.tAxis.Factor));
+        paramlist.push_back(make_tuple("gain", &joydesc.gain.Id,  &joydesc.gain.type,  &joydesc.gain.Factor));
 
         for(auto p : paramlist)
         {
-            string idPar, factorPar;
-            idPar     = std::get<0>(p)+"_id";
-            factorPar = std::get<0>(p)+"_factor";
-            if(!axisConf.check(idPar) || !axisConf.find(idPar).isInt())
+            bool                   idFound(false), facFound(false);
+            string                 idPar, factorPar, Error("Axis/Button");
+            inputType              type;
+            map<string, inputType> str2types{make_pair("Axis",   Input::InputDescription::AXIS),
+                                             make_pair("Button", Input::InputDescription::BUTTON)};
+            for(auto t : str2types)
             {
-                yError() << "baseControl: param" << idPar << "not found or not a int in configuration file";
+                idPar     = std::get<0>(p)+t.first+"_id";
+                factorPar = std::get<0>(p)+t.first+"_factor";
+                if(axisConf.check(idPar) && axisConf.find(idPar).isInt())
+                {
+                    idFound = true;
+                    if(axisConf.check(factorPar) && axisConf.find(factorPar).isDouble())
+                    {
+                        facFound = true;
+                        type = str2types[t.first];
+                        break;
+                    }
+                }
+            }
+
+            if(!idFound)
+            {
+                yError() << "baseControl: param" << std::get<0>(p)+Error+"_id" << "not found or not a int in configuration file";
                 return false;
             }
 
-            if(!axisConf.check(factorPar) || !axisConf.find(factorPar).isDouble())
+            if(!facFound)
             {
-                yError() << "baseControl: param" << factorPar << "not found or not a int in configuration file";
+                yError() << "baseControl: param" << std::get<0>(p)+Error+"_factor" << "not found or not a int in configuration file";
+                return false;
+            }
+
+            if(type == Input::InputDescription::BUTTON &&
+                    (std::get<0>(p) == "x" ||
+                     std::get<0>(p) == "y" ||
+                     std::get<0>(p) == "t"))
+            {
+                yError() << "at the moment xAxis, yAxis and tAxis cannot be mapped to buttons";
                 return false;
             }
 
             *std::get<1>(p) = axisConf.find(idPar).asInt();
-            *std::get<2>(p) = axisConf.find(factorPar).asDouble();
+            *std::get<2>(p) = type;
+            *std::get<3>(p) = axisConf.find(factorPar).asDouble();
         }
 
         Bottle& joyOptions = ctrl_options.findGroup(joydev.asString()+"_options");

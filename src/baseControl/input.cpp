@@ -233,14 +233,25 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         //received a joystick command.
 
         double x, y;
-        joypad->getAxis(jDescr.xAxis.AxisId, x);
-        joypad->getAxis(jDescr.yAxis.AxisId, y);
-        joypad->getAxis(jDescr.tAxis.AxisId, joy_angular_speed);
-        joypad->getAxis(jDescr.gainAxis.AxisId, joy_pwm_gain);
-        x                 *= jDescr.xAxis.AxisFactor;
-        y                 *= jDescr.yAxis.AxisFactor;
-        joy_angular_speed *= jDescr.tAxis.AxisFactor;
-        joy_pwm_gain      *= jDescr.gainAxis.AxisFactor;
+        joypad->getAxis(jDescr.xAxis.Id, x);
+        joypad->getAxis(jDescr.yAxis.Id, y);
+        joypad->getAxis(jDescr.tAxis.Id, joy_angular_speed);
+
+        if(jDescr.gain.type == InputDescription::AXIS)
+        {
+            joypad->getAxis(jDescr.gain.Id, joy_pwm_gain);
+        }
+        else
+        {
+            float r;
+            joypad->getButton(jDescr.gain.Id, r);
+            joy_pwm_gain = r;
+        }
+
+        x                 *= jDescr.xAxis.Factor;
+        y                 *= jDescr.yAxis.Factor;
+        joy_angular_speed *= jDescr.tAxis.Factor;
+        joy_pwm_gain      *= jDescr.gain.Factor;
         read_speed_cart(x, y, joy_desired_direction, joy_linear_speed, joy_pwm_gain);
         joy_linear_speed = (joy_linear_speed > 100) ? 100 : joy_linear_speed;
         joy_angular_speed = (joy_angular_speed > 100) ? 100 : joy_angular_speed;

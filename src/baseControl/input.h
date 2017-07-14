@@ -49,26 +49,29 @@ using namespace yarp::dev;
 class Input
 {
 public:
-    struct AxisDescription
+    struct InputDescription
     {
-        unsigned int AxisId;
-        float        AxisFactor;
-        AxisDescription() = default;
-        AxisDescription(unsigned int id, float factor) : AxisId(id), AxisFactor(factor){}
+        enum InputType{BUTTON, AXIS, HAT};
+
+        InputType    type;
+        unsigned int Id;
+        float        Factor;
+        InputDescription() = default;
+        InputDescription(unsigned int id, float factor) : Id(id), Factor(factor){}
     };
 
     struct JoyDescription
     {
-        AxisDescription xAxis;
-        AxisDescription yAxis;
-        AxisDescription tAxis;
-        AxisDescription gainAxis;
+        InputDescription xAxis;
+        InputDescription yAxis;
+        InputDescription tAxis;
+        InputDescription gain;
         JoyDescription() = default;
-        JoyDescription(AxisDescription x, AxisDescription y, AxisDescription t, AxisDescription g) :
+        JoyDescription(InputDescription x, InputDescription y, InputDescription t, InputDescription g) :
             xAxis(x),
             yAxis(y),
             tAxis(t),
-            gainAxis(g)
+            gain(g)
         {}
     }jDescr;
 private:
