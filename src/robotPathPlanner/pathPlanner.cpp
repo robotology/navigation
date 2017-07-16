@@ -112,8 +112,8 @@ bool  PlannerThread::readLocalizationData()
 
     if (m_localization_data.map_id != m_current_map.getMapName())
     {
-        yWarning() << "Current map name != m_localization_data.map_id";
-        yInfo() << "Asking the map to the MAP server";
+        yWarning() << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
+        yInfo() << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
         bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
         if (map_get_succesfull)
         {
