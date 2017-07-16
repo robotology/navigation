@@ -140,7 +140,6 @@ protected:
     Property             m_robotCtrl_options;
     ResourceFinder       &m_rf;
     yarp::dev::Map2DLocation    m_localization_data;
-    yarp::sig::Vector    m_odometry_data;
     target_type          m_target_data;
     std::vector<LaserMeasurementData>  m_laser_data;
     struct

@@ -368,7 +368,6 @@ bool GotoThread::threadInit()
     b = yarp::os::Network::connect("/robotGoto/gui:o", "/yarpLaserScannerGui/nav_display:i");
 
     //automatic port connections
-    b = yarp::os::Network::connect("/baseControl/odometry:o", localName + "/odometry:i");
     b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i");
 
     /*

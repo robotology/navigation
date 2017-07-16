@@ -49,19 +49,6 @@
 
 <connection>
   <from>/fakeMobileBaseTest/odometry:o</from>
-  <to>/robotGoto/odometry:i</to>
-  <protocol>udp</protocol>
-</connection>
-
-<connection>
-  <from>/fakeMobileBaseTest/odometry:o</from>
-  <to>/robotGoto/localization:i</to>
-  <protocol>udp</protocol>
-</connection>
-
-
-<connection>
-  <from>/fakeMobileBaseTest/odometry:o</from>
   <to>/fakeLaser/location:i</to>
   <protocol>tcp</protocol>
 </connection>

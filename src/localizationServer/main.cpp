@@ -62,8 +62,8 @@ using namespace yarp::os;
  * | ROS            |  initialpose_topic | string     | -         |   -                | No           | Name of the topic which will be used to publish the initial pose  | -     |
  * | TF             |  map_frame_id      | string     | -         |   -                | Yes          | Name of the map reference frame                                   | e.g. /map    |
  * | TF             |  robot_frame_id    | string     | -         |   -                | Yes          | Name of the robot reference frame                                 | e.g. /mobile_base    |
- * | LOCALIZATION   |  use_localization_from_port    | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a port to receive localization data                         | Incompatible with 'use_localization_from_tf=1'  |
- * | LOCALIZATION   |  use_localization_from_tf      | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a tfClient to receive localization data                     | Incompatible with 'use_localization_from_port=1 |
+ * | LOCALIZATION   |  use_localization_from_odometry_port    | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a port to receive localization data                         | Incompatible with 'use_localization_from_tf=1'  |
+ * | LOCALIZATION   |  use_localization_from_tf      | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a tfClient to receive localization data                     | Incompatible with 'use_localization_from_odometry_port=1 |
  * | ODOMETRY       |  odometry_broadcast_port       | string   |  -   |   -         | Yes          | Full name of port broadcasting the localization data. The server will connect to this port.  | -    |
  */
 
@@ -195,12 +195,12 @@ public:
         }
 
         //localization group
-        if (localization_group.check("use_localization_from_port")) { m_use_localization_from_odometry_port = (localization_group.find("use_localization_from_port").asInt() == 1); }
+        if (localization_group.check("use_localization_from_odometry_port")) { m_use_localization_from_odometry_port = (localization_group.find("use_localization_from_odometry_port").asInt() == 1); }
         if (localization_group.check("use_localization_from_tf"))   { m_use_localization_from_tf = (localization_group.find("use_localization_from_tf").asInt() == 1); }
 
         if (m_use_localization_from_odometry_port == true && m_use_localization_from_tf == true)
         {
-            yError() << "`use_localization_from_tf` and `use_localization_from_port` cannot be true simulteneously!";
+            yError() << "`use_localization_from_tf` and `use_localization_from_odometry_port` cannot be true simulteneously!";
             return false;
         }
 

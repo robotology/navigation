@@ -53,12 +53,6 @@
 </connection>
 
 <connection>
-  <from>/baseControl/odometry:o</from>
-  <to>/robotGoto/odometry:i</to>
-  <protocol>udp</protocol>
-</connection>
-
-<connection>
   <from>/mapClick:o</from>
   <to>/robotPathPlanner/yarpviewTarget:i</to>
   <protocol>tcp</protocol>

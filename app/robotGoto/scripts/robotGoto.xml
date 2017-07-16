@@ -16,10 +16,4 @@
   <protocol>udp</protocol>
 </connection>
 
-<connection>
-  <from>/baseControl/odometry:o</from>
-  <to>/robotGoto/odometry:i</to>
-  <protocol>udp</protocol>
-</connection>
-
 </application>
