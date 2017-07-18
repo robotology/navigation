@@ -29,11 +29,13 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/IMap2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IFrameTransform.h>
 #include <visualization_msgs_MarkerArray.h>
 #include <geometry_msgs_PoseStamped.h>
 #include <geometry_msgs_PoseWithCovarianceStamped.h>
+#include <nav_msgs_OccupancyGrid.h>
 
 #include <math.h>
 
@@ -59,7 +61,9 @@ using namespace yarp::os;
  * | INITIAL_POS    |  initial_y     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
  * | INITIAL_POS    |  initial_theta | double  | deg            | 0.0                | Yes          | Initial estimation of robot position                              | -     |
  * | INITIAL_POS    |  initial_map   | string  | -              |   -                | Yes          | Name of the map on which localization is performed                | -     |
- * | ROS            |  initialpose_topic | string     | -         |   -                | No           | Name of the topic which will be used to publish the initial pose  | -     |
+ * | MAP            |  connect_to_yarp_mapserver   | int  | 0/1     |   -              | Yes          | If set to 1, LocalizationServer will ask maps to yarp map server when initial pose is updated | -     |
+ * | ROS            |  initialpose_topic   | string     | -         |   -              | No           | Name of the topic which will be used to publish the initial pose  | -     |
+ * | ROS            |  occupancygrid_topic | string     | -         |   -              | No           | Name of the topic which will be used to publish map data when initial pose is updated         | -     |
  * | TF             |  map_frame_id      | string     | -         |   -                | Yes          | Name of the map reference frame                                   | e.g. /map    |
  * | TF             |  robot_frame_id    | string     | -         |   -                | Yes          | Name of the robot reference frame                                 | e.g. /mobile_base    |
  * | LOCALIZATION   |  use_localization_from_odometry_port    | int      | 0/1  |   -         | Yes          | If set to 1, the module will use a port to receive localization data                         | Incompatible with 'use_localization_from_tf=1'  |
@@ -72,18 +76,22 @@ class localizationModule : public yarp::os::RFModule
 protected:
     std::string                  m_module_name;
     bool                         m_ros_enabled;
+    yarp::dev::MapGrid2D         m_current_map;
     yarp::dev::Map2DLocation     m_initial_loc;
     yarp::dev::Map2DLocation     m_localization_data;
     yarp::dev::PolyDriver        m_ptf;
+    yarp::dev::PolyDriver        m_pmap;
     yarp::os::ResourceFinder     m_rf;
     yarp::os::Port               m_rpcPort;
     yarp::os::Mutex              m_mutex;
     bool                         m_use_localization_from_odometry_port;
     bool                         m_use_localization_from_tf;
+    bool                         m_use_map_server;
     std::string                  m_port_broadcast_odometry_name;
     yarp::os::BufferedPort<yarp::sig::Vector>  m_port_odometry_input;
     double                       m_last_odometry_data_received;
     yarp::dev::IFrameTransform*  m_iTf;
+    yarp::dev::IMap2D*           m_iMap;
     double                       m_tf_data_received;
     std::string                  m_frame_robot_id;
     std::string                  m_frame_map_id;
@@ -92,11 +100,15 @@ protected:
     //ros
     yarp::os::Node*                   m_rosNode;
     std::string                       m_topic_initial_pose;
+    std::string                       m_topic_occupancyGrid;
     yarp::os::Publisher<geometry_msgs_PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
+    yarp::os::Publisher<nav_msgs_OccupancyGrid> m_rosPublisher_occupancyGrid;
 
 public:
     localizationModule()
     {
+        m_iMap = 0;
+        m_iTf = 0;
         m_rosNode = 0;
         m_ros_enabled = false;
         m_module_name = "localizationServer";
@@ -157,6 +169,14 @@ public:
             return false;
         }
 
+        Bottle map_group = m_rf.findGroup("MAP");
+        if (map_group.isNull())
+        {
+            yError() << "Missing MAP group!";
+            return false;
+        }
+        yDebug() << map_group.toString();
+
         //general group
         if (general_group.check("module_name") == false)
         {
@@ -175,11 +195,27 @@ public:
         //ros group
         if (m_ros_enabled)
         {
+            m_rosNode = new yarp::os::Node("/"+m_module_name);
+                    
+            if (ros_group.check ("occupancygrid_topic"))
+            {
+                m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
+                if (!m_rosPublisher_occupancyGrid.topic(m_topic_occupancyGrid))
+                {
+                     if (m_rosNode)
+                     {
+                         delete m_rosNode;
+                         m_rosNode=0;
+                     }
+                     yError() << "localizationModule: unable to publish data on " << m_topic_occupancyGrid << " topic, check your yarp-ROS network configuration";
+                     return false;
+                }
+            }
+
             if (ros_group.check ("initialpose_topic")) 
             {
                 m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
                 {
-                    m_rosNode = new yarp::os::Node("/"+m_module_name);
                     if (!m_rosPublisher_initial_pose.topic(m_topic_initial_pose))
                     {
                         if (m_rosNode)
@@ -203,6 +239,16 @@ public:
             yError() << "`use_localization_from_tf` and `use_localization_from_odometry_port` cannot be true simulteneously!";
             return false;
         }
+
+        //map server group
+        yDebug() << map_group.toString();
+
+        if (map_group.check("connect_to_yarp_mapserver") == false)
+        {
+            yError() << "Missing `connect_to_yarp_mapserver` in [MAP] group";
+            return false;
+        }
+        m_use_map_server= (map_group.find("connect_to_yarp_mapserver").asInt()==1);
 
         //tf group
         if (tf_group.check("map_frame_id") == false)
@@ -259,6 +305,28 @@ public:
             }
         }
 
+        if (m_use_map_server)
+        {
+            Property map_options;
+            map_options.put("device", "map2DClient");
+            map_options.put("local", "/" +m_module_name + "/mapClient");
+            map_options.put("remote", "/mapServer");
+            if (m_pmap.open(map_options) == false)
+            {
+                yWarning() << "Unable to open mapClient";
+            }
+            else
+            {
+                yInfo() << "Opened mapClient";
+                m_pmap.view(m_iMap);
+                if (m_pmap.isValid() == false || m_iMap == 0)
+                {
+                    yError() << "Unable to view map interface";
+                    return false;
+                }
+            }
+        }
+
         //initial location intialization
         if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
         else { yError() << "missing initial_x param"; return false; }
@@ -282,6 +350,20 @@ public:
 
     virtual bool close()
     {
+        if (m_ptf.isValid())
+        {
+            m_ptf.close();
+        }
+        if (m_pmap.isValid())
+        {
+            m_pmap.close();
+        }
+
+        if (m_rosPublisher_occupancyGrid.asPort().isOpen())
+        {
+            m_rosPublisher_occupancyGrid.interrupt();
+            m_rosPublisher_occupancyGrid.close();
+        }
         if (m_rosPublisher_initial_pose.asPort().isOpen())
         {
             m_rosPublisher_initial_pose.interrupt();
@@ -394,6 +476,54 @@ public:
     bool initializeLocalization(yarp::dev::Map2DLocation& loc)
     {
         m_localization_data.map_id = loc.map_id;
+        
+        if (m_iMap)
+        {
+            bool b = m_iMap->get_map(m_localization_data.map_id, m_current_map);
+            if (b==false)
+            {
+                yError() << "Map "<<m_localization_data.map_id << " not found.";
+            }
+            else
+            {
+                if (m_rosNode)
+                {
+                    double tmp=0;
+                    nav_msgs_OccupancyGrid& ogrid = m_rosPublisher_occupancyGrid.prepare();
+                    ogrid.clear();
+                    ogrid.info.height=m_current_map.height();
+                    ogrid.info.width=m_current_map.width();
+                    m_current_map.getResolution(tmp);
+                    ogrid.info.resolution=tmp;
+                  //  m_current_map.
+                    ogrid.info.map_load_time.sec=0;
+                    ogrid.info.map_load_time.nsec=0;
+                    double x, y, t;
+                    m_current_map.getOrigin(x,y,t);
+                    ogrid.info.origin.position.x=x;
+                    ogrid.info.origin.position.y=y;
+                    yarp::math::Quaternion q;
+                    yarp::sig::Vector v(4);
+                    v[0]=0; v[1]=0; v[2]=1; v[3]=t*DEG2RAD;
+                    q.fromAxisAngle(v);
+                    ogrid.info.origin.orientation.x = q.x();
+                    ogrid.info.origin.orientation.y = q.y();
+                    ogrid.info.origin.orientation.z = q.z();
+                    ogrid.info.origin.orientation.w = q.w();
+                    ogrid.data.resize(m_current_map.width()*m_current_map.height());
+                    for (size_t i=0; i< ogrid.data.size(); i++)
+                    {
+                        yarp::dev::MapGrid2D::XYCell cell;
+                        cell.x=i%m_current_map.width();
+                        cell.y=i/m_current_map.width();
+                        m_current_map.getOccupancyData(cell,tmp);
+                        ogrid.data[i]=(int)tmp;
+                    }
+                    m_rosPublisher_occupancyGrid.write();
+                }
+            }
+        }
+
         m_localization_data.x = loc.x;
         m_localization_data.y = loc.y;
         m_localization_data.theta = loc.theta;
@@ -402,6 +532,7 @@ public:
         {
             //send data to ROS localization module
             geometry_msgs_PoseWithCovarianceStamped& pos = m_rosPublisher_initial_pose.prepare();
+            pos.clear();
             pos.header.frame_id=m_frame_robot_id;
             pos.header.seq=0;
             pos.header.stamp.sec=0;

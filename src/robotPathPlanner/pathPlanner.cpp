@@ -119,6 +119,7 @@ bool  PlannerThread::readLocalizationData()
         {
             yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
             m_current_map.enlargeObstacles(0.6);
+            yDebug() << "Obstacles enlargement performed ("<<"0.6m"<<")";
         }
         else
         {
