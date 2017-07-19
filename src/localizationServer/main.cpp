@@ -495,7 +495,7 @@ public:
                     ogrid.info.width=m_current_map.width();
                     m_current_map.getResolution(tmp);
                     ogrid.info.resolution=tmp;
-                  //  m_current_map.
+                    ogrid.header.frame_id="map";
                     ogrid.info.map_load_time.sec=0;
                     ogrid.info.map_load_time.nsec=0;
                     double x, y, t;
@@ -511,14 +511,15 @@ public:
                     ogrid.info.origin.orientation.z = q.z();
                     ogrid.info.origin.orientation.w = q.w();
                     ogrid.data.resize(m_current_map.width()*m_current_map.height());
-                    for (size_t i=0; i< ogrid.data.size(); i++)
-                    {
-                        yarp::dev::MapGrid2D::XYCell cell;
-                        cell.x=i%m_current_map.width();
-                        cell.y=i/m_current_map.width();
+                    int index=0;
+                    yarp::dev::MapGrid2D::XYCell cell;
+                    for (cell.y=m_current_map.height()-1; cell.y>-1; cell.y--)
+                      for (cell.x=0; cell.x<m_current_map.width(); cell.x++)
+                      {
                         m_current_map.getOccupancyData(cell,tmp);
-                        ogrid.data[i]=(int)tmp;
-                    }
+                        ogrid.data[index++]=(int)tmp;
+                      }
+                      
                     m_rosPublisher_occupancyGrid.write();
                 }
             }
