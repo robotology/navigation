@@ -35,6 +35,7 @@
 #include <yarp/dev/IJoypadController.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/IJoypadController.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/pids.h>
 #include <string>
@@ -115,6 +116,7 @@ private:
     double              linear_vel_at_100_joy;
     double              angular_vel_at_100_joy;
 
+    PolyDriver          joyPolyDriver;
     IJoypadController*  joypad;
 
 protected:
@@ -131,7 +133,6 @@ protected:
 
 public:
 
-    Input(unsigned int _period, PolyDriver* _driver, IJoypadController* const joypad, JoyDescription joydesc);
     Input(unsigned int _period, PolyDriver* _driver);
     ~Input();
 
