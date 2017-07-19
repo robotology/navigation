@@ -240,8 +240,6 @@ Input::Input(unsigned int _period, PolyDriver* _driver)
     control_board_driver   = _driver;
 
     thread_timeout_counter = 0;
-    
-    joypad                 = 0;
 
     command_received       = 0;
     rosInput_received      = 0;
@@ -315,15 +313,40 @@ void Input::read_speed_polar(const Bottle *b, double& des_dir, double& lin_spd, 
 
 void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
-    double x_speed = b->get(1).asDouble();
-    double y_speed = b->get(2).asDouble();
-    ang_spd        = b->get(3).asDouble();
-    pwm_gain       = b->get(4).asDouble();
-    read_speed_cart(x_speed, y_speed, des_dir, lin_spd, pwm_gain);
+     double x_speed = b->get(1).asDouble();
+     double y_speed = b->get(2).asDouble();
+     double t_speed = b->get(3).asDouble();
+     des_dir        = atan2(y_speed, x_speed) * 180.0 / M_PI;
+     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
+     ang_spd        = t_speed;
+     pwm_gain = b->get(4).asDouble();
 }
 
-void Input::read_speed_cart(double x_speed, double y_speed, double& des_dir, double& lin_spd, double& pwm_gain)
+void Input::read_joystick_data(double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
+    //received a joystick command.
+    double x_speed;
+    double y_speed;
+    joypad->getAxis(jDescr.xAxis.Id, x_speed);
+    joypad->getAxis(jDescr.yAxis.Id, y_speed);
+    joypad->getAxis(jDescr.tAxis.Id, joy_angular_speed);
+
+    if(jDescr.gain.type == InputDescription::AXIS)
+    {
+        joypad->getAxis(jDescr.gain.Id, joy_pwm_gain);
+    }
+    else
+    {
+        float r;
+        joypad->getButton(jDescr.gain.Id, r);
+        joy_pwm_gain = r;
+    }
+
+    x_speed           *= jDescr.xAxis.Factor;
+    y_speed           *= jDescr.yAxis.Factor;
+    joy_angular_speed *= jDescr.tAxis.Factor;
+    joy_pwm_gain      *= jDescr.gain.Factor;
+
     des_dir  = atan2(y_speed, x_speed) * 180.0 / M_PI;
     lin_spd  = sqrt (x_speed*x_speed+y_speed*y_speed);
     pwm_gain = (pwm_gain<+100) ? pwm_gain : +100;
@@ -343,29 +366,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
 
     if(joypad)
     {
-        //received a joystick command.
-
-        double x, y;
-        joypad->getAxis(jDescr.xAxis.Id, x);
-        joypad->getAxis(jDescr.yAxis.Id, y);
-        joypad->getAxis(jDescr.tAxis.Id, joy_angular_speed);
-
-        if(jDescr.gain.type == InputDescription::AXIS)
-        {
-            joypad->getAxis(jDescr.gain.Id, joy_pwm_gain);
-        }
-        else
-        {
-            float r;
-            joypad->getButton(jDescr.gain.Id, r);
-            joy_pwm_gain = r;
-        }
-
-        x                 *= jDescr.xAxis.Factor;
-        y                 *= jDescr.yAxis.Factor;
-        joy_angular_speed *= jDescr.tAxis.Factor;
-        joy_pwm_gain      *= jDescr.gain.Factor;
-        read_speed_cart(x, y, joy_desired_direction, joy_linear_speed, joy_pwm_gain);
+        read_joystick_data(joy_desired_direction, joy_linear_speed, joy_angular_speed, joy_pwm_gain);
         joy_linear_speed = (joy_linear_speed > 100) ? 100 : joy_linear_speed;
         joy_angular_speed = (joy_angular_speed > 100) ? 100 : joy_angular_speed;
         joy_linear_speed = (joy_linear_speed < -100) ? -100 : joy_linear_speed;

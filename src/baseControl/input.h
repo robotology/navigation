@@ -35,7 +35,6 @@
 #include <yarp/dev/IJoypadController.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/IJoypadController.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/pids.h>
 #include <string>
@@ -146,7 +145,7 @@ public:
     void   read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    void   read_speed_cart    (double x_speed, double y_speed, double& des_dir, double& lin_spd, double& pwm_gain);
+    void   read_joystick_data (                 double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     //double get_max_linear_vel()   {return max_linear_vel;}
     //double get_max_angular_vel()  {return max_angular_vel;}
 
