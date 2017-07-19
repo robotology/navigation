@@ -56,10 +56,6 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
     // open control input ports
     port_movement_control.open((localName+"/control:i").c_str());
     port_auxiliary_control.open((localName+"/aux_control:i").c_str());
-    if(!joypad)
-    {
-        port_joystick_control.open((localName+"/joystick:i").c_str());
-    }
 
     if (!ctrl_options.check("GENERAL"))
     {
@@ -111,31 +107,43 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
 
     localName = ctrl_options.find("local").asString();
 
-
     //Joystick
-    Input::JoyDescription joydesc;
-    if (general_options.check("JoypadDevice"))
+    if (general_options.check("joypad_input_group")==false)
     {
-        if(!general_options.check("axes_configuration_group"))
-        {
-            yError() << "axes_configuration_group param not found in configuration (under GENERAL group)";
-            return false;
-        }
-        if(!general_options.find("axes_configuration_group").isString())
-        {
-            yError() << "axes_configuration_group param is not a string as it should";
-            return false;
-        }
-        Bottle& axisConf = ctrl_options.findGroup(general_options.find("axes_configuration_group").asString());
+        yError() << "missing parameter joypad_input_group in [GENERAL] group";
+        return false;
+    }
 
-        if(axisConf.isNull())
+    string joypad_group_name = general_options.find("joypad_input_group").toString();
+    Bottle& joypad_group = ctrl_options.findGroup(joypad_group_name);
+    if (joypad_group.isNull())
+    {
+        yError() << "Unable to find joypad section" << joypad_group_name;
+        return false;
+    }
+
+    if (joypad_group.check("JoystickPort"))
+    {
+        string joystick_port_name = joypad_group.find("JoystickPort").asString();
+        port_joystick_control.open(joystick_port_name.c_str());
+    }
+    else if (joypad_group.check("JoypadDevice"))
+    {
+        Input::JoyDescription joydesc;
+        Value joydevicename = joypad_group.find("JoypadDevice");
+        if (!joydevicename.isString())
         {
-            yError() << general_options.find("axes_configuration_group").asString() << "group not found in configuration file";
+            yError() << "baseControl: JoypadDevice param is not a string";
             return false;
         }
-
-        Value joydev = general_options.find("JoypadDevice");
-        if (!joydev.isString())
+        Value joylocal = joypad_group.find("local");
+        if (!joylocal.isString())
+        {
+            yError() << "baseControl: JoypadDevice param is not a string";
+            return false;
+        }
+        Value joyremote = joypad_group.find("remote");
+        if (!joyremote.isString())
         {
             yError() << "baseControl: JoypadDevice param is not a string";
             return false;
@@ -151,7 +159,9 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
         for(auto p : paramlist)
         {
             bool                   idFound(false), facFound(false);
-            string                 idPar, factorPar, Error("Axis/Button");
+            string                 idPar;
+            string                 factorPar;
+            string                 Error("Axis/Button");
             inputType              type;
             map<string, inputType> str2types{make_pair("Axis",   Input::InputDescription::AXIS),
                                              make_pair("Button", Input::InputDescription::BUTTON)};
@@ -159,10 +169,10 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
             {
                 idPar     = std::get<0>(p)+t.first+"_id";
                 factorPar = std::get<0>(p)+t.first+"_factor";
-                if(axisConf.check(idPar) && axisConf.find(idPar).isInt())
+                if(joypad_group.check(idPar) && joypad_group.find(idPar).isInt())
                 {
                     idFound = true;
-                    if(axisConf.check(factorPar) && axisConf.find(factorPar).isDouble())
+                    if(joypad_group.check(factorPar) && joypad_group.find(factorPar).isDouble())
                     {
                         facFound = true;
                         type = str2types[t.first];
@@ -192,23 +202,16 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
                 return false;
             }
 
-            *std::get<1>(p) = axisConf.find(idPar).asInt();
+            *std::get<1>(p) = joypad_group.find(idPar).asInt();
             *std::get<2>(p) = type;
-            *std::get<3>(p) = axisConf.find(factorPar).asDouble();
+            *std::get<3>(p) = joypad_group.find(factorPar).asDouble();
         }
 
-        Bottle& joyOptions = ctrl_options.findGroup(joydev.asString()+"_options");
-
-        if (joyOptions.isNull())
-        {
-            yError() << "baseControl:"<< joydev.asString() + "_options" << "group not found";
-            return false;
-        }
-
-        yInfo() << "opening" << joydev.asString() << "device";
+        yInfo() << "opening" << joydevicename.asString() << "device";
         Property joycfg;
-        joycfg.put("device", joydev.asString());
-        joycfg.fromString(joyOptions.toString(), false);
+        joycfg.put("device", joydevicename.asString());
+        joycfg.put("local", joylocal.toString());
+        joycfg.put("remote",joyremote.toString());
 
         if (!joyPolyDriver.open(joycfg))
         {
@@ -229,6 +232,11 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
             yError() << "joypad must have at least 3 axes";
             return false;
         }
+    }
+    else
+    {
+        yError("Unable to configure joystick: You need either the JoystickPort or the JoypadDevice option");
+        return false;
     }
 
     return true;
