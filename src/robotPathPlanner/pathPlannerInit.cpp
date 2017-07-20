@@ -184,39 +184,6 @@ bool PlannerThread::threadInit()
     }
     m_laser_angle_of_view = fabs(m_min_laser_angle) + fabs(m_max_laser_angle);
 
-#if 0
-    /////DEPRECATED!!!
-    //read the map
-    string map_filename;
-    //yarp::os::ResourceFinder mapFinder;
-    //mapFinder.setDefaultContext("robot/maps");
-    //mapFinder.configure(0, 0);
-    //map_filename = mapFinder.getHomeContextPath().c_str() + string("/");
-    //map_filename = map_filename + rf.find("map_file").asString().c_str();
-    //map_filename = rf.find("map_file").asString().c_str();
-
-    Bottle mapBottle = m_rf.findGroup("MAP");
-    if (mapBottle.isNull())
-    {
-        yError("MAP group not found,closing");
-        return false;
-    }
-    if (mapBottle.check("file_name")==false)
-    {
-        yError("map_file param not found,closing");
-        return false;
-    }
-    map_filename = mapBottle.find("map_name").asString();
-
-    if (!m_current_map.loadFromFile(map_filename))
-    {
-        yError("map file not found, closing");
-        return false;
-    }
-    m_current_map.enlargeObstacles(m_robot_radius);
-    m_iMap->store_map(m_current_map);
-#endif
-
     return true;
 }
 
