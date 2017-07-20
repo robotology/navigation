@@ -140,6 +140,13 @@ public:
             reply.addString("new relative target received");
         }
 
+        else if (command.get(0).isString() && command.get(0).asString() == "goto")
+        {
+            std::string location_name = command.get(1).asString();
+            plannerThread->gotoLocation(location_name);
+            reply.addString("goto done");
+        }
+
         else if (command.get(0).isString() && command.get(0).asString() == "store_current_location")
         {
             std::string location_name = command.get(1).asString();
@@ -306,6 +313,7 @@ public:
             {
                 reply.addVocab(Vocab::encode("many"));
                 reply.addString("Available commands are:");
+                reply.addString("goto <locationName>");
                 reply.addString("gotoAbs <x> <y> <angle in degrees>");
                 reply.addString("gotoRel <x> <y> <angle in degrees>");
                 reply.addString("store_current_location <location_name>");
