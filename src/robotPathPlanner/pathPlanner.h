@@ -162,6 +162,7 @@ class PlannerThread: public yarp::os::RateThread
     bool          readInnerNavigationStatus();
     void          draw_map();
     bool          getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const;
+    bool          updateLocations();
 
     public:
     PlannerThread(unsigned int _period, ResourceFinder &_rf);

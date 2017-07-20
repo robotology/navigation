@@ -96,6 +96,20 @@ void PlannerThread::readTargetFromYarpView()
     }
 }
 
+bool  PlannerThread::updateLocations()
+{
+    std::vector<yarp::os::ConstString> all_locations;
+    m_iMap->getLocationsList(all_locations);
+    Map2DLocation tmp_loc;
+    m_locations_list.clear();
+    for (size_t i=0; i<all_locations.size(); i++)
+    {
+        m_iMap->getLocation(all_locations[i],tmp_loc);
+        m_locations_list.push_back(tmp_loc);
+    }
+    return true;
+}
+
 bool  PlannerThread::readLocalizationData()
 {
     bool ret = m_iLoc->getCurrentPosition(m_localization_data);
@@ -120,6 +134,7 @@ bool  PlannerThread::readLocalizationData()
             yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
             m_current_map.enlargeObstacles(m_robot_radius);
             yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
+            updateLocations();
         }
         else
         {
@@ -137,16 +152,6 @@ bool  PlannerThread::readLocalizationData()
         }
     }
 
-    //update locations data
-    std::vector<yarp::os::ConstString> all_locations;
-    m_iMap->getLocationsList(all_locations);
-    Map2DLocation tmp_loc;
-    m_locations_list.clear();
-    for (size_t i=0; i<all_locations.size(); i++)
-    {
-        m_iMap->getLocation(all_locations[i],tmp_loc);
-        m_locations_list.push_back(tmp_loc);
-    }
     return true;
 }
 
