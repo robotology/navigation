@@ -140,6 +140,20 @@ public:
             reply.addString("new relative target received");
         }
 
+        else if (command.get(0).isString() && command.get(0).asString() == "store_current_location")
+        {
+            std::string location_name = command.get(1).asString();
+            plannerThread->storeCurrentLocation(location_name);
+            reply.addString("store_current_location done");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "delete_location")
+        {
+            std::string location_name = command.get(1).asString();
+            plannerThread->deleteLocation(location_name);
+            reply.addString("delete_location done");
+        }
+
         else if (command.get(0).asString() == "get")
         {
             if (command.get(1).asString() == "navigation_status")
@@ -294,6 +308,8 @@ public:
                 reply.addString("Available commands are:");
                 reply.addString("gotoAbs <x> <y> <angle in degrees>");
                 reply.addString("gotoRel <x> <y> <angle in degrees>");
+                reply.addString("store_current_location <location_name>");
+                reply.addString("delete_location <location_name>");
                 reply.addString("stop");
                 reply.addString("pause");
                 reply.addString("resume");

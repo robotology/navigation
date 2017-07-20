@@ -164,6 +164,16 @@ void PlannerThread::pauseMovement(double d)
     }
 }
 
+void PlannerThread::storeCurrentLocation(std::string location_name)
+{
+    m_iMap->storeLocation(location_name,m_localization_data);
+}
+
+void PlannerThread::deleteLocation(std::string location_name)
+{
+    m_iMap->deleteLocation(location_name);
+}
+
 void PlannerThread::printStats()
 {
 }

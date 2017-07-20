@@ -141,6 +141,8 @@ class PlannerThread: public yarp::os::RateThread
     void          pauseMovement(double secs);
     void          resumeMovement();
     void          getCurrentPos(Map2DLocation& v);
+    void          storeCurrentLocation(std::string location_name);
+    void          deleteLocation(std::string location_name);
     Map2DLocation getCurrentAbsTarget();
     Map2DLocation getCurrentRelTarget();
     string        getCurrentMapId();
