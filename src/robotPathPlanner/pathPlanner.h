@@ -111,6 +111,7 @@ class PlannerThread: public yarp::os::RateThread
     yarp::dev::Map2DLocation               m_localization_data;
     yarp::dev::Map2DLocation               m_final_goal;
     std::queue<yarp::dev::Map2DLocation>   m_sequence_of_goals;
+    std::vector<Map2DLocation>             m_locations_list;
 
     std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
 
@@ -125,6 +126,10 @@ class PlannerThread: public yarp::os::RateThread
     int                 m_loc_timeout_counter;
     int                 m_laser_timeout_counter;
     int                 m_inner_status_timeout_counter;
+
+    //drawing flags
+    public:
+    bool                m_enable_draw_all_locations;
 
     public:
     virtual void run();

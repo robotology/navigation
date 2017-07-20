@@ -118,8 +118,8 @@ bool  PlannerThread::readLocalizationData()
         if (map_get_succesfull)
         {
             yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
-            m_current_map.enlargeObstacles(0.6);
-            yDebug() << "Obstacles enlargement performed ("<<"0.6m"<<")";
+            m_current_map.enlargeObstacles(m_robot_radius);
+            yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
         }
         else
         {
@@ -135,6 +135,17 @@ bool  PlannerThread::readLocalizationData()
             yarp::os::Time::delay(1.0);
             return true; //consider changing this to false
         }
+    }
+
+    //update locations data
+    std::vector<yarp::os::ConstString> all_locations;
+    m_iMap->getLocationsList(all_locations);
+    Map2DLocation tmp_loc;
+    m_locations_list.clear();
+    for (size_t i=0; i<all_locations.size(); i++)
+    {
+        m_iMap->getLocation(all_locations[i],tmp_loc);
+        m_locations_list.push_back(tmp_loc);
     }
     return true;
 }
@@ -229,6 +240,15 @@ void PlannerThread::draw_map()
             //do nothing
         break;
     }
+
+    if (m_enable_draw_all_locations)
+    {
+        for (size_t i=0; i<m_locations_list.size(); i++)
+        {
+            drawGoal(processed_map_with_scan, MapGrid2D::XYCell(m_locations_list[i].x, m_locations_list[i].y), m_locations_list[i].theta* DEG2RAD, blue_color);
+        }
+    }
+
     drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, blue_color2);
 #define DRAW_INFO
 #ifdef DRAW_INFO

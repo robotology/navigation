@@ -167,6 +167,19 @@ public:
             plannerThread->resumeMovement();
             reply.addString("Resuming.");
         }
+        else if (command.get(0).isString() && command.get(0).asString() == "draw_locations")
+        {
+            if (command.get(1).asInt() == 1) 
+            {
+                plannerThread->m_enable_draw_all_locations = true;
+                yDebug() << "locations drawing enabled";
+            }
+            else
+            {
+                plannerThread->m_enable_draw_all_locations = false;
+                yDebug() << "locations drawing disabled";
+            }
+        }
         else
         {
             reply.addString("Unknown command.");
@@ -285,6 +298,7 @@ public:
                 reply.addString("pause");
                 reply.addString("resume");
                 reply.addString("quit");
+                reply.addString("draw_locations <0/1>");
             }
             else if (command.get(0).isString())
             {
