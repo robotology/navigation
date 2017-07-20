@@ -132,8 +132,9 @@ bool PlannerThread::threadInit()
     //open the map interface
     Property map_options;
     map_options.put("device", "map2DClient");
-    map_options.put("local", "/robotPathPlanner/mapClient");
-    map_options.put("remote", "/mapServer");
+    map_options.put("local", "/robotPathPlanner");
+    map_options.put("locations_server", "/locationsServer");
+    map_options.put("map_server", "/mapServer");
     if (m_pMap.open(map_options) == false)
     {
         yError() << "Unable to open mapClient";
