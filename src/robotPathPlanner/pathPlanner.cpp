@@ -250,7 +250,7 @@ void PlannerThread::draw_map()
     {
         for (size_t i=0; i<m_locations_list.size(); i++)
         {
-            drawGoal(processed_map_with_scan, MapGrid2D::XYCell(m_locations_list[i].x, m_locations_list[i].y), m_locations_list[i].theta* DEG2RAD, blue_color);
+            drawGoal(processed_map_with_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
         }
     }
 
