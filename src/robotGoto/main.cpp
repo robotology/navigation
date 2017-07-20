@@ -185,7 +185,7 @@ public:
             }
             else if (command.get(1).asString() == "obstacle_stop")
             {
-                if (gotoThread->m_enable_obstacles_avoidance)
+                if (gotoThread->m_enable_obstacles_emergency_stop)
                 {
                     reply.addString("enable_obstacle_stop=false");
                     gotoThread->m_enable_obstacles_emergency_stop = false;
