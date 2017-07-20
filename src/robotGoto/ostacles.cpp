@@ -81,23 +81,31 @@ obstacles_class::obstacles_class(ResourceFinder &rf)
     }
 
     //////////////
-    Bottle& btmp = rf.findGroup("OBSTACLES_EMERGENCY_STOP");
+    Bottle obstacles_stop_group = rf.findGroup("OBSTACLES_EMERGENCY_STOP");
+    if (obstacles_stop_group.isNull())
+    {
+        yError() << "Missing OBSTACLES_EMERGENCY_STOP group!";
+    }
 
-    if (btmp.check("enable_dynamic_max_distance", Value(0)).asInt() == 1)
+    if (obstacles_stop_group.check("enable_dynamic_max_distance", Value(0)).asInt() == 1)
         m_enable_dynamic_max_distance = true;
 
-    m_max_obstacle_waiting_time = btmp.check("max_wating_time", Value(60.0)).asDouble();
-    m_max_detection_distance = btmp.check("max_detection_distance", Value(1.5)).asDouble();
-    m_min_detection_distance = btmp.check("min_detection_distance", Value(0.4)).asDouble();
+    m_max_obstacle_waiting_time = obstacles_stop_group.check("max_wating_time", Value(60.0)).asDouble();
+    m_max_detection_distance = obstacles_stop_group.check("max_detection_distance", Value(1.5)).asDouble();
+    m_min_detection_distance = obstacles_stop_group.check("min_detection_distance", Value(0.4)).asDouble();
 
     //////////////
-    btmp = rf.findGroup("OBSTACLES_AVOIDANCE");
+    Bottle obstacles_avoidance_group = rf.findGroup("OBSTACLES_AVOIDANCE");
+    if (obstacles_avoidance_group.isNull())
+    {
+        yError() << "Missing OBSTACLES_AVOIDANCE group!";
+    }
 
-    if (btmp.check("frontal_blind_angle"))
-        m_frontal_blind_angle = btmp.check("frontal_blind_angle", Value(25.0)).asDouble();
+    if (obstacles_avoidance_group.check("frontal_blind_angle"))
+        m_frontal_blind_angle = obstacles_avoidance_group.check("frontal_blind_angle", Value(25.0)).asDouble();
 
-    if (btmp.check("speed_reduction_factor"))
-        m_speed_reduction_factor = btmp.check("speed_reduction_factor", Value(0.70)).asDouble();
+    if (obstacles_avoidance_group.check("speed_reduction_factor"))
+        m_speed_reduction_factor = obstacles_avoidance_group.check("speed_reduction_factor", Value(0.70)).asDouble();
 }
 
 //checks if a point is inside a polygon
@@ -181,6 +189,7 @@ bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementDat
 
 bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data)
 {
+    static double last_time_error_message = 0;
     int laser_obstacles  = 0;
     double goal_distance = 1000; //TO BE COMPLETED
 
@@ -188,15 +197,26 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     double vertx[4];
     double verty[4];
     double theta              = 0.0;
-    double ctheta             = cos(theta);
-    double stheta             = sin(theta);
-    double detection_distance = 1.5;
+    //the following 90 degrees rotation is needed to perform the following reference frame rotation.
+    //the refence frame of the robot is the one shown on the right.
+    //      Y                 X
+    //      |       -->       |
+    //      O--X           Y--O
+    double ctheta             = cos(theta-1.5707);
+    double stheta             = sin(theta-1.5707);
+    double detection_distance = m_min_detection_distance;
 
     if (m_enable_dynamic_max_distance)
+    {
+        //detection_distance is increased from min to max as the velocity of the robot increases
         detection_distance = m_max_detection_distance * m_safety_coeff;
-    else
+    }
+
+    //an obstacle farther than m_max_detection_distance is always ignored
+    if (detection_distance>m_max_detection_distance)
         detection_distance = m_max_detection_distance;
 
+    //an obstacle nearer than m_min_detection_distance is always detected
     if (detection_distance<m_min_detection_distance)
         detection_distance = m_min_detection_distance;
 
@@ -226,7 +246,11 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
         if (d < m_robot_radius)
         {
             laser_obstacles++;
-            yError("obstacles on the platform");
+            if (yarp::os::Time::now() - last_time_error_message > 0.3)
+            {
+                yError("obstacles on the platform");
+                last_time_error_message = yarp::os::Time::now();
+            }
             continue;
         }
 

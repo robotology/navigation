@@ -206,7 +206,7 @@ bool GotoThread::threadInit()
     m_useGoalFromRosTopic        = false;
     m_publishRosStuff            = false;
     m_obstacle_handler = new obstacles_class(m_rf);
-    yInfo("Using following paramters: %s", m_rf.toString().c_str());
+    yInfo("Using following parameters: %s", m_rf.toString().c_str());
 
     Bottle ros_group = m_rf.findGroup("ROS");
     if (ros_group.isNull())
