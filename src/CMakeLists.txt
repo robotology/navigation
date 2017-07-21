@@ -12,6 +12,6 @@ add_subdirectory(fakeMobileBaseTest)
 add_subdirectory(localizationServer)
 
 
-add_subdirectory(navigationTest)
+add_subdirectory(navigation2DClientTest)
 add_subdirectory(robotPathPlannerExample)
 add_subdirectory(robotGotoExample)

@@ -1,5 +1,24 @@
-#include "navigationtestmodule.h"
+/*
+* Copyright (C)2016  iCub Facility - Istituto Italiano di Tecnologia
+* Author: Andrea Ruzzenenti
+* email:  andrea.ruzzenenti@iit.it
+* website: www.robotcub.org
+* Permission is granted to copy, distribute, and/or modify this program
+* under the terms of the GNU General Public License, version 2 or any
+* later version published by the Free Software Foundation.
+*
+* A copy of the license can be found at
+* http://www.robotcub.org/icub/license/gpl.txt
+*
+* This program is distributed in the hope that it will be useful, but
+* WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+* Public License for more details
+*/
+
+#include "navigation2DClientTestModule.h"
 #include <cmath>
+
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace std;
@@ -51,8 +70,9 @@ bool NavTestModule::configure(ResourceFinder& rf)
 
     navTestCfg.put("device",         "navigation2DClient");
     navTestCfg.put("local",          "/navigationTest");
-    navTestCfg.put("remote",         navServerRoot);
-    navTestCfg.put("locationRemote", "/locationServer");
+    navTestCfg.put("navigation_server", navServerRoot);
+    navTestCfg.put("map_locations_server", "/mapServer");
+    navTestCfg.put("localization_server", "/localizationServer");
 
     iNav            = 0;
     okClient        = ddNavClient.open(navTestCfg);
@@ -60,10 +80,10 @@ bool NavTestModule::configure(ResourceFinder& rf)
 
     if(okClient)
     {
-        yInfo("ddNavClient device open reported successful");
+        yInfo("navigation2DClient device opened successful;y");
         if(okView)
         {
-            yInfo("INavigation2D interface open reported successful");
+            yInfo("INavigation2D interface opened successfully");
         }
         else
         {
@@ -73,7 +93,7 @@ bool NavTestModule::configure(ResourceFinder& rf)
     }
     else
     {
-        yError("Error opening ddNavClinet device");
+        yError("Error opening navigation2DClient device");
         return false;
     }
 

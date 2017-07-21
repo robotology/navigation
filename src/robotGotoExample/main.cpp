@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
     navTestCfg.put("device", "navigation2DClient");
     navTestCfg.put("local", "/robotGotoExample");
     navTestCfg.put("navigation_server", "/robotGoto");
-    navTestCfg.put("locations_server", "/locationsServer");
+    navTestCfg.put("map_locations_server", "/mapServer");
     navTestCfg.put("localization_server", "/localizationServer");
 
     PolyDriver ddNavClient;

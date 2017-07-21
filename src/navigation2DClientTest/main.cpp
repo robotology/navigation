@@ -25,7 +25,7 @@
 #include <iomanip>
 #include <string>
 
-#include "navigationtestmodule.h"
+#include "navigation2DClientTestModule.h"
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -35,13 +35,13 @@ int main(int argc, char* argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("navigationTest");
-    rf.setDefaultConfigFile("navigationTest.ini");
+    rf.setDefaultContext("navigation2DClienTest");
+    rf.setDefaultConfigFile("navigation2DClientTest.ini");
     rf.configure(argc,argv);
 
     if (rf.check("help"))
     {
-        yInfo("No help message yet.. i'm very sorry. try later");
+        yInfo("No help message yet.. ");
         return 0;
     }
 

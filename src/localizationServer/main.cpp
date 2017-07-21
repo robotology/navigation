@@ -310,8 +310,7 @@ public:
             Property map_options;
             map_options.put("device", "map2DClient");
             map_options.put("local", "/" +m_module_name); //This is just a prefix. map2DClient will complete the port name.
-            map_options.put("locations_server", "/locationsServer");
-            map_options.put("map_server", "/mapServer");
+            map_options.put("remote", "/mapServer");
             if (m_pmap.open(map_options) == false)
             {
                 yWarning() << "Unable to open mapClient";

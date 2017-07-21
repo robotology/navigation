@@ -16,10 +16,9 @@
    <node>console</node>
 </module>
 
-
 <module>
    <name>yarpdev</name>
-   <parameters>--device locationsServer --local /locationsServer</parameters>
+   <parameters>--device Map2DServer</parameters>
    <node>console</node>
 </module>
 

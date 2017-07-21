@@ -18,12 +18,6 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device locationsServer --local /locationsServer</parameters>
-   <node>console</node>
-</module>
-
-<module>
-   <name>yarpdev</name>
    <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
    <node>console</node>
 </module>
