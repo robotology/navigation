@@ -57,17 +57,30 @@ bool PlannerThread::threadInit()
 {
     //read configuration parametes
     std::string debug_rf = m_rf.toString();
-    if (m_rf.check("waypoint_tolerance_lin")) { m_waypoint_tolerance_lin = m_rf.find("waypoint_tolerance_lin").asDouble(); }
-    if (m_rf.check("waypoint_tolerance_ang")) { m_waypoint_tolerance_ang = m_rf.find("waypoint_tolerance_ang").asDouble(); }
-    if (m_rf.check("goal_tolerance_lin"))     { m_goal_tolerance_lin = m_rf.find("goal_tolerance_lin").asDouble(); }
-    if (m_rf.check("goal_tolerance_ang"))     { m_goal_tolerance_ang = m_rf.find("goal_tolerance_ang").asDouble(); }
-    if (m_rf.check("use_optimized_path"))     { int p = m_rf.find("use_optimized_path").asInt(); m_use_optimized_path = (p == 1); }
-    if (m_rf.check("max_lin_speed"))          { m_max_lin_speed = m_rf.find("max_lin_speed").asDouble(); }
-    if (m_rf.check("max_ang_speed"))          { m_max_ang_speed = m_rf.find("max_ang_speed").asDouble(); }
-    if (m_rf.check("min_lin_speed"))          { m_min_lin_speed = m_rf.find("min_lin_speed").asDouble(); }
-    if (m_rf.check("min_ang_speed"))          { m_min_ang_speed = m_rf.find("min_ang_speed").asDouble(); }
-    if (m_rf.check("min_waypoint_distance"))  { m_min_waypoint_distance = m_rf.find("min_waypoint_distance").asInt(); }
-    if (m_rf.check("publish_map_image_Hz"))  { m_imagemap_refresh_time = 1/(m_rf.find("publish_map_image_Hz").asDouble()); }
+    Bottle navigation_group = m_rf.findGroup("NAVIGATION");
+    if (navigation_group.isNull())
+    {
+        yError() << "Missing NAVIGATION group!";
+        return false;
+    }
+    if (navigation_group.check("waypoint_tolerance_lin")) { m_waypoint_tolerance_lin = navigation_group.find("waypoint_tolerance_lin").asDouble(); } else {yError() << "Missing waypoint_tolerance_lin parameter" ;return false;}
+    if (navigation_group.check("waypoint_tolerance_ang")) { m_waypoint_tolerance_ang = navigation_group.find("waypoint_tolerance_ang").asDouble(); } else {yError() << "Missing waypoint_tolerance_ang parameter" ;return false;}
+    if (navigation_group.check("goal_tolerance_lin"))     { m_goal_tolerance_lin = navigation_group.find("goal_tolerance_lin").asDouble(); } else {yError() << "Missing goal_tolerance_lin parameter" ;return false;}
+    if (navigation_group.check("goal_tolerance_ang"))     { m_goal_tolerance_ang = navigation_group.find("goal_tolerance_ang").asDouble(); } else {yError() << "Missing goal_tolerance_ang parameter" ;return false;}
+    if (navigation_group.check("use_optimized_path"))     { int p = navigation_group.find("use_optimized_path").asInt(); m_use_optimized_path = (p == 1); } else {yError() << "Missing use_optimized_path parameter" ;return false;}
+    if (navigation_group.check("max_lin_speed"))          { m_max_lin_speed = navigation_group.find("max_lin_speed").asDouble(); } else {yError() << "Missing max_lin_speed parameter" ;return false;}
+    if (navigation_group.check("max_ang_speed"))          { m_max_ang_speed = navigation_group.find("max_ang_speed").asDouble(); } else {yError() << "Missing max_ang_speed parameter" ;return false;}
+    if (navigation_group.check("min_lin_speed"))          { m_min_lin_speed = navigation_group.find("min_lin_speed").asDouble(); } else {yError() << "Missing min_lin_speed parameter" ;return false;}
+    if (navigation_group.check("min_ang_speed"))          { m_min_ang_speed = navigation_group.find("min_ang_speed").asDouble(); } else {yError() << "Missing min_ang_speed parameter" ;return false;}
+    if (navigation_group.check("min_waypoint_distance"))  { m_min_waypoint_distance = navigation_group.find("min_waypoint_distance").asInt(); } else {yError() << "Missing min_waypoint_distance parameter" ;return false;}
+
+    Bottle general_group = m_rf.findGroup("GENERAL");
+    if (general_group.isNull())
+    {
+        yError() << "Missing GENERAL group!";
+        return false;
+    }
+    if (general_group.check("publish_map_image_Hz"))   { m_imagemap_refresh_time = 1/(general_group.find("publish_map_image_Hz").asDouble()); } else {yError() << "Missing publish_map_image_Hz parameter" ;return false;}
 
     Bottle geometry_group = m_rf.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())

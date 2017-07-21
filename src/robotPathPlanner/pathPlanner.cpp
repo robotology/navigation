@@ -347,7 +347,7 @@ void PlannerThread::run()
                     m_port_commands_output.write(cmd2, ans2);
                 }
                 {
-                    //last waypoint ha minimum linear speed = 0
+                    //last waypoint has minimum linear speed = 0
                     Bottle cmd3, ans3;
                     cmd3.addString("set");
                     cmd3.addString("min_lin_speed");
