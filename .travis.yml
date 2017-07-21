@@ -36,7 +36,7 @@ before_script:
   - git checkout devel
   - mkdir build
   - cd build
-  - cmake ../ -DCREATE_LIB_MATH:BOOL=ON -DCREATE_OPTIONAL_CARRIERS:BOOL=ON
+  - cmake ../ -DCREATE_LIB_MATH:BOOL=ON
   - make
   - sudo make install
   - cd ../..
