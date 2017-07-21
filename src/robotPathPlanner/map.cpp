@@ -157,7 +157,7 @@ void drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvSc
 {
     if (map == 0) return;
     cvCircle(map, cvPoint(current.x, current.y), 3, color);
-    if (isnan(angle)==false)
+    if (std::isnan(angle)==false)
     {
         int orient_x = current.x + 6 * cos(-angle);
         int orient_y = current.y + 6 * sin(-angle);
