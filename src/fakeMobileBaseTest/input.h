@@ -31,6 +31,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IJoypadController.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
@@ -44,6 +45,32 @@ using namespace yarp::dev;
 
 class Input
 {
+public:
+    struct InputDescription
+    {
+        enum InputType{BUTTON, AXIS, HAT};
+
+        InputType    type;
+        unsigned int Id;
+        float        Factor;
+        InputDescription() = default;
+        InputDescription(unsigned int id, float factor) : Id(id), Factor(factor){}
+    };
+
+    struct JoyDescription
+    {
+        InputDescription xAxis;
+        InputDescription yAxis;
+        InputDescription tAxis;
+        InputDescription gain;
+        JoyDescription() = default;
+        JoyDescription(InputDescription x, InputDescription y, InputDescription t, InputDescription g) :
+            xAxis(x),
+            yAxis(y),
+            tAxis(t),
+            gain(g)
+        {}
+    }jDescr;
 private:
     Property ctrl_options;
 
@@ -52,18 +79,18 @@ private:
     int                 command_received;
     int                 rosInput_received;
     int                 auxiliary_received;
-    int                 joystick_received;
+    int                 joystick_received[2];
 
     int                 mov_timeout_counter;
     int                 aux_timeout_counter;
-    int                 joy_timeout_counter;
+    int                 joy_timeout_counter[2];
     int                 ros_timeout_counter;
 
     //movement control variables (input from external)
-    double              joy_linear_speed;
-    double              joy_angular_speed;
-    double              joy_desired_direction;
-    double              joy_pwm_gain;
+    double              joy_linear_speed[2];
+    double              joy_angular_speed[2];
+    double              joy_desired_direction[2];
+    double              joy_pwm_gain[2];
 
     double              cmd_linear_speed;
     double              cmd_angular_speed;
@@ -86,13 +113,17 @@ private:
 protected:
     BufferedPort<Bottle>              port_movement_control;
     BufferedPort<Bottle>              port_auxiliary_control;
-    BufferedPort<Bottle>              port_joystick_control;
+    BufferedPort<Bottle>*             port_joystick_control[2];
     string                            localName;
+    PolyDriver                        joyPolyDriver[2];
+    IJoypadController*                iJoy[2];
 
 public:
 
     Input();
     ~Input();
+
+    bool   configureJoypdad(int n, const Bottle& joypad_group);
 
     bool   open(ResourceFinder &_rf, Property &_options);
     void   close();
@@ -107,6 +138,7 @@ private:
     void   read_percent_cart(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_polar(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_joystick_data (IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
 };
 
 #endif

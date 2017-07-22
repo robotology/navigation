@@ -190,7 +190,7 @@ public:
             do
             {
                 yarp::os::Time::delay(1.0);
-                if (yarp::os::Network::connect("/joystickCtrl:o","/baseControl/joystick:i"))
+                if (yarp::os::Network::connect("/joystickCtrl:o","/baseControl/joystick1:i"))
                     {
                         yInfo("Joystick has been automatically connected");
                         break;
