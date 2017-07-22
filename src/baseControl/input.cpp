@@ -170,6 +170,7 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
             return false;
         }
     }
+    return true;
 }
 
 bool Input::open(ResourceFinder &_rf, Property &_options)
