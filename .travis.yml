@@ -45,7 +45,7 @@ before_script:
   - git checkout devel
   - mkdir build
   - cd build
-  - cmake ../
+  - cmake ../ -DICUBMAIN_COMPILE_CORE:BOOL=OFF -DICUBMAIN_COMPILE_TOOLS:BOOL=OFF -DICUBMAIN_COMPILE_SIMULATORS:BOOL=OFF -DICUBMAIN_COMPILE_MODULES:BOOL=OFF
   - make
   - sudo make install
   - cd ../..
