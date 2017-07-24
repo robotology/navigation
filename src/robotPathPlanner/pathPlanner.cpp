@@ -233,6 +233,7 @@ void PlannerThread::draw_map()
         case navigation_status_moving:
         case navigation_status_waiting_obstacle:
         case navigation_status_aborted:
+        case navigation_status_failing:
         case navigation_status_paused:
         case navigation_status_thinking:
             drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, red_color);
@@ -275,7 +276,8 @@ void PlannerThread::draw_map()
     if (m_planner_status != navigation_status_idle &&
         m_planner_status != navigation_status_goal_reached &&
         m_planner_status != navigation_status_aborted &&
-        m_planner_status != navigation_status_error)
+        m_planner_status != navigation_status_error &&
+        m_planner_status != navigation_status_failing)
     {
 #ifdef DRAW_BOTH_PATHS
         drawPath(map_with_path, start, computed_path, color);
@@ -392,6 +394,12 @@ void PlannerThread::run()
         {
             //do nothing, just wait
         }
+        else if (m_inner_status == navigation_status_failing)
+        {
+            //try to avoid obstacles
+            yError ("unable to reach next waypoint, trying new solution");
+            //TODO ...
+        }
         else if (m_inner_status == navigation_status_aborted)
         {
             //terminate navigation
@@ -474,6 +482,11 @@ void PlannerThread::run()
     else if (m_planner_status == navigation_status_aborted)
     {
         //do nothing, just wait
+    }
+    else if (m_planner_status == navigation_status_failing)
+    {
+        //do nothing, just wait.
+        //this status should be not reached by the high-level planner.
     }
     else if (m_planner_status == navigation_status_error)
     {

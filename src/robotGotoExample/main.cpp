@@ -56,6 +56,7 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
         iNav->getAbsoluteLocationOfCurrentTarget(goal);
         if (status == navigation_status_goal_reached) break;
         if (status == navigation_status_aborted) break;
+        if (status == navigation_status_failing) break;
 
         yInfo() << "Current navigation status:" << status;
         yInfo() << "Current position:" << pos.toString();
@@ -79,7 +80,11 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
     }
     else if (status == navigation_status_aborted)
     {
-        yInfo() << "Unable to reach goal";
+        yInfo() << "Unable to reach goal: navigation_status_aborted";
+    }
+    else if (status == navigation_status_failing)
+    {
+        yInfo() << "Unable to reach goal: navigation_status_failing";
     }
 
     iNav->stopNavigation();

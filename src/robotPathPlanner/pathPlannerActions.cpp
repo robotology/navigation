@@ -26,7 +26,8 @@ bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
 {
     if (m_planner_status != navigation_status_idle &&
         m_planner_status != navigation_status_goal_reached &&
-        m_planner_status != navigation_status_aborted)
+        m_planner_status != navigation_status_aborted &&
+        m_planner_status != navigation_status_failing)
     {
         yError ("Not in idle state, send a 'stop' first\n");
         return false;
@@ -74,7 +75,8 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     //target and localization data are formatted as follows: x, y, angle (in degrees)
     if (m_planner_status != navigation_status_idle &&
         m_planner_status != navigation_status_goal_reached &&
-        m_planner_status != navigation_status_aborted)
+        m_planner_status != navigation_status_aborted &&
+        m_planner_status != navigation_status_failing)
     {
         yError ("Not in idle state, send a 'stop' first");
         return false;

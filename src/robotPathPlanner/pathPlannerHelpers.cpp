@@ -24,13 +24,13 @@ using namespace yarp::dev;
 
 NavigationStatusEnum pathPlannerHelpers::string2status(string s)
 {
-    //enum status_type {IDLE=0, MOVING, WAITING_OBSTACLE, REACHED, ABORTED, PAUSED};
     NavigationStatusEnum status;
     if (s == "navigation_status_idle")     status = navigation_status_idle;
     else if (s == "navigation_status_moving")   status = navigation_status_moving;
     else if (s == "navigation_status_waiting_obstacle")  status = navigation_status_waiting_obstacle;
     else if (s == "navigation_status_goal_reached")  status = navigation_status_goal_reached;
     else if (s == "navigation_status_aborted")  status = navigation_status_aborted;
+    else if (s == "navigation_status_failing")  status = navigation_status_failing;
     else if (s == "navigation_status_paused")   status = navigation_status_paused;
     else if (s == "navigation_status_preparing_before_move")   status = navigation_status_preparing_before_move;
     else if (s == "navigation_status_thinking") status = navigation_status_thinking;
@@ -49,6 +49,7 @@ std::string pathPlannerHelpers::getStatusAsString(NavigationStatusEnum status)
     else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
     else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
     else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
+    else if (status == navigation_status_failing) return std::string("navigation_status_failing");
     else if (status == navigation_status_paused) return std::string("navigation_status_paused");
     else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
     else if (status == navigation_status_thinking) return std::string("navigation_status_thinking");

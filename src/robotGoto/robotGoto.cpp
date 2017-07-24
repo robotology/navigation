@@ -51,6 +51,7 @@ std::string getStatusAsString(NavigationStatusEnum status)
     else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
     else if (status == navigation_status_goal_reached)     return std::string("navigation_status_goal_reached");
     else if (status == navigation_status_aborted)          return std::string("navigation_status_aborted");
+    else if (status == navigation_status_failing)          return std::string("navigation_status_failing");
     else if (status == navigation_status_paused)           return std::string("navigation_status_paused");
     else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
     else if (status == navigation_status_thinking)         return std::string("navigation_thinking");
@@ -805,8 +806,8 @@ void GotoThread::run()
             {
                 if (fabs(current_time - m_time_of_obstacle_detection) > m_obstacle_handler->get_max_time_waiting_for_obstacle_removal())
                 {
-                    yError ("failed to recover from obstacle, goal aborted");
-                    m_status = navigation_status_aborted;
+                    yError ("Failing to recover from obstacle.");
+                    m_status = navigation_status_failing;
                 }
             }
         break;
@@ -823,6 +824,7 @@ void GotoThread::run()
         case navigation_status_idle:
         case navigation_status_thinking:
         case navigation_status_aborted:
+        case navigation_status_failing:
         case navigation_status_goal_reached:
             //do nothing
         break;
