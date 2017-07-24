@@ -51,6 +51,8 @@ PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
     m_robot_laser_t = 0;
     m_imagemap_refresh_time = 0.033;
     m_enable_draw_all_locations=true;
+    m_enable_draw_enlarged_scans=true;
+    m_enable_draw_laser_scans=true;
 }
 
 bool PlannerThread::threadInit()

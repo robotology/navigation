@@ -22,6 +22,7 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Os.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
@@ -53,28 +54,6 @@ bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, I
         return true;
     }
     return false;
-}
-
-bool enlargeScan(std::vector <MapGrid2D::XYCell>& laser_scan, unsigned int times, double max_dist)
-{   
-    //@@@ THIS FUNCTION IS STILL TO BE COMPLETED
-    std::vector <MapGrid2D::XYCell> laser_scan2;
-    if (max_dist>0)
-    {
-        for (unsigned int i=0; i<laser_scan.size(); i++)
-        {
-            int dx = (laser_scan[i].x-laser_scan[i].x);
-            int dy = (laser_scan[i].x-laser_scan[i].x);
-            if (dx*dx + dy*dy < max_dist)
-                laser_scan2.push_back(laser_scan[i]);
-        }
-    }
-
-    for (unsigned int i=0; i< times; i++)
-    {
-
-    }
-    return true;
 }
 
 bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path)
@@ -179,6 +158,48 @@ void drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, c
     if (map==0) return;
     for (unsigned int i=0; i<laser_scan.size(); i++)
     cvCircle(map, cvPoint(laser_scan[i].x, laser_scan[i].y), 0, color);
+}
+
+void drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color)
+{
+    if (map==0) return;
+    for (size_t y=0; y<laserMap.height(); y++)
+        for (size_t x=0; x<laserMap.width(); x++)
+        {
+            MapGrid2D::map_flags flag;
+            laserMap.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag);
+            if (flag==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE ||
+                flag==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
+            {
+                cvCircle(map, cvPoint(x,y), 0, color);
+            }
+        }
+
+}
+
+void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
+{
+    if (map_to_be_updated.width() != obstacles_map.width() ||
+        map_to_be_updated.height() != map_to_be_updated.height())
+    {
+        yError() << "update_obstacles_map: the two maps must have the same size!";
+        return;
+    }
+    for (size_t y=0; y<map_to_be_updated.height(); y++)
+        for (size_t x=0; x<map_to_be_updated.width(); x++)
+        {
+            MapGrid2D::map_flags flag_src;
+            MapGrid2D::map_flags flag_dst;
+            map_to_be_updated.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_dst);
+            obstacles_map.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_src);
+            if (flag_dst==MapGrid2D::MAP_CELL_FREE)
+            {
+                if      (flag_src==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
+                { flag_dst=MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE; }
+                else if (flag_src==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE)
+                { flag_dst=MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE; }
+            }
+        }
 }
 
 bool checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst)

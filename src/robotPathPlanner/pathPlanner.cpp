@@ -80,7 +80,7 @@ void PlannerThread::readTargetFromYarpView()
             c_end_world = (m_current_map.cell2World(c_end_gui));
             double angle = atan2(c_end_world.y - c_start_world.y, c_end_world.x - c_start_world.x) * 180.0 / M_PI;
             yarp::sig::Vector v = static_cast<yarp::sig::Vector>(c_start_world);
-            yInfo("selected point is located at (%6.3f, %6.3f), angle:", v[0], v[1], angle);
+            yInfo("selected point is located at (%6.3f, %6.3f), angle: %6.3f", v[0], v[1], angle);
             yarp::os::Bottle& out = m_port_yarpview_target_output.prepare();
             out.clear();
             out.addString("gotoAbs");
@@ -131,8 +131,10 @@ bool  PlannerThread::readLocalizationData()
         bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
         if (map_get_succesfull)
         {
+            m_temporary_obstacles_map = m_current_map;
             yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
             m_current_map.enlargeObstacles(m_robot_radius);
+            m_augmented_map = m_current_map;
             yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
             updateLocations();
         }
@@ -157,6 +159,8 @@ bool  PlannerThread::readLocalizationData()
 
 bool  PlannerThread::readInnerNavigationStatus()
 {
+    static double last_print_time = 0;
+
     //read the internal navigation status
     Bottle cmd1, ans1;
     cmd1.addString("get");
@@ -166,8 +170,12 @@ bool  PlannerThread::readInnerNavigationStatus()
     m_inner_status = pathPlannerHelpers::string2status(s);
     if (m_inner_status == navigation_status_error)
     {
-        yError() << "Inner status = error"; 
-        yarp::os::Time::delay(1.0);
+        if (yarp::os::Time::now() - last_print_time > 1.0)
+        {
+            yError() << "Inner status = error"; 
+            yarp::os::Time::delay(1.0);
+            last_print_time = yarp::os::Time::now();
+        }
         return false;
     }
     return true;
@@ -193,7 +201,9 @@ void  PlannerThread::readLaserData()
             double cs = cos(m_localization_data.theta * DEG2RAD);
             world.x = las_x*cs - las_y*ss + m_localization_data.x;
             world.y = las_x*ss + las_y*cs + m_localization_data.y;
-            m_laser_map_cells.push_back(m_current_map.world2Cell(world));
+        //    if (!std::isinf(world.x) &&  !std::isinf(world.y))
+            if (std::isfinite(world.x) && std::isfinite(world.y))
+               { m_laser_map_cells.push_back(m_current_map.world2Cell(world));}
         }
         m_laser_timeout_counter = 0;
     }
@@ -201,6 +211,17 @@ void  PlannerThread::readLaserData()
     {
         m_laser_timeout_counter++;
     }
+
+    //transform the laser measurment in a temporary map
+    for (size_t y=0; y< m_temporary_obstacles_map.height(); y++)
+        for (size_t x=0; x< m_temporary_obstacles_map.width(); x++)
+             m_temporary_obstacles_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
+    for (size_t i=0; i< m_laser_map_cells.size(); i++)
+    {
+        m_temporary_obstacles_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
+    }
+    //enlarge the laser scanner data
+    m_temporary_obstacles_map.enlargeObstacles(m_robot_radius);
 }
 
 void PlannerThread::draw_map()
@@ -210,7 +231,7 @@ void PlannerThread::draw_map()
     static CvScalar red_color   = cvScalar(200, 80, 80);
     static CvScalar green_color = cvScalar(80, 200, 80);
     static CvScalar blue_color  = cvScalar(0, 0, 200);
-    static CvScalar blue_color2 = cvScalar(80, 80, 200);
+    static CvScalar azure_color = cvScalar(80, 80, 200);
     MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
     MapGrid2D::XYCell final_goal = m_current_map.world2Cell(yarp::dev::MapGrid2D::XYWorld(m_final_goal.x, m_final_goal.y));
 
@@ -221,9 +242,14 @@ void PlannerThread::draw_map()
     cvCopy(map_image.getIplImage(), processed_map_with_scan);
     if (m_laser_timeout_counter<TIMEOUT_MAX)
     {
-        drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
-        //map.enlargeScan(laser_map_cell,6);
-        //map.drawLaserScan(map.processed_map_with_scan,laser_map_cell,blue_color2);
+        if (m_enable_draw_enlarged_scans)
+        {
+            drawLaserMap(processed_map_with_scan, m_temporary_obstacles_map, azure_color);
+        }
+        if (m_enable_draw_laser_scans)
+        {
+            drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
+        }
     }
 
     //draw goal
@@ -255,7 +281,7 @@ void PlannerThread::draw_map()
         }
     }
 
-    drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, blue_color2);
+    drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
 #define DRAW_INFO
 #ifdef DRAW_INFO
     MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
@@ -301,9 +327,12 @@ void PlannerThread::draw_map()
 void PlannerThread::run()
 {
     m_mutex.wait();
+    //double check1 = yarp::os::Time::now();
     readTargetFromYarpView();
     readLocalizationData();
     readLaserData();
+    //double check2 = yarp::os::Time::now();
+    //yDebug() << check2-check1;
     if (readInnerNavigationStatus() == false)
     {
         m_planner_status = navigation_status_error;
@@ -398,7 +427,12 @@ void PlannerThread::run()
         {
             //try to avoid obstacles
             yError ("unable to reach next waypoint, trying new solution");
-            //TODO ...
+
+            Bottle cmd, ans;
+            cmd.addString("stop");
+            m_port_commands_output.write(cmd, ans);
+            update_obstacles_map(m_current_map, m_augmented_map);
+            sendWaypoint();
         }
         else if (m_inner_status == navigation_status_aborted)
         {
@@ -513,9 +547,13 @@ void PlannerThread::run()
     }
     
     static double last_drawn = yarp::os::Time::now();
-    if (yarp::os::Time::now() - last_drawn > m_imagemap_refresh_time)
+    double elapsed_time = yarp::os::Time::now() - last_drawn;
+    if ( elapsed_time > m_imagemap_refresh_time)
     {
+        //double check3 = yarp::os::Time::now();
         draw_map();
+        //double check4 = yarp::os::Time::now();
+        //yDebug() << check4-check3;
         last_drawn = yarp::os::Time::now();
     }
     

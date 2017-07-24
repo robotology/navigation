@@ -82,8 +82,10 @@ class PlannerThread: public yarp::os::RateThread
     double    m_robot_laser_x;       //m
     double    m_robot_laser_y;       //m
     double    m_robot_laser_t;       //deg
-    //map_class map;
+
     yarp::dev::MapGrid2D m_current_map;
+    yarp::dev::MapGrid2D m_temporary_obstacles_map;
+    yarp::dev::MapGrid2D m_augmented_map;
     bool      m_use_optimized_path;
     double    m_min_laser_angle;
     double    m_max_laser_angle;
@@ -130,6 +132,9 @@ class PlannerThread: public yarp::os::RateThread
     //drawing flags
     public:
     bool                m_enable_draw_all_locations;
+    bool                m_enable_draw_laser_scans;
+    bool                m_enable_draw_enlarged_scans;
+
 
     public:
     virtual void run();

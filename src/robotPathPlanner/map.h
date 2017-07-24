@@ -54,6 +54,7 @@ void drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCe
 void drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
 void drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
 void drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color);
+void drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color);
 bool sendToPort(BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send);
 
 //return true if the straight line that connects src with dst does not contain any obstacles
@@ -64,4 +65,8 @@ bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input
 
 //compute the path
 bool findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path);
+
+// register obstacles in the map
+void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map);
+
 #endif

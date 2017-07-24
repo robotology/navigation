@@ -201,6 +201,19 @@ public:
                 yDebug() << "locations drawing disabled";
             }
         }
+        else if (command.get(0).isString() && command.get(0).asString() == "draw_enlarged_scans")
+        {
+            if (command.get(1).asInt() == 1) 
+            {
+                plannerThread->m_enable_draw_enlarged_scans = true;
+                yDebug() << "enlarged scans drawing enabled";
+            }
+            else
+            {
+                plannerThread->m_enable_draw_enlarged_scans = false;
+                yDebug() << "enlarged scans drawing disabled";
+            }
+        }
         else
         {
             reply.addString("Unknown command.");
