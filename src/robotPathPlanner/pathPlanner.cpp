@@ -425,14 +425,26 @@ void PlannerThread::run()
         }
         else if (m_inner_status == navigation_status_failing)
         {
-            //try to avoid obstacles
-            yError ("unable to reach next waypoint, trying new solution");
+            if (m_enable_try_recovery)
+            {
+                //try to avoid obstacles
+                yError ("unable to reach next waypoint, trying new solution");
 
-            Bottle cmd, ans;
-            cmd.addString("stop");
-            m_port_commands_output.write(cmd, ans);
-            update_obstacles_map(m_current_map, m_augmented_map);
-            sendWaypoint();
+                Bottle cmd, ans;
+                cmd.addString("stop");
+                m_port_commands_output.write(cmd, ans);
+                update_obstacles_map(m_current_map, m_augmented_map);
+                sendWaypoint();
+            }
+            else
+            {
+                //terminate navigation
+                Bottle cmd, ans;
+                cmd.addString("stop");
+                m_port_commands_output.write(cmd, ans);
+                m_planner_status = navigation_status_aborted;
+                yError ("unable to reach next waypoint, aborting navigation");
+            }
         }
         else if (m_inner_status == navigation_status_aborted)
         {

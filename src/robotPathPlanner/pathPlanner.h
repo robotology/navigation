@@ -93,6 +93,7 @@ class PlannerThread: public yarp::os::RateThread
     string    m_frame_robot_id;
     string    m_frame_map_id;
     double    m_imagemap_refresh_time;
+    bool      m_enable_try_recovery;
 
     //ports
     PolyDriver                                             m_ptf;

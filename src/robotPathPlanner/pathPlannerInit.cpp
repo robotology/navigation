@@ -53,6 +53,7 @@ PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
     m_enable_draw_all_locations=true;
     m_enable_draw_enlarged_scans=true;
     m_enable_draw_laser_scans=true;
+    m_enable_try_recovery=false;
 }
 
 bool PlannerThread::threadInit()
@@ -75,6 +76,7 @@ bool PlannerThread::threadInit()
     if (navigation_group.check("min_lin_speed"))          { m_min_lin_speed = navigation_group.find("min_lin_speed").asDouble(); } else {yError() << "Missing min_lin_speed parameter" ;return false;}
     if (navigation_group.check("min_ang_speed"))          { m_min_ang_speed = navigation_group.find("min_ang_speed").asDouble(); } else {yError() << "Missing min_ang_speed parameter" ;return false;}
     if (navigation_group.check("min_waypoint_distance"))  { m_min_waypoint_distance = navigation_group.find("min_waypoint_distance").asInt(); } else {yError() << "Missing min_waypoint_distance parameter" ;return false;}
+    if (navigation_group.check("enable_try_recovery"))    { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt()==1); } else {yError() << "Missing enable_try_recovery parameter" ;return false;}
 
     Bottle general_group = m_rf.findGroup("GENERAL");
     if (general_group.isNull())
