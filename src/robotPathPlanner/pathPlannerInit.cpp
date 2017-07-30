@@ -34,10 +34,14 @@ PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
     m_goal_tolerance_ang = 0.6;
     m_waypoint_tolerance_lin = 0.05;
     m_waypoint_tolerance_ang = 0.6;
-    m_max_lin_speed = 0.9;
-    m_max_ang_speed = 10.0;
-    m_min_lin_speed = 0.0;
-    m_min_ang_speed = 0.0;
+    m_goal_max_lin_speed = 0.9;
+    m_goal_max_ang_speed = 10.0;
+    m_goal_min_lin_speed = 0.0;
+    m_goal_min_ang_speed = 0.0;
+    m_waypoint_max_lin_speed = 0.9;
+    m_waypoint_max_ang_speed = 10.0;
+    m_waypoint_min_lin_speed = 0.0;
+    m_waypoint_min_ang_speed = 0.0;
     m_use_optimized_path = true;
     m_current_path = &m_computed_simplified_path;
     m_min_waypoint_distance = 0;
@@ -71,10 +75,14 @@ bool PlannerThread::threadInit()
     if (navigation_group.check("goal_tolerance_lin"))     { m_goal_tolerance_lin = navigation_group.find("goal_tolerance_lin").asDouble(); } else {yError() << "Missing goal_tolerance_lin parameter" ;return false;}
     if (navigation_group.check("goal_tolerance_ang"))     { m_goal_tolerance_ang = navigation_group.find("goal_tolerance_ang").asDouble(); } else {yError() << "Missing goal_tolerance_ang parameter" ;return false;}
     if (navigation_group.check("use_optimized_path"))     { int p = navigation_group.find("use_optimized_path").asInt(); m_use_optimized_path = (p == 1); } else {yError() << "Missing use_optimized_path parameter" ;return false;}
-    if (navigation_group.check("max_lin_speed"))          { m_max_lin_speed = navigation_group.find("max_lin_speed").asDouble(); } else {yError() << "Missing max_lin_speed parameter" ;return false;}
-    if (navigation_group.check("max_ang_speed"))          { m_max_ang_speed = navigation_group.find("max_ang_speed").asDouble(); } else {yError() << "Missing max_ang_speed parameter" ;return false;}
-    if (navigation_group.check("min_lin_speed"))          { m_min_lin_speed = navigation_group.find("min_lin_speed").asDouble(); } else {yError() << "Missing min_lin_speed parameter" ;return false;}
-    if (navigation_group.check("min_ang_speed"))          { m_min_ang_speed = navigation_group.find("min_ang_speed").asDouble(); } else {yError() << "Missing min_ang_speed parameter" ;return false;}
+    if (navigation_group.check("waypoint_max_lin_speed")) { m_waypoint_max_lin_speed = navigation_group.find("waypoint_max_lin_speed").asDouble(); } else {yError() << "Missing waypoint_max_lin_speed parameter" ;return false;}
+    if (navigation_group.check("waypoint_max_ang_speed")) { m_waypoint_max_ang_speed = navigation_group.find("waypoint_max_ang_speed").asDouble(); } else {yError() << "Missing waypoint_max_ang_speed parameter" ;return false;}
+    if (navigation_group.check("waypoint_min_lin_speed")) { m_waypoint_min_lin_speed = navigation_group.find("waypoint_min_lin_speed").asDouble(); } else {yError() << "Missing waypoint_min_lin_speed parameter" ;return false;}
+    if (navigation_group.check("waypoint_min_ang_speed")) { m_waypoint_min_ang_speed = navigation_group.find("waypoint_min_ang_speed").asDouble(); } else {yError() << "Missing waypoint_min_ang_speed parameter" ;return false;}
+    if (navigation_group.check("goal_max_lin_speed"))     { m_goal_max_lin_speed = navigation_group.find("goal_max_lin_speed").asDouble(); } else {yError() << "Missing goal_max_lin_speed parameter" ;return false;}
+    if (navigation_group.check("goal_max_ang_speed"))     { m_goal_max_ang_speed = navigation_group.find("goal_max_ang_speed").asDouble(); } else {yError() << "Missing goal_max_ang_speed parameter" ;return false;}
+    if (navigation_group.check("goal_min_lin_speed"))     { m_goal_min_lin_speed = navigation_group.find("goal_min_lin_speed").asDouble(); } else {yError() << "Missing goal_min_lin_speed parameter" ;return false;}
+    if (navigation_group.check("goal_min_ang_speed"))     { m_goal_min_ang_speed = navigation_group.find("goal_min_ang_speed").asDouble(); } else {yError() << "Missing goal_min_ang_speed parameter" ;return false;}
     if (navigation_group.check("min_waypoint_distance"))  { m_min_waypoint_distance = navigation_group.find("min_waypoint_distance").asInt(); } else {yError() << "Missing min_waypoint_distance parameter" ;return false;}
     if (navigation_group.check("enable_try_recovery"))    { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt()==1); } else {yError() << "Missing enable_try_recovery parameter" ;return false;}
 

@@ -66,10 +66,14 @@ class PlannerThread: public yarp::os::RateThread
     double m_goal_tolerance_ang;       //deg
     double m_waypoint_tolerance_lin;   //m 
     double m_waypoint_tolerance_ang;   //deg
-    double m_max_lin_speed;            //m/s
-    double m_min_lin_speed;            //m/s
-    double m_max_ang_speed;            //deg/s
-    double m_min_ang_speed;            //deg/s
+    double m_goal_max_lin_speed;       //m/s
+    double m_goal_min_lin_speed;       //m/s
+    double m_goal_max_ang_speed;       //deg/s
+    double m_goal_min_ang_speed;       //deg/s
+    double m_waypoint_max_lin_speed;   //m/s
+    double m_waypoint_min_lin_speed;   //m/s
+    double m_waypoint_max_ang_speed;   //deg/s
+    double m_waypoint_min_ang_speed;   //deg/s
     int    m_min_waypoint_distance;    //cells
 
     //semaphore

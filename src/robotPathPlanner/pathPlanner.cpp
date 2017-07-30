@@ -378,12 +378,32 @@ void PlannerThread::run()
                     m_port_commands_output.write(cmd2, ans2);
                 }
                 {
-                    //last waypoint has minimum linear speed = 0
                     Bottle cmd3, ans3;
                     cmd3.addString("set");
                     cmd3.addString("min_lin_speed");
-                    cmd3.addDouble(0.0);
+                    cmd3.addDouble(m_goal_min_lin_speed);
                     m_port_commands_output.write(cmd3, ans3);
+                }
+                {
+                    Bottle cmd4, ans4;
+                    cmd4.addString("set");
+                    cmd4.addString("max_lin_speed");
+                    cmd4.addDouble(m_goal_max_lin_speed);
+                    m_port_commands_output.write(cmd4, ans4);
+                }
+                {
+                    Bottle cmd5, ans5;
+                    cmd5.addString("set");
+                    cmd5.addString("min_ang_speed");
+                    cmd5.addDouble(m_goal_min_ang_speed);
+                    m_port_commands_output.write(cmd5, ans5);
+                }
+                {
+                    Bottle cmd6, ans6;
+                    cmd6.addString("set");
+                    cmd6.addString("max_ang_speed");
+                    cmd6.addDouble(m_goal_max_ang_speed);
+                    m_port_commands_output.write(cmd6, ans6);
                 }
                 sendWaypoint();
             }
@@ -394,18 +414,31 @@ void PlannerThread::run()
                 //send the next waypoint
                 yInfo("sending the next waypoint");
                 {
-                    //here I send min_lin_speed = max_lin_speed to have constant velocity
                     Bottle cmd, ans;
                     cmd.addString("set"); 
                     cmd.addString("min_lin_speed");
-                    cmd.addDouble(m_max_lin_speed);
+                    cmd.addDouble(m_waypoint_min_lin_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set"); 
                     cmd.addString("max_lin_speed");
-                    cmd.addDouble(m_max_lin_speed);
+                    cmd.addDouble(m_waypoint_max_lin_speed);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set"); 
+                    cmd.addString("min_ang_speed");
+                    cmd.addDouble(m_waypoint_min_ang_speed);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set"); 
+                    cmd.addString("max_ang_speed");
+                    cmd.addDouble(m_waypoint_max_ang_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 sendWaypoint();
@@ -481,29 +514,28 @@ void PlannerThread::run()
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("max_lin_speed");
-                cmd.addDouble(m_max_lin_speed);
+                cmd.addDouble(m_waypoint_max_lin_speed);
                 m_port_commands_output.write(cmd, ans);
             }
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("max_ang_speed");
-                cmd.addDouble(m_max_ang_speed);
+                cmd.addDouble(m_waypoint_max_ang_speed);
                 m_port_commands_output.write(cmd, ans);
             }
             {
-                //here I send min_lin_speed = max_lin_speed to have constant velocity
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("min_lin_speed");
-                cmd.addDouble(m_max_lin_speed);
+                cmd.addDouble(m_waypoint_min_lin_speed);
                 m_port_commands_output.write(cmd, ans);
             }
             {
                 Bottle cmd, ans;
                 cmd.addString("set"); 
                 cmd.addString("min_ang_speed");
-                cmd.addDouble(m_min_ang_speed);
+                cmd.addDouble(m_waypoint_min_ang_speed);
                 m_port_commands_output.write(cmd, ans);
             }
             sendWaypoint();
