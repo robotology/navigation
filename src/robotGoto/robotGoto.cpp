@@ -607,13 +607,13 @@ void GotoThread::saturateRobotControls()
     if (m_max_lin_speed < 0){ yError() << "Invalid m_max_lin_speed value"; m_max_lin_speed = fabs(m_max_lin_speed); }
 
     //control saturation.
-    //Beware! this test should not inclue the case ==0 to prevent the saturator to ovveride the "do not move" command.
+    //Beware! this test should not inclue the case ==0 to prevent the saturator to override the "do not move" command.
     if      (m_control_out.angular_vel>0)
         m_control_out.angular_vel = std::max(m_min_ang_speed, std::min(m_control_out.angular_vel, m_max_ang_speed));
     else if (m_control_out.angular_vel<0)
         m_control_out.angular_vel = std::max(-m_max_ang_speed, std::min(m_control_out.angular_vel, -m_min_ang_speed));
 
-    //Beware! this test should not inclue the case ==0 to prevent the saturator to ovveride the "do not move" command.
+    //Beware! this test should not inclue the case ==0 to prevent the saturator to override the "do not move" command.
     if      (m_control_out.linear_vel>0)
         m_control_out.linear_vel = std::max(m_min_lin_speed, std::min(m_control_out.linear_vel, m_max_lin_speed));
     else if (m_control_out.linear_vel<0)
@@ -744,7 +744,7 @@ void GotoThread::run()
                     if (m_robot_is_holonomic)
                     {
                         //===========================
-                        m_control_out.linear_vel = m_gain_ang * distance;
+                        m_control_out.linear_vel = m_gain_lin * distance;
                         m_control_out.linear_dir = beta_robot;
                         m_control_out.angular_vel = m_gain_ang * beta_robot;
                         //===========================
@@ -752,11 +752,12 @@ void GotoThread::run()
                     else
                     {
                         //===========================
-                        m_control_out.linear_vel = m_gain_ang * distance;
+                        m_control_out.linear_vel = m_gain_lin * distance;
                         m_control_out.linear_dir = 0.0;
                         m_control_out.angular_vel = m_gain_ang * beta_robot;
                         //===========================
                     }
+                    //yDebug() << m_control_out.linear_vel;
                 }
                 //do not move forward, just rotate unless you are almost facing the goal
                 else
