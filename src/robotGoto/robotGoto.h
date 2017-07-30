@@ -99,6 +99,8 @@ public:
     double m_max_ang_speed;       //deg/s
     double m_min_lin_speed;       //m/s
     double m_min_ang_speed;       //deg/s
+    double m_approach_direction;
+    double m_approach_speed;
     double m_default_beta_angle_threshold;
     double m_default_gain_lin;
     double m_default_gain_ang;
@@ -108,6 +110,8 @@ public:
     double m_default_max_ang_speed;       //deg/s
     double m_default_min_lin_speed;       //m/s
     double m_default_min_ang_speed;       //deg/s
+    double m_default_approach_direction;
+    double m_default_approach_speed;
 
     int    m_loc_timeout_counter;
     int    m_las_timeout_counter;
@@ -151,6 +155,7 @@ protected:
     }
     m_control_out;
     NavigationStatusEnum m_status;
+    NavigationStatusEnum m_status_after_approach;
     int                  m_retreat_counter;
     bool                 m_useGoalFromRosTopic;
     bool                 m_publishRosStuff;
@@ -180,6 +185,7 @@ public:
     string        getMapId();
     void          setNewAbsTarget(yarp::sig::Vector target);
     void          setNewRelTarget(yarp::sig::Vector target);
+    void          approachTarget(double dir, double speed, double time);
     void          resetParamsToDefaultValue();
     void          stopMovement();
     void          pauseMovement (double secs);

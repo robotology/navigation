@@ -119,6 +119,15 @@ public:
             reply.addString("params reset done");
         }
 
+        else if (command.get(0).isString() && command.get(0).asString() == "approach")
+        {
+            double dir    = command.get(1).asDouble();
+            double speed  = command.get(2).asDouble();
+            double time   = command.get(3).asDouble();
+            gotoThread->approachTarget(dir,speed,time);
+            reply.addString("approach command received");
+        }
+
         else if (command.get(0).isString() && command.get(0).asString() == "gotoAbs")
         {
             yarp::sig::Vector v;
@@ -330,6 +339,7 @@ public:
             reply.addString("Available commands are:");
             reply.addString("gotoAbs <x> <y> <angle in degrees>");
             reply.addString("gotoRel <x> <y> <angle in degrees>");
+            reply.addString("approach <angle in degrees> <linear velocity> <time>");
             reply.addString("stop");
             reply.addString("pause");
             reply.addString("resume");

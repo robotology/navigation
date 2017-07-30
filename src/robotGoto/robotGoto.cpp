@@ -203,6 +203,8 @@ bool GotoThread::threadInit()
     m_default_max_ang_speed         = m_min_ang_speed = 0.0; //deg/s
     m_default_goal_tolerance_lin    = m_goal_tolerance_lin = 0.05;
     m_default_goal_tolerance_ang    = m_goal_tolerance_ang = 0.6;
+    m_default_approach_direction    = 180;
+    m_default_approach_speed        = 0.2; //ms/s
 
     m_useGoalFromRosTopic        = false;
     m_publishRosStuff            = false;
@@ -685,14 +687,14 @@ void GotoThread::run()
         case navigation_status_preparing_before_move:
             if (m_retreat_counter > 0)
             {
-                m_control_out.linear_dir = 180;
-                m_control_out.linear_vel = 0.4;
+                m_control_out.linear_dir = m_approach_direction;
+                m_control_out.linear_vel = m_approach_speed;
                 m_control_out.angular_vel = 0;
                 m_retreat_counter--;
             }
             else
             {
-                m_status = navigation_status_moving;
+                m_status = m_status_after_approach;
             }
         break;
 
@@ -922,10 +924,13 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
     }
     m_target_data.target = Map2DLocation("", target[0], target[1], target[2]);
     m_status = navigation_status_preparing_before_move;
+    m_status_after_approach = navigation_status_moving;
     if (m_enable_retreat)
     {
         m_retreat_counter = m_retreat_duration;
-    }
+        m_approach_direction = m_default_approach_direction;
+        m_approach_speed     = m_default_approach_speed;
+    } 
     else
     {
         m_retreat_counter = 0;
@@ -957,6 +962,8 @@ void GotoThread::resetParamsToDefaultValue()
     m_max_ang_speed      = m_default_max_ang_speed;
     m_min_lin_speed      = m_default_min_lin_speed;
     m_min_ang_speed      = m_default_min_ang_speed;
+    m_approach_direction = m_default_approach_direction;
+    m_approach_speed     = m_approach_speed;
 }
 
 void GotoThread::setNewRelTarget(yarp::sig::Vector target)
@@ -974,9 +981,12 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
     m_target_data.target.y     = +target[0] * sin(a) + target[1] * cos(a) + m_localization_data.y;
     m_target_data.target.theta = target[2] + m_localization_data.theta;
     m_status = navigation_status_preparing_before_move;
+    m_status_after_approach = navigation_status_moving;
     if (m_enable_retreat)
     { 
         m_retreat_counter = m_retreat_duration;
+        m_approach_direction = m_default_approach_direction;
+        m_approach_speed     = m_default_approach_speed;
     }
     else
     {
@@ -984,6 +994,15 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
     }
     yInfo("received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
     sendCurrentGoal();
+}
+
+void GotoThread::approachTarget(double dir, double speed, double time)
+{
+    m_approach_direction= dir;
+    m_approach_speed    = speed;
+    m_retreat_counter   = time;
+    m_status            = navigation_status_preparing_before_move;
+    m_status_after_approach = navigation_status_idle;
 }
 
 void GotoThread::pauseMovement(double secs)
