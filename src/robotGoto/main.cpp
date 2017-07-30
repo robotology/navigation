@@ -179,6 +179,16 @@ public:
                 gotoThread->m_min_ang_speed = command.get(2).asDouble();
                 reply.addString("min_ang_speed set.");
             }
+            else if (command.get(1).asString() == "ang_speed_gain")
+            {
+                gotoThread->m_gain_ang = command.get(2).asDouble();
+                reply.addString("ang_speed_gain set.");
+            }
+            else if (command.get(1).asString() == "lin_speed_gain")
+            {
+                gotoThread->m_gain_lin = command.get(2).asDouble();
+                reply.addString("lin_speed_gain set.");
+            }
             else if (command.get(1).asString() == "obstacle_avoidance")
             {
                 if (gotoThread->m_enable_obstacles_avoidance)
