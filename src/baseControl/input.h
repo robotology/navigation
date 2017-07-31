@@ -73,7 +73,8 @@ public:
             tAxis(t),
             gain(g)
         {}
-    }jDescr;
+    };
+
 private:
     Property ctrl_options;
 
@@ -85,6 +86,7 @@ private:
     int                 rosInput_received;
     int                 auxiliary_received;
     int                 joystick_received[2];
+    JoyDescription      jDescr[2];
 
     int                 mov_timeout_counter;
     int                 aux_timeout_counter;
@@ -146,7 +148,7 @@ public:
     void   read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    void   read_joystick_data (IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
+    void   read_joystick_data (JoyDescription *jDescr,IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     //double get_max_linear_vel()   {return max_linear_vel;}
     //double get_max_angular_vel()  {return max_angular_vel;}
 

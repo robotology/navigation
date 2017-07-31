@@ -66,7 +66,6 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
 {
     if (joypad_group.check("JoypadDevice"))
     {
-        Input::JoyDescription joydesc;
         Value joydevicename = joypad_group.find("JoypadDevice");
         if (!joydevicename.isString())
         {
@@ -88,10 +87,10 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
 
         typedef Input::InputDescription::InputType inputType;
         vector<tuple<string, unsigned int*, inputType*, float*> > paramlist;
-        paramlist.push_back(make_tuple("x",    &joydesc.xAxis.Id, &joydesc.xAxis.type, &joydesc.xAxis.Factor));
-        paramlist.push_back(make_tuple("y",    &joydesc.yAxis.Id, &joydesc.yAxis.type, &joydesc.yAxis.Factor));
-        paramlist.push_back(make_tuple("t",    &joydesc.tAxis.Id, &joydesc.tAxis.type, &joydesc.tAxis.Factor));
-        paramlist.push_back(make_tuple("gain", &joydesc.gain.Id,  &joydesc.gain.type,  &joydesc.gain.Factor));
+        paramlist.push_back(make_tuple("x",    &jDescr[n].xAxis.Id, &jDescr[n].xAxis.type, &jDescr[n].xAxis.Factor));
+        paramlist.push_back(make_tuple("y",    &jDescr[n].yAxis.Id, &jDescr[n].yAxis.type, &jDescr[n].yAxis.Factor));
+        paramlist.push_back(make_tuple("t",    &jDescr[n].tAxis.Id, &jDescr[n].tAxis.type, &jDescr[n].tAxis.Factor));
+        paramlist.push_back(make_tuple("gain", &jDescr[n].gain.Id,  &jDescr[n].gain.type,  &jDescr[n].gain.Factor));
 
         for(auto p : paramlist)
         {
@@ -402,30 +401,30 @@ void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, d
      pwm_gain = b->get(4).asDouble();
 }
 
-void Input::read_joystick_data(IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
+void Input::read_joystick_data(JoyDescription *jDescr, IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
     //received a joystick command.
     double x_speed;
     double y_speed;
-    iJoy->getAxis(jDescr.xAxis.Id, x_speed);
-    iJoy->getAxis(jDescr.yAxis.Id, y_speed);
-    iJoy->getAxis(jDescr.tAxis.Id, ang_spd);
+    iJoy->getAxis(jDescr->xAxis.Id, x_speed);
+    iJoy->getAxis(jDescr->yAxis.Id, y_speed);
+    iJoy->getAxis(jDescr->tAxis.Id, ang_spd);
 
-    if(jDescr.gain.type == InputDescription::AXIS)
+    if(jDescr->gain.type == InputDescription::AXIS)
     {
-        iJoy->getAxis(jDescr.gain.Id, pwm_gain);
+        iJoy->getAxis(jDescr->gain.Id, pwm_gain);
     }
     else
     {
         float r;
-        iJoy->getButton(jDescr.gain.Id, r);
+        iJoy->getButton(jDescr->gain.Id, r);
         pwm_gain = r;
     }
 
-    x_speed       *= jDescr.xAxis.Factor;
-    y_speed       *= jDescr.yAxis.Factor;
-    ang_spd       *= jDescr.tAxis.Factor;
-    pwm_gain      *= jDescr.gain.Factor;
+    x_speed       *= jDescr->xAxis.Factor;
+    y_speed       *= jDescr->yAxis.Factor;
+    ang_spd       *= jDescr->tAxis.Factor;
+    pwm_gain      *= jDescr->gain.Factor;
 
     des_dir  = atan2(y_speed, x_speed) * 180.0 / M_PI;
     lin_spd  = sqrt (x_speed*x_speed+y_speed*y_speed);
@@ -510,7 +509,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         //- - -read joystick2 - - -
         if(iJoy[id])
         {
-            read_joystick_data(iJoy[id],joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
+            read_joystick_data(&jDescr[id], iJoy[id],joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
             joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
             joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
             joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
