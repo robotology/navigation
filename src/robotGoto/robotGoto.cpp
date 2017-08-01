@@ -69,11 +69,12 @@ GotoThread::GotoThread(unsigned int _period, ResourceFinder &_rf, Property optio
     m_obstacle_handler = 0;
     m_loc_timeout_counter = TIMEOUT_MAX;
     m_las_timeout_counter = TIMEOUT_MAX;
-    m_retreat_counter = 0;
+    m_retreat_starting_time = 0;
+    m_retreat_duration_time = 0;
     m_enable_obstacles_emergency_stop = false;
     m_enable_obstacles_avoidance = false;
     m_enable_retreat = false;
-    m_retreat_duration = 300;
+    m_retreat_duration_default = 0.3;
     m_control_out.zero();
     m_pause_start = 0;
     m_pause_duration = 0;
@@ -290,7 +291,7 @@ bool GotoThread::threadInit()
     if (btmp.check("enable_retreat", Value(0)).asInt() == 1)
         m_enable_retreat = true;
 
-    m_retreat_duration = btmp.check("retreat_duration", Value(300)).asInt();
+    m_retreat_duration_default = btmp.check("retreat_duration", Value(0.3)).asDouble();
 
     //open module ports
     string localName = "/robotGoto";
@@ -685,12 +686,11 @@ void GotoThread::run()
     switch (m_status)
     {
         case navigation_status_preparing_before_move:
-            if (m_retreat_counter > 0)
+            if (yarp::os::Time::now()-m_retreat_starting_time < m_retreat_duration_time)
             {
                 m_control_out.linear_dir = m_approach_direction;
                 m_control_out.linear_vel = m_approach_speed;
                 m_control_out.angular_vel = 0;
-                m_retreat_counter--;
             }
             else
             {
@@ -842,6 +842,10 @@ void GotoThread::run()
     {
         saturateRobotControls();
     }
+    else if (m_status == navigation_status_preparing_before_move)
+    {
+        //do nothing
+    }
     else
     {
         if (m_control_out.linear_dir != 0.0 || m_control_out.linear_vel != 0.0 || m_control_out.angular_vel != 0.0)
@@ -928,13 +932,14 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
     m_status_after_approach = navigation_status_moving;
     if (m_enable_retreat)
     {
-        m_retreat_counter = m_retreat_duration;
-        m_approach_direction = m_default_approach_direction;
-        m_approach_speed     = m_default_approach_speed;
+        m_retreat_duration_time    = m_retreat_duration_default;
+        m_retreat_starting_time    = yarp::os::Time::now();
+        m_approach_direction       = m_default_approach_direction;
+        m_approach_speed           = m_default_approach_speed;
     } 
     else
     {
-        m_retreat_counter = 0;
+        m_retreat_duration_time = 0;
     }
 
     yDebug("current pos: abs(%.3f %.3f %.2f)", m_localization_data.x, m_localization_data.y, m_localization_data.theta);
@@ -985,13 +990,13 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
     m_status_after_approach = navigation_status_moving;
     if (m_enable_retreat)
     { 
-        m_retreat_counter = m_retreat_duration;
-        m_approach_direction = m_default_approach_direction;
-        m_approach_speed     = m_default_approach_speed;
+        m_retreat_duration_time = m_retreat_duration_default;
+        m_approach_direction    = m_default_approach_direction;
+        m_approach_speed        = m_default_approach_speed;
     }
     else
     {
-        m_retreat_counter = 0;
+        m_retreat_duration_time = 0;
     }
     yInfo("received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
     sendCurrentGoal();
@@ -1001,7 +1006,8 @@ void GotoThread::approachTarget(double dir, double speed, double time)
 {
     m_approach_direction= dir;
     m_approach_speed    = speed;
-    m_retreat_counter   = time;
+    m_retreat_duration_time = time;
+    m_retreat_starting_time = yarp::os::Time::now();
     m_status            = navigation_status_preparing_before_move;
     m_status_after_approach = navigation_status_idle;
 }

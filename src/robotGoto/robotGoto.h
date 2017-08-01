@@ -78,7 +78,7 @@ class GotoThread: public yarp::os::RateThread
     ////////////////////////////////////
 public:
     bool   m_enable_retreat;
-    int    m_retreat_duration;
+    double m_retreat_duration_default;
 
     //robot properties
     bool   m_robot_is_holonomic;
@@ -156,7 +156,8 @@ protected:
     m_control_out;
     NavigationStatusEnum m_status;
     NavigationStatusEnum m_status_after_approach;
-    int                  m_retreat_counter;
+    double               m_retreat_duration_time;
+    double               m_retreat_starting_time;
     bool                 m_useGoalFromRosTopic;
     bool                 m_publishRosStuff;
     string               m_frame_robot_id;
