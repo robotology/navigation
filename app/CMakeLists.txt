@@ -10,5 +10,6 @@ add_subdirectory(robotGotoExample)
 add_subdirectory(robotPathPlannerExample)
 add_subdirectory(baseControl)
 add_subdirectory(localizationServer)
+add_subdirectory(mapper2D)
 add_subdirectory(mapsExample)
 

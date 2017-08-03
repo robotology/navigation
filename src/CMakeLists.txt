@@ -10,6 +10,7 @@ add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
 add_subdirectory(fakeMobileBaseTest)
 add_subdirectory(localizationServer)
+add_subdirectory(mapper2D)
 
 
 add_subdirectory(navigation2DClientTest)
