@@ -55,18 +55,14 @@ using namespace yarp::dev;
 #define DEG2RAD M_PI/180
 
 /**
- * \section localizationModule
- * A module which acts as the server side for a Localization2DClient.
+ * \section mapper2D
+ * A module which registers laser scans to a map.
  *
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value      | Required     | Description                                                       | Notes |
  * |:--------------:|:--------------:|:-------:|:--------------:|:------------------:|:-----------: |:-----------------------------------------------------------------:|:-----:|
  * | GENERAL        |  module_name   | string  | -              | localizationServer | Yes          | The name of the module use to open ports                          |       |
  * | GENERAL        |  enable_ros    | int     | 0/1            | -                  | Yes          | If set to 1, the module will open the ROS topic specified by ROS::initialpose_topic parameter     |       |
- * | INITIAL_POS    |  initial_x     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
- * | INITIAL_POS    |  initial_y     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
- * | INITIAL_POS    |  initial_theta | double  | deg            | 0.0                | Yes          | Initial estimation of robot position                              | -     |
- * | INITIAL_POS    |  initial_map   | string  | -              |   -                | Yes          | Name of the map on which localization is performed                | -     |
  * | MAP            |  connect_to_yarp_mapserver   | int  | 0/1     |   -              | Yes          | If set to 1, LocalizationServer will ask maps to yarp map server when initial pose is updated | -     |
  * | ROS            |  initialpose_topic   | string     | -         |   -              | No           | Name of the topic which will be used to publish the initial pose  | -     |
  * | ROS            |  occupancygrid_topic | string     | -         |   -              | No           | Name of the topic which will be used to publish map data when initial pose is updated         | -     |
@@ -126,20 +122,22 @@ protected:
     std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells_array;
 
     //Menu 
+    bool                         m_map_changed;
     CvPoint                      m_menu_lu[4];
     CvPoint                      m_menu_rd[4];
     int                          m_pixel_size;
+    yarp::dev::MapGrid2D::map_flags m_selected_flag;
 
     //ros
+    double                            m_map_publish_period;
     yarp::os::Node*                   m_rosNode;
-    std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
-    yarp::os::Publisher<geometry_msgs_PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
     yarp::os::Publisher<nav_msgs_OccupancyGrid> m_rosPublisher_occupancyGrid;
 
 public:
     mapperModule()
     {
+        m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN;
         m_iMap = 0;
         m_iTf  = 0;
         m_iLaser =0;
@@ -148,6 +146,7 @@ public:
         m_max_laser_angle = 0;
         m_laser_angle_of_view =0;
         m_rosNode = 0;
+        m_map_changed=false;
         m_ros_enabled = false;
         m_mapping_running = false;
         m_laser_requested = true;
@@ -157,6 +156,7 @@ public:
         m_last_odometry_data_received = -1;
         m_last_statistics_printed = -1;
         m_clear_robot_way_enabled = true;
+        m_map_publish_period = 1.0;
 
         m_localization_data.map_id = "unknown";
         m_localization_data.x = nan("");
@@ -190,13 +190,6 @@ public:
         if (general_group.isNull())
         {
             yError() << "Missing GENERAL group!";
-            return false;
-        }
-
-        Bottle initial_group = m_rf.findGroup("INITIAL_POS");
-        if (initial_group.isNull())
-        {
-            yError() << "Missing INITIAL_POS group!";
             return false;
         }
 
@@ -279,22 +272,9 @@ public:
                      return false;
                 }
             }
-
-            if (ros_group.check ("initialpose_topic")) 
+            if (ros_group.check ("map_publish_period"))
             {
-                m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
-                {
-                    if (!m_rosPublisher_initial_pose.topic(m_topic_initial_pose))
-                    {
-                        if (m_rosNode)
-                        {
-                            delete m_rosNode;
-                            m_rosNode=0;
-                        }
-                        yError() << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
-                        return false;
-                    }
-                }
+                m_map_publish_period = ros_group.find ("map_publish_period").asDouble();
             }
         }
 
@@ -400,10 +380,17 @@ public:
         return true;
     }
 
+   void update_cell(MapGrid2D::XYCell c_start, yarp::dev::MapGrid2D::map_flags flag)
+   {
+       m_current_map.setMapFlag(c_start,flag);
+       if (flag == yarp::dev::MapGrid2D::MAP_CELL_FREE)
+       {m_current_map.setOccupancyData(c_start,0);}
+       if (flag == yarp::dev::MapGrid2D::MAP_CELL_WALL)
+       {m_current_map.setOccupancyData(c_start,100);}
+   }
+
    void readTargetFromYarpView()
    {
-        static yarp::dev::MapGrid2D::map_flags selected_flag = yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN;
-
         yarp::os::Bottle *gui_targ = m_port_yarpview_target_input.read(false);
         if (gui_targ)
         {
@@ -413,57 +400,60 @@ public:
                 c_start.x = (*gui_targ).get(0).asInt();
                 c_start.y = (*gui_targ).get(1).asInt();
 
+#if 0
                 if (c_start.x> m_menu_lu[0].x && c_start.x<m_menu_rd[0].x &&
                     c_start.y> m_menu_lu[0].y && c_start.y<m_menu_rd[0].y)
                 {
-                    selected_flag = yarp::dev::MapGrid2D::MAP_CELL_KEEP_OUT;
+                    m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_KEEP_OUT;
                     yDebug() << "MAP_CELL_KEEP_OUT selected";
                 }
                 if (c_start.x> m_menu_lu[1].x && c_start.x<m_menu_rd[1].x &&
                     c_start.y> m_menu_lu[1].y && c_start.y<m_menu_rd[1].y)
                 {
-                    selected_flag = yarp::dev::MapGrid2D::MAP_CELL_FREE;
+                    m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_FREE;
                     yDebug() << "MAP_CELL_FREE selected";
                 }
                 if (c_start.x> m_menu_lu[2].x && c_start.x<m_menu_rd[2].x &&
                     c_start.y> m_menu_lu[2].y && c_start.y<m_menu_rd[2].y)
                 {
-                    selected_flag = yarp::dev::MapGrid2D::MAP_CELL_WALL;
+                    m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_WALL;
                     yDebug() << "MAP_CELL_WALL selected";
                 }
                 if (c_start.x> m_menu_lu[3].x && c_start.x<m_menu_rd[3].x &&
                     c_start.y> m_menu_lu[3].y && c_start.y<m_menu_rd[3].y)
                 {
-                    selected_flag = yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN;
+                    m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN;
                     yDebug() << "MAP_CELL_UNKNOWN selected";
                 }
+#endif
 
                 yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_start));
                 yInfo("selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
 
                 if  (m_pixel_size==2)
                 {
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x  ,c_start.y  ),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x+1,c_start.y  ),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x  ,c_start.y+1),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x+1,c_start.y+1),selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x  ,c_start.y  ),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x+1,c_start.y  ),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x  ,c_start.y+1),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x+1,c_start.y+1),m_selected_flag);
                 }
                 else if  (m_pixel_size==3)
                 {
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x  ,c_start.y  ),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x+1,c_start.y  ),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x-1,c_start.y  ),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x+1,c_start.y+1),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x-1,c_start.y+1),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x+1,c_start.y-1),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x-1,c_start.y-1),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x  ,c_start.y+1),selected_flag);
-                    m_current_map.setMapFlag(MapGrid2D::XYCell(c_start.x  ,c_start.y-1),selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x  ,c_start.y  ),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x+1,c_start.y  ),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x-1,c_start.y  ),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x+1,c_start.y+1),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x-1,c_start.y+1),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x+1,c_start.y-1),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x-1,c_start.y-1),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x  ,c_start.y+1),m_selected_flag);
+                    update_cell(MapGrid2D::XYCell(c_start.x  ,c_start.y-1),m_selected_flag);
                 }
                 else
                 {
-                    m_current_map.setMapFlag(c_start,selected_flag);
+                    update_cell(c_start,m_selected_flag);
                 }
+                m_map_changed=true;
             }
         }
     }
@@ -491,11 +481,6 @@ public:
         {
             m_rosPublisher_occupancyGrid.interrupt();
             m_rosPublisher_occupancyGrid.close();
-        }
-        if (m_rosPublisher_initial_pose.asPort().isOpen())
-        {
-            m_rosPublisher_initial_pose.interrupt();
-            m_rosPublisher_initial_pose.close();
         }
         if (m_rosNode)
         {
@@ -563,6 +548,46 @@ public:
             return false;
         }
         return true;
+    }
+
+    void publish_map()
+    {
+        if (m_rosNode)
+        {
+            double tmp=0;
+            nav_msgs_OccupancyGrid& ogrid = m_rosPublisher_occupancyGrid.prepare();
+            ogrid.clear();
+            ogrid.info.height=m_current_map.height();
+            ogrid.info.width=m_current_map.width();
+            m_current_map.getResolution(tmp);
+            ogrid.info.resolution=tmp;
+            ogrid.header.frame_id="map";
+            ogrid.info.map_load_time.sec=0;
+            ogrid.info.map_load_time.nsec=0;
+            double x, y, t;
+            m_current_map.getOrigin(x,y,t);
+            ogrid.info.origin.position.x=x;
+            ogrid.info.origin.position.y=y;
+            yarp::math::Quaternion q;
+            yarp::sig::Vector v(4);
+            v[0]=0; v[1]=0; v[2]=1; v[3]=t*DEG2RAD;
+            q.fromAxisAngle(v);
+            ogrid.info.origin.orientation.x = q.x();
+            ogrid.info.origin.orientation.y = q.y();
+            ogrid.info.origin.orientation.z = q.z();
+            ogrid.info.origin.orientation.w = q.w();
+            ogrid.data.resize(m_current_map.width()*m_current_map.height());
+            int index=0;
+            yarp::dev::MapGrid2D::XYCell cell;
+            for (cell.y=m_current_map.height()-1; cell.y>-1; cell.y--)
+                for (cell.x=0; cell.x<m_current_map.width(); cell.x++)
+                {
+                m_current_map.getOccupancyData(cell,tmp);
+                ogrid.data[index++]=(int)tmp;
+                }
+                      
+            m_rosPublisher_occupancyGrid.write();
+        }
     }
 
     bool init_map()
@@ -645,6 +670,7 @@ public:
         {
             m_current_map.setMapFlag(m_laser_map_cells_array[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
         }
+        m_map_changed=true;
     }
     
     void  readLocalizationData()
@@ -799,6 +825,16 @@ public:
             {cvCircle(map, cvPoint(laser_scan[i].x, laser_scan[i].y), 0, color);}
     }
 
+    void clear_robot_way()
+    {
+         MapGrid2D::XYCell robot_loc = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
+        m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x  ,robot_loc.y), yarp::dev::MapGrid2D::MAP_CELL_FREE);
+        m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x+1,robot_loc.y), yarp::dev::MapGrid2D::MAP_CELL_FREE);
+        m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x  ,robot_loc.y+1), yarp::dev::MapGrid2D::MAP_CELL_FREE);
+        m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x+1,robot_loc.y+1), yarp::dev::MapGrid2D::MAP_CELL_FREE);
+        m_map_changed=true;
+    }
+
     virtual bool updateModule()
     {
         double current_time = yarp::os::Time::now();
@@ -817,11 +853,7 @@ public:
             readLocalizationData();
             if (m_clear_robot_way_enabled)
             {
-                MapGrid2D::XYCell robot_loc = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
-                m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x  ,robot_loc.y), yarp::dev::MapGrid2D::MAP_CELL_FREE);
-                m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x+1,robot_loc.y), yarp::dev::MapGrid2D::MAP_CELL_FREE);
-                m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x  ,robot_loc.y+1), yarp::dev::MapGrid2D::MAP_CELL_FREE);
-                m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x+1,robot_loc.y+1), yarp::dev::MapGrid2D::MAP_CELL_FREE);
+                clear_robot_way();
             }
         }
         if (m_laser_requested)
@@ -865,13 +897,23 @@ public:
             }
         }
 
-        drawMenu(iplimage);
+        //drawMenu(iplimage);
 
         //send image on port
         if (m_port_map_output.getOutputCount()>0)
         {
             m_port_map_output.prepare() = map_image;
             m_port_map_output.write();
+        }
+
+        //publish map
+        double c_time = yarp::os::Time::now();
+        static double last_publish_time = yarp::os::Time::now();
+        if (m_map_changed && m_map_publish_period>0 && (c_time-last_publish_time)>m_map_publish_period)
+        {
+            publish_map();
+            last_publish_time=c_time;
+            m_map_changed=false;
         }
         return true; 
     }
@@ -919,17 +961,19 @@ public:
         }
         else if (command.get(0).isString() && command.get(0).asString() == "start")
         {
-            m_mapping_running = true; 
+            m_mapping_running = true;
+            m_map_changed = true;
             reply.addString("done");
         }
        
         else if (command.get(0).isString() && command.get(0).asString() == "stop")
         {
             m_mapping_running = false;
+            m_map_changed = true;
             std::string filename = command.get(1).asString();
             reply.addString("done");
         }
-
+#if 0
         else if (command.get(0).isString() && command.get(0).asString() == "initLoc")
         {
             yarp::dev::Map2DLocation loc;
@@ -939,6 +983,36 @@ public:
             loc.theta = command.get(4).asDouble();
             std::string s = std::string("Localization initialized to: ") + loc.toString();
             reply.addString(s);
+        }
+#endif 
+        else if (command.get(0).isString() && command.get(0).asString() == "set_pixel_type")
+        {
+            std::string choice = command.get(1).asString();
+            if (choice == "wall")
+            { 
+                m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_WALL;
+                reply.addString("wall selected");
+            }
+            else if (choice == "free")
+            { 
+                m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_FREE;
+                reply.addString("free selected");
+            }
+            else if (choice == "unknown")
+            { 
+                m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN;
+                reply.addString("unknown selected");
+            }
+            else if (choice == "keepout")
+            { 
+                m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_KEEP_OUT;
+                reply.addString("keepout selected");
+            }
+            else
+            {
+                m_selected_flag = yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN;
+                reply.addString("Invalid string, unknown selected");
+            }
         }
         else if (command.get(0).isString() && command.get(0).asString() == "set_pixel_size")
         {
