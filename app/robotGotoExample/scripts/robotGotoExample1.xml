@@ -5,6 +5,12 @@
 </dependencies>
 
 <module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
    <name>fakeMobileBaseTest</name>
    <parameters>--holonomic</parameters>
    <node>console</node>
@@ -18,13 +24,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Map2DServer</parameters>
-   <node>console</node>
-</module>
-
-<module>
-   <name>yarpdev</name>
-   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
    <node>console</node>
 </module>
 

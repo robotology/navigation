@@ -5,6 +5,12 @@
 </dependencies>
 
 <module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
    <name>fakeMobileBaseTest</name>
    <parameters>--holonomic</parameters>
    <node>console</node>
@@ -17,8 +23,8 @@
 </module>
 
 <module>
-   <name>yarpdev</name>
-   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <name>localizationServer</name>
+   <parameters>--context robotPathPlannerExample --from localizationServer.ini</parameters>
    <node>console</node>
 </module>
 
@@ -43,12 +49,6 @@
 <module>
    <name>yarpview</name>
    <parameters>--name /plannerView:i</parameters>
-   <node>console</node>
-</module>
-
-<module>
-   <name>localizationServer</name>
-   <parameters>--context robotPathPlannerExample --from localizationServer.ini</parameters>
    <node>console</node>
 </module>
 
