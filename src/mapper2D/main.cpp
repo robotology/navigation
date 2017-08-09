@@ -779,8 +779,8 @@ public:
         cvCircle(map, cvPoint(current.x, current.y), 3, color);
         if (std::isnan(angle)==false)
         {
-            int orient_x = current.x + 6 * cos(-angle);
-            int orient_y = current.y + 6 * sin(-angle);
+            int orient_x = current.x + int(6 * cos(-angle));
+            int orient_y = current.y + int(6 * sin(-angle));
             cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
         }
     }
@@ -813,8 +813,8 @@ public:
     {
         if (map==0) return;
         cvCircle(map, cvPoint(current.x, current.y), 6, color);
-        int orient_x = current.x + 12 * cos(-angle);
-        int orient_y = current.y + 12 * sin(-angle);
+        int orient_x = current.x + int(12 * cos(-angle));
+        int orient_y = current.y + int(12 * sin(-angle));
         cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
     }
 
@@ -832,7 +832,7 @@ public:
         m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x+1,robot_loc.y), yarp::dev::MapGrid2D::MAP_CELL_FREE);
         m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x  ,robot_loc.y+1), yarp::dev::MapGrid2D::MAP_CELL_FREE);
         m_current_map.setMapFlag(MapGrid2D::XYCell(robot_loc.x+1,robot_loc.y+1), yarp::dev::MapGrid2D::MAP_CELL_FREE);
-        m_map_changed=true;
+        //m_map_changed=true;
     }
 
     virtual bool updateModule()

@@ -36,9 +36,9 @@ bool iKart_MotorControl::set_control_openloop()
 bool iKart_MotorControl::set_control_velocity()
 {
     yInfo ("Setting velocity mode");
-    icmd->setVelocityMode(0);
-    icmd->setVelocityMode(1);
-    icmd->setVelocityMode(2);
+    icmd->setControlMode(0, VOCAB_CM_VELOCITY);
+    icmd->setControlMode(1, VOCAB_CM_VELOCITY);
+    icmd->setControlMode(2, VOCAB_CM_VELOCITY);
     ivel->setRefAcceleration(0, 1000000);
     ivel->setRefAcceleration(1, 1000000);
     ivel->setRefAcceleration(2, 1000000);
@@ -54,7 +54,6 @@ bool iKart_MotorControl::set_control_idle()
     icmd->setControlMode(0, VOCAB_CM_IDLE);
     icmd->setControlMode(1, VOCAB_CM_IDLE);
     icmd->setControlMode(2, VOCAB_CM_IDLE);
-    icmd->setControlMode(3, VOCAB_CM_IDLE);
     yInfo("Motors now off");
     return true;
 }

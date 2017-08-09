@@ -128,8 +128,8 @@ bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle,
 {
     if (map==0) return false;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
-    int orient_x = current.x + 12 * cos(-angle);
-    int orient_y = current.y + 12 * sin(-angle);
+    int orient_x = current.x + int(12 * cos(-angle));
+    int orient_y = current.y + int(12 * sin(-angle));
     cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
     return true;
 }
@@ -140,8 +140,8 @@ bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvSc
     cvCircle(map, cvPoint(current.x, current.y), 3, color);
     if (std::isnan(angle)==false)
     {
-        int orient_x = current.x + 6 * cos(-angle);
-        int orient_y = current.y + 6 * sin(-angle);
+        int orient_x = current.x + int(6 * cos(-angle));
+        int orient_y = current.y + int(6 * sin(-angle));
         cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
     }
     return true;
