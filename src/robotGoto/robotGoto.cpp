@@ -296,10 +296,16 @@ bool GotoThread::threadInit()
     //open module ports
     string localName = "/robotGoto";
 
-    m_port_commands_output.open((localName + "/control:o").c_str());
-    m_port_status_output.open((localName + "/status:o").c_str());
-    m_port_speak_output.open((localName + "/speak:o").c_str());
-    m_port_gui_output.open((localName + "/gui:o").c_str());
+    bool ret = true;
+    ret &= m_port_commands_output.open((localName + "/control:o").c_str());
+    ret &= m_port_status_output.open((localName + "/status:o").c_str());
+    ret &= m_port_speak_output.open((localName + "/speak:o").c_str());
+    ret &= m_port_gui_output.open((localName + "/gui:o").c_str());
+    if (ret == false)
+    {
+        yError() << "Unable to open module ports";
+        return false;
+    }
 
     //localization
     Property loc_options;

@@ -52,7 +52,12 @@ public:
             return false;
         }
 
-        rpcPort.open("/robotGoto/rpc");
+        bool ret = rpcPort.open("/robotGoto/rpc");
+        if (ret == false)
+        {
+            yError() << "Unable to open module ports";
+            return false;
+        }
         attach(rpcPort);
         //attachTerminal();
 

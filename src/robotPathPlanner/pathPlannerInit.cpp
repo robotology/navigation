@@ -133,13 +133,19 @@ bool PlannerThread::threadInit()
     }
 
     //open module ports
+    bool ret = true;
     string localName = "/robotPathPlanner";
-    m_port_status_input.open((localName + "/navigationStatus:i").c_str());
-    m_port_status_output.open((localName + "/plannerStatus:o").c_str());
-    m_port_commands_output.open((localName + "/commands:o").c_str());
-    m_port_map_output.open((localName + "/map:o").c_str());
-    m_port_yarpview_target_input.open((localName + "/yarpviewTarget:i").c_str());
-    m_port_yarpview_target_output.open((localName + "/yarpviewTarget:o").c_str());
+    ret &= m_port_status_input.open((localName + "/navigationStatus:i").c_str());
+    ret &= m_port_status_output.open((localName + "/plannerStatus:o").c_str());
+    ret &= m_port_commands_output.open((localName + "/commands:o").c_str());
+    ret &= m_port_map_output.open((localName + "/map:o").c_str());
+    ret &= m_port_yarpview_target_input.open((localName + "/yarpviewTarget:i").c_str());
+    ret &= m_port_yarpview_target_output.open((localName + "/yarpviewTarget:o").c_str());
+    if (ret == false)
+    {
+        yError() << "Unable to open module ports";
+        return false;
+    }
 
     //localization
     Property loc_options;

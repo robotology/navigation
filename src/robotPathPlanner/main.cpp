@@ -43,7 +43,12 @@ public:
 
         plannerThread = new PlannerThread(20,rf);
 
-        rpcPort.open("/robotPathPlanner/rpc");
+        bool ret = rpcPort.open("/robotPathPlanner/rpc");
+        if (ret == false)
+        {
+            yError() << "Unable to open module ports";
+            return false;
+        }
         attach(rpcPort);
         //attachTerminal();
 

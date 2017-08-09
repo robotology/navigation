@@ -100,9 +100,15 @@ bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
         return false;
     }
     // open control input ports
-    port_odometry.open((localName+"/odometry:o").c_str());
-    port_odometer.open((localName+"/odometer:o").c_str());
-    port_vels.open((localName+"/velocity:o").c_str());
+    bool ret = true;
+    ret &= port_odometry.open((localName+"/odometry:o").c_str());
+    ret &= port_odometer.open((localName+"/odometer:o").c_str());
+    ret &= port_vels.open((localName+"/velocity:o").c_str());
+    if (ret == false)
+    {
+        yError() << "Unable to open module ports";
+        return false;
+    }
 
     //reset odometry
     reset_odometry();
