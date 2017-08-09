@@ -70,10 +70,14 @@ class PlannerThread: public yarp::os::RateThread
     double m_goal_min_lin_speed;       //m/s
     double m_goal_max_ang_speed;       //deg/s
     double m_goal_min_ang_speed;       //deg/s
+    double m_goal_ang_gain;            //deg/s
+    double m_goal_lin_gain;            //m/s
     double m_waypoint_max_lin_speed;   //m/s
     double m_waypoint_min_lin_speed;   //m/s
     double m_waypoint_max_ang_speed;   //deg/s
     double m_waypoint_min_ang_speed;   //deg/s
+    double m_waypoint_ang_gain;        //deg/s
+    double m_waypoint_lin_gain;        //m/s
     int    m_min_waypoint_distance;    //cells
 
     //semaphore
@@ -119,6 +123,7 @@ class PlannerThread: public yarp::os::RateThread
     yarp::dev::Map2DLocation               m_final_goal;
     std::queue<yarp::dev::Map2DLocation>   m_sequence_of_goals;
     std::vector<Map2DLocation>             m_locations_list;
+    std::string                            m_last_target;
 
     std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
 
@@ -151,7 +156,7 @@ class PlannerThread: public yarp::os::RateThread
     void          pauseMovement(double secs);
     void          resumeMovement();
     void          getCurrentPos(Map2DLocation& v);
-    void          gotoLocation(std::string location_name);
+    bool          gotoLocation(std::string location_name);
     void          storeCurrentLocation(std::string location_name);
     void          deleteLocation(std::string location_name);
     Map2DLocation getCurrentAbsTarget();
@@ -160,6 +165,7 @@ class PlannerThread: public yarp::os::RateThread
     Map2DLocation getFinalAbsTarget();
     Map2DLocation getFinalRelTarget();
     string        getFinalMapId();
+    bool          getLastTarget(string& target_name);
     string        getNavigationStatusAsString();
     int           getNavigationStatusAsInt();
     void          getTimeouts(int& localiz, int& laser, int& inner_status);

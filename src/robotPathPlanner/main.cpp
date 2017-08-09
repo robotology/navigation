@@ -143,8 +143,14 @@ public:
         else if (command.get(0).isString() && command.get(0).asString() == "goto")
         {
             std::string location_name = command.get(1).asString();
-            plannerThread->gotoLocation(location_name);
-            reply.addString("goto done");
+            if (plannerThread->gotoLocation(location_name))
+            {
+                reply.addString("goto done");
+            }
+            else
+            {
+                reply.addString("goto error");
+            }
         }
 
         else if (command.get(0).isString() && command.get(0).asString() == "store_current_location")
@@ -159,6 +165,21 @@ public:
             std::string location_name = command.get(1).asString();
             plannerThread->deleteLocation(location_name);
             reply.addString("delete_location done");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "get_last_target")
+        {
+            string last_target;
+            bool b = plannerThread->getLastTarget(last_target);
+            if (b)
+            {
+                reply.addString(last_target);
+            }
+            else
+            {
+                yError() << "get_last_target failed: goto <location_name> target not found.";
+                reply.addString("not found");
+            }
         }
 
         else if (command.get(0).asString() == "get")

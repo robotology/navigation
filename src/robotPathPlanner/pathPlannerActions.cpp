@@ -166,14 +166,21 @@ void PlannerThread::pauseMovement(double d)
     }
 }
 
-void PlannerThread::gotoLocation(std::string location_name)
+bool PlannerThread::gotoLocation(std::string location_name)
 {
     yarp::dev::Map2DLocation loc;
     if(m_iMap->getLocation(location_name,loc))
     {
-        setNewAbsTarget(loc);
+        bool b = setNewAbsTarget(loc);
+        m_last_target = location_name;
+        updateLocations();
+        return b;
     }
-    updateLocations();
+    else
+    {
+        updateLocations();
+        return false;
+    }
 }
 
 void PlannerThread::storeCurrentLocation(std::string location_name)

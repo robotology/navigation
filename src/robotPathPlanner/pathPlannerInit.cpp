@@ -79,10 +79,14 @@ bool PlannerThread::threadInit()
     if (navigation_group.check("waypoint_max_ang_speed")) { m_waypoint_max_ang_speed = navigation_group.find("waypoint_max_ang_speed").asDouble(); } else {yError() << "Missing waypoint_max_ang_speed parameter" ;return false;}
     if (navigation_group.check("waypoint_min_lin_speed")) { m_waypoint_min_lin_speed = navigation_group.find("waypoint_min_lin_speed").asDouble(); } else {yError() << "Missing waypoint_min_lin_speed parameter" ;return false;}
     if (navigation_group.check("waypoint_min_ang_speed")) { m_waypoint_min_ang_speed = navigation_group.find("waypoint_min_ang_speed").asDouble(); } else {yError() << "Missing waypoint_min_ang_speed parameter" ;return false;}
+    if (navigation_group.check("waypoint_lin_speed_gain"))     { m_waypoint_lin_gain = navigation_group.find("waypoint_lin_speed_gain").asDouble(); } else {yError() << "Missing waypoint_lin_speed_gain parameter" ;return false;}
+    if (navigation_group.check("waypoint_ang_speed_gain"))     { m_waypoint_ang_gain = navigation_group.find("waypoint_ang_speed_gain").asDouble(); } else {yError() << "Missing waypoint_ang_speed_gain parameter" ;return false;}
     if (navigation_group.check("goal_max_lin_speed"))     { m_goal_max_lin_speed = navigation_group.find("goal_max_lin_speed").asDouble(); } else {yError() << "Missing goal_max_lin_speed parameter" ;return false;}
     if (navigation_group.check("goal_max_ang_speed"))     { m_goal_max_ang_speed = navigation_group.find("goal_max_ang_speed").asDouble(); } else {yError() << "Missing goal_max_ang_speed parameter" ;return false;}
     if (navigation_group.check("goal_min_lin_speed"))     { m_goal_min_lin_speed = navigation_group.find("goal_min_lin_speed").asDouble(); } else {yError() << "Missing goal_min_lin_speed parameter" ;return false;}
     if (navigation_group.check("goal_min_ang_speed"))     { m_goal_min_ang_speed = navigation_group.find("goal_min_ang_speed").asDouble(); } else {yError() << "Missing goal_min_ang_speed parameter" ;return false;}
+    if (navigation_group.check("goal_lin_speed_gain"))    { m_goal_lin_gain = navigation_group.find("goal_lin_speed_gain").asDouble(); } else {yError() << "Missing goal_lin_speed_gain parameter" ;return false;}
+    if (navigation_group.check("goal_ang_speed_gain"))    { m_goal_ang_gain = navigation_group.find("goal_ang_speed_gain").asDouble(); } else {yError() << "Missing goal_ang_speed_gain parameter" ;return false;}
     if (navigation_group.check("min_waypoint_distance"))  { m_min_waypoint_distance = navigation_group.find("min_waypoint_distance").asInt(); } else {yError() << "Missing min_waypoint_distance parameter" ;return false;}
     if (navigation_group.check("enable_try_recovery"))    { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt()==1); } else {yError() << "Missing enable_try_recovery parameter" ;return false;}
 

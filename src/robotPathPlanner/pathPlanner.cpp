@@ -224,6 +224,30 @@ void  PlannerThread::readLaserData()
     m_temporary_obstacles_map.enlargeObstacles(m_robot_radius);
 }
 
+bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_image)
+{
+    if (template_image == 0)
+    {
+        yError() << "PlannerThread::draw_map cannot copy an empty image!";
+        return false;
+    }
+    if (image_to_be_prepared == 0) 
+    {
+        image_to_be_prepared = cvCloneImage(template_image);
+    }
+    else if (image_to_be_prepared->width != template_image->width ||
+             image_to_be_prepared->height != template_image->height)
+    {
+        cvResize(template_image, image_to_be_prepared);
+        cvCopy(template_image, image_to_be_prepared);
+    }
+    else
+    {
+        cvCopy(template_image, image_to_be_prepared);
+    }
+    return true;
+}
+
 void PlannerThread::draw_map()
 {
     CvFont font;
@@ -238,8 +262,7 @@ void PlannerThread::draw_map()
     yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
     m_current_map.getMapImage(map_image);
     static IplImage*   processed_map_with_scan = 0;
-    if (processed_map_with_scan == 0) processed_map_with_scan = cvCloneImage((const IplImage*)map_image.getIplImage());
-    cvCopy(map_image.getIplImage(), processed_map_with_scan);
+    prepare_image(processed_map_with_scan,(const IplImage*) map_image.getIplImage());
     if (m_laser_timeout_counter<TIMEOUT_MAX)
     {
         if (m_enable_draw_enlarged_scans)
@@ -293,8 +316,7 @@ void PlannerThread::draw_map()
     drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, m_localization_data, font, blue_color);
 #endif
     static IplImage* map_with_path = 0;
-    if (map_with_path == 0) map_with_path = cvCloneImage(processed_map_with_scan);
-    else cvCopy(processed_map_with_scan, map_with_path);
+    prepare_image(map_with_path,processed_map_with_scan);
 
     CvScalar color = cvScalar(0, 200, 0);
     CvScalar color2 = cvScalar(0, 200, 100);
@@ -318,8 +340,7 @@ void PlannerThread::draw_map()
     }
 
     static IplImage* map_with_location = 0;
-    if (map_with_location == 0) map_with_location = cvCloneImage(map_with_path);
-    else cvCopy(map_with_path, map_with_location);
+    prepare_image(map_with_location,map_with_path);
 
     sendToPort(&m_port_map_output, map_with_location);
 }
@@ -364,11 +385,11 @@ void PlannerThread::run()
                 yInfo("sending the last waypoint");
                 {
                     //send the tolerance to the inner controller
-                    Bottle cmd1, ans1;
-                    cmd1.addString("set");
-                    cmd1.addString("linear_tol");
-                    cmd1.addDouble(m_goal_tolerance_lin);
-                    m_port_commands_output.write(cmd1, ans1);
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("linear_tol");
+                    cmd.addDouble(m_goal_tolerance_lin);
+                    m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd2, ans2;
@@ -378,32 +399,46 @@ void PlannerThread::run()
                     m_port_commands_output.write(cmd2, ans2);
                 }
                 {
-                    Bottle cmd3, ans3;
-                    cmd3.addString("set");
-                    cmd3.addString("min_lin_speed");
-                    cmd3.addDouble(m_goal_min_lin_speed);
-                    m_port_commands_output.write(cmd3, ans3);
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("min_lin_speed");
+                    cmd.addDouble(m_goal_min_lin_speed);
+                    m_port_commands_output.write(cmd, ans);
                 }
                 {
-                    Bottle cmd4, ans4;
-                    cmd4.addString("set");
-                    cmd4.addString("max_lin_speed");
-                    cmd4.addDouble(m_goal_max_lin_speed);
-                    m_port_commands_output.write(cmd4, ans4);
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("max_lin_speed");
+                    cmd.addDouble(m_goal_max_lin_speed);
+                    m_port_commands_output.write(cmd, ans);
                 }
                 {
-                    Bottle cmd5, ans5;
-                    cmd5.addString("set");
-                    cmd5.addString("min_ang_speed");
-                    cmd5.addDouble(m_goal_min_ang_speed);
-                    m_port_commands_output.write(cmd5, ans5);
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("min_ang_speed");
+                    cmd.addDouble(m_goal_min_ang_speed);
+                    m_port_commands_output.write(cmd, ans);
                 }
                 {
-                    Bottle cmd6, ans6;
-                    cmd6.addString("set");
-                    cmd6.addString("max_ang_speed");
-                    cmd6.addDouble(m_goal_max_ang_speed);
-                    m_port_commands_output.write(cmd6, ans6);
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("max_ang_speed");
+                    cmd.addDouble(m_goal_max_ang_speed);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("ang_speed_gain");
+                    cmd.addDouble(m_goal_ang_gain);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("lin_speed_gain");
+                    cmd.addDouble(m_goal_lin_gain);
+                    m_port_commands_output.write(cmd, ans);
                 }
                 sendWaypoint();
             }
@@ -439,6 +474,20 @@ void PlannerThread::run()
                     cmd.addString("set"); 
                     cmd.addString("max_ang_speed");
                     cmd.addDouble(m_waypoint_max_ang_speed);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("ang_speed_gain");
+                    cmd.addDouble(m_waypoint_ang_gain);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("lin_speed_gain");
+                    cmd.addDouble(m_waypoint_lin_gain);
                     m_port_commands_output.write(cmd, ans);
                 }
                 sendWaypoint();
@@ -536,6 +585,20 @@ void PlannerThread::run()
                 cmd.addString("set"); 
                 cmd.addString("min_ang_speed");
                 cmd.addDouble(m_waypoint_min_ang_speed);
+                m_port_commands_output.write(cmd, ans);
+            }
+            {
+                Bottle cmd, ans;
+                cmd.addString("set");
+                cmd.addString("ang_speed_gain");
+                cmd.addDouble(m_waypoint_ang_gain);
+                m_port_commands_output.write(cmd, ans);
+            }
+            {
+                Bottle cmd, ans;
+                cmd.addString("set");
+                cmd.addString("lin_speed_gain");
+                cmd.addDouble(m_waypoint_lin_gain);
                 m_port_commands_output.write(cmd, ans);
             }
             sendWaypoint();
