@@ -28,6 +28,9 @@ void MotorControl::close()
         rosPublisherPort_cmd_twist.interrupt();
         rosPublisherPort_cmd_twist.close();
     }
+
+    port_status.interrupt();
+    port_status.close();
 }
 
 MotorControl::~MotorControl()
@@ -169,6 +172,12 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
         yInfo () << "ROS_OUTPUT param found. Enabling topic "<<rosTopicName_cmd_twist;
     }
 
+    bool ret = port_status.open((localName+"/motors_status:o").c_str());
+    if (ret == false)
+    {
+        yError() << "Unable to open module ports";
+        return false;
+    }
 
     return true;
 }
@@ -176,11 +185,114 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
 MotorControl::MotorControl(unsigned int _period, PolyDriver* _driver)
 {
     control_board_driver = _driver;
-
+    motors_num=0;
     thread_timeout_counter = 0;
 
     max_motor_vel = 0;
     max_motor_pwm = 0;
 
     thread_period = _period;
+}
+
+void MotorControl::printStats()
+{
+    yInfo( "* Motor thread:\n");
+    yInfo( "timeouts: %d\n", thread_timeout_counter);
+
+    double val = 0;
+    for (int i=0; i<motors_num; i++)
+    {
+        val=F[i];
+        if (board_control_modes[i]==VOCAB_CM_IDLE)
+            yInfo( "F%d: IDLE\n", i);
+        else
+            yInfo( "F%d: %+.1f\n", i, val);
+    }
+
+    if (port_status.getOutputCount()>0)
+    {
+        //port_status.setEnvelope(timeStamp);
+        Bottle &t = port_status.prepare();
+        t.clear();
+        for (int i=0; i<motors_num; i++)
+        {
+            string s = yarp::os::Vocab::decode(board_control_modes[i]);
+            t.addString(s);
+        }
+        port_status.write();
+    }
+}
+
+bool MotorControl::set_control_openloop()
+{
+    yInfo ("Setting openloop mode");
+    for (int i=0; i<motors_num; i++)
+    {
+        icmd->setControlMode(i, VOCAB_CM_PWM);
+        ipwm->setRefDutyCycle(i, 0);
+    }
+    return true;
+}
+
+bool MotorControl::set_control_velocity()
+{
+    yInfo ("Setting velocity mode");
+    for (int i=0; i<motors_num; i++)
+    {
+        icmd->setControlMode(i, VOCAB_CM_VELOCITY);
+        ivel->setRefAcceleration(i, 1000000);
+        ivel->velocityMove(i, 0);
+    }
+    return true;
+}
+
+bool MotorControl::set_control_idle()
+{
+    yInfo ("Setting ilde mode");
+    for (int i=0; i<motors_num; i++)
+    {
+        icmd->setControlMode(i, VOCAB_CM_IDLE);
+    }
+    yInfo("Motors now off");
+    return true;
+}
+
+bool MotorControl::check_motors_on()
+{
+    int c0(0),c1(0);
+    yarp::os::Time::delay(0.05);
+    
+    bool status_not_idle=true;
+    for (int i=0; i<motors_num; i++)
+    {
+        icmd->getControlMode(i, &board_control_modes[i]);
+        status_not_idle &= (board_control_modes[i]!=VOCAB_CM_IDLE);
+    }
+
+    if (status_not_idle)
+    {
+        yInfo("Motors now on\n");
+        return true;
+    }
+    else
+    {
+        yInfo("Unable to turn motors on! fault pressed?\n");
+        return false;
+    }
+}
+
+void MotorControl::updateControlMode()
+{
+    board_control_modes_last = board_control_modes;
+    
+    for (int i = 0; i < motors_num; i++)
+    {
+        icmd->getControlMode(i, &board_control_modes[i]);
+        if (board_control_modes[i] == VOCAB_CM_HW_FAULT && board_control_modes_last[i] != VOCAB_CM_HW_FAULT)
+        {
+            yWarning("One motor is in fault status. Turning off control.");
+            set_control_idle();
+            break;
+        }
+    }
 }

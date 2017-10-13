@@ -51,9 +51,6 @@ class iKart_MotorControl : public MotorControl
 public:
     iKart_MotorControl(unsigned int _period, PolyDriver* _driver);
     ~iKart_MotorControl();
-    bool set_control_velocity();
-    bool set_control_openloop();
-    bool set_control_idle();
 
     bool open(ResourceFinder &_rf, Property &_options);
     void execute_none();
@@ -61,9 +58,6 @@ public:
     void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void close();
-    bool check_motors_on();
-    void updateControlMode();
-    void printStats();
     void set_motors_filter(int b) {motors_filter_enabled=b;}
     double get_vlin_coeff();
     double get_vang_coeff();
