@@ -1,0 +1,61 @@
+<application>
+<name>robotGoto EXAMPLE2</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>fakeMobileBaseTest</name>
+   <parameters>--holonomic</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>localizationServer</name>
+   <parameters>--context robotGotoExample --from localizationServer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\maps\\map_test.map</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotGoto</name>
+   <parameters>--context robotGotoExample --from robotGoto_ikart.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotGotoExample</name>
+   <parameters></parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/fakeMobileBaseTest/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/fakeMobileBaseTest/odometry:o</from>
+  <to>/fakeLaser/location:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>

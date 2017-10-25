@@ -12,7 +12,7 @@
 
 <module>
    <name>fakeMobileBaseTest</name>
-   <parameters>--holonomic</parameters>
+   <parameters>--context fakeMobileBaseTest --from fakeMobileBaseTest.ini --holonomic</parameters>
    <node>console</node>
 </module>
 
@@ -48,13 +48,7 @@
 
 <module>
    <name>yarpview</name>
-   <parameters>--name /plannerView:i</parameters>
-   <node>console</node>
-</module>
-
-<module>
-   <name>robotPathPlannerExample</name>
-   <parameters></parameters>
+   <parameters>--name /plannerView:i --out /mapClick:o</parameters>
    <node>console</node>
 </module>
 
@@ -83,12 +77,10 @@
 </connection>
 
 <connection>
-  <from>/robotGoto/speak:o</from>
-  <to>/iSpeak</to>
+  <from>/mapClick:o</from>
+  <to>/robotPathPlanner/yarpviewTarget:i</to>
   <protocol>tcp</protocol>
 </connection>
-
-
 
 <connection>
   <from>/robotPathPlanner/yarpviewTarget:o</from>

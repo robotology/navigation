@@ -91,7 +91,7 @@ public:
         Property ctrl_options;
 
         ConstString configFile=rf.findFile("from");
-        if (configFile=="") //--from baseCtrl.ini
+        if (configFile=="") //--from fakeMobileBaseTest.ini
         {
             yWarning("Cannot find .ini configuration file. By default I'm searching for fakeMobileBaseTest.ini");
           //  return false;

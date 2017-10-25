@@ -34,7 +34,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace std;
 
-void gotoLoc(string location, INavigation2D* iNav)
+bool gotoLoc(string location, INavigation2D* iNav)
 {
     NavigationStatusEnum status;
     do
@@ -42,13 +42,18 @@ void gotoLoc(string location, INavigation2D* iNav)
         iNav->getNavigationStatus(status);
         if (status == navigation_status_idle) break;
 
-        yInfo() << "Current navigation status:" << status << "Waiting for navigation_status_idle";
+        yInfo() << "Current navigation status:" << yarp::os::Vocab::decode(status) << "Waiting for navigation_status_idle";
         yarp::os::Time::delay(0.1);
     } while (1);
 
     Map2DLocation pos;
     Map2DLocation current_waypoint;
-    iNav->gotoTargetByLocationName(location);
+    iNav->getLocation(location,current_waypoint);
+    if (iNav->gotoTargetByLocationName(location)==false)
+    {
+        yError() << "Unable to go to: " <<location;
+        return false;
+    }
 
     do
     {
@@ -58,7 +63,7 @@ void gotoLoc(string location, INavigation2D* iNav)
         if (status == navigation_status_aborted) break;
         if (status == navigation_status_failing) break;
 
-        yInfo() << "Current navigation status:" << status;
+        yInfo() << "Current navigation status:" << yarp::os::Vocab::decode(status);
         yInfo() << "Current position:" << pos.toString();
         yInfo() << "Current goal:" << current_waypoint.toString();
 
@@ -89,10 +94,12 @@ void gotoLoc(string location, INavigation2D* iNav)
     }
 
     iNav->stopNavigation();
+    return true;
 }
 
 int main(int argc, char* argv[])
 {
+    //basic resource finder and yarp initialization
     ResourceFinder rf;
     rf.setVerbose(true);
     rf.setDefaultContext("robotPathPlannerExample");
@@ -106,20 +113,19 @@ int main(int argc, char* argv[])
     }
 
     Network yarp;
-
     if (!yarp.checkNetwork())
     {
         yError("Sorry YARP network does not seem to be available, is the yarp server available?\n");
         return -1;
     }
 
+    //opens the navigation2DClient
     Property        navTestCfg;
     navTestCfg.put("device", "navigation2DClient");
     navTestCfg.put("local", "/robotPathPlannerExample");
     navTestCfg.put("navigation_server", "/robotPathPlanner");
     navTestCfg.put("map_locations_server", "/mapServer");
     navTestCfg.put("localization_server", "/localizationServer");
-
     PolyDriver ddNavClient;
     bool ok = ddNavClient.open(navTestCfg);
     if (!ok)
@@ -127,6 +133,7 @@ int main(int argc, char* argv[])
         yError() << "Unable to open navigation2DClient device driver";
     }
 
+    //opens the INavigation2D interface
     INavigation2D* iNav = 0;
     ok = ddNavClient.view(iNav);
     if (!ok)
@@ -134,12 +141,22 @@ int main(int argc, char* argv[])
         yError() << "Unable to open INavigation2D interface";
     }
 
+    //interrupts any previous navigation task
+    iNav->stopNavigation();
+    yarp::os::Time::delay(0.1);
+
     for (int i = 0; i < 5; i++)
     {
-        gotoLoc("living room", iNav);
+        //move the robot until 'living_room' location is reached.
+        yInfo() << "Now moving towards 'living_room' location";
+        gotoLoc("living_room", iNav);
+
+        //move the robot until 'office' location is reached.
+        yInfo() << "Now moving towards 'office' location";
         gotoLoc("office", iNav);
     } 
 
+    yInfo() << "RobotPathPlannerExample complete";
     yarp::os::Time::delay(1.0);
     ddNavClient.close();
     return 0;

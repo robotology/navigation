@@ -48,7 +48,13 @@
 
 <module>
    <name>yarpview</name>
-   <parameters>--name /plannerView:i --out /mapClick:o</parameters>
+   <parameters>--name /plannerView:i</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotPathPlannerExample</name>
+   <parameters></parameters>
    <node>console</node>
 </module>
 
@@ -73,18 +79,6 @@
 <connection>
   <from>/robotGoto/status:o</from>
   <to>/robotPathPlanner/navigationStatus:i</to>
-  <protocol>tcp</protocol>
-</connection>
-
-<connection>
-  <from>/robotGoto/speak:o</from>
-  <to>/iSpeak</to>
-  <protocol>tcp</protocol>
-</connection>
-
-<connection>
-  <from>/mapClick:o</from>
-  <to>/robotPathPlanner/yarpviewTarget:i</to>
   <protocol>tcp</protocol>
 </connection>
 
