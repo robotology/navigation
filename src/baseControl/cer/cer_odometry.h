@@ -36,7 +36,6 @@
 #include <yarp/math/Math.h>
 #include <yarp/os/Stamp.h>
 #include <string>
-#include <math.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
 #include "../odometry.h"
@@ -80,6 +79,8 @@ public:
     bool open(ResourceFinder &_rf, Property &options);
     void compute();
     void printStats();
+    double get_vlin_coeff();
+    double get_vang_coeff();
 
 };
 

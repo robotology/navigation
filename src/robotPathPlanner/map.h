@@ -29,6 +29,8 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Image.h>
 #include <yarp/sig/ImageDraw.h>
+#include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/MapGrid2D.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
@@ -46,61 +48,25 @@ using namespace yarp::dev;
 #define M_PI 3.14159265
 #endif
 
-struct cell
-{
-    int x;
-    int y;
-    cell()             {x=0; y=0;}
-    cell(int u, int v) {x=u; y=v;}
-};
+//draw stuff on the map
+bool drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
+bool drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color);
+bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
+bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
+bool drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color);
+bool drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color);
+bool sendToPort(BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send);
 
-class map_class
-{
-    public:
-    int size_x;
-    int size_y;
-    int crop_x;
-    int crop_y;
-    int crop_w;
-    int crop_h;
-    double                                  resolution;
-    yarp::sig::Vector                       origin;
-    IplImage*                               loaded_map;
-    IplImage*                               processed_map;
-    IplImage*                               processed_map_with_scan;
-    
-    public:
-    map_class();
+//return true if the straight line that connects src with dst does not contain any obstacles
+bool checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst);
 
-    bool loadMap(string filename);
-    bool crop(IplImage* img, IplImage* &imgOrig);
-    bool enlargeObstacles(const IplImage* src, IplImage*& dst, unsigned int times);
-    bool enlargeScan(std::vector <cell>& laser_scan, unsigned int times, double max_dist);
-    bool skeletonize(const IplImage* src, IplImage*& dst);
-    bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send); 
-    
-    //return true if the straight line that connects src with dst does not contain any obstacles
-    bool checkStraightLine(IplImage* map, cell src, cell dst);
+//simplify the path
+bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path);
 
-    //simplify the path
-    bool simplifyPath(IplImage *map, std::queue<cell> input_path, std::queue<cell>& output_path);
+//compute the path
+bool findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path);
 
-    //draw stuff on the map
-    void drawPath(IplImage *map, cell current_position, cell current_target, std::queue<cell> path, const CvScalar& color);
-    void drawCurrentPosition(IplImage *map, cell current, const CvScalar& color);
-    void drawLaserScan(IplImage *map, std::vector <cell>& laser_scan, const CvScalar& color);
-
-    //compute the path
-    bool findPath(IplImage *img, cell start, cell goal, std::queue<cell>& path);
-
-    cell world2cell (yarp::sig::Vector v); 
-    yarp::sig::Vector cell2world (cell c);
-
-    private:
-    
-    //used by enlargemetn functions
-    void enlargePixelObstacle (int& i, int& j, cv::Mat& src, cv::Mat& dst, cv::Vec3b& color, std::vector<cv::Vec2d>& next_list);
-    void enlargePixelSkeleton (int& i, int& j, cv::Mat& src, cv::Mat& dst, cv::Vec3b& color, std::vector<cv::Vec2d>& next_list);
-};
+// register obstacles in the map
+void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map);
 
 #endif

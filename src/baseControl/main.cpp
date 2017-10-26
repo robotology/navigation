@@ -190,7 +190,7 @@ public:
             do
             {
                 yarp::os::Time::delay(1.0);
-                if (yarp::os::Network::connect("/joystickCtrl:o","/baseControl/joystick:i"))
+                if (yarp::os::Network::connect("/joystickCtrl:o","/baseControl/joystick1:i"))
                     {
                         yInfo("Joystick has been automatically connected");
                         break;
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("cer");
+    rf.setDefaultContext("navigation");
     rf.setDefaultConfigFile("baseCtrl.ini");
     rf.configure(argc,argv);
 

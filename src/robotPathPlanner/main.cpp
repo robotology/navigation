@@ -20,6 +20,7 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
+#include <yarp/dev/ControlBoardInterfaces.h>
 
 #include "pathPlanner.h"
 #include <math.h>
@@ -40,13 +41,14 @@ public:
     {
         yarp::os::Time::turboBoost();
 
-        Property p;
-        ConstString configFile = rf.findFile("from");
-        if (configFile!="") p.fromConfigFile(configFile.c_str());
+        plannerThread = new PlannerThread(20,rf);
 
-        plannerThread = new PlannerThread(20,rf,p);
-
-        rpcPort.open("/robotPathPlanner/rpc:i");
+        bool ret = rpcPort.open("/robotPathPlanner/rpc");
+        if (ret == false)
+        {
+            yError() << "Unable to open module ports";
+            return false;
+        }
         attach(rpcPort);
         //attachTerminal();
 
@@ -88,55 +90,261 @@ public:
     { 
         if (isStopping())
         {
-            plannerThread->stop();   
+            plannerThread->stop();
             return false;
         }
         
+        int loc, las, sta;
+        plannerThread->getTimeouts(loc,las,sta);
+
         bool err = false;
-        if (plannerThread->laser_timeout_counter>TIMEOUT_MAX)
+        if (las>TIMEOUT_MAX)
         {
             yError("timeout, no laser data received!\n");
             err= true;
         }
-        if (plannerThread->loc_timeout_counter>TIMEOUT_MAX)
+        if (loc>TIMEOUT_MAX)
         {
             yError(" timeout, no localization data received!\n");
             err= true;
         }
-        if (plannerThread->inner_status_timeout_counter>TIMEOUT_MAX)
+        if (sta>TIMEOUT_MAX)
         {
             yError("timeout, no status info received!\n");
             err= true;
         }
         
         if (err==false)
-        yInfo ("module running, ALL ok");
+            yInfo() << "module running, ALL ok. Navigation status:" << plannerThread->getNavigationStatusAsString();
 
         return true; 
+    }
+
+    bool parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+    {
+        if (command.get(0).isString() && command.get(0).asString() == "gotoAbs")
+        {
+            yarp::dev::Map2DLocation loc;
+            loc.x = command.get(1).asDouble();
+            loc.y = command.get(2).asDouble();
+            if   (command.size() == 4) { loc.theta = command.get(3).asDouble(); }
+            else                       { loc.theta = nan(""); }
+            loc.map_id = plannerThread->getCurrentMapId();
+            plannerThread->setNewAbsTarget(loc);
+            reply.addString("new absolute target received");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "gotoRel")
+        {
+            yarp::sig::Vector v;
+            v.push_back(command.get(1).asDouble());
+            v.push_back(command.get(2).asDouble());
+            if (command.size() == 4) { v.push_back(command.get(3).asDouble()); }
+            else                     { v.push_back(nan("")); }
+            plannerThread->setNewRelTarget(v);
+            reply.addString("new relative target received");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "goto")
+        {
+            std::string location_name = command.get(1).asString();
+            if (plannerThread->gotoLocation(location_name))
+            {
+                reply.addString("goto done");
+            }
+            else
+            {
+                reply.addString("goto error");
+            }
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "store_current_location")
+        {
+            std::string location_name = command.get(1).asString();
+            plannerThread->storeCurrentLocation(location_name);
+            reply.addString("store_current_location done");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "delete_location")
+        {
+            std::string location_name = command.get(1).asString();
+            plannerThread->deleteLocation(location_name);
+            reply.addString("delete_location done");
+        }
+
+        else if (command.get(0).isString() && command.get(0).asString() == "get_last_target")
+        {
+            string last_target;
+            bool b = plannerThread->getLastTarget(last_target);
+            if (b)
+            {
+                reply.addString(last_target);
+            }
+            else
+            {
+                yError() << "get_last_target failed: goto <location_name> target not found.";
+                reply.addString("not found");
+            }
+        }
+
+        else if (command.get(0).asString() == "get")
+        {
+            if (command.get(1).asString() == "navigation_status")
+            {
+                string s = plannerThread->getNavigationStatusAsString();
+                reply.addString(s.c_str());
+            }
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "stop")
+           
+        {
+            plannerThread->stopMovement();
+            reply.addString("Stopping movement.");
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "pause")
+        {
+            double time = -1;
+            if (command.size() > 1)
+                time = command.get(1).asDouble();
+            plannerThread->pauseMovement(time);
+            reply.addString("Pausing.");
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "resume")
+        {
+            plannerThread->resumeMovement();
+            reply.addString("Resuming.");
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "draw_locations")
+        {
+            if (command.get(1).asInt() == 1) 
+            {
+                plannerThread->m_enable_draw_all_locations = true;
+                yDebug() << "locations drawing enabled";
+            }
+            else
+            {
+                plannerThread->m_enable_draw_all_locations = false;
+                yDebug() << "locations drawing disabled";
+            }
+        }
+        else if (command.get(0).isString() && command.get(0).asString() == "draw_enlarged_scans")
+        {
+            if (command.get(1).asInt() == 1) 
+            {
+                plannerThread->m_enable_draw_enlarged_scans = true;
+                yDebug() << "enlarged scans drawing enabled";
+            }
+            else
+            {
+                plannerThread->m_enable_draw_enlarged_scans = false;
+                yDebug() << "enlarged scans drawing disabled";
+            }
+        }
+        else
+        {
+            reply.addString("Unknown command.");
+        }
+        return true;
+    }
+
+    bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+    {
+        int request = command.get(1).asVocab();
+        if (request == VOCAB_NAV_GOTOABS)
+        {
+            yarp::dev::Map2DLocation loc;
+            loc.map_id = command.get(2).asString();
+            loc.x = command.get(3).asDouble();
+            loc.y = command.get(4).asDouble();
+            loc.theta = command.get(5).asDouble();
+            plannerThread->setNewAbsTarget(loc);
+            reply.addVocab(VOCAB_OK);
+        }
+
+        else if (request == VOCAB_NAV_GOTOREL)
+        {
+            yarp::sig::Vector v;
+            v.push_back(command.get(2).asDouble());
+            v.push_back(command.get(3).asDouble());
+            if (command.size() == 5) v.push_back(command.get(4).asDouble());
+            plannerThread->setNewRelTarget(v);
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (request == VOCAB_NAV_GET_STATUS)
+        {
+            int nav_status = plannerThread->getNavigationStatusAsInt();
+            reply.addVocab(VOCAB_OK);
+            reply.addInt(nav_status);
+        }
+        else if (request == VOCAB_NAV_STOP)
+        {
+            plannerThread->stopMovement();
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (request == VOCAB_NAV_SUSPEND)
+        {
+            double time = -1;
+            if (command.size() > 1)
+                time = command.get(1).asDouble();
+            plannerThread->pauseMovement(time);
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (request == VOCAB_NAV_RESUME)
+        {
+            plannerThread->resumeMovement();
+            reply.addVocab(VOCAB_OK);
+        }
+        else if (request == VOCAB_NAV_GET_CURRENT_POS)
+        {
+            yarp::dev::Map2DLocation loc;
+            plannerThread->getCurrentPos(loc);
+            reply.addVocab(VOCAB_OK);
+            reply.addString(loc.map_id);
+            reply.addDouble(loc.x);
+            reply.addDouble(loc.y);
+            reply.addDouble(loc.theta);
+
+        }
+        else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
+        {
+            Map2DLocation loc = request == VOCAB_NAV_GET_ABS_TARGET ? plannerThread->getCurrentAbsTarget() : plannerThread->getCurrentRelTarget();
+            reply.addVocab(VOCAB_OK);
+
+            if(request == VOCAB_NAV_GET_ABS_TARGET) reply.addString(loc.map_id);
+
+            reply.addDouble(loc.x);
+            reply.addDouble(loc.y);
+            reply.addDouble(loc.theta);
+        }
+        else
+        {
+            reply.addVocab(VOCAB_ERR);
+        }
+        return true;
     }
 
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
     {
         reply.clear(); 
 
-        plannerThread->mutex.wait();
+        plannerThread->m_mutex.wait();
         if (command.get(0).isVocab())
         {
-            if (command.get(0).asVocab() == VOCAB3('p','n','t'))
+            if(command.get(0).asVocab() == VOCAB_INAVIGATION && command.get(1).isVocab())
             {
-                yarp::sig::Vector v;
-                v.push_back(command.get(1).asDouble());
-                v.push_back(command.get(2).asDouble());
-                plannerThread->setNewAbsTarget(v);
-                reply.addString("new absolute target received from gui");
+                parse_respond_vocab(command,reply);
+            }
+            else
+            {
+                yError() << "Invalid vocab received";
+                reply.addVocab(VOCAB_ERR);
             }
         }
-    
         else if (command.get(0).isString())
         {
             if (command.get(0).asString()=="quit")
             {
-                plannerThread->mutex.post();
+                plannerThread->m_mutex.post();
                 return false;
             }
 
@@ -144,66 +352,28 @@ public:
             {
                 reply.addVocab(Vocab::encode("many"));
                 reply.addString("Available commands are:");
-                reply.addString("gotoAbs <x> <y> <angle>");
-                reply.addString("gotoRel <x> <y> <angle>");
+                reply.addString("goto <locationName>");
+                reply.addString("gotoAbs <x> <y> <angle in degrees>");
+                reply.addString("gotoRel <x> <y> <angle in degrees>");
+                reply.addString("store_current_location <location_name>");
+                reply.addString("delete_location <location_name>");
                 reply.addString("stop");
                 reply.addString("pause");
                 reply.addString("resume");
                 reply.addString("quit");
+                reply.addString("draw_locations <0/1>");
             }
-
-            else if (command.get(0).asString()=="gotoAbs")
+            else if (command.get(0).isString())
             {
-                yarp::sig::Vector v;
-                v.push_back(command.get(1).asDouble());
-                v.push_back(command.get(2).asDouble());
-                if (command.size()==4) v.push_back(command.get(3).asDouble());
-                plannerThread->setNewAbsTarget(v);
-                reply.addString("new absolute target received");
-            }
-
-            else if (command.get(0).asString()=="gotoRel")
-            {
-                yarp::sig::Vector v;
-                v.push_back(command.get(1).asDouble());
-                v.push_back(command.get(2).asDouble());
-                if (command.size()==4) v.push_back(command.get(3).asDouble());
-                plannerThread->setNewRelTarget(v);
-                reply.addString("new relative target received");
-            }
-
-            else if (command.get(0).asString()=="get")
-            {
-                if (command.get(1).asString()=="navigation_status")
-                {
-                    string s = plannerThread->getNavigationStatus();
-                    reply.addString(s.c_str());
-                }
-            }
-            else if (command.get(0).asString()=="stop")
-            {
-                plannerThread->stopMovement();
-                reply.addString("Stopping movement.");
-            }
-            else if (command.get(0).asString()=="pause")
-            {
-                double time = -1;
-                if (command.size() > 1)
-                    time = command.get(1).asDouble();
-                plannerThread->pauseMovement(time);
-                reply.addString("Pausing.");
-            }
-            else if (command.get(0).asString()=="resume")
-            {
-                plannerThread->resumeMovement();
-                reply.addString("Resuming.");
-            }
-            else
-            {
-                reply.addString("Unknown command.");
+                parse_respond_string(command, reply);
             }
         }
-        plannerThread->mutex.post();
+        else
+        {
+            yError() << "Invalid command type";
+            reply.addVocab(VOCAB_ERR);
+        }
+        plannerThread->m_mutex.post();
         return true;
     }
 };
@@ -222,7 +392,8 @@ int main(int argc, char *argv[])
     rf.setDefaultConfigFile("robotPathPlanner.ini");           //overridden by --from parameter
     rf.setDefaultContext("robotPathPlanner");                  //overridden by --context parameter
     rf.configure(argc,argv);
-    
+    std::string debug_rf = rf.toString();
+
     robotPlannerModule robotPlanner;
 
     return robotPlanner.runModule(rf);

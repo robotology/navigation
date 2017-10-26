@@ -8,6 +8,10 @@ add_subdirectory(baseControl)
 add_subdirectory(forceGuidance)
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
+add_subdirectory(fakeMobileBaseTest)
+add_subdirectory(localizationServer)
+add_subdirectory(mapper2D)
 
 
-
+add_subdirectory(tests)
+add_subdirectory(tutorials)

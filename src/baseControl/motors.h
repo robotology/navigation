@@ -36,25 +36,38 @@
 #include <string>
 #include <math.h>
 #include <vector>
+#include <geometry_msgs_Twist.h>
+#include <yarp/os/Node.h>
+#include <yarp/os/Publisher.h>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-#define DEFAULT_MAX_LINEAR_VEL  0.42  // maximum linear  velocity (m/s)
-#define DEFAULT_MAX_ANGULAR_VEL 24.0  // maximum angular velocity (deg/s)
+#ifndef RAD2DEG
+#define RAD2DEG 180.0/M_PI
+#endif 
+
+#ifndef DEG2RAD
+#define DEG2RAD M_PI/180.0
+#endif
 
 class MotorControl
 {
 protected:
+    int                 motors_num;
     Property            ctrl_options;
     double              thread_period;
     std::vector<double> F;
     std::vector<int>    board_control_modes;
+    std::vector<int>    board_control_modes_last;
     int                 thread_timeout_counter;
 
-    double              max_linear_vel;
-    double              max_angular_vel;
+    double              max_motor_pwm;
+    double              max_motor_vel;
 
 protected:
     //ResourceFinder            rf;
@@ -62,35 +75,42 @@ protected:
 
     int                motors_filter_enabled;
     string             localName;
+    BufferedPort<Bottle>            port_status;
 
     IPidControl       *ipid;
     IVelocityControl  *ivel;
     IEncoders         *ienc;
     IAmplifierControl *iamp;
-    IOpenLoopControl  *iopl;
+    IPWMControl       *ipwm;
     IControlMode2     *icmd;
+
+    //ros
+    bool                                         enable_ROS;
+    bool                                         enable_ROS_OUTPUT_GROUP;
+    std::string                                  rosTopicName_cmd_twist;
+    yarp::os::Publisher<geometry_msgs_Twist>     rosPublisherPort_cmd_twist;
 
 public:
 
     MotorControl(unsigned int _period, PolyDriver* _driver);
     virtual ~MotorControl();
-    virtual bool set_control_velocity() = 0;
-    virtual bool set_control_openloop() = 0;
-    virtual bool set_control_idle() = 0;
+    virtual bool set_control_velocity();
+    virtual bool set_control_openloop();
+    virtual bool set_control_idle();
+    virtual bool check_motors_on();
+    virtual void updateControlMode();
+    virtual void printStats();
 
-    bool open(ResourceFinder &_rf, Property &_options);
+    virtual bool open(ResourceFinder &_rf, Property &_options);
     virtual void close();
     virtual void execute_none() = 0;
     virtual void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
     virtual void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
     virtual void decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
-    virtual bool check_motors_on() = 0;
-    virtual void updateControlMode() = 0;
-    virtual void printStats() = 0;
 
     virtual void set_motors_filter(int b) {motors_filter_enabled=b;}
-    virtual double get_max_linear_vel()   {return max_linear_vel;}
-    virtual double get_max_angular_vel()  {return max_angular_vel;}
+    virtual double get_max_motor_vel()   {return max_motor_vel;}
+    virtual double get_max_motor_pwm()   {return max_motor_pwm;}
     virtual void  apply_motor_filter(int i);
 };
 

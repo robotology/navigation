@@ -41,17 +41,16 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-#define DEFAULT_MAX_LINEAR_VEL  0.42  // maximum linear  velocity (m/s)
-#define DEFAULT_MAX_ANGULAR_VEL 24.0  // maximum angular velocity (deg/s)
-
 class iKart_MotorControl : public MotorControl
 {
+    //robot geometry
+    double              geom_r;
+    double              geom_L;
+    double              g_angle;
+
 public:
     iKart_MotorControl(unsigned int _period, PolyDriver* _driver);
     ~iKart_MotorControl();
-    bool set_control_velocity();
-    bool set_control_openloop();
-    bool set_control_idle();
 
     bool open(ResourceFinder &_rf, Property &_options);
     void execute_none();
@@ -59,13 +58,9 @@ public:
     void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void close();
-    bool check_motors_on();
-    void updateControlMode();
-    void printStats();
     void set_motors_filter(int b) {motors_filter_enabled=b;}
- 
-    double get_max_linear_vel()   {return max_linear_vel;}
-    double get_max_angular_vel()  {return max_angular_vel;}
+    double get_vlin_coeff();
+    double get_vang_coeff();
 };
 
 #endif

@@ -1,0 +1,14 @@
+<application>
+<name>transform_server</name>
+
+<dependencies>	
+cerSrv
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>r1-base</node>
+</module>
+
+</application>

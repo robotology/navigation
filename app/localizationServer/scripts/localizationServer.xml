@@ -1,0 +1,13 @@
+<application>
+<name>localizationServer</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>localizationServer</name>
+   <parameters>--context localizationServer --from localizationServer.ini</parameters>
+   <node>console</node>
+</module>
+
+</application>

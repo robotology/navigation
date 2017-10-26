@@ -1,0 +1,32 @@
+<application>
+<name>mapper2D</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>mapper2D</name>
+   <parameters>--context mapper2D --from mapper2D.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /mapperView:i --out /mapperClick:o</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/mapperClick:o</from>
+  <to>/mapper2D/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/mapper2D/map:o</from>
+  <to>/mapperView:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+
+</application>

@@ -67,7 +67,8 @@ iKart_Odometry::iKart_Odometry(unsigned int _period, PolyDriver* _driver) : Odom
     traveled_distance=0;
     traveled_angle=0;
     geom_r = 0;
-    geom_L = 297.16/1000.0;   //m
+    geom_L = 0;
+    g_angle = 0;
     encvel_estimator =new iCub::ctrl::AWLinEstimator(3,1.0);
     enc.resize(3);
     encv.resize(3);
@@ -96,9 +97,15 @@ bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
         return false;
     }
     // open control input ports
-    port_odometry.open((localName+"/odometry:o").c_str());
-    port_odometer.open((localName+"/odometer:o").c_str());
-    port_vels.open((localName+"/velocity:o").c_str());
+    bool ret= true;
+    ret &= port_odometry.open((localName+"/odometry:o").c_str());
+    ret &= port_odometer.open((localName+"/odometer:o").c_str());
+    ret &= port_vels.open((localName+"/velocity:o").c_str());
+    if (ret == false)
+    {
+        yError() << "Unable to open module ports";
+        return false;
+    }
 
     //reset odometry
     reset_odometry();
@@ -116,22 +123,32 @@ bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
         yError("iKart_Odometry::open Unable to find GENERAL group!");
         return false;
     }
-    string robot_type_s = general_group.check("robot_type", Value("none"), "geometry of the robot").asString();
-    if (robot_type_s == "ikart_V1")
+
+    //get robot geometry
+    Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
+    if (geometry_group.isNull())
     {
-        geom_r = 62.5 / 1000.0;     //m
-        g_angle = 0;
-    }
-    else if (robot_type_s == "ikart_V2")
-    {
-        geom_r = 76.15 / 1000.0;     //m
-        g_angle = 45;
-    }
-    else
-    {
-        yError("iKart_Odometry::open Invalid robot type!");
+        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
         return false;
     }
+    if (!geometry_group.check("geom_r"))
+    {
+        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("geom_L"))
+    {
+        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    if (!geometry_group.check("g_angle"))
+    {
+        yError("Missing param g_angle in [ROBOT_GEOMETRY] group");
+        return false;
+    }
+    geom_r = geometry_group.find("geom_r").asDouble();
+    geom_L = geometry_group.find("geom_L").asDouble();
+    g_angle = geometry_group.find("g_angle").asDouble();
 
     return true;
 }
@@ -167,7 +184,7 @@ void iKart_Odometry::compute()
     // -------------------------------------------------------------------------------------
 
     //compute the orientation. odom_theta is expressed in radians
-    odom_theta = -geom_r*(enc[0]+enc[1]+enc[2])/(3*geom_L);
+    odom_theta = geom_r*(enc[0]+enc[1]+enc[2])/(3*geom_L);
 
     //build the kinematics matrix
     yarp::sig::Matrix kin;
@@ -220,13 +237,13 @@ void iKart_Odometry::compute()
     odom_cart_vels  = m1*ikin*encv;
     ikart_cart_vels = m2*ikin*encv;
 
-    base_vel_x     = ikart_cart_vels[1];
-    base_vel_y     = ikart_cart_vels[0];
+    base_vel_x     = ikart_cart_vels[0];
+    base_vel_y     = ikart_cart_vels[1];
     base_vel_theta = ikart_cart_vels[2];
     base_vel_lin   = sqrt(odom_vel_x*odom_vel_x + odom_vel_y*odom_vel_y);
     
     odom_vel_x      = odom_cart_vels[0];
-    odom_vel_y      = -odom_cart_vels[1];
+    odom_vel_y      = odom_cart_vels[1];
     odom_vel_theta  = odom_cart_vels[2];
   
     //these are not currently used
@@ -240,6 +257,9 @@ void iKart_Odometry::compute()
         odom_vel_theta  = atan2(odom_vel_x,odom_vel_y)*RAD2DEG;
         base_vel_theta = atan2(base_vel_x,base_vel_y)*RAD2DEG;
     }
+    //convert from radians back to degrees
+    odom_theta       *= RAD2DEG;
+    traveled_angle   *= RAD2DEG;
 
     //the integration step
     odom_x=odom_x + (odom_vel_x * period/1000.0);
@@ -269,13 +289,18 @@ void iKart_Odometry::compute()
                 (-sin(odom_theta)-si3p)*encB + 
                 (sin(odom_theta)-si3m)*encC
                 );
-    */
-
-    //convert from radians back to degrees
-    odom_theta       *= RAD2DEG;
-    base_vel_theta   *= RAD2DEG;
-    odom_vel_theta   *= RAD2DEG;
-    traveled_angle   *= RAD2DEG;
+    */  
 
     mutex.post();
+}
+
+double iKart_Odometry::get_vlin_coeff()
+{
+    return 1;
+}
+
+double iKart_Odometry::get_vang_coeff()
+{
+    // theta = - r(e0 + e1 +e2)/eL
+    return geom_L/geom_r;
 }

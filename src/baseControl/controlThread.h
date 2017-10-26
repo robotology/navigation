@@ -79,12 +79,6 @@ private:
     double               input_desired_direction;
     double               input_pwm_gain;
                          
-    //movement control variables (internally computed)
-    double               exec_linear_speed;
-    double               exec_angular_speed;
-    double               exec_desired_direction;
-    double               exec_pwm_gain;
-                         
     //controlpids
     parlPID*             linear_speed_pid;
     parlPID*             angular_speed_pid;
@@ -95,10 +89,13 @@ private:
     int                  robot_type;
     double               lin_ang_ratio;
     bool                 both_lin_ang_enabled;
+    bool                 ratio_limiter_enabled;
     int                  input_filter_enabled;
     bool                 debug_enabled;
-    double               max_motor_pwm;
-    double               max_motor_vel;
+    double               max_angular_vel;
+    double               max_linear_vel;
+    double               max_angular_acc;
+    double               max_linear_acc;
     
     //ROS node
     yarp::os::Node*     rosNode;
@@ -152,7 +149,10 @@ public:
         angular_speed_pid        = 0;
         linear_ol_pid            = 0;
         angular_ol_pid           = 0;
-        max_motor_pwm            = 0;
+        max_linear_vel           = 0;
+        max_angular_vel          = 0;
+        max_angular_acc          = 0;
+        max_linear_acc           = 0;
         remoteName               = ctrl_options.find("remote").asString();
         localName                = ctrl_options.find("local").asString();
     }
@@ -174,11 +174,14 @@ public:
     void set_pid (string id, double kp, double ki, double kd);
     void apply_ratio_limiter (double max, double& linear_speed, double& angular_speed);
     void apply_ratio_limiter (double& linear_speed, double& angular_speed);
+    void apply_acceleration_limiter (double& linear_speed, double& angular_speed, double& desired_direction);
     void apply_input_filter  (double& linear_speed, double& angular_speed, double& desired_direction);
     void set_input_filter    (int b) {input_filter_enabled=b;}
     
-    void apply_control_openloop_pid(double& pidout_linear_speed,double& pidout_angular_speed, const double ref_linear_speed,const double ref_angular_speed);
-    void apply_control_speed_pid(double& pidout_linear_speed,double& pidout_angular_speed, const double ref_linear_speed,const double ref_angular_speed);
+    void apply_control_openloop_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed);
+    void apply_control_speed_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed);
+    double get_max_linear_vel()  { return max_linear_vel; }
+    double get_max_angular_vel() { return max_angular_vel; }
 
     virtual void threadRelease()
     {
