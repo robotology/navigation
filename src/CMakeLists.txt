@@ -13,6 +13,5 @@ add_subdirectory(localizationServer)
 add_subdirectory(mapper2D)
 
 
-add_subdirectory(navigation2DClientTest)
-add_subdirectory(robotPathPlannerExample)
-add_subdirectory(robotGotoExample)
+add_subdirectory(tests)
+add_subdirectory(tutorials)
