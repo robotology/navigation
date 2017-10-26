@@ -933,7 +933,7 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
         target.push_back(beta2);
         m_target_data.weak_angle = true;
     }
-    m_target_data.target = Map2DLocation("", target[0], target[1], target[2]);
+    m_target_data.target = Map2DLocation("unknown_to_robotGoto", target[0], target[1], target[2]);
     m_status = navigation_status_preparing_before_move;
     m_status_after_approach = navigation_status_moving;
     if (m_enable_retreat)

@@ -48,6 +48,9 @@ bool gotoLoc(string location, INavigation2D* iNav)
 
     Map2DLocation pos;
     Map2DLocation current_waypoint;
+    Map2DLocation curr_goal;
+    iNav->getAbsoluteLocationOfCurrentTarget(curr_goal);
+
     iNav->getLocation(location,current_waypoint);
     if (iNav->gotoTargetByLocationName(location)==false)
     {

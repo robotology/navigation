@@ -42,23 +42,25 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
         iNav->getNavigationStatus(status);
         if (status == navigation_status_idle) break;
 
-        yInfo() << "Current navigation status:" << status << "Waiting for navigation_status_idle";
+        yInfo() << "Current navigation status:" << yarp::os::Vocab::decode(status) << "Waiting for navigation_status_idle";
         yarp::os::Time::delay(0.1);
     } while (1);
 
     Map2DLocation pos;
+    Map2DLocation curr_goal;
+
     iNav->gotoTargetByAbsoluteLocation(goal);
 
     do
     {
         iNav->getNavigationStatus(status);
         iNav->getCurrentPosition(pos);
-        iNav->getAbsoluteLocationOfCurrentTarget(goal);
+        iNav->getAbsoluteLocationOfCurrentTarget(curr_goal);
         if (status == navigation_status_goal_reached) break;
         if (status == navigation_status_aborted) break;
         if (status == navigation_status_failing) break;
 
-        yInfo() << "Current navigation status:" << status;
+        yInfo() << "Current navigation status:" << yarp::os::Vocab::decode(status);
         yInfo() << "Current position:" << pos.toString();
         yInfo() << "Current goal:" << goal.toString();
 
@@ -133,24 +135,35 @@ int main(int argc, char* argv[])
         yError() << "Unable to open INavigation2D interface";
     }
 
+    //interrupts any previous navigation task
+    iNav->stopNavigation();
+    yarp::os::Time::delay(0.1);
+
+    //define two locations
     Map2DLocation goal1;
     Map2DLocation goal2;
     goal1.map_id = "testMap";
-    goal1.x = 20;
-    goal1.y = 10;
+    goal1.x = 2.0;
+    goal1.y = 1.0;
     goal1.theta = 0;
 
     goal2.map_id = "testMap";
-    goal2.x = 10;
-    goal2.y = 20;
+    goal2.x = 1.0;
+    goal2.y = 2.0;
     goal2.theta = 90;
 
     for (int i = 0; i < 5; i++)
     {
+        //move the robot until goal1 location is reached.
+        yInfo() << "Now moving towards location:" << goal1.toString();
         gotoLoc(goal1, iNav);
+
+        //move the robot until goal2 location reached.
+        yInfo() << "Now moving towards location:" << goal2.toString();
         gotoLoc(goal2, iNav);
     }
 
+    yInfo() << "RobotGotoPlannerExample complete";
     yarp::os::Time::delay(1.0);
     ddNavClient.close();
     return 0;
