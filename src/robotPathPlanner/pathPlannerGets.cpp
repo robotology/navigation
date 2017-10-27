@@ -45,6 +45,12 @@ Map2DLocation PlannerThread::getFinalRelTarget()
 Map2DLocation PlannerThread::getCurrentAbsTarget()
 {
     Map2DLocation m;
+    if (m_sequence_of_goals.size()==0)
+    {
+        m.map_id="invalid";
+        yError() << "No valid target has been set yet.";
+        return m;
+    }
     m.map_id = m_sequence_of_goals.front().map_id;
     m.x = m_sequence_of_goals.front().x;
     m.y = m_sequence_of_goals.front().y;
@@ -55,6 +61,12 @@ Map2DLocation PlannerThread::getCurrentAbsTarget()
 Map2DLocation PlannerThread::getCurrentRelTarget()
 {
     Map2DLocation m;
+    if (m_sequence_of_goals.size()==0)
+    {
+        m.map_id="invalid";
+        yError() << "No valid target has been set yet.";
+        return m;
+    }
     m.map_id = m_sequence_of_goals.front().map_id;
     m.x = m_sequence_of_goals.front().x - m_localization_data.x;
     m.y = m_sequence_of_goals.front().y - m_localization_data.y;
