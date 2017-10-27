@@ -29,6 +29,7 @@
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/IMap2D.h>
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -148,6 +149,44 @@ int main(int argc, char* argv[])
     iNav->stopNavigation();
     yarp::os::Time::delay(0.1);
 
+    //gets an interface to dialogue with MapServer
+    IMap2D*  iMap=0;
+    Property map_options;
+    PolyDriver ddMapClient;
+    map_options.put("device", "map2DClient");
+    map_options.put("local", "/robotPathPlannerExample"); //This is just a prefix. map2DClient will complete the port name.
+    map_options.put("remote", "/mapServer");
+    if (ddMapClient.open(map_options) == false)
+    {
+        yError() << "Unable to open mapClient";
+        return false;
+    }
+    else
+    {
+        yInfo() << "Opened mapClient";
+        ddMapClient.view(iMap);
+        if (ddMapClient.isValid() == false || iMap == 0)
+        {
+            yError() << "Unable to view map interface";
+            return false;
+        }
+    }
+
+    //defines a new location callled bedroom and saves it to map server
+    Map2DLocation bedroom_location;
+    bedroom_location.map_id="testMap";
+    bedroom_location.x=2.0;
+    bedroom_location.x=1.0;
+    bedroom_location.theta=45.0;
+    if (iMap->storeLocation("bedroom",bedroom_location))
+    {
+        yInfo() << "'bedroom' location has been stored to mapServer";
+    }
+    else
+    {
+        yWarning() << "'bedroom' location is already present into mapServer";
+    }
+    
     for (int i = 0; i < 5; i++)
     {
         //move the robot until 'living_room' location is reached.
@@ -157,6 +196,10 @@ int main(int argc, char* argv[])
         //move the robot until 'office' location is reached.
         yInfo() << "Now moving towards 'office' location";
         gotoLoc("office", iNav);
+
+        //move the robot until 'bedroom' location is reached.
+        yInfo() << "Now moving towards 'bedroom' location";
+        gotoLoc("bedroom", iNav);
     } 
 
     yInfo() << "RobotPathPlannerExample complete";

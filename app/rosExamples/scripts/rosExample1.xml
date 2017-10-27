@@ -6,7 +6,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 1)"</parameters>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 1)" "(enable_ros_subscriber 1)"</parameters>
    <node>console</node>
 </module>
 
