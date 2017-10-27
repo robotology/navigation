@@ -18,7 +18,7 @@
 
 <module>
    <name>localizationServer</name>
-   <parameters>--context robotGotoExample --from localizationServer.ini</parameters>
+   <parameters>--context robotGotoExamples --from localizationServer.ini</parameters>
    <node>console</node>
 </module>
 
@@ -36,7 +36,7 @@
 
 <module>
    <name>robotGoto</name>
-   <parameters>--context robotGotoExample --from robotGoto_ikart.ini</parameters>
+   <parameters>--context robotGotoExamples --from robotGoto_ikart.ini</parameters>
    <node>console</node>
 </module>
 

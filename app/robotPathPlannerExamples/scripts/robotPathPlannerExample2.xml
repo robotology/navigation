@@ -24,7 +24,7 @@
 
 <module>
    <name>localizationServer</name>
-   <parameters>--context robotPathPlannerExample --from localizationServer.ini</parameters>
+   <parameters>--context robotPathPlannerExamples --from localizationServer.ini</parameters>
    <node>console</node>
 </module>
 
@@ -36,7 +36,7 @@
 
 <module>
    <name>robotGoto</name>
-   <parameters>--context robotPathPlannerExample --from robotGoto_ikart.ini</parameters>
+   <parameters>--context robotPathPlannerExamples --from robotGoto_ikart.ini</parameters>
    <node>console</node>
 </module>
 

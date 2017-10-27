@@ -1,0 +1,103 @@
+<application>
+<name>ros EXAMPLE1</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 1)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>fakeMobileBaseTest</name>
+   <parameters>--context fakeMobileBaseTest --from fakeMobileBaseTest.ini --holonomic</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>rosrun</name>
+   <parameters>map_server map_server ~/navigation/app/mapsExample/map_test_grid.yaml</parameters>
+   <node>ros_pc</node>
+</module>
+
+<module>
+   <name>roslaunch</name>
+   <parameters>~/navigation/app/rosExamples/launch/amcl_map_from_ros.launch</parameters>
+   <node>ros_pc</node>
+</module>
+
+<module>
+   <name>localizationServer</name>
+   <parameters>--context rosExamples --from localizationServer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_client</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotGoto</name>
+   <parameters>--context rosExamples --from robotGoto_ikart.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotPathPlanner</name>
+   <parameters>--context robotPathPlannerExample --from robotPathPlanner_ikart.ini </parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /plannerView:i --out /mapClick:o</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/fakeMobileBaseTest/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/map:o</from>
+  <to>/plannerView:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/commands:o</from>
+  <to>/robotGoto/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/robotGoto/status:o</from>
+  <to>/robotPathPlanner/navigationStatus:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/mapClick:o</from>
+  <to>/robotPathPlanner/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/yarpviewTarget:o</from>
+  <to>/robotPathPlanner/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/fakeMobileBaseTest/odometry:o</from>
+  <to>/fakeLaser/location:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>

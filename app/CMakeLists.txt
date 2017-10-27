@@ -6,8 +6,9 @@
 
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
-add_subdirectory(robotGotoExample)
-add_subdirectory(robotPathPlannerExample)
+add_subdirectory(robotGotoExamples)
+add_subdirectory(robotPathPlannerExamples)
+add_subdirectory(rosExamples)
 add_subdirectory(baseControl)
 add_subdirectory(localizationServer)
 add_subdirectory(mapper2D)
