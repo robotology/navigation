@@ -57,6 +57,10 @@ private:
     BufferedPort<Bottle>      m_port_odometer;
     bool                      m_is_holonomic;
 
+    //variables to control odometry simulated errors
+    double              odometry_error_x_gain;
+    double              odometry_error_y_gain;
+    double              odometry_error_t_gain;
 public:
     Controller();
     ~Controller();
@@ -66,6 +70,9 @@ public:
     void   publish_tf();
     void   publish_port();
     bool   init(bool holonomic);
+    void   set_odometry_error (double xgain, double ygain, double tgain);
+
+
 };
 
 #endif

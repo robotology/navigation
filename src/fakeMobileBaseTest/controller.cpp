@@ -27,7 +27,9 @@
 
 Controller::Controller()
 {
-
+    odometry_error_x_gain=1.0;
+    odometry_error_y_gain=1.0;
+    odometry_error_t_gain=1.0;
 }
 
 bool Controller::init(bool holonomic)
@@ -64,13 +66,20 @@ Controller::~Controller()
     m_port_odometer.close();
 }
 
+void Controller::set_odometry_error (double xgain, double ygain, double tgain)
+{
+    odometry_error_x_gain=xgain;
+    odometry_error_y_gain=ygain;
+    odometry_error_t_gain=tgain;
+}
+
 void  Controller::publish_tf()
 {
     yarp::sig::Matrix m1;
     m1.resize(4, 4);
-    double a = m_current_theta*DEG2RAD;
-    m1[0][0] = cos(a);   m1[0][1] = -sin(a);  m1[0][2] = 0; m1[0][3] = m_current_x;
-    m1[1][0] = sin(a);   m1[1][1] = cos(a);   m1[1][2] = 0; m1[1][3] = m_current_y;
+    double a = m_current_theta*DEG2RAD*odometry_error_t_gain;
+    m1[0][0] = cos(a);   m1[0][1] = -sin(a);  m1[0][2] = 0; m1[0][3] = m_current_x*odometry_error_x_gain;
+    m1[1][0] = sin(a);   m1[1][1] = cos(a);   m1[1][2] = 0; m1[1][3] = m_current_y*odometry_error_y_gain;
     m1[2][0] = 0;        m1[2][1] = 0;        m1[2][2] = 1; m1[2][3] = 0;
     m1[3][0] = 0;        m1[3][1] = 0;        m1[3][2] = 0; m1[3][3] = 1;
     m_iTf->setTransform("mobile_base_body", "map", m1);
@@ -84,9 +93,9 @@ void  Controller::publish_port()
         m_port_odometry.setEnvelope(m_timeStamp);
         Bottle &b = m_port_odometry.prepare();
         b.clear();
-        b.addDouble(m_current_x); //position in the odom reference frame
-        b.addDouble(m_current_y);
-        b.addDouble(m_current_theta);
+        b.addDouble(m_current_x*odometry_error_x_gain); //position in the odom reference frame
+        b.addDouble(m_current_y*odometry_error_y_gain);
+        b.addDouble(m_current_theta*odometry_error_t_gain);
         b.addDouble(0); //velocity in the robot reference frame
         b.addDouble(0);
         b.addDouble(0);

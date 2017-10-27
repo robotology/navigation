@@ -12,7 +12,7 @@
 
 <module>
    <name>fakeMobileBaseTest</name>
-   <parameters>--context fakeMobileBaseTest --from fakeMobileBaseTest.ini --holonomic</parameters>
+   <parameters>--context rosExamples --from fakeMobileBaseTest.ini --holonomic</parameters>
    <node>console</node>
 </module>
 

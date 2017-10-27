@@ -127,6 +127,18 @@ public:
             return false;
         }
 
+        if (ctrl_options.check("ODOMETRY_ERROR"))
+        {
+            yarp::os::Bottle error_group = ctrl_options.findGroup("ODOMETRY_ERROR");
+            if (error_group.check("x_gain") == false)  { yError() << "Missing x_gain parameter"; return false; }
+            if (error_group.check("y_gain") == false)  { yError() << "Missing y_gain parameter"; return false; }
+            if (error_group.check("t_gain") == false) { yError() << "Missing t_gain parameter"; return false; }
+            double odometry_error_x_gain = error_group.find("x_gain").asDouble();
+            double odometry_error_y_gain = error_group.find("y_gain").asDouble();
+            double odometry_error_t_gain = error_group.find("t_gain").asDouble();
+            control->set_odometry_error(odometry_error_x_gain,odometry_error_y_gain,odometry_error_t_gain);
+        }
+
         //try to connect to joystickCtrl output
         if (rf.check("joystick_connect"))
         {
