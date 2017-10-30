@@ -257,8 +257,9 @@ void ControlThread::run()
     if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
-        pidout_linear_throttle = input_linear_speed * exec_pwm_gain;
-        pidout_angular_throttle = input_angular_speed * exec_pwm_gain;
+        //the following /2 is used to avoid saturation due to decoupling
+        pidout_linear_throttle = input_linear_speed / this->max_linear_vel * this->motor_handler->get_max_motor_pwm()/2 * exec_pwm_gain;
+        pidout_angular_throttle = input_angular_speed / this->max_angular_vel * this->motor_handler->get_max_motor_pwm()/2 * exec_pwm_gain;
         pidout_direction = input_desired_direction;
         this->motor_handler->execute_openloop(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
