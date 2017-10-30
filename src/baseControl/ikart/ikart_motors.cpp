@@ -161,7 +161,7 @@ void iKart_MotorControl::execute_openloop(double appl_linear_speed, double appl_
     //Apply the commands
     ipwm->setRefDutyCycle(0, -F[0]);
     ipwm->setRefDutyCycle(1, -F[1]);
-    ipwm->setRefDutyCycle(1, -F[2]);
+    ipwm->setRefDutyCycle(2, -F[2]);
 }
 
 void iKart_MotorControl::execute_none()
