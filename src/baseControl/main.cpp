@@ -328,8 +328,12 @@ public:
         {
             if (control_thr)
             {
-                control_thr->get_odometry_handler()->reset_odometry();
-                reply.addString("Odometry reset done.");
+                Odometry* pOdometry=0;
+                pOdometry = control_thr->get_odometry_handler();
+                if (pOdometry) 
+                {pOdometry->reset_odometry(); reply.addString("Odometry reset done.");}
+                else
+                {reply.addString("No Odometry available.");}
             }
             return true;
         }
@@ -356,9 +360,11 @@ public:
     { 
         if (control_thr)
         {
+            Odometry* pOdometry=0;
             control_thr->printStats();
             control_thr->get_motor_handler()->updateControlMode();
-            control_thr->get_odometry_handler()->printStats();
+            pOdometry = control_thr->get_odometry_handler();
+            if (pOdometry) pOdometry->printStats();
             control_thr->get_motor_handler()->printStats();
             control_thr->get_input_handler()->printStats();
         }

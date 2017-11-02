@@ -146,8 +146,10 @@ void ControlThread::set_pid (string id, double kp, double ki, double kd)
 void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,double& pidout_angular_throttle, 
                            const double ref_linear_speed, const double ref_angular_speed)
 {
-    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin();
-    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta();
+    double feedback_linear_speed = 0;
+    double feedback_angular_speed = 0;
+    if (odometry_handler) this->odometry_handler->get_base_vel_lin();
+    if (odometry_handler) this->odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_speed_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_throttle = 1.0 * tmp[0];
@@ -179,8 +181,10 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,doubl
 
 void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed)
 {
-    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin();
-    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta();
+    double feedback_linear_speed = 0; 
+    double feedback_angular_speed = 0; 
+    if (odometry_handler) this->odometry_handler->get_base_vel_lin();
+    if (odometry_handler) this->odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_ol_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_throttle = 1.0 * tmp[0];
@@ -206,8 +210,8 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
 
 void ControlThread::run()
 {
-    this->odometry_handler->compute();
-    this->odometry_handler->broadcast();
+    if (odometry_handler) this->odometry_handler->compute();
+    if (odometry_handler) this->odometry_handler->broadcast();
 
     double pidout_linear_throttle = 0;
     double pidout_angular_throttle = 0;
@@ -429,12 +433,17 @@ bool ControlThread::threadInit()
     }
 
     //create the odometry and the motor handlers
+    odometry_enabled = true;
+    if (rf.check("no_odometry")) 
+    {
+        odometry_enabled=false;
+    }
 
     if (robot_type_s == "cer")
     {
         yInfo("Using cer robot type");
         robot_type       = ROBOT_TYPE_DIFFERENTIAL;
-        odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
+        if (odometry_enabled) odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new CER_MotorControl((int)(thread_period), control_board_driver);
         input_handler    = new Input((int)(thread_period), control_board_driver);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
@@ -445,7 +454,7 @@ bool ControlThread::threadInit()
     {
         yInfo("Using ikart_V1 robot type");
         robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
-        odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
+        if (odometry_enabled) odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
         input_handler    = new Input((int)(thread_period), control_board_driver);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
@@ -457,7 +466,7 @@ bool ControlThread::threadInit()
     {
         yInfo("Using ikart_V2 robot type");
         robot_type       = ROBOT_TYPE_THREE_MECHANUM;
-        odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
+        if (odometry_enabled) odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
         motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
         input_handler    = new Input((int)(thread_period), control_board_driver);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
@@ -477,7 +486,7 @@ bool ControlThread::threadInit()
         //input_handler->rosNode    = rosNode;
     }
     
-    if (odometry_handler->open(rf, ctrl_options) == false)
+    if (odometry_handler && odometry_handler->open(rf, ctrl_options) == false)
     {
         yError() << "Problem occurred while opening odometry handler";
         return false;

@@ -113,6 +113,7 @@ protected:
 
     string               remoteName;
     string               localName;
+    bool                 odometry_enabled;
 
 public:
     Odometry* const      get_odometry_handler() { return odometry_handler;}
@@ -155,6 +156,9 @@ public:
         max_linear_acc           = 0;
         remoteName               = ctrl_options.find("remote").asString();
         localName                = ctrl_options.find("local").asString();
+        odometry_handler         = 0;
+        motor_handler            = 0;
+        input_handler            = 0;
     }
 
     virtual bool threadInit();
