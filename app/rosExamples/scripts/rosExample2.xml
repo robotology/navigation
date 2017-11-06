@@ -1,5 +1,5 @@
 <application>
-<name>ros EXAMPLE1</name>
+<name>ros EXAMPLE2</name>
 
 <dependencies>
 </dependencies>
@@ -17,20 +17,26 @@
 </module>
 
 <module>
+   <name>rosrun</name>
+   <parameters>map_server map_server ~/navigation/app/mapsExample/map_test_grid.yaml</parameters>
+   <node>ros_pc</node>
+</module>
+
+<module>
    <name>yarpdev</name>
-   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <parameters>--device map2DServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 1</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>roslaunch</name>
-   <parameters>~/navigation/app/rosExamples/launch/amcl_map_from_yarp.launch</parameters>
+   <parameters>~/navigation/app/rosExamples/launch/amcl_map_from_ros.launch</parameters>
    <node>ros_pc</node>
 </module>
 
 <module>
    <name>localizationServer</name>
-   <parameters>--context rosExamples --from localizationServer_yarp.ini</parameters>
+   <parameters>--context rosExamples --from localizationServer_ros.ini</parameters>
    <node>console</node>
 </module>
 
