@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         yInfo("Possible options: ");
-        yInfo("'rate <r>' sets the threads rate (default 20ms).");
+        yInfo("'period <r>' sets the threads period (default 20ms).");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
         yInfo("'holonomic' if set, the robot will be holonomic");
         return 0;
