@@ -37,6 +37,11 @@ using namespace std;
 
 bool gotoLoc(string location, INavigation2D* iNav)
 {
+    Map2DLocation pos;
+    Map2DLocation current_waypoint;
+    Map2DLocation curr_goal;
+
+    //Gets the current navigation status
     NavigationStatusEnum status;
     do
     {
@@ -47,18 +52,17 @@ bool gotoLoc(string location, INavigation2D* iNav)
         yarp::os::Time::delay(0.1);
     } while (1);
 
-    Map2DLocation pos;
-    Map2DLocation current_waypoint;
-    Map2DLocation curr_goal;
     iNav->getAbsoluteLocationOfCurrentTarget(curr_goal);
-
     iNav->getLocation(location,current_waypoint);
+
+    //Sends the navigation command
     if (iNav->gotoTargetByLocationName(location)==false)
     {
         yError() << "Unable to go to: " <<location;
         return false;
     }
-
+    
+    //Checks if navigation is complete
     do
     {
         iNav->getNavigationStatus(status);
@@ -80,9 +84,9 @@ bool gotoLoc(string location, INavigation2D* iNav)
             yInfo() << "Your current position is not in the same map of the current goal.";
             iNav->stopNavigation();
         }
-
         yarp::os::Time::delay(1.0);
-    } while (1);
+    } 
+    while (1);
 
     if (status == navigation_status_goal_reached)
     {
@@ -97,6 +101,7 @@ bool gotoLoc(string location, INavigation2D* iNav)
         yInfo() << "Unable to reach goal: navigation_status_failing";
     }
 
+    //Terminates the navigation task.
     iNav->stopNavigation();
     return true;
 }
@@ -123,7 +128,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    //opens the navigation2DClient
+    //opens a navigation2DClient device to control the robot
     Property        navTestCfg;
     navTestCfg.put("device", "navigation2DClient");
     navTestCfg.put("local", "/robotPathPlannerExample");
@@ -135,22 +140,23 @@ int main(int argc, char* argv[])
     if (!ok)
     {
         yError() << "Unable to open navigation2DClient device driver";
+        return -1;
     }
 
-    //opens the INavigation2D interface
+    //gets a INavigation2D interface from the navigation2DClient
     INavigation2D* iNav = 0;
     ok = ddNavClient.view(iNav);
     if (!ok)
     {
         yError() << "Unable to open INavigation2D interface";
+        return -1;
     }
 
     //interrupts any previous navigation task
     iNav->stopNavigation();
     yarp::os::Time::delay(0.1);
 
-    //gets an interface to dialogue with MapServer
-    IMap2D*  iMap=0;
+    //opens a map2DClient device to dialogue with MapServer
     Property map_options;
     PolyDriver ddMapClient;
     map_options.put("device", "map2DClient");
@@ -159,20 +165,20 @@ int main(int argc, char* argv[])
     if (ddMapClient.open(map_options) == false)
     {
         yError() << "Unable to open mapClient";
+        return -1;
+    }
+    yInfo() << "Opened mapClient";
+
+    //gets a IMap2D interface from the map2DClient
+    IMap2D*  iMap=0;
+    ddMapClient.view(iMap);
+    if (ddMapClient.isValid() == false || iMap == 0)
+    {
+        yError() << "Unable to view map interface";
         return false;
     }
-    else
-    {
-        yInfo() << "Opened mapClient";
-        ddMapClient.view(iMap);
-        if (ddMapClient.isValid() == false || iMap == 0)
-        {
-            yError() << "Unable to view map interface";
-            return false;
-        }
-    }
 
-    //defines a new location callled bedroom and saves it to map server
+    //defines a new location called bedroom and saves it to map server
     Map2DLocation bedroom_location;
     bedroom_location.map_id="testMap";
     bedroom_location.x=2.0;
@@ -202,6 +208,7 @@ int main(int argc, char* argv[])
         gotoLoc("bedroom", iNav);
     } 
 
+    //Closes the navigation2DClient
     yInfo() << "RobotPathPlannerExample complete";
     yarp::os::Time::delay(1.0);
     ddNavClient.close();
