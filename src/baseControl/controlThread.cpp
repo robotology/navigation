@@ -290,7 +290,7 @@ void ControlThread::run()
     double pidout_direction     = 0;
 
     //read inputs (input_linear_speed in m/s, input_angular_speed in deg/s...)
-    /*this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
+    this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
 
     if (input_linear_speed < 0)
     {
@@ -319,7 +319,7 @@ void ControlThread::run()
     
     //apply ratio limiter
     if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
-    */
+
     /*
     if (!lateral_movement_enabled)
     {
@@ -330,7 +330,7 @@ void ControlThread::run()
     */
 
     //The controllers
-    /*if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
+    if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
         //the following /2 is used to avoid saturation due to decoupling
@@ -367,17 +367,7 @@ void ControlThread::run()
     {
         yError ("Unknown control mode!");
         this->motor_handler->execute_none();
-    }*/
-    
-    yDebug("BEFORE");
- //   this->motor_handler->ivel->velocityMove(0,0.0);
- //   this->motor_handler->ivel->velocityMove(1,0.0);
-        double sps [2];
-    sps[0]=0;
-    sps[1]=0;
-   this->motor_handler->ivel->velocityMove(sps);
-    yDebug("AFTER");
-    
+}
 }
 
 void ControlThread::printStats()
@@ -458,7 +448,6 @@ bool ControlThread::threadInit()
 
     control_board_options.put("remote", remoteName.c_str());
     control_board_options.put("local", localName.c_str());
-    control_board_options.put("writeStrict","on");
 
     do
     {
