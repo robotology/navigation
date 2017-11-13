@@ -1,5 +1,7 @@
 # Navigation
 
+[![DOI](https://zenodo.org/badge/60769866.svg)](https://zenodo.org/badge/latestdoi/60769866)
+
 A collection of modules to perform 2D navigation with a YARP-based robot.
 
 * [Introduction](#introduction)
