@@ -121,55 +121,9 @@ public:
     Input* const         get_input_handler()    { return input_handler; }
     void                 enable_debug(bool b);
 
-    ControlThread
-    (
-        unsigned int _period, 
-        ResourceFinder &_rf,
-        Property options
-    )
-    : RateThread(_period), rf(_rf), ctrl_options(options)
-    {
-        rosNode                  = NULL;
-        control_board_driver     = 0;
-        thread_timeout_counter   = 0;
-        base_control_type        = BASE_CONTROL_NONE;
-
-        input_filter_enabled     = 0;
-        lin_ang_ratio            = 0.7;
-        robot_type               = ROBOT_TYPE_NONE;
-
-        debug_enabled            = false;
-        both_lin_ang_enabled     = true;
-        thread_period            = _period;
-
-        input_linear_speed       = 0;
-        input_angular_speed      = 0;
-        input_desired_direction  = 0;
-        input_pwm_gain           = 0;
-        linear_speed_pid         = 0;
-        angular_speed_pid        = 0;
-        linear_ol_pid            = 0;
-        angular_ol_pid           = 0;
-        max_linear_vel           = 0;
-        max_angular_vel          = 0;
-        max_angular_acc          = 0;
-        max_linear_acc           = 0;
-        remoteName               = ctrl_options.find("remote").asString();
-        localName                = ctrl_options.find("local").asString();
-        odometry_handler         = 0;
-        motor_handler            = 0;
-        input_handler            = 0;
-    }
-
+    ControlThread   (unsigned int _period, ResourceFinder &_rf, Property options);
     virtual bool threadInit();
-
-    virtual void afterStart(bool s)
-    {
-        if (s)
-            yInfo("Control thread started successfully");
-        else
-            yError("Control thread did not start");
-    }
+    virtual void afterStart(bool s);
 
     virtual void run();
     bool set_control_type (string s);
@@ -184,35 +138,10 @@ public:
     
     void apply_control_openloop_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed);
     void apply_control_speed_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed);
-    double get_max_linear_vel()  { return max_linear_vel; }
-    double get_max_angular_vel() { return max_angular_vel; }
+    double get_max_linear_vel();
+    double get_max_angular_vel();
 
-    virtual void threadRelease()
-    {
-        if (odometry_handler)  {delete odometry_handler; odometry_handler=0;}
-        if (motor_handler)     {delete motor_handler; motor_handler=0;}
-        if (input_handler)     {delete input_handler; input_handler = 0; }
-
-        if (linear_speed_pid)  {delete linear_speed_pid;  linear_speed_pid=0;}
-        if (angular_speed_pid) {delete angular_speed_pid; angular_speed_pid=0;}
-        if (linear_ol_pid)     {delete linear_ol_pid;  linear_ol_pid=0;}
-        if (angular_ol_pid)    {delete angular_ol_pid; angular_ol_pid=0;}
-
-        if (debug_enabled)
-        {
-            port_debug_linear.interrupt();
-            port_debug_linear.close();
-            port_debug_angular.interrupt();
-            port_debug_angular.close();
-        }
-
-        if (rosNode)
-        {
-            rosNode->interrupt();
-            delete rosNode;
-            rosNode = 0;
-        }
-    }
+    virtual void threadRelease();
 };
 
 #endif

@@ -17,49 +17,14 @@ public:
     }
     ~Vec2D(){}
 
-    double mod2()const{ return x*x+y*y; }
-    double mod()const{ return sqrt(x*x+y*y); }
-
-    Vec2D rot(double alfa)
-    {
-        alfa*=DEG2RAD;
-        double cs=cos(alfa);
-        double sn=sin(alfa);
-        return Vec2D(cs*x-sn*y,sn*x+cs*y);
-    }
-
-    Vec2D rotLeft()const{ return Vec2D(-y,x); }
-    Vec2D rotRight()const{ return Vec2D(y,-x); }
-
-    Vec2D norm(double dl=1.0) const
-    { 
-        double dm=mod();
-        
-        if (dm!=0.0)
-            return *this*(dl/dm);
-        else
-            return Vec2D(0.0,0.0);
-    }
-
-    double normalize(double dl=1.0)
-    { 
-        double dm=mod();
-        
-        if (dm!=0.0)
-        {
-            x*=dl/=dm;
-            y*=dl;
-        }
-        else
-            x=y=0.0;
-
-        return dm;
-    }
-
-    double arg() const
-    {
-        return RAD2DEG*atan2(y,x);
-    }
+    double mod2()const;
+    double mod()const;
+    Vec2D rot(double alfa);
+    Vec2D rotLeft()const;
+    Vec2D rotRight()const;
+    Vec2D norm(double dl=1.0) const;
+    double normalize(double dl=1.0);
+    double arg() const;
 
     inline Vec2D operator+(const Vec2D& p)const{ return Vec2D(x+p.x,y+p.y); }
     inline Vec2D operator-(const Vec2D& p)const{ return Vec2D(x-p.x,y-p.y); }

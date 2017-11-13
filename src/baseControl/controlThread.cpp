@@ -23,6 +23,78 @@
 #include "cer/cer_motors.h"
 #include "ikart/ikart_motors.h"
 
+void ControlThread::afterStart(bool s)
+{
+    if (s)
+        yInfo("Control thread started successfully");
+    else
+        yError("Control thread did not start");
+}
+
+void ControlThread::threadRelease()
+{
+    if (odometry_handler)  {delete odometry_handler; odometry_handler=0;}
+    if (motor_handler)     {delete motor_handler; motor_handler=0;}
+    if (input_handler)     {delete input_handler; input_handler = 0; }
+
+    if (linear_speed_pid)  {delete linear_speed_pid;  linear_speed_pid=0;}
+    if (angular_speed_pid) {delete angular_speed_pid; angular_speed_pid=0;}
+    if (linear_ol_pid)     {delete linear_ol_pid;  linear_ol_pid=0;}
+    if (angular_ol_pid)    {delete angular_ol_pid; angular_ol_pid=0;}
+
+    if (debug_enabled)
+    {
+        port_debug_linear.interrupt();
+        port_debug_linear.close();
+        port_debug_angular.interrupt();
+        port_debug_angular.close();
+    }
+
+    if (rosNode)
+    {
+        rosNode->interrupt();
+        delete rosNode;
+        rosNode = 0;
+    }
+}
+
+double ControlThread::get_max_linear_vel()  { return max_linear_vel; }
+double ControlThread::get_max_angular_vel() { return max_angular_vel; }
+
+ControlThread::ControlThread (unsigned int _period, ResourceFinder &_rf, Property options) : RateThread(_period), rf(_rf), ctrl_options(options)
+{
+    rosNode                  = NULL;
+    control_board_driver     = 0;
+    thread_timeout_counter   = 0;
+    base_control_type        = BASE_CONTROL_NONE;
+
+    input_filter_enabled     = 0;
+    lin_ang_ratio            = 0.7;
+    robot_type               = ROBOT_TYPE_NONE;
+
+    debug_enabled            = false;
+    both_lin_ang_enabled     = true;
+    thread_period            = _period;
+
+    input_linear_speed       = 0;
+    input_angular_speed      = 0;
+    input_desired_direction  = 0;
+    input_pwm_gain           = 0;
+    linear_speed_pid         = 0;
+    angular_speed_pid        = 0;
+    linear_ol_pid            = 0;
+    angular_ol_pid           = 0;
+    max_linear_vel           = 0;
+    max_angular_vel          = 0;
+    max_angular_acc          = 0;
+    max_linear_acc           = 0;
+    remoteName               = ctrl_options.find("remote").asString();
+    localName                = ctrl_options.find("local").asString();
+    odometry_handler         = 0;
+    motor_handler            = 0;
+    input_handler            = 0;
+}
+
 void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_speed)
 {
     if (lin_ang_ratio>1.0)  lin_ang_ratio = 1.0;
@@ -218,7 +290,7 @@ void ControlThread::run()
     double pidout_direction     = 0;
 
     //read inputs (input_linear_speed in m/s, input_angular_speed in deg/s...)
-    this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
+    /*this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
 
     if (input_linear_speed < 0)
     {
@@ -247,7 +319,7 @@ void ControlThread::run()
     
     //apply ratio limiter
     if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
-
+    */
     /*
     if (!lateral_movement_enabled)
     {
@@ -258,7 +330,7 @@ void ControlThread::run()
     */
 
     //The controllers
-    if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
+    /*if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
         //the following /2 is used to avoid saturation due to decoupling
@@ -295,7 +367,17 @@ void ControlThread::run()
     {
         yError ("Unknown control mode!");
         this->motor_handler->execute_none();
-    }
+    }*/
+    
+    yDebug("BEFORE");
+ //   this->motor_handler->ivel->velocityMove(0,0.0);
+ //   this->motor_handler->ivel->velocityMove(1,0.0);
+        double sps [2];
+    sps[0]=0;
+    sps[1]=0;
+   this->motor_handler->ivel->velocityMove(sps);
+    yDebug("AFTER");
+    
 }
 
 void ControlThread::printStats()
@@ -376,6 +458,7 @@ bool ControlThread::threadInit()
 
     control_board_options.put("remote", remoteName.c_str());
     control_board_options.put("local", localName.c_str());
+    control_board_options.put("writeStrict","on");
 
     do
     {

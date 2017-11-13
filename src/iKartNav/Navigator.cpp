@@ -6,6 +6,199 @@
 #define PRIO_LASER  1
 #define PRIO_VISION 2
 
+void Navigator::updateOdometry(Vec2D P,double H)
+{
+    mOdoP=P;
+    mOdoH=H;
+
+    int xc=XWorld2Grid(mOdoP.x);
+    int yc=YWorld2Grid(mOdoP.y);
+
+    if (xc> DIM_BY_2) shiftMapSouth();
+    if (xc<-DIM_BY_2) shiftMapNorth();
+
+    if (yc> DIM_BY_2) shiftMapEast();
+    if (yc<-DIM_BY_2) shiftMapWest();
+}
+
+void Navigator::setOmega(double omega)
+{
+    if (omega>mMaxOmega)
+    {
+        mOmegaRef=mMaxOmega;
+    }
+    else if (omega<-mMaxOmega)
+    {
+        mOmegaRef=-mMaxOmega;
+    }
+    else
+    {
+        mOmegaRef=omega;
+    }
+}
+
+void Navigator::setVisionTarget(double heading)
+{
+    int angle=RAYS_BY_2+int(0.5+4.0*mod180(heading));
+        
+    mTargetFilter.addPoint(mOdoP,Vec2D(heading+mOdoH),mRanges[angle]);
+
+    if (mTargetFilter.numSamples()<2)
+    {
+        printf("Vision target not complete (%d samples)\n",mTargetFilter.numSamples());
+
+        mHaveTarget=false;            
+        return;
+    }
+        
+    mTarget=mTargetFilter.getTarget();
+        
+    printf("Vision target X=%.3f Y=%.3f\n",mTarget.x,mTarget.y);
+    
+    replaceTarget(mTarget);
+}
+
+void Navigator::setUserTarget(double heading,double distance)
+{
+    mHaveTarget=true;
+    mTarget=mOdoP+distance*Vec2D(mOdoH+heading);
+    printf("NEW TARGET X=%.3f Y=%.3f\n",mTarget.x,mTarget.y);
+    fflush(stdout);
+    
+    replaceTarget(mTarget);
+}
+    
+void Navigator::sendCtrlRef()
+{
+    double timeNew=yarp::os::Time::now();
+    static double timeOld=timeNew;  
+    double step=timeNew-timeOld;
+    timeOld=timeNew;
+
+    if (mVelRef!=mVel)
+    {
+        Vec2D Verr=mVelRef-mVel;
+
+        if (Verr.mod()>step*mLinAcc) mVel+=Verr.norm(step*mLinAcc); else mVel=mVelRef;
+    }
+
+    if (mOmegaRef!=mOmega)
+    {
+        double Werr=mOmegaRef-mOmega;
+
+        if (Werr>step*mRotAcc) mOmega+=step*mRotAcc; else if (Werr<-step*mRotAcc) mOmega-=step*mRotAcc; else mOmega=mOmegaRef;
+    }
+
+    mKartCtrl->setCtrlRef(-mVel.arg(),mVel.mod(),-mOmega,NAVIGATOR_PRIORITY);
+}
+
+void Navigator::sendBrake()
+{
+    mOmega=mOmegaRef=0.0;
+    mVel=mVelRef=Vec2D::zero;
+    mKartCtrl->setCtrlRef(0.0,0.0,0.0,NAVIGATOR_PRIORITY);
+}
+
+void Navigator::setVel(const Vec2D& vel)
+{
+    if (vel.mod()>mMaxSpeed)
+    {
+        mVelRef=vel.norm(mMaxSpeed);
+    }
+    else
+    {
+        mVelRef=vel;
+    }
+}
+
+void Navigator::replaceTarget(Vec2D& target)
+{
+    static double timeOld=0.0;
+
+    int xr=XWorld2GridRound(target.x);
+    int yr=YWorld2GridRound(target.y);
+
+    if (xr<=-DIM || xr>=DIM || yr<=-DIM || yr>=DIM) return;
+
+    Vec2D direction,gradient;
+    double curvature,zeta;
+
+    Vec2D X=target;
+    Vec2D D=mOdoP-target;
+
+    int n=(int)(100.0*D.mod());
+
+    mHaveTarget=false;
+
+    for (int i=0; i<n; ++i)
+    {
+        int result=followGNF(X,direction,curvature,zeta,gradient);
+
+        if (result==GNF_OUT_OF_GRID)
+        {
+            printf("WARNING: the target is out of grid\n");
+            mHaveTarget=true;
+                
+            if (mTargetPortO.getOutputCount()>0)
+            {
+                double timeNew=yarp::os::Time::now();
+
+                if (timeNew-timeOld>1.0)
+                {
+                    timeOld=timeNew;
+                    D=target-mOdoP;
+                    yarp::os::Bottle msg;
+                    msg.addDouble(-D.arg());
+                    msg.addDouble( D.mod());
+                    mTargetPortO.write(msg);
+                }
+            }
+
+            return;
+        }
+
+        if (zeta<THR)
+        {
+            if (i)
+            {
+                if (!mHaveTargetH)
+                {
+                    mHaveTargetH=true;
+                    mTargetH=(target-X).arg();
+                }
+
+                printf("Target replaced X=%.3f  Y=%.3f\n",X.x,X.y);
+                fflush(stdout);
+            }
+
+            mHaveTarget=true;
+            target=X;
+
+            if (mTargetPortO.getOutputCount()>0)
+            {
+                double timeNew=yarp::os::Time::now();
+
+                if (timeNew-timeOld>1.0)
+                {
+                    timeOld=timeNew;
+                    D=target-mOdoP;
+                    yarp::os::Bottle msg;
+                    msg.addDouble(-D.arg());
+                    msg.addDouble( D.mod());
+                    mTargetPortO.write(msg);
+                }
+            }
+                
+            return;
+        }
+
+        X+=(gradient*D>=0.0?0.01:-0.01)*gradient;
+    }
+
+    printf("Can't replace target in a free space position (Z=%f - Zmax=%f)\n",zeta,THR);
+    fflush(stdout);
+}
+
 Navigator::Navigator(yarp::os::ResourceFinder *rf)
     :
         RateThread(10),
