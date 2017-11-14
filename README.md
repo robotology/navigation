@@ -76,9 +76,10 @@ Navigation examples are provided by the following YARP applications:
 * robotPathPlannerExamples  [(link to the repo)](https://github.com/robotology/navigation/tree/master/app/robotaPathPlannerExamples/scripts)
 * rosExamples  [(link to the repo)](https://github.com/robotology/navigation/tree/master/app/rosExamples/scripts)
 
-Since these examples involve the execution of several, interconnected yarp modules, it is recommended to launch the xml files through [yarpmanager](http://www.yarp.it/yarpmanager.html) GUI.
+These examples involve the execution of several, interconnected yarp modules. It is thus recommended to launch the xml files through [yarpmanager](http://www.yarp.it/yarpmanager.html) GUI.
 It's also recommended not to start the modules all at once. Simply start each module manually, giving at least a second of waiting time before starting the next one. Yarp ports can be safely connected as a last step.
 The following examples are sorted in order of increasing complexity.
+Since the interaction between multiple YARP-ROS modules is objectively complex, we encourage users to extensively hack the provided examples, trying to connect, disconnect and modify modules configuration, to better grasp all provided functionalities.
 
 <a name='robotGotoExample1'></a>
 ### robotGotoExample1
