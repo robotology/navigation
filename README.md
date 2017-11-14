@@ -1,3 +1,4 @@
+
 # Navigation
 
 [![DOI](https://zenodo.org/badge/60769866.svg)](https://zenodo.org/badge/latestdoi/60769866)
@@ -14,6 +15,7 @@ A collection of modules to perform 2D navigation with a YARP-based robot.
   - [robotPathPlannerExample2](#robotPathPlannerExample2)
   - [rosExample1](#rosExample1)
   - [rosExample2](#rosExample2)
+* [Additional Material](#additional)
 
 <a name='introduction'></a>
 ## Introduction
@@ -103,5 +105,17 @@ This application demonstrate YARP-ROS interoperation. In all previous examples, 
 <a name='rosExample2'></a>
 ### rosExample2
 This application is similar to the previous one, with the only exception that the map is not loaded from a .map yarp file. Instead, **map2DServer** receives it from ROS **map_server** node, through ROS topics */map* and */map_metadata*. The map is stored into YARP map server with the default name *ros_map*.
+
+<a name='additional'></a>
+## AdditionalMaterial
+We recommend YARP users who want to learn more about ROS, its core functionalities and its navigation stack to check the following links:
+* [**ROS topics**](http://wiki.ros.org/Topics): basic explanation of ROS topics.
+* [**TF package**](http://wiki.ros.org/tf2): a library which allows users to keep track of multiple coordinate frames over time. 
+* [**AMCL**](http://wiki.ros.org/amcl): a module to perform localization in a previosuly generated map.
+* [**Navigation Stack**](http://wiki.ros.org/navigation): ROS navigation stack.
+* [**ROS Map server**](http://wiki.ros.org/map_server): a module to broadcast previosuly saved maps on a ROS topic.
+* [**gmapping**](http://wiki.ros.org/gmapping): a module to perform laser-based SLAM.
+
+
 
 
