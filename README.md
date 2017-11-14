@@ -80,6 +80,7 @@ These examples involve the execution of several, interconnected yarp modules. It
 It's also recommended not to start the modules all at once. Simply start each module manually, giving at least a second of waiting time before starting the next one. Yarp ports can be safely connected as a last step.
 The following examples are sorted in order of increasing complexity.
 Since the interaction between multiple YARP-ROS modules is objectively complex, we encourage users to extensively hack the provided examples, trying to connect, disconnect and modify modules configuration, to better grasp all provided functionalities.
+We also encourage users to inspect interconnections between all application modules using [yarpviz](https://github.com/robotology/yarpviz). 
 
 <a name='robotGotoExample1'></a>
 ### robotGotoExample1
