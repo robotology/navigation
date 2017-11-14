@@ -21,6 +21,7 @@
 #include <yarp/sig/Vector.h>
 #include <string>
 #include <list>
+#include <math.h>
 #include <yarp/dev/MapGrid2D.h>
 #include "aStar.h"
 

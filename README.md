@@ -117,6 +117,8 @@ We recommend YARP users who want to learn more about ROS, its core functionaliti
 * [**Navigation Stack**](http://wiki.ros.org/navigation): ROS navigation stack.
 * [**ROS Map server**](http://wiki.ros.org/map_server): a module to broadcast previosuly saved maps on a ROS topic.
 * [**gmapping**](http://wiki.ros.org/gmapping): a module to perform laser-based SLAM.
+* [**ROS global_planner**](http://wiki.ros.org/global_planner): ROS package providing global navigation functionalities.
+* [**ROS local_planner**](http://wiki.ros.org/base_local_planner): ROS package providing local navigation functionalities.
 
 
 
