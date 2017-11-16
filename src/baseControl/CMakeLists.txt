@@ -7,8 +7,8 @@
 set(PROJECTNAME baseControl)
 project(${PROJECTNAME})
 
-file(GLOB folder_source *.cpp cer/*.cpp ikart/*.cpp)
-file(GLOB folder_header *.h cer/*.h ikart/*.h)
+file(GLOB folder_source *.cpp cer/*.cpp ikart/*.cpp simulator/*.cpp)
+file(GLOB folder_header *.h cer/*.h ikart/*.h simulator/*.h)
 
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})

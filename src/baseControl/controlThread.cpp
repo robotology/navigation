@@ -18,10 +18,14 @@
 
 #include "controlThread.h"
 #include "filters.h"
+
 #include "cer/cer_odometry.h"
 #include "ikart/ikart_odometry.h"
+#include "simulator/sim_odometry.h"
+
 #include "cer/cer_motors.h"
 #include "ikart/ikart_motors.h"
+#include "simulator/sim_motors.h"
 
 void ControlThread::afterStart(bool s)
 {
@@ -541,6 +545,18 @@ bool ControlThread::threadInit()
         if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
         motor_handler    = new iKart_MotorControl(control_board_driver);
         input_handler    = new Input();
+        yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
+        robot_geom.put("geom_r", 76.15 / 1000.0);
+        robot_geom.put("geom_L", 273 / 1000.0);
+        robot_geom.put("g_angle", 45.0);
+    }
+    else if (robot_type_s == "sim")
+    {
+        yInfo("Using sim robot type");
+        robot_type       = ROBOT_TYPE_SIMULATOR;
+        if (odometry_enabled) odometry_handler = new SIM_Odometry((int)(thread_period), control_board_driver);
+        motor_handler    = new SIM_MotorControl((int)(thread_period), control_board_driver);
+        input_handler    = new Input((int)(thread_period), control_board_driver);
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 76.15 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);

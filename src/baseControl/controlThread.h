@@ -51,7 +51,8 @@ enum robot_type_enum
     ROBOT_TYPE_NONE = 0,
     ROBOT_TYPE_DIFFERENTIAL = 1,
     ROBOT_TYPE_THREE_ROTOCASTER = 2,
-    ROBOT_TYPE_THREE_MECHANUM = 3
+    ROBOT_TYPE_THREE_MECHANUM = 3,
+    ROBOT_TYPE_SIMULATOR = 4
 };
 
 enum control_type_enum
