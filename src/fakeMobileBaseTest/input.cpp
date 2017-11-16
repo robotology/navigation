@@ -196,10 +196,33 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
     }
     if (!general_options.check("max_angular_vel"))
     {
-        yWarning("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
-        //return false;
+        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
+        return false;
+    }
+    useRos = general_options.check("use_ROS", Value(false), "enable Ros Comunication").asBool();
+
+    if (useRos)
+    {
+        if (ctrl_options.check("ROS_INPUT"))
+        {
+            yarp::os::Bottle rin_group = ctrl_options.findGroup("ROS_INPUT");
+            if (rin_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
+            rosTopicName_twist = rin_group.find("topic_name").asString();
+            rosInputEnabled = true;
+        }
+        else
+        {
+            rosInputEnabled = false;
     }
    
+        if (!rosSubscriberPort_twist.topic(rosTopicName_twist))
+        {
+            yError() << " opening " << rosTopicName_twist << " Topic, check your yarp-ROS network configuration\n";
+            return false;
+        }
+    }
+    
+
     double tmp = 0;
     tmp = (joystick_options.check("linear_vel_at_full_control", Value(0), "linear velocity at 100% of the joystick control [m/s]")).asDouble();
     if (tmp>0) linear_vel_at_100_joy = tmp;
@@ -281,6 +304,7 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
 
 Input::Input()
 {
+    useRos                 = false;
     thread_timeout_counter = 0;
 
     command_received       = 0;
@@ -558,6 +582,22 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         }
     }
     
+    //- - - read ros commands - - -
+    if (rosInputEnabled)
+    {
+        if (geometry_msgs_Twist* rosTwist = rosSubscriberPort_twist.read(false))
+        {
+            Bottle b;
+            b.addInt(3);
+            b.addDouble(rosTwist->linear.x);
+            b.addDouble(rosTwist->linear.y);
+            b.addDouble(rosTwist->angular.z * 180 / M_PI);
+            read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
+            wdt_old_ros_cmd   = wdt_ros_cmd;
+            wdt_ros_cmd       = Time::now();
+            rosInput_received = 100;
+        }
+    }
 
     //- - - priority test - - -
     if (joystick_received[0]>0)

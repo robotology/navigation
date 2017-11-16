@@ -47,6 +47,7 @@ protected:
     Port            rpcPort;
     bool            m_publish_tf_enable;
     bool            m_publish_port_enable;
+    yarp::os::Node*           rosNode;
 
     struct
     {
@@ -59,6 +60,7 @@ protected:
 public:
     CtrlModule() 
     {
+        rosNode=0;
         input=0;
         control = 0;
         m_publish_port_enable = true;
@@ -113,6 +115,42 @@ public:
         //set the thread rate
         int period = rf.check("period",Value(20)).asInt();
         yInfo("fakeMobileBaseTest thread rate: %d ms.",period);
+
+        //GENERAL options
+        yarp::os::Bottle general_options;
+        if (ctrl_options.check("GENERAL"))
+        {
+            general_options = ctrl_options.findGroup("GENERAL");
+        }
+        else
+        {
+            yError() << "Missing general_options section";
+            return false;
+        }
+
+        //initialize ROS
+        bool useRos   = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();
+        if(useRos)
+        {
+            if (ctrl_options.check("ROS_GENERAL"))
+            {
+                string rosNodeName;
+                yarp::os::Bottle r_group = ctrl_options.findGroup("ROS_GENERAL");
+                if (r_group.check("node_name") == false)
+                {
+                    yError() << "Missing node_name parameter"; return false;
+                }
+                rosNodeName = r_group.find("node_name").asString();
+                rosNode     = new yarp::os::Node(rosNodeName);
+                yarp::os::Time::delay(0.1);
+            }
+            else
+            {
+                yError() << "[ROS_GENERAL] group is missing from configuration file. ROS comunication will not be initialized";
+            }
+        }
+
+        //creates the input
         input = new Input();
         if (input->open(rf, ctrl_options) ==false)
         {
@@ -120,6 +158,7 @@ public:
             return false;
         }
 
+        //creates the controller
         control = new Controller();
         if (control->init(holonomic) == false)
         {

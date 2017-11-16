@@ -208,11 +208,11 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
             yarp::os::Bottle rin_group = ctrl_options.findGroup("ROS_INPUT");
             if (rin_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
             rosTopicName_twist = rin_group.find("topic_name").asString();
-            enable_ROS_INPUT_GROUP = true;
+            rosInputEnabled = true;
         }
         else
         {
-            enable_ROS_INPUT_GROUP = false;
+            rosInputEnabled = false;
         }
         
         if (!rosSubscriberPort_twist.topic(rosTopicName_twist))
@@ -586,17 +586,20 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
     }
     
     //- - - read ros commands - - -
-    if (geometry_msgs_Twist* rosTwist = rosSubscriberPort_twist.read(false))
+    if (rosInputEnabled)
     {
-        Bottle b;
-        b.addInt(3);
-        b.addDouble(rosTwist->linear.x);
-        b.addDouble(rosTwist->linear.y);
-        b.addDouble(rosTwist->angular.z * 180 / M_PI);
-        read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
-        wdt_old_ros_cmd   = wdt_ros_cmd;
-        wdt_ros_cmd       = Time::now();
-        rosInput_received = 100;
+        if (geometry_msgs_Twist* rosTwist = rosSubscriberPort_twist.read(false))
+        {
+            Bottle b;
+            b.addInt(3);
+            b.addDouble(rosTwist->linear.x);
+            b.addDouble(rosTwist->linear.y);
+            b.addDouble(rosTwist->angular.z * 180 / M_PI);
+            read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
+            wdt_old_ros_cmd   = wdt_ros_cmd;
+            wdt_ros_cmd       = Time::now();
+            rosInput_received = 100;
+        }
     }
 
     //- - - priority test - - -
