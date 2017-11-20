@@ -15,3 +15,4 @@ add_subdirectory(localizationServer)
 
 add_subdirectory(tests)
 add_subdirectory(tutorials)
+add_subdirectory(templates)

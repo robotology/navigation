@@ -15,6 +15,7 @@ A collection of modules to perform 2D navigation with a YARP-based robot.
   - [robotPathPlannerExample2](#robotPathPlannerExample2)
   - [rosExample1](#rosExample1)
   - [rosExample2](#rosExample2)
+* [Templates](#templates)
 * [Additional Material](#additional)
 
 <a name='introduction'></a>
@@ -107,6 +108,11 @@ This application demonstrate YARP-ROS interoperation. In all previous examples, 
 <a name='rosExample2'></a>
 ### rosExample2
 This application is similar to the previous one, with the only exception that the map is not loaded from a .map yarp file. Instead, **map2DServer** receives it from ROS **map_server** node, through ROS topics */map* and */map_metadata*. The map is stored into YARP map server with the default name *ros_map*.
+
+<a name='templates'></a>
+## Templates
+We included in the repository two template applications, **navigationTemplate** and **localizationTemplate**.
+These template are useful in case the user needs to develop a new navigation/localization module, either wrapping an existing library or implementing a new algorithm. These modules are constituted just by the skeleton application. The *respond()* function already implements all the required VOCABs which make these modules compliant with INavigation2D and ILocalization2d interfaces. The user has to complete the parts marked with the comment *//### TO BE IMPLEMENTED BY USER* in order to implement the navigation/localization functionalities.
 
 <a name='additional'></a>
 ## AdditionalMaterial
