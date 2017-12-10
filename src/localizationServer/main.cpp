@@ -74,30 +74,39 @@ using namespace yarp::os;
 class localizationModule : public yarp::os::RFModule
 {
 protected:
+    //general
     std::string                  m_module_name;
-    bool                         m_ros_enabled;
+    double                       m_last_statistics_printed;
     yarp::dev::MapGrid2D         m_current_map;
     yarp::dev::Map2DLocation     m_initial_loc;
     yarp::dev::Map2DLocation     m_localization_data;
-    yarp::dev::PolyDriver        m_ptf;
-    yarp::dev::PolyDriver        m_pmap;
     yarp::os::ResourceFinder     m_rf;
     yarp::os::Port               m_rpcPort;
     yarp::os::Mutex              m_mutex;
+    
+    //configuration options
+    bool                         m_ros_enabled;
     bool                         m_use_localization_from_odometry_port;
     bool                         m_use_localization_from_tf;
     bool                         m_use_map_server;
+
+    //odometry port
     std::string                  m_port_broadcast_odometry_name;
     yarp::os::BufferedPort<yarp::sig::Vector>  m_port_odometry_input;
     double                       m_last_odometry_data_received;
+
+    //tf data
+    yarp::dev::PolyDriver        m_ptf;
     yarp::dev::IFrameTransform*  m_iTf;
-    yarp::dev::IMap2D*           m_iMap;
     double                       m_tf_data_received;
     std::string                  m_frame_robot_id;
     std::string                  m_frame_map_id;
-    double                       m_last_statistics_printed;
+
+    //map interface 
+    yarp::dev::PolyDriver        m_pmap;
+    yarp::dev::IMap2D*           m_iMap;
     
-    //ros
+    //ROS
     yarp::os::Node*                   m_rosNode;
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
@@ -105,6 +114,9 @@ protected:
     yarp::os::Publisher<nav_msgs_OccupancyGrid> m_rosPublisher_occupancyGrid;
 
 public:
+    /**
+    * Default constructor and internal data intitialization.
+    */
     localizationModule()
     {
         m_iMap = 0;
@@ -122,6 +134,11 @@ public:
         m_localization_data.theta = nan("");
     }
 
+    /**
+    * Performs module configuration, parsing user options stored in the resource finder.
+    * Available options are described in main module documentation.
+    * @return true if the module was succesfully configured and opened, false otherwise.
+    */
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
         yarp::os::Time::turboBoost();
@@ -196,7 +213,8 @@ public:
         if (m_ros_enabled)
         {
             m_rosNode = new yarp::os::Node("/"+m_module_name);
-                    
+            
+            //initialize an occupancy grid publisher (every time the localization is re-initializzed, the map is published too)
             if (ros_group.check ("occupancygrid_topic"))
             {
                 m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
@@ -212,6 +230,7 @@ public:
                 }
             }
 
+             //initialize an initial pose publisher
             if (ros_group.check ("initialpose_topic")) 
             {
                 m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
@@ -275,6 +294,7 @@ public:
         //device driver opening and/or connections
         if (m_use_localization_from_odometry_port)
         {
+            //opens a YARP port to receive odometry data
             std::string odom_portname = "/" + m_module_name + "/odometry:i";
             bool b1 = m_port_odometry_input.open(odom_portname.c_str());
             bool b2 = yarp::os::Network::sync(odom_portname.c_str(),false);
@@ -288,6 +308,7 @@ public:
 
         if (m_use_localization_from_tf)
         {
+            //opens a client to receive localization data from transformServer
             Property options;
             options.put("device", "transformClient");
             options.put("local", "/"+m_module_name + "/TfClient");
@@ -307,6 +328,7 @@ public:
 
         if (m_use_map_server)
         {
+            //opens a client to send/received data from mapServer
             Property map_options;
             map_options.put("device", "map2DClient");
             map_options.put("local", "/" +m_module_name); //This is just a prefix. map2DClient will complete the port name.
@@ -341,6 +363,10 @@ public:
         return true;
     }
 
+    /**
+    * Interrupts ports operations
+    * @return this method cannot fail, so it always returns true
+    */
     virtual bool interruptModule()
     {
         m_rpcPort.interrupt();
@@ -348,6 +374,10 @@ public:
         return true;
     }
 
+    /**
+    * Terminates module execution and performs cleanup
+    * @return this method cannot fail, so it always returns true
+    */
     virtual bool close()
     {
         if (m_ptf.isValid())
@@ -380,11 +410,18 @@ public:
         return true;
     }
 
+    /**
+    * Set the update period for updateModule().
+    * @return the period expressed in seconds
+    */
     virtual double getPeriod()
     { 
         return 0.1; 
     }
     
+    /**
+    * Print stats/debug info.
+    */
     void printStats()
     {
         static int counter = 0;
@@ -392,10 +429,17 @@ public:
         counter+=10;
     }
 
+    /**
+    * The main loop. Receives localization data and stores it internally, so an external module can retrieve it 
+    * using a Localization2DClient connected to this server. Two localization sources are currently implemented:
+    * from a YARP port or using the tfClient/tfServer mechanism.
+    * @return true if everything is ok. Otherwise returning false will terminate module execution.
+    */
     virtual bool updateModule()
     {
         double current_time = yarp::os::Time::now();
-
+        
+        //print some stats every 10 seconds
         if (current_time - m_last_statistics_printed > 10.0)
         {
             printStats();
@@ -403,6 +447,7 @@ public:
         }
 
         LockGuard lock(m_mutex);
+        //receives localization data from odometry port if m_use_localization_from_odometry_port is enabled
         if (m_use_localization_from_odometry_port)
         {
             yarp::sig::Vector *loc = m_port_odometry_input.read(false);
@@ -418,6 +463,7 @@ public:
                 yWarning() << "No localization data recevied for more than 0.1s!";
             }
         }
+        //receives localization data from a tf server if m_use_localization_from_tf is enabled
         else if (m_use_localization_from_tf)
         {
             yarp::sig::Vector iv;
@@ -438,6 +484,7 @@ public:
                 yWarning() << "No localization data received for more than 0.1s!";
             }
         }
+        //if no localization data is available, the module cannot proceed.
         else
         {
             yWarning() << "Localization disabled";
@@ -447,6 +494,12 @@ public:
         return true; 
     }
 
+    /**
+    * Parser for string commands. It is called by virtual bool respond().
+    * @param command the bottle containing the user command
+    * @param reply the bottle which will be returned to the RPC client
+    * @return true if the command was succesfully parsed
+    */
     bool parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
         if (command.get(0).isString() && command.get(0).asString() == "getLoc")
@@ -473,6 +526,11 @@ public:
         return true;
     }
 
+    /**
+    * Initializes the localization algorithm with the given location.
+    * @param loc the initial guess for the robot location
+    * @return true/false if the command is accepted
+    */
     bool initializeLocalization(yarp::dev::Map2DLocation& loc)
     {
         m_localization_data.map_id = loc.map_id;
@@ -557,6 +615,12 @@ public:
         return true;
     }
 
+    /**
+    * Parser for VOCAB commands. It is called by virtual bool respond().
+    * @param command the bottle containing the user command
+    * @param reply the bottle which will be returned to the RPC client
+    * @return true if the command was succesfully parsed
+    */
     bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
         int request = command.get(1).asVocab();
@@ -586,10 +650,17 @@ public:
         return true;
     }
 
+    /**
+    * Parser for user command received from the RPC port
+    * @param command the bottle containing the user command
+    * @param reply the bottle which will be returned to the RPC client
+    * @return true if the command was succesfully parsed
+    */
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
     {
         yarp::os::LockGuard lock(m_mutex);
         reply.clear(); 
+        //parser for VOCAB  commands
         if (command.get(0).isVocab())
         {
             if(command.get(0).asVocab() == VOCAB_INAVIGATION && command.get(1).isVocab())
@@ -602,6 +673,7 @@ public:
                 reply.addVocab(VOCAB_ERR);
             }
         }
+        //parser for string commands
         else if (command.get(0).isString())
         {
             if (command.get(0).asString()=="help")
@@ -616,6 +688,7 @@ public:
                 parse_respond_string(command, reply);
             }
         }
+        //unknown/invalid command received
         else
         {
             yError() << "Invalid command type";
@@ -625,8 +698,11 @@ public:
     }
 };
 
+
+////////////////////////////
 int main(int argc, char *argv[])
 {
+    // Initialize the Yarp network
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {
@@ -641,8 +717,8 @@ int main(int argc, char *argv[])
     rf.configure(argc,argv);
     std::string debug_rf = rf.toString();
 
+    //Open the Localization Module
     localizationModule robotLocalizer;
-
     return robotLocalizer.runModule(rf);
 }
 

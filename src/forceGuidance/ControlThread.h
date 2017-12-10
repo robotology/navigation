@@ -138,8 +138,3 @@ public:
     double lp_filter_1Hz(double input, int i);
     double lp_filter_0_5Hz(double input, int i);
 };
-
-
-
-
-
