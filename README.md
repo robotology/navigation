@@ -74,7 +74,7 @@ The following modules are currently under development/testing and should be used
 Navigation examples are provided by the following YARP applications:
 
 * robotGotoExamples [(link to the repo)](https://github.com/robotology/navigation/tree/master/app/robotGotoExamples/scripts)
-* robotPathPlannerExamples  [(link to the repo)](https://github.com/robotology/navigation/tree/master/app/robotaPathPlannerExamples/scripts)
+* robotPathPlannerExamples  [(link to the repo)](https://github.com/robotology/navigation/tree/master/app/robotPathPlannerExamples/scripts)
 * rosExamples  [(link to the repo)](https://github.com/robotology/navigation/tree/master/app/rosExamples/scripts)
 
 These examples involve the execution of several, interconnected yarp modules. It is thus recommended to launch the xml files through [yarpmanager](http://www.yarp.it/yarpmanager.html) GUI.
