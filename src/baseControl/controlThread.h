@@ -46,7 +46,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-enum
+enum robot_type_enum
 {
     ROBOT_TYPE_NONE = 0,
     ROBOT_TYPE_DIFFERENTIAL = 1,
@@ -54,7 +54,7 @@ enum
     ROBOT_TYPE_THREE_MECHANUM = 3
 };
 
-enum
+enum control_type_enum
 {
     BASE_CONTROL_NONE = 0,
     BASE_CONTROL_OPENLOOP_NO_PID = 1,
@@ -70,7 +70,7 @@ class ControlThread : public yarp::os::RateThread
 private:
     Property             ctrl_options;
     double               thread_period;
-    int                  base_control_type;
+    control_type_enum    base_control_type;
     int                  thread_timeout_counter;
                          
     //the current command
@@ -116,32 +116,79 @@ protected:
     bool                 odometry_enabled;
 
 public:
+    //Odometry, MotorControl and Input are instantiated by ControlThread.
     Odometry* const      get_odometry_handler() { return odometry_handler;}
     MotorControl* const  get_motor_handler()    { return motor_handler;}
     Input* const         get_input_handler()    { return input_handler; }
     void                 enable_debug(bool b);
 
+public:
+    /**
+    * Constructor
+    * @param _period the rateThread period, expressed in milliseconds.
+    * @param _rf the resource finder containgin the configuration options (from .ini file)
+    * @param options additional configuration options
+    */
     ControlThread   (unsigned int _period, ResourceFinder &_rf, Property options);
+
+    //yarp::os::RateThread methods
     virtual bool threadInit();
     virtual void afterStart(bool s);
-
     virtual void run();
+    virtual void threadRelease();
+
+public:
+
+    /**
+    * Sets the current control type
+    * @param s can be one of the following: 'none', 'velocity_no_pid', 'openloop_no_pid', 'velocity_pid', 'openloop_pid'
+    * @return true if the string is accepted
+    */
     bool set_control_type (string s);
-    int  get_control_type ();
+    
+    /**
+    * Return the current control type
+    * @return the current robot control type
+    */
+    control_type_enum  get_control_type ();
+    
+    /**
+    * Print stats about the current internal status (e.g. current control mode of the joints, etc).
+    */
     void printStats();
+
+    /**
+    * Sets the PID control gains if the current control mode is: velocity_pid, openloop_pid.
+    */
     void set_pid (string id, double kp, double ki, double kd);
+
+    /**
+    * Sets an low pass filter on input commands.
+    * @param b is a code which specifies the filter type. Can be one of the following: 0 (disabled) or
+    * 1,2,4,8 for a first order low-pass filter with a cut-off frequency of 1,2,4,8Hz.
+    */
+    void set_input_filter    (int b) {input_filter_enabled=b;}
+
+    /**
+    * Gets robot max linear velocity.
+    * @return the maximum robot linear velocity, expressed in m/s
+    */
+    double get_max_linear_vel();
+
+    /**
+    * Gets robot max angular velocity.
+    * @return the maximum robot angular velocity, expressed in deg/s
+    */
+    double get_max_angular_vel();
+
+protected:
+    //Perform filtering on control action. For internal use only.
     void apply_ratio_limiter (double max, double& linear_speed, double& angular_speed);
     void apply_ratio_limiter (double& linear_speed, double& angular_speed);
     void apply_acceleration_limiter (double& linear_speed, double& angular_speed, double& desired_direction);
     void apply_input_filter  (double& linear_speed, double& angular_speed, double& desired_direction);
-    void set_input_filter    (int b) {input_filter_enabled=b;}
-    
     void apply_control_openloop_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed);
     void apply_control_speed_pid(double& pidout_linear_throttle, double& pidout_angular_throttle, const double ref_linear_speed, const double ref_angular_speed);
-    double get_max_linear_vel();
-    double get_max_angular_vel();
-
-    virtual void threadRelease();
 };
 
 #endif

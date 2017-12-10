@@ -76,10 +76,8 @@ public:
     };
 
 private:
-    Property ctrl_options;
-
-    double              thread_period;
-
+    Property            ctrl_options;
+    string              localName;
     int                 thread_timeout_counter;
 
     int                 command_received;
@@ -88,70 +86,111 @@ private:
     int                 joystick_received[2];
     JoyDescription      jDescr[2];
 
+    //watchdog counters
     int                 mov_timeout_counter;
     int                 aux_timeout_counter;
     int                 joy_timeout_counter[2];
     int                 ros_timeout_counter;
 
-    //movement control variables (input from external)
+    //movement control variables: joypad input
     double              joy_linear_speed[2];
     double              joy_angular_speed[2];
     double              joy_desired_direction[2];
     double              joy_pwm_gain[2];
+    double              linear_vel_at_100_joy;
+    double              angular_vel_at_100_joy;
 
+    //standard input via YARP port
     double              cmd_linear_speed;
     double              cmd_angular_speed;
     double              cmd_desired_direction;
     double              cmd_pwm_gain;
 
+    //aux input via YARP port
     double              aux_linear_speed;
     double              aux_angular_speed;
     double              aux_desired_direction;
     double              aux_pwm_gain;
     
+    //ROS input
     double              ros_linear_speed;
     double              ros_angular_speed;
     double              ros_desired_direction;
     double              ros_pwm_gain;
 
-    double              linear_vel_at_100_joy;
-    double              angular_vel_at_100_joy;
-
 protected:
-    //ResourceFinder            rf;
-    PolyDriver*                       control_board_driver;
-    BufferedPort<Bottle>              port_movement_control;
+    // ROS input
     Subscriber<geometry_msgs_Twist>   rosSubscriberPort_twist;
     string                            rosTopicName_twist;
     bool                              useRos;
     bool                              rosInputEnabled;
+
+    // YARP ports input
+    BufferedPort<Bottle>              port_movement_control;
     BufferedPort<Bottle>              port_auxiliary_control;
     BufferedPort<Bottle>*             port_joystick_control[2];
-    string                            localName;
+
+    //Joypad input
     PolyDriver                        joyPolyDriver[2];
     IJoypadController*                iJoy[2];
 
 public:
 
-    Input(unsigned int _period, PolyDriver* _driver);
+    /**
+    * Default Constructor
+    */
+    Input();
+
+    /**
+    * Destructor
+    */
     ~Input();
 
-    bool   configureJoypdad(int n, const Bottle& joypad_group);
+    /**
+    * Opens the input module, parsing the given options
+    * @param _options the configuration option for the module
+    * @return true if the motor module opened succesfully. False if a mandatatory parameter is missing or invalid.
+    */
+    bool   open(Property &_options);
 
-    bool   open(ResourceFinder &_rf, Property &_options);
+    /**
+    * Closes the input module.
+    */
     void   close();
-    void   updateControlMode();
+
+    /**
+    * Print some stats about the recevied input commands
+    */
     void   printStats();
  
-    void   read_inputs        (double *linear_speed, double *angular_speed, double *desired_direction, double *pwm_gain);
+    /**
+    * Receives the user input commands inputs. These can come a YARPport, a device (joypad), a ROS topic etc.
+    * The robot commands are expressed as casrtesian velocity in the robot reference frame
+    * @param linear_speed the mobile base linear speed
+    * @param desired_direction the mobile base heading (linear_speed will be applied taking in account robot reference frame).
+    * @param angular_speed the mobile base angular speed (in-place rotation).
+    * @param pwm_gain the pwm gain (0-100). Joypad emergency button tipically sets this value to zero to stop the robot. User modules, instead, do not use this value (always set to 100)/
+    */
+    void   read_inputs        (double& linear_speed, double& angular_speed, double& desired_direction, double& pwm_gain);
+    
+private:
+
+    /**
+    * Configures a joypad.
+    * @param n the number of the joypad to be configured (0-1)
+    * @param joypad_group the bottle containing the configuration options
+    * @return true/false if the joypad has been succesfully configured
+    */
+    bool   configureJoypdad   (int n, const Bottle& joypad_group);
+
+    //Internal functions to extract velocity commands from a given bottle or from a joypad descriptor
     void   read_percent_polar (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_percent_cart  (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_polar   (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_speed_cart    (const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
     void   read_joystick_data (JoyDescription *jDescr,IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain);
-    //double get_max_linear_vel()   {return max_linear_vel;}
-    //double get_max_angular_vel()  {return max_angular_vel;}
 
+    //Performs conversion from joypad stick units to metric units
     double get_linear_vel_at_100_joy()   { return linear_vel_at_100_joy; }
     double get_angular_vel_at_100_joy()  { return angular_vel_at_100_joy; }
 };

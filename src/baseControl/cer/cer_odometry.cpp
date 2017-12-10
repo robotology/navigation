@@ -49,9 +49,8 @@ CER_Odometry::~CER_Odometry()
     close();
 }
 
-CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry(_period, _driver)
+CER_Odometry::CER_Odometry(PolyDriver* _driver) : Odometry(_driver)
 {
-    period = _period;
     control_board_driver= _driver;
     odom_x=0;
     odom_y=0;
@@ -77,7 +76,7 @@ CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry
     geom_L = 0;
 }
 
-bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
+bool CER_Odometry::open(Property& _options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();
@@ -114,7 +113,7 @@ bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
     reset_odometry();
 
     //the base class open
-    if (!Odometry::open(_rf, _options))
+    if (!Odometry::open(_options))
     {
         yError() << "Error in Odometry::open()"; return false;
     }
@@ -214,12 +213,13 @@ void CER_Odometry::compute()
     odom_vel_theta = base_vel_theta;
 
     //the integration step
-    odom_x=odom_x + (odom_vel_x * period/1000.0);
-    odom_y=odom_y + (odom_vel_y * period/1000.0);
+    double period=el.time-last_time;
+    odom_x=odom_x + (odom_vel_x * period);
+    odom_y=odom_y + (odom_vel_y * period);
 
     //compute traveled distance (odometer)
-    traveled_distance = traveled_distance + fabs(base_vel_lin   * period/1000.0);
-    traveled_angle    = traveled_angle    + fabs(base_vel_theta * period/1000.0);
+    traveled_distance = traveled_distance + fabs(base_vel_lin   * period);
+    traveled_angle    = traveled_angle    + fabs(base_vel_theta * period);
 
     //convert from radians back to degrees
     odom_theta       *= RAD2DEG;
@@ -228,6 +228,7 @@ void CER_Odometry::compute()
     traveled_angle   *= RAD2DEG;
 
     mutex.post();
+    last_time = yarp::os::Time::now();
 }
 
 double CER_Odometry::get_vlin_coeff()

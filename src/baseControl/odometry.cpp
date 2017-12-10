@@ -46,9 +46,8 @@ Odometry::~Odometry()
     close();
 }
 
-Odometry::Odometry(unsigned int _period, PolyDriver* _driver)
+Odometry::Odometry(PolyDriver* _driver)
 {
-    period               = _period;
     control_board_driver = _driver;
     odom_x               = 0;
     odom_y               = 0;
@@ -67,7 +66,7 @@ Odometry::Odometry(unsigned int _period, PolyDriver* _driver)
     rosMsgCounter        = 0;
 }
 
-bool Odometry::open(ResourceFinder &_rf, Property &options)
+bool Odometry::open(Property &options)
 {
     if (ctrl_options.check("GENERAL"))
     {

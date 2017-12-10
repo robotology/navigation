@@ -290,7 +290,7 @@ void ControlThread::run()
     double pidout_direction     = 0;
 
     //read inputs (input_linear_speed in m/s, input_angular_speed in deg/s...)
-    this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
+    this->input_handler->read_inputs(input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
 
     if (input_linear_speed < 0)
     {
@@ -392,7 +392,7 @@ bool ControlThread::set_control_type (string s)
     return true;
 }
 
-int ControlThread::get_control_type ()
+control_type_enum ControlThread::get_control_type ()
 {
     return base_control_type;
 }
@@ -515,9 +515,9 @@ bool ControlThread::threadInit()
     {
         yInfo("Using cer robot type");
         robot_type       = ROBOT_TYPE_DIFFERENTIAL;
-        if (odometry_enabled) odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
-        motor_handler    = new CER_MotorControl((int)(thread_period), control_board_driver);
-        input_handler    = new Input((int)(thread_period), control_board_driver);
+        if (odometry_enabled) odometry_handler = new CER_Odometry(control_board_driver);
+        motor_handler    = new CER_MotorControl(control_board_driver);
+        input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 320.0 / 2 / 1000.0);
         robot_geom.put("geom_L", 338 / 1000.0);
@@ -526,9 +526,9 @@ bool ControlThread::threadInit()
     {
         yInfo("Using ikart_V1 robot type");
         robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
-        if (odometry_enabled) odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-        motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
-        input_handler    = new Input((int)(thread_period), control_board_driver);
+        if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
+        motor_handler    = new iKart_MotorControl(control_board_driver);
+        input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 62.5 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);
@@ -538,9 +538,9 @@ bool ControlThread::threadInit()
     {
         yInfo("Using ikart_V2 robot type");
         robot_type       = ROBOT_TYPE_THREE_MECHANUM;
-        if (odometry_enabled) odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-        motor_handler    = new iKart_MotorControl((int)(thread_period), control_board_driver);
-        input_handler    = new Input((int)(thread_period), control_board_driver);
+        if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
+        motor_handler    = new iKart_MotorControl(control_board_driver);
+        input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 76.15 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);
@@ -558,19 +558,19 @@ bool ControlThread::threadInit()
         //input_handler->rosNode    = rosNode;
     }
     
-    if (odometry_handler && odometry_handler->open(rf, ctrl_options) == false)
+    if (odometry_handler && odometry_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening odometry handler";
         return false;
     }
 
-    if (motor_handler->open(rf, ctrl_options) == false)
+    if (motor_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening motor handler";
         return false;
     }
 
-    if (input_handler->open(rf, ctrl_options) == false)
+    if (input_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening input handler";
         return false;

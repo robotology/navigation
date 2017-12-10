@@ -65,9 +65,7 @@ protected:
     Property              ctrl_options;
     yarp::os::Semaphore   mutex;
     yarp::os::Stamp       timeStamp;
-
-    //thread period
-    double                period;
+    double                last_time;
 
     //ros
     bool                                            enable_ROS;
@@ -109,27 +107,82 @@ protected:
     double              odom_theta;
 
 protected:
-    //ResourceFinder                  rf;
-    PolyDriver                      *control_board_driver;
     BufferedPort<Bottle>            port_odometry;
     BufferedPort<Bottle>            port_odometer;
     BufferedPort<Bottle>            port_vels;
-
     string                          localName;
+
+    //motor control interfaces 
+    PolyDriver                      *control_board_driver;
     IEncoders                       *ienc;
 
 public:
-    Odometry(unsigned int _period, PolyDriver* _driver); 
+    /**
+    * Constructor
+    * @param _driver is a pointer to a remoteControlBoard driver.
+    */
+    Odometry(PolyDriver* _driver); 
+
+    /**
+    * Default destructor
+    */
     ~Odometry();
+    
+    /**
+    * Resets the robot odometry, meaning the the current robot pose becomes 0,0,0.
+    * @return true/false if the command is accepted.
+    */
     virtual bool   reset_odometry() = 0;
-    virtual bool   open(ResourceFinder &_rf, Property &options) = 0;
+
+    /**
+    * Initializes the odometry module.
+    * @param options the options to be passed to odometry module.
+    * @return true/false if the odometry module is opened succesfully.
+    */
+    virtual bool   open(Property &options) = 0;
+
+    /**
+    * Performs the odometry computation.
+    */
     virtual void   compute() = 0;
+
+    /**
+    * Broadcast odometry data over YARP ports (or ROS topics)
+    */
     virtual void   broadcast();
+
+    /**
+    * Print some stats about the computed odometry estimation
+    */
     virtual void   printStats() = 0;
+
+    /**
+    * Terminates the execution of the odometry module
+    */
     virtual void   close();
+
+    /**
+    * Get the current robot linear velocity
+    * @return the current linear velocity
+    */
     virtual double get_base_vel_lin();
+
+    /**
+    * Get the current robot angular velocity
+    * @return the current angular velocity
+    */
     virtual double get_base_vel_theta();
+
+    /**
+    * Returns the linear velocity coefficient, defined by robot kinematic model
+    * @return the coefficient
+    */
     virtual double get_vlin_coeff() = 0;
+
+    /**
+    * Returns the angular velocity coefficient, defined by robot kinematic model
+    * @return the coefficient
+    */
     virtual double get_vang_coeff() = 0;
 };
 

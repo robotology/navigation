@@ -51,6 +51,7 @@ public:
         control_thr=0;
     }
 
+    //Module initialization and configuration
     virtual bool configure(ResourceFinder &rf)
     {
         string slash="/";
@@ -222,6 +223,7 @@ public:
         return true;
     }
 
+    //This function parses the user commands recevied through the RPC port
     bool respond(const Bottle& command, Bottle& reply) 
     {
         reply.clear(); 
@@ -265,10 +267,17 @@ public:
         {
             if (control_thr)
             {
-                if (command.get(1).asInt()>0) 
-                    {control_thr->get_motor_handler()->set_motors_filter(command.get(1).asInt()); reply.addString("Motors filter on");}
+                int f= command.get(1).asInt();
+                if (f==1) 
+                    {control_thr->get_motor_handler()->set_motors_filter(MotorControl::HZ_1); reply.addString("Motors filter on");}
+                if (f==2) 
+                    {control_thr->get_motor_handler()->set_motors_filter(MotorControl::HZ_2); reply.addString("Motors filter on");}
+                if (f==4) 
+                    {control_thr->get_motor_handler()->set_motors_filter(MotorControl::HZ_4); reply.addString("Motors filter on");}
+                if (f==8) 
+                    {control_thr->get_motor_handler()->set_motors_filter(MotorControl::HZ_8); reply.addString("Motors filter on");}
                 else
-                    {control_thr->get_motor_handler()->set_motors_filter(0); reply.addString("Motors filter off");}
+                    {control_thr->get_motor_handler()->set_motors_filter(MotorControl::DISABLED); reply.addString("Motors filter off");}
             }
             return true;
         }
@@ -341,6 +350,7 @@ public:
         return true;
     }
 
+    //Module close and cleanup
     virtual bool close()
     {
         if (control_thr)
@@ -355,6 +365,8 @@ public:
         return true;
     }
 
+    //CtrlModule update is called with the frequency of 1s. The update fucntion just checks that everything is ok and]
+    //prints some stats. The control is performed by the high-frequency thread control_thr.
     virtual double getPeriod()    { return 1.0;  }
     virtual bool   updateModule()
     { 
@@ -382,7 +394,7 @@ public:
 };
 
 
-
+/////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
     ResourceFinder rf;

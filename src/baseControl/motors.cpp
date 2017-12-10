@@ -56,40 +56,34 @@ void MotorControl::execute_speed(double appl_linear_speed, double appl_desired_d
     }
 }
 
-void  MotorControl::apply_motor_filter(int i)
+void  MotorControl::apply_motor_filter(int joint)
 {
-    if (motors_filter_enabled == 1)
+    if (motors_filter_enabled == HZ_1)
     {
-        F[i] = control_filters::lp_filter_1Hz(F[i], i);
+        F[joint] = control_filters::lp_filter_1Hz(F[joint], joint);
     }
-    else if (motors_filter_enabled == 2)
+    else if (motors_filter_enabled == HZ_2)
     {
-        F[i] = control_filters::lp_filter_2Hz(F[i], i);
+        F[joint] = control_filters::lp_filter_2Hz(F[joint], joint);
     }
-    else if (motors_filter_enabled == 4) //default
+    else if (motors_filter_enabled == HZ_4) //default
     {
-        F[i] = control_filters::lp_filter_4Hz(F[i], i);
+        F[joint] = control_filters::lp_filter_4Hz(F[joint], joint);
     }
-    else if (motors_filter_enabled == 8)
+    else if (motors_filter_enabled == HZ_8)
     {
-        F[i] = control_filters::lp_filter_8Hz(F[i], i);
+        F[joint] = control_filters::lp_filter_8Hz(F[joint], joint);
     }
-    else if (motors_filter_enabled == 10)
+    else if (motors_filter_enabled == HZ_05)
     {
-        F[i] = control_filters::lp_filter_0_5Hz(F[i], i);
+        F[joint] = control_filters::lp_filter_0_5Hz(F[joint], joint);
     }
 }
 
-bool MotorControl::open(ResourceFinder &_rf, Property &_options)
+bool MotorControl::open(Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();
-
-    if (_rf.check("no_motors_filter"))
-    {
-        yInfo("'no_filter' option found. Turning off PWM filter.");
-        motors_filter_enabled=0;
-    }
 
     // open the interfaces for the control boards
     bool ok = true;
@@ -144,7 +138,12 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
         return false;
     }
 
-    motors_filter_enabled = motors_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+    int f = motors_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+    motors_filter_enabled = DISABLED;
+    if (f==1) motors_filter_enabled = HZ_1;
+    else if (f==2) motors_filter_enabled = HZ_2;
+    else if (f==4) motors_filter_enabled = HZ_4;
+    else if (f==8) motors_filter_enabled = HZ_8;
     max_motor_pwm = motors_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
     max_motor_vel = motors_options.check("max_motor_vel", Value(0), "max_motor_vel").asDouble();
 
@@ -182,7 +181,7 @@ bool MotorControl::open(ResourceFinder &_rf, Property &_options)
     return true;
 }
 
-MotorControl::MotorControl(unsigned int _period, PolyDriver* _driver)
+MotorControl::MotorControl(PolyDriver* _driver)
 {
     control_board_driver = _driver;
     motors_num=0;
@@ -190,8 +189,6 @@ MotorControl::MotorControl(unsigned int _period, PolyDriver* _driver)
 
     max_motor_vel = 0;
     max_motor_pwm = 0;
-
-    thread_period = _period;
 }
 
 void MotorControl::printStats()

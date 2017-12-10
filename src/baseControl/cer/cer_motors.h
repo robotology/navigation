@@ -48,16 +48,25 @@ class CER_MotorControl : public MotorControl
     double              geom_L;
 
 public:
-    CER_MotorControl(unsigned int _period, PolyDriver* _driver);
+    /**
+    * Constructor
+    * @param _driver is a pointer to a remoteControlBoard driver.
+    */
+    CER_MotorControl(PolyDriver* _driver);
+
+    /**
+    * Destructor
+    */
     virtual ~CER_MotorControl();
 
-    bool open(ResourceFinder &_rf, Property &_options);
+    //The following methods are documented in base class odometry.h
+    bool open(Property &_options);
     void execute_none();
     void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void close();
-    void set_motors_filter(int b) {motors_filter_enabled=b;}
+    void set_motors_filter(filter_frequency b) {motors_filter_enabled=b;}
     double get_vlin_coeff();
     double get_vang_coeff();
 };

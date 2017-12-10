@@ -49,9 +49,8 @@ iKart_Odometry::~iKart_Odometry()
     close();
 }
 
-iKart_Odometry::iKart_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry(_period, _driver)
+iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : Odometry(_driver)
 {
-    period = _period;
     control_board_driver= _driver;
     odom_x=0;
     odom_y=0;
@@ -74,7 +73,7 @@ iKart_Odometry::iKart_Odometry(unsigned int _period, PolyDriver* _driver) : Odom
     encv.resize(3);
 }
 
-bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
+bool iKart_Odometry::open(Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();
@@ -111,7 +110,7 @@ bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
     reset_odometry();
 
     //the base class open
-    if (!Odometry::open(_rf, _options))
+    if (!Odometry::open(_options))
     {
         yError() << "Error in Odometry::open()"; return false;
     }
@@ -262,12 +261,13 @@ void iKart_Odometry::compute()
     traveled_angle   *= RAD2DEG;
 
     //the integration step
-    odom_x=odom_x + (odom_vel_x * period/1000.0);
-    odom_y=odom_y + (odom_vel_y * period/1000.0);
+    double period=el.time-last_time;
+    odom_x=odom_x + (odom_vel_x * period);
+    odom_y=odom_y + (odom_vel_y * period);
 
     //compute traveled distance (odometer)
-    traveled_distance = traveled_distance + fabs(base_vel_lin   * period/1000.0);
-    traveled_angle    = traveled_angle    + fabs(base_vel_theta * period/1000.0);
+    traveled_distance = traveled_distance + fabs(base_vel_lin   * period);
+    traveled_angle    = traveled_angle    + fabs(base_vel_theta * period);
 
     /* [ -(3^(1/2)*r)/3, (3^(1/2)*r)/3,        0]
         [            r/3,           r/3, -(2*r)/3]
@@ -290,8 +290,8 @@ void iKart_Odometry::compute()
                 (sin(odom_theta)-si3m)*encC
                 );
     */  
-
     mutex.post();
+    last_time = yarp::os::Time::now();
 }
 
 double iKart_Odometry::get_vlin_coeff()

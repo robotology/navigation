@@ -30,19 +30,13 @@ iKart_MotorControl::~iKart_MotorControl()
     close();
 }
 
-bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
+bool iKart_MotorControl::open(Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();
 
-    if (_rf.check("no_motors_filter"))
-    {
-        yInfo("'no_filter' option found. Turning off PWM filter.");
-        motors_filter_enabled=0;
-    }
-
     //the base class open
-    if (!MotorControl::open(_rf, _options))
+    if (!MotorControl::open(_options))
     {
         yError() << "Error in MotorControl::open()"; return false;
     }
@@ -94,14 +88,12 @@ bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
 
-    motors_filter_enabled = general_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-
     localName = ctrl_options.find("local").asString();
 
     return true;
 }
 
-iKart_MotorControl::iKart_MotorControl(unsigned int _period, PolyDriver* _driver) : MotorControl(_period, _driver)
+iKart_MotorControl::iKart_MotorControl(PolyDriver* _driver) : MotorControl(_driver)
 {
     control_board_driver = _driver;
     motors_num=3;
@@ -111,7 +103,6 @@ iKart_MotorControl::iKart_MotorControl(unsigned int _period, PolyDriver* _driver
     board_control_modes.resize(motors_num, 0);
     board_control_modes_last.resize(motors_num, 0);
 
-    thread_period = _period;
     geom_r = 0;
     geom_L = 0;
     g_angle = 0;

@@ -60,7 +60,6 @@ class MotorControl
 protected:
     int                 motors_num;
     Property            ctrl_options;
-    double              thread_period;
     std::vector<double> F;
     std::vector<int>    board_control_modes;
     std::vector<int>    board_control_modes_last;
@@ -69,20 +68,22 @@ protected:
     double              max_motor_pwm;
     double              max_motor_vel;
 
+public:
+    enum filter_frequency {DISABLED=0, HZ_05=1, HZ_1=2, HZ_2=3, HZ_4=4, HZ_8=5};
+
 protected:
-    //ResourceFinder            rf;
-    PolyDriver                *control_board_driver;
+    filter_frequency           motors_filter_enabled;
+    string                     localName;
+    BufferedPort<Bottle>       port_status;
 
-    int                motors_filter_enabled;
-    string             localName;
-    BufferedPort<Bottle>            port_status;
-
-    IPidControl       *ipid;
-    IVelocityControl  *ivel;
-    IEncoders         *ienc;
-    IAmplifierControl *iamp;
-    IPWMControl       *ipwm;
-    IControlMode2     *icmd;
+    //motor control interfaces
+    PolyDriver            *control_board_driver;
+    IPidControl           *ipid;
+    IVelocityControl      *ivel;
+    IEncoders             *ienc;
+    IAmplifierControl     *iamp;
+    IPWMControl           *ipwm;
+    IControlMode2         *icmd;
 
     //ros
     bool                                         enable_ROS;
@@ -90,28 +91,117 @@ protected:
     std::string                                  rosTopicName_cmd_twist;
     yarp::os::Publisher<geometry_msgs_Twist>     rosPublisherPort_cmd_twist;
 
-public:
-
-    MotorControl(unsigned int _period, PolyDriver* _driver);
-    virtual ~MotorControl();
-    virtual bool set_control_velocity();
-    virtual bool set_control_openloop();
-    virtual bool set_control_idle();
-    virtual bool check_motors_on();
-    virtual void updateControlMode();
-    virtual void printStats();
-
-    virtual bool open(ResourceFinder &_rf, Property &_options);
-    virtual void close();
-    virtual void execute_none() = 0;
-    virtual void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
-    virtual void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
+protected:
+    /**
+    * Decouples the control, i.e. computes the individual motor commands, given the robot velocity command in the cartesian space.
+    * @param appl_linear_speed the mobile base linear speed
+    * @param appl_desired_direction the mobile base heading (appl_linear_speed will be applied taking in account robot reference frame).
+    * @param appl_angular_speed the mobile base angular speed (in-place rotation).
+    */
     virtual void decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
 
-    virtual void set_motors_filter(int b) {motors_filter_enabled=b;}
+public:
+    /**
+    * Constructor
+    * @param _driver is a pointer to a remoteControlBoard driver.
+    */
+    MotorControl(PolyDriver* _driver);
+
+    /**
+    * Destructor
+    */
+    virtual ~MotorControl();
+
+    /**
+    * Sets all the robot joints to control mode velocity. BaseControl will send velocity reference to motor joints
+    * @return true if the operation was succesful, false otherwise.
+    */
+    virtual bool set_control_velocity();
+
+    /**
+    * Sets all the robot joints to control mode openloop. BaseControl will send openloop commands to motor joints
+    * @return true if the operation was succesful, false otherwise.
+    */
+    virtual bool set_control_openloop();
+
+    /**
+    * Sets all the robot joints to control mode idle.
+    * @return true if the operation was succesful, false otherwise.
+    */
+    virtual bool set_control_idle();
+
+    /**
+    * Checks if robot joints are not idle or faulted.
+    * @return true if the motor control is active, false otherwise.
+    */
+    virtual bool check_motors_on();
+
+    /**
+    * Checks if the system is fully functional. If a joint is in fault, turn off the control on all other joints.
+    */
+    virtual void updateControlMode();
+   
+    /**
+    * Print stats about the current internal status (e.g. current control mode of the joints, etc).
+    */
+    virtual void printStats();
+
+    /**
+    * Opens the motors module, parsing the given options
+    * @param _options the configuration option for the module
+    * @return true if the motor module opened succesfully. False if a mandatatory parameter is missing or invalid.
+    */
+    virtual bool open(Property &_options);
+
+    /**
+    * Closes the motors module.
+    */
+    virtual void close();
+
+    /**
+    * Do not perform any control action. Simply keep the robot joint stopped.
+    */
+    virtual void execute_none() = 0;
+
+    /**
+    * Performs the control action, controlling the robot joints in openloop mode to track the required cartesian velocity commands.
+    * @param appl_linear_speed the mobile base linear speed
+    * @param appl_desired_direction the mobile base heading (appl_linear_speed will be applied taking in account robot reference frame).
+    * @param appl_angular_speed the mobile base angular speed (in-place rotation).
+    */
+    virtual void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
+    
+    /**
+    * Performs the control action, controlling the robot joints in velocity mode to track the required cartesian velocity commands.
+    * @param appl_linear_speed the mobile base linear speed
+    * @param appl_desired_direction the mobile base heading (appl_linear_speed will be applied taking in account robot reference frame).
+    * @param appl_angular_speed the mobile base angular speed (in-place rotation).
+    */
+    virtual void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
+    
+    /**
+    * Enable/Disable/Sets the frequency of the motor output low pass filter. Filtering is performed by apply_motor_filter()
+    * @param freq the low pass filter frequency (or filter_frequency::DISABLED) to turn off the filter
+    */
+    virtual void set_motors_filter(filter_frequency freq) {motors_filter_enabled=freq;}
+
+    /**
+    * Return the maximum value of joint velocity, as defined in the configuration parameters.
+    * @return the maximum value of joint velocity. joint the joint number
+    */
     virtual double get_max_motor_vel()   {return max_motor_vel;}
+   
+    /**
+    * Return the maximum value of motor pwm, as defined in the configuration parameters.
+    * @return the maximum value of motor pwm. joint the joint number
+    */
     virtual double get_max_motor_pwm()   {return max_motor_pwm;}
-    virtual void  apply_motor_filter(int i);
+
+    /**
+    * Apply a low pass filter to motor output. The frequency is defined by motors_filter_enabled
+    * @param joint the joint number
+    */
+    virtual void  apply_motor_filter(int joint);
 };
 
 #endif

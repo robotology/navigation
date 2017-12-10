@@ -172,7 +172,7 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
     return true;
 }
 
-bool Input::open(ResourceFinder &_rf, Property &_options)
+bool Input::open(Property &_options)
 {
     ctrl_options = _options;
     localName    = ctrl_options.find("local").asString();
@@ -302,10 +302,9 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
     return true;
 }
 
-Input::Input(unsigned int _period, PolyDriver* _driver)
+Input::Input()
 {
     useRos                 = false;
-    control_board_driver   = _driver;
 
     thread_timeout_counter = 0;
 
@@ -352,7 +351,6 @@ Input::Input(unsigned int _period, PolyDriver* _driver)
     linear_vel_at_100_joy  = 0;
     angular_vel_at_100_joy = 0;
 
-    thread_period          = _period;
     iJoy[0]                = 0;
     iJoy[1]                = 0;
 }
@@ -432,7 +430,7 @@ void Input::read_joystick_data(JoyDescription *jDescr, IJoypadController* iJoy, 
     pwm_gain = (pwm_gain>0) ? pwm_gain : 0;
 }
 
-void Input::read_inputs(double *linear_speed,double *angular_speed,double *desired_direction, double *pwm_gain)
+void Input::read_inputs(double& linear_speed,double& angular_speed,double& desired_direction, double& pwm_gain)
 {
     static double wdt_old_mov_cmd = Time::now();
     static double wdt_old_ros_cmd = Time::now();
@@ -605,38 +603,38 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
     //- - - priority test - - -
     if (joystick_received[0]>0)
     {
-        *desired_direction  = joy_desired_direction[0];
-        *linear_speed       = joy_linear_speed[0];
-        *angular_speed      = joy_angular_speed[0];
-        *pwm_gain           = joy_pwm_gain[0];
+        desired_direction  = joy_desired_direction[0];
+        linear_speed       = joy_linear_speed[0];
+        angular_speed      = joy_angular_speed[0];
+        pwm_gain           = joy_pwm_gain[0];
     }
     else if (joystick_received[1]>0)
     {
-        *desired_direction  = joy_desired_direction[1];
-        *linear_speed       = joy_linear_speed[1];
-        *angular_speed      = joy_angular_speed[1];
-        *pwm_gain           = joy_pwm_gain[1];
+        desired_direction  = joy_desired_direction[1];
+        linear_speed       = joy_linear_speed[1];
+        angular_speed      = joy_angular_speed[1];
+        pwm_gain           = joy_pwm_gain[1];
     }
     else if (auxiliary_received>0)
     {
-        *desired_direction  = aux_desired_direction;
-        *linear_speed       = aux_linear_speed;
-        *angular_speed      = aux_angular_speed;
-        *pwm_gain           = aux_pwm_gain;
+        desired_direction  = aux_desired_direction;
+        linear_speed       = aux_linear_speed;
+        angular_speed      = aux_angular_speed;
+        pwm_gain           = aux_pwm_gain;
     }
     else if (rosInput_received>0)
     {
-        *desired_direction  = ros_desired_direction;
-        *linear_speed       = ros_linear_speed;
-        *angular_speed      = ros_angular_speed;
-        *pwm_gain           = ros_pwm_gain;
+        desired_direction  = ros_desired_direction;
+        linear_speed       = ros_linear_speed;
+        angular_speed      = ros_angular_speed;
+        pwm_gain           = ros_pwm_gain;
     }
     else //if (command_received>0)
     {
-        *desired_direction  = cmd_desired_direction;
-        *linear_speed       = cmd_linear_speed;
-        *angular_speed      = cmd_angular_speed;
-        *pwm_gain           = cmd_pwm_gain;
+        desired_direction  = cmd_desired_direction;
+        linear_speed       = cmd_linear_speed;
+        angular_speed      = cmd_angular_speed;
+        pwm_gain           = cmd_pwm_gain;
     }
 
     //watchdog on received commands

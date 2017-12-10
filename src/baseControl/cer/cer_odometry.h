@@ -73,10 +73,20 @@ private:
     yarp::sig::Vector encv;
 
 public:
-    CER_Odometry(unsigned int _period, PolyDriver* _driver);
+    /**
+    * Constructor
+    * @param _driver is a pointer to a remoteControlBoard driver.
+    */
+    CER_Odometry(PolyDriver* _driver);
+    
+    /**
+    * Default destructor
+    */
     virtual ~CER_Odometry();
+
+    //The following methods are documented in base class odometry.h
     bool reset_odometry();
-    bool open(ResourceFinder &_rf, Property &options);
+    bool open(Property &options);
     void compute();
     void printStats();
     double get_vlin_coeff();

@@ -33,7 +33,13 @@ protected:
     yarp::os::Port     rpcPort;
 
 public:
+    /**
+    * Default module constructor
+    */
     localizationModule();
+
+    //declared in yarp::os::RFModule
+public:
     virtual bool configure(yarp::os::ResourceFinder &rf);
     virtual bool interruptModule();
     virtual bool close();
@@ -41,10 +47,19 @@ public:
     virtual bool updateModule();
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply);
 
-    //Initializes the localization algorithm with the given location.
+public:
+    /**
+    * Initializes the localization algorithm with the given location.
+    * @param loc the initial guess for the robot location
+    * @return true/false if the command is accepted
+    */
     bool initializeLocalization(yarp::dev::Map2DLocation loc);
 
-    //Get the current position of the robot, estimated by the localization algorithm
+    /**
+    * Get the current position of the robot, estimated by the localization algorithm
+    * @param loc the current position of the robot
+    * @return true/false if the command is accepted
+    */
     bool getLocalizationData(yarp::dev::Map2DLocation& loc);
 };
 
