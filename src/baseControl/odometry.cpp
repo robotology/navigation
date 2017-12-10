@@ -252,7 +252,7 @@ void Odometry::broadcast()
 
     if (enable_ROS)
     {
-        tf_tfMessage &rosData = rosPublisherPort_tf.prepare();
+        tf2_msgs_TFMessage &rosData = rosPublisherPort_tf.prepare();
         geometry_msgs_TransformStamped transform;
         transform.child_frame_id = child_frame_id;
         transform.header.frame_id = odometry_frame_id;

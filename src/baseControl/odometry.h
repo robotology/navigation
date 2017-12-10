@@ -41,7 +41,7 @@
 #include <nav_msgs_Odometry.h>
 #include <geometry_msgs_PolygonStamped.h>
 #include <geometry_msgs_TransformStamped.h>
-#include <tf_tfMessage.h>
+#include <tf2_msgs_TFMessage.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -83,7 +83,7 @@ protected:
     geometry_msgs_PolygonStamped                               footprint;
     std::string                                                footprint_frame_id;
 
-    yarp::os::Publisher<tf_tfMessage>                          rosPublisherPort_tf;
+    yarp::os::Publisher<tf2_msgs_TFMessage>                    rosPublisherPort_tf;
 
 protected:
     //estimated cartesian velocity in the fixed odometry reference frame (world)

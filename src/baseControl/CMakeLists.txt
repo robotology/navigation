@@ -18,7 +18,7 @@ yarp_add_idl (ROS_MSG "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/visualization
                       "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/nav_msgs/Odometry.msg"
                       "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/geometry_msgs/PolygonStamped.msg"
                       "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/geometry_msgs/TransformStamped.msg"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/tf/tfMessage.msg")
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/tf2_msgs/TFMessage.msg")
 
 include_directories(${GSL_INCLUDE_DIRS}
                     ${YARP_INCLUDE_DIRS}
