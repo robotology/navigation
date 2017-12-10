@@ -73,7 +73,7 @@ Windows, Linux
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
-#include "ControlThread.h"
+
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -86,78 +86,60 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-
-class CtrlModule: public RFModule
+class CtrlThread: public RateThread
 {
+private:
+    Network             yarp;
+
 protected:
-    CtrlThread *thr;
-    //Port        rpcPort;
+    ResourceFinder      &rf;
+    
+    //remotoreControlBoard device driver
+    PolyDriver          *control_board_driver;
+    IVelocityControl    *iVel;
+
+    //wrench offset
+    double              lx0;
+    double              ly0;
+    double              rx0;
+    double              ry0;
+    //current measurments
+    double              lx;
+    double              ly;
+    double              rx;
+    double              ry;
+
+    //yarp in/out ports
+    Port                            commands_out_port;
+    BufferedPort<yarp::sig::Vector> l_wrench_in_port;
+    BufferedPort<yarp::sig::Vector> r_wrench_in_port;
 
 public:
-    CtrlModule() { }
+    /**
+    * Constructor.
+    * @param _period the control loop period (default 20ms)
+    * @param _rf the resource finder containing the configuration options
+    */
+    CtrlThread(unsigned int _period, ResourceFinder &_rf);
 
-    virtual bool configure(ResourceFinder &rf)
-    {
-        string slash="/";
-        string ctrlName;
-        string robotName;
-        string partName;
-        string remoteName;
-        string localName;
+    //Inherithed from yarp::os::RateThread 
+    virtual bool threadInit();
+    virtual void afterStart(bool s);
+    virtual void run();
+    virtual void threadRelease();
 
-        Time::turboBoost();
-
-        // get params from the RF
-        ctrlName=rf.check("local",Value("forceGuidance")).asString();
-        robotName=rf.check("robot",Value("ikart")).asString();
-        partName = rf.check("part", Value("wheels")).asString();
-
-        remoteName = slash + robotName + slash + partName;
-        localName= slash + ctrlName;
-
-        thr=new CtrlThread(20,rf);
-        if (!thr->start())
-        {
-            delete thr;
-            return false;
-        }
-
-        //rpcPort.open((localName+"/rpc").c_str());
-        //attach(rpcPort);
-
-        return true;
-    }
-
-    virtual bool close()
-    {
-        thr->stop();
-        delete thr;
-        return true;
-    }
-
-    virtual double getPeriod()    { return 10.0;  }
-    virtual bool   updateModule() { return true; }
+    /**
+    * These functions implements a butterworth low pass first order, with a cut off frequency of 0.5-1Hz.
+    * Coefficients have been computed in order to be used with a sampling frequency of 50Hz (20ms)
+    * @param input the value to be filtered
+    * @param i the id(0-9) containing the variable history
+    * @return the filtered value
+    */
+    double lp_filter_1Hz(double input, int i);
+    double lp_filter_0_5Hz(double input, int i);
 };
 
 
-//////////////////////////////////////////////////////
-int main(int argc, char *argv[])
-{
-    ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.configure(argc,argv);
-
-    if (rf.check("help"))
-    {
-        yInfo() << "Options:";
-        yInfo() << "\tNo options at the moment" ;
-        return 0;
-    }
-
-    CtrlModule mod;
-
-    return mod.runModule(rf);
-}
 
 
 

@@ -8,7 +8,10 @@ set(PROJECTNAME forceGuidance)
 project(${PROJECTNAME})
 
 file(GLOB folder_source *.cpp)
+file(GLOB folder_header *.h)
+
 source_group("Source Files" FILES ${folder_source})
+source_group("Header Files" FILES ${folder_header})
 
 include_directories(${GSL_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS})
 
