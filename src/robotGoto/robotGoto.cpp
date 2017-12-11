@@ -1018,17 +1018,18 @@ void GotoThread::approachTarget(double dir, double speed, double time)
     m_status_after_approach = navigation_status_idle;
 }
 
-void GotoThread::pauseMovement(double secs)
+bool GotoThread::pauseMovement(double secs)
 {
+    bool ret = true;
     if (m_status == navigation_status_paused)
     {
         yWarning ( "already in pause!");
-        return;
+        ret = false;
     }
-    if (m_status != navigation_status_moving)
+    else if (m_status != navigation_status_moving)
     {
         yWarning( "not moving!");
-        return;
+        ret = false;
     }
 
     if (secs > 0)
@@ -1044,18 +1045,32 @@ void GotoThread::pauseMovement(double secs)
     }
     m_status = navigation_status_paused;
     m_pause_start = yarp::os::Time::now();
+    return true;
 }
 
-void GotoThread::resumeMovement()
+bool GotoThread::resumeMovement()
 {
+    bool ret = true;
     yInfo( "asked to resume movement");
-    m_status = navigation_status_moving;
+    if (m_status != navigation_status_moving)
+    {
+        m_status = navigation_status_moving;
+        yInfo ("Navigation resumed");
+    }
+    else
+    {
+        yWarning ("Already moving!");
+        ret = false;
+    }
+    return ret;
 }
 
-void GotoThread::stopMovement()
+bool GotoThread::stopMovement()
 {
+    bool ret = true;
     yInfo( "asked to stop");
     m_status = navigation_status_idle;
+    return ret;
 }
 
 string GotoThread::getNavigationStatusAsString()

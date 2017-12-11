@@ -267,11 +267,11 @@ void PlannerThread::draw_map()
     {
         if (m_enable_draw_enlarged_scans)
         {
-            drawLaserMap(processed_map_with_scan, m_temporary_obstacles_map, azure_color);
+            map_utilites::drawLaserMap(processed_map_with_scan, m_temporary_obstacles_map, azure_color);
         }
         if (m_enable_draw_laser_scans)
         {
-            drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
+            map_utilites::drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
         }
     }
 
@@ -285,10 +285,10 @@ void PlannerThread::draw_map()
         case navigation_status_failing:
         case navigation_status_paused:
         case navigation_status_thinking:
-            drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, red_color);
+            map_utilites::drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, red_color);
         break;
         case navigation_status_goal_reached:
-            drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, green_color);
+            map_utilites::drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, green_color);
         break;
         case navigation_status_idle:
         default:
@@ -300,11 +300,11 @@ void PlannerThread::draw_map()
     {
         for (size_t i=0; i<m_locations_list.size(); i++)
         {
-            drawGoal(processed_map_with_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
+            map_utilites::drawGoal(processed_map_with_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
         }
     }
 
-    drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
+    map_utilites::drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
 #define DRAW_INFO
 #ifdef DRAW_INFO
     MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
@@ -313,7 +313,7 @@ void PlannerThread::draw_map()
     MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
     MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
     MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
-    drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, m_localization_data, font, blue_color);
+    map_utilites::drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, m_localization_data, font, blue_color);
 #endif
     static IplImage* map_with_path = 0;
     prepare_image(map_with_path,processed_map_with_scan);
@@ -334,7 +334,7 @@ void PlannerThread::draw_map()
         MapGrid2D::XYCell current_path;
         if (getCurrentWaypoint(current_path))
         {
-            drawPath(map_with_path, start, current_path, *m_current_path, color);
+            map_utilites::drawPath(map_with_path, start, current_path, *m_current_path, color);
         }
 #endif
     }
@@ -342,7 +342,7 @@ void PlannerThread::draw_map()
     static IplImage* map_with_location = 0;
     prepare_image(map_with_location,map_with_path);
 
-    sendToPort(&m_port_map_output, map_with_location);
+    map_utilites::sendToPort(&m_port_map_output, map_with_location);
 }
 
 void PlannerThread::run()
@@ -515,7 +515,7 @@ void PlannerThread::run()
                 Bottle cmd, ans;
                 cmd.addString("stop");
                 m_port_commands_output.write(cmd, ans);
-                update_obstacles_map(m_current_map, m_augmented_map);
+                map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
                 sendWaypoint();
             }
             else
@@ -758,7 +758,7 @@ bool PlannerThread::startPath()
     m_planner_status = navigation_status_thinking;
 
     //search for a path
-    bool b = findPath(m_current_map, start, goal, m_computed_path);
+    bool b = map_utilites::findPath(m_current_map, start, goal, m_computed_path);
     if (!b)
     {
         yError ("path not found");
@@ -768,7 +768,7 @@ bool PlannerThread::startPath()
     double t2 = yarp::os::Time::now();
 
     //search for an simpler path (waypoint optimization)
-    simplifyPath(m_current_map, m_computed_path, m_computed_simplified_path);
+    map_utilites::simplifyPath(m_current_map, m_computed_path, m_computed_simplified_path);
     yInfo("path size:%d simplified path size:%d time: %.2f", m_computed_path.size(), m_computed_simplified_path.size(), t2 - t1);
 
     //choose the path to use

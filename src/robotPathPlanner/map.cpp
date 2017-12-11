@@ -40,8 +40,9 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace map_utilites;
 
-bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send)
+bool map_utilites::sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send)
 {
     if (port!=0 && port->getOutputCount()>0)
     {
@@ -56,7 +57,7 @@ bool sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, I
     return false;
 }
 
-bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path)
+bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path)
 {
     unsigned int path_size = input_path.size();
     if (path_size==0) return false;
@@ -107,7 +108,7 @@ bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input
     return true;
 };
 
-bool drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color)
+bool map_utilites::drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color)
 {
     if (map==0) return false;
     cvLine(map, cvPoint(current_position.x, current_position.y), cvPoint(current_target.x, current_target.y), color);
@@ -124,7 +125,7 @@ bool drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCe
     return true;
 }
 
-bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
 {
     if (map==0) return false;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
@@ -134,7 +135,7 @@ bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle,
     return true;
 }
 
-bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
 {
     if (map == 0) return false;
     cvCircle(map, cvPoint(current.x, current.y), 3, color);
@@ -147,7 +148,7 @@ bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvSc
     return true;
 }
 
-bool drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
+bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
 {
     if (map==0) return false;
     char txt[255];
@@ -158,7 +159,7 @@ bool drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, 
     return true;
 }
 
-bool drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color)
+bool map_utilites::drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color)
 {
     if (map==0) return false;
     for (unsigned int i=0; i<laser_scan.size(); i++)
@@ -166,7 +167,7 @@ bool drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, c
     return true;
 }
 
-bool drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color)
+bool map_utilites::drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color)
 {
     if (map==0) return false;
     for (size_t y=0; y<laserMap.height(); y++)
@@ -183,7 +184,7 @@ bool drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvS
     return true;
 }
 
-void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
+void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
 {
     if (map_to_be_updated.width() != obstacles_map.width() ||
         map_to_be_updated.height() != map_to_be_updated.height())
@@ -208,7 +209,7 @@ void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::d
         }
 }
 
-bool checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst)
+bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst)
 {
     //here using the fast Bresenham algorithm
     int dx = abs(dst.x-src.x);
@@ -239,7 +240,7 @@ bool checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid
     return true;
 }
 
-bool findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
+bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
 {
     //return find_dijkstra_path(map, start, goal, path);
     return find_astar_path(map, start, goal, path);

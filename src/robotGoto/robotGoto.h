@@ -232,19 +232,22 @@ public:
     
     /**
     * Terminates a previosuly started navigation task.
+    * @return true if the operation was succesfull, false otherwise.
     */
-    void          stopMovement();
+    bool          stopMovement();
     
     /**
     * Pauses the robot navigation
     * @param sec the duration of the pause, expressed in seconds. A negative number means forever.
+    * @return true if the operation was succesfull, false otherwise.
     */
-    void          pauseMovement (double secs=-1);
+    bool          pauseMovement (double secs=-1);
     
     /**
     * Resumes the robot navigation after a previous pauseMovement()
+    * @return true if the operation was succesfull, false otherwise.
     */
-    void          resumeMovement();
+    bool          resumeMovement();
     
     /**
     * Returns the current navigation status used by the internal finite-state machine

@@ -104,16 +104,15 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     }
 }
 
-void PlannerThread::stopMovement()
+bool PlannerThread::stopMovement()
 {
+    bool ret = true;
     //stop the inner navigation loop
     Bottle cmd1, ans1;
     cmd1.addString("stop"); 
     m_port_commands_output.write(cmd1, ans1);
 
     //stop the outer navigation loop
-
-
     if (m_planner_status != navigation_status_idle)
     {
         m_planner_status = navigation_status_idle;
@@ -122,19 +121,20 @@ void PlannerThread::stopMovement()
     else
     {
         yWarning ("Already not moving");
+        ret = false;
     }
+    return ret;
 }
 
-void PlannerThread::resumeMovement()
+bool PlannerThread::resumeMovement()
 {
+    bool ret = true;
     //resuming the inner navigation loop
     Bottle cmd1, ans1;
     cmd1.addString("resume");
     m_port_commands_output.write(cmd1, ans1);
 
     //stop the outer navigation loop
-
-
     if (m_planner_status != navigation_status_moving)
     {
         m_planner_status = navigation_status_moving;
@@ -143,11 +143,14 @@ void PlannerThread::resumeMovement()
     else
     {
         yWarning ("Already moving!");
+        ret = false;
     }
+   return ret;
 }
 
-void PlannerThread::pauseMovement(double d)
+bool PlannerThread::pauseMovement(double d)
 {
+    bool ret = true;
     //pausing the inner navigation loop
     Bottle cmd1, ans1;
     cmd1.addString("pause");
@@ -163,7 +166,9 @@ void PlannerThread::pauseMovement(double d)
     else
     {
         yWarning ("Already paused");
+        ret = false;
     }
+    return ret;
 }
 
 bool PlannerThread::gotoLocation(std::string location_name)
@@ -183,23 +188,25 @@ bool PlannerThread::gotoLocation(std::string location_name)
     }
 }
 
-void PlannerThread::storeCurrentLocation(std::string location_name)
+bool PlannerThread::storeCurrentLocation(std::string location_name)
 {
-    m_iMap->storeLocation(location_name,m_localization_data);
+    bool b = m_iMap->storeLocation(location_name,m_localization_data);
     updateLocations();
+    return b;
 }
 
-void PlannerThread::deleteLocation(std::string location_name)
+bool PlannerThread::deleteLocation(std::string location_name)
 {
-    m_iMap->deleteLocation(location_name);
+     bool b = m_iMap->deleteLocation(location_name);
     updateLocations();
+    return b;
 }
 
 void PlannerThread::printStats()
 {
 }
 
-int PlannerThread::getNavigationStatusAsInt()
+NavigationStatusEnum PlannerThread::getNavigationStatusAsInt()
 {
     return m_planner_status;
 }
