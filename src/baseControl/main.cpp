@@ -223,7 +223,7 @@ public:
         return true;
     }
 
-    //This function parses the user commands recevied through the RPC port
+    //This function parses the user commands received through the RPC port
     bool respond(const Bottle& command, Bottle& reply) 
     {
         reply.clear(); 
@@ -365,7 +365,7 @@ public:
         return true;
     }
 
-    //CtrlModule update is called with the frequency of 1s. The update fucntion just checks that everything is ok and]
+    //CtrlModule update is called with the frequency of 1s. The update function just checks that everything is ok and
     //prints some stats. The control is performed by the high-frequency thread control_thr.
     virtual double getPeriod()    { return 1.0;  }
     virtual bool   updateModule()
@@ -415,6 +415,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    //Initialize Yarp network
     Network yarp;
 
     if (!yarp.checkNetwork())
@@ -423,7 +424,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    //Starts the control module
     CtrlModule mod;
-
     return mod.runModule(rf);
 }

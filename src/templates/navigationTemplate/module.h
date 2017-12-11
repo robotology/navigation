@@ -70,14 +70,16 @@ public:
     /**
     * //Gets the last target set through a setNewAbsTarget command.
     * @return a Map2DLocation containing data of the current target.
+    * @return true if a target is current available, false otherwise (in this case returned target is invalid)
     */
-    yarp::dev::Map2DLocation getCurrentAbsTarget();
+    bool getCurrentAbsTarget(yarp::dev::Map2DLocation& target);
     
     /**
     * //Gets the last target set through a setNewRelTarget command, expressed in absolute coordinates.
-    * @return a Map2DLocation containing data of the current target.
+    * @param a Map2DLocation containing data of the current target.
+    * @return true if a target is current available, false otherwise (in this case returned target is invalid)
     */
-    yarp::dev::Map2DLocation getCurrentRelTarget();
+    bool getCurrentRelTarget(yarp::dev::Map2DLocation& target);
     
     /**
     * //Gets the status of the current navigation task. Typically stored into navigation_status variable.

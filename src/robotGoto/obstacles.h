@@ -64,18 +64,18 @@ private:
 
     double m_last_print_time;
 public:
-    //obstacles_emergency_stop block
+    //obstacles avoiance stop block
     double               m_max_obstacle_distance;
     double               m_frontal_blind_angle;
     double               m_speed_reduction_factor;
     double               m_angle_f;
     double               m_angle_t;
     double               m_angle_g;
-    double               m_w_f;
-    double               m_w_t;
-    double               m_w_g;
+    double               m_w_f; //perpendicular repulsion force
+    double               m_w_t; //tangential repulsition force
+    double               m_w_g; //goal attraction force
 
-    //obstacle avoidance block
+    //obstacle emergency block
     bool                 m_enable_dynamic_max_distance;
     double               m_max_obstacle_waiting_time;
     double               m_safety_coeff;
@@ -90,6 +90,15 @@ public:
     void set_safety_coeff(double val);
 
 private:
+    /**
+    * Checks if a point is inside a n-sided polygons.
+    * @param testx x-coordinate of the point to be tested
+    * @param testy y-coordinate of the point to be tested
+    * @param nvert the number of vertices of the polygon
+    * @param vertx an array of size nvert containing the x-coordinates of all vertices
+    * @param verty an array of size nvert containing the y-coordinates of all vertices
+    * @return true if the requested point is inside the polygon, false otherwise
+    */
     int pnpoly(int nvert, double *vertx, double *verty, double testx, double testy);
 };
 

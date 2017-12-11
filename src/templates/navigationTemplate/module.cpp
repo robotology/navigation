@@ -157,7 +157,15 @@ bool navigationModule::respond(const yarp::os::Bottle& command,yarp::os::Bottle&
             }
             else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
             {
-                yarp::dev::Map2DLocation loc = request == VOCAB_NAV_GET_ABS_TARGET ? this->getCurrentAbsTarget() : this->getCurrentRelTarget();
+                yarp::dev::Map2DLocation loc;
+                if (request == VOCAB_NAV_GET_ABS_TARGET)
+                {
+                    this->getCurrentAbsTarget(loc);
+                }
+                else
+                {
+                    this->getCurrentRelTarget(loc);
+                }
                 reply.addVocab(VOCAB_OK);
 
                 if(request == VOCAB_NAV_GET_ABS_TARGET) reply.addString(loc.map_id);
@@ -234,18 +242,20 @@ bool navigationModule::stopMovement()
     return true;
 }
 
-yarp::dev::Map2DLocation navigationModule::getCurrentAbsTarget()
+bool navigationModule::getCurrentAbsTarget(yarp::dev::Map2DLocation& target)
 {
     //### TO BE IMPLEMENTED BY USER
     yarp::dev::Map2DLocation curr;
-    return curr;
+    target = curr;
+    return true;
 }
 
-yarp::dev::Map2DLocation navigationModule::getCurrentRelTarget()
+bool navigationModule::getCurrentRelTarget(yarp::dev::Map2DLocation& target)
 {
     //### TO BE IMPLEMENTED BY USER
     yarp::dev::Map2DLocation curr;
-    return curr;
+    target = curr;
+    return true;
 }
 
 bool navigationModule::pauseMovement(double time)

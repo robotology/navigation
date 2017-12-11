@@ -307,7 +307,7 @@ bool GotoThread::threadInit()
         return false;
     }
 
-    //localization
+    //open the localization client and the corresponding interface
     Property loc_options;
     loc_options.put("device", "localization2DClient");
     loc_options.put("local", "/robotGoto/localizationClient");
@@ -344,20 +344,18 @@ bool GotoThread::threadInit()
 
     string laser_remote_port = laserBottle.find("laser_port").asString();
 
+    //opens the laser client and the corresponding interface
     Property options;
     options.put("device", "Rangefinder2DClient");
     options.put("local", "/robotGoto/laser:i");
     options.put("remote", laser_remote_port);
     options.put("period", 10);
-
     if (m_pLas.open(options) == false)
     {
         yError() << "Unable to open laser driver";
         return false;
     }
-
     m_pLas.view(m_iLaser);
-
     if (m_iLaser == 0)
     {
         yError() << "Unable to open laser interface";
@@ -390,6 +388,7 @@ bool GotoThread::threadInit()
 
 void GotoThread::threadRelease()
 {
+    //clean up
     if (m_ptf.isValid()) m_ptf.close();
     if (m_pLas.isValid()) m_pLas.close();
     if (m_pLoc.isValid()) m_pLoc.close();
@@ -483,7 +482,7 @@ void GotoThread::getLaserData()
     }
 }
 
-void GotoThread::sendCurrentGoal()
+void GotoThread::publishCurrentGoal()
 {
     if (!m_publishRosStuff)
     {
@@ -579,14 +578,10 @@ void GotoThread::publishLocalPlan()
 
 }
 
-void GotoThread::getCurrentPos(yarp::dev::Map2DLocation& loc)
+bool GotoThread::getCurrentPos(yarp::dev::Map2DLocation& loc)
 {
     loc = m_localization_data;
-}
-
-string GotoThread::getMapId()
-{
-    return m_localization_data.map_id;
+    return true;
 }
 
 double normalize_angle (double angle)
@@ -950,21 +945,26 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
 
     yDebug("current pos: abs(%.3f %.3f %.2f)", m_localization_data.x, m_localization_data.y, m_localization_data.theta);
     yDebug("received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
-    sendCurrentGoal();
+    publishCurrentGoal();
 }
 
-Map2DLocation GotoThread::getCurrentAbsTarget()
+bool GotoThread::getCurrentAbsTarget(Map2DLocation& target)
 {
-    return m_target_data.target;
+    //TODO: check for target validity
+    target = m_target_data.target;
+    return true;
 }
 
-Map2DLocation GotoThread::getCurrentRelTarget()
+bool GotoThread::getCurrentRelTarget(Map2DLocation& target)
 {
-    return Map2DLocation(m_frame_robot_id, m_target_data.target.x - m_localization_data.x, m_target_data.target.y - m_localization_data.y, m_target_data.target.theta - m_localization_data.theta);
+    //TODO: check for target validity
+    target = Map2DLocation(m_frame_robot_id, m_target_data.target.x - m_localization_data.x, m_target_data.target.y - m_localization_data.y, m_target_data.target.theta - m_localization_data.theta);
+    return true; 
 }
 
 void GotoThread::resetParamsToDefaultValue()
 {
+    //resets internal variables to default value
     m_beta_angle_threshold = m_default_beta_angle_threshold;
     m_gain_lin           = m_default_gain_lin;
     m_gain_ang           = m_default_gain_ang;
@@ -1005,7 +1005,7 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
         m_retreat_duration_time = 0;
     }
     yInfo("received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
-    sendCurrentGoal();
+    publishCurrentGoal();
 }
 
 void GotoThread::approachTarget(double dir, double speed, double time)
@@ -1038,8 +1038,9 @@ void GotoThread::pauseMovement(double secs)
     }
     else
     {
+        //infinite pause
         yInfo( "asked to pause");
-        m_pause_duration = 10000000;
+        m_pause_duration = 1e20;
     }
     m_status = navigation_status_paused;
     m_pause_start = yarp::os::Time::now();
@@ -1062,7 +1063,7 @@ string GotoThread::getNavigationStatusAsString()
     return getStatusAsString(m_status);
 }
 
-int GotoThread::getNavigationStatusAsInt()
+NavigationStatusEnum GotoThread::getNavigationStatusAsInt()
 {
     return m_status;
 }

@@ -113,6 +113,7 @@ public:
     double m_default_approach_direction;
     double m_default_approach_speed;
 
+    //watchdogs for data recevied from external sources
     int    m_loc_timeout_counter;
     int    m_las_timeout_counter;
 
@@ -124,36 +125,33 @@ protected:
     double m_pause_start;
     double m_pause_duration;
 
-    //ports
+    //yarp device drivers and interfaces
     PolyDriver                      m_ptf;
     PolyDriver                      m_pLas;
     PolyDriver                      m_pLoc;
     IRangefinder2D*                 m_iLaser;
     ILocalization2D*                m_iLoc;
+
+    //yarp ports
     BufferedPort<yarp::sig::Vector> m_port_target_input;
     BufferedPort<yarp::os::Bottle>  m_port_commands_output;
     BufferedPort<yarp::os::Bottle>  m_port_status_output;
     BufferedPort<yarp::os::Bottle>  m_port_speak_output;
     BufferedPort<yarp::os::Bottle>  m_port_gui_output;
+
+    //ros topics
     yarp::os::Node*                 m_rosNode;
     rosGoalSubscriber               m_rosGoalInputPort;
     rosGoalPublisher                m_rosCurrentGoal;
     rosPathPublisher                m_localPlan;
     rosPathPublisher                m_globalPlan;
     
-    Property             m_robotCtrl_options;
-    ResourceFinder       &m_rf;
-    yarp::dev::Map2DLocation    m_localization_data;
-    target_type          m_target_data;
+    Property                           m_robotCtrl_options;
+    ResourceFinder                    &m_rf;
+    yarp::dev::Map2DLocation           m_localization_data;
+    target_type                        m_target_data;
     std::vector<LaserMeasurementData>  m_laser_data;
-    struct
-    {
-       double linear_vel;
-       double linear_dir;
-       double angular_vel;
-       void zero() { linear_vel = 0; linear_dir = 0; angular_vel = 0; }
-    }
-    m_control_out;
+    
     NavigationStatusEnum m_status;
     NavigationStatusEnum m_status_after_approach;
     double               m_retreat_duration_time;
@@ -168,44 +166,161 @@ protected:
     double               m_time_of_obstacle_detection;
     double               m_time_ob_obstacle_removal;
 
+    //obstacle handler
     obstacles_class*     m_obstacle_handler;
 
-    
+    //internal type definition to store control output
+    struct
+    {
+       double linear_vel;
+       double linear_dir;
+       double angular_vel;
+       void zero() { linear_vel = 0; linear_dir = 0; angular_vel = 0; }
+    }
+    m_control_out;
     
     ////////////////////////////////////////
-    //METHOD
+    //METHODS
     ///////////////////////////////////////
 public:
-    GotoThread(unsigned int _period, ResourceFinder &_rf, Property options);
-
+    //methods inherited from yarp::os::RateThread
     virtual bool threadInit();
     virtual void run();
     virtual void threadRelease();
 
-    void          getCurrentPos(yarp::dev::Map2DLocation& loc);
-    string        getMapId();
+    /**
+    * Constructor.
+    * @param _period the control loop period (default 20ms)
+    * @param _rf the resource finder containing the configuration options (from .ini file)
+    * @param options additional configuration options
+    */
+    GotoThread(unsigned int _period, ResourceFinder &_rf, Property options);
+
+    /**
+    * Returns robot current position
+    * @param loc the current absolute position of the robot
+    * @return true if the command is executed succesfully, false otherwise
+    */
+    bool          getCurrentPos(yarp::dev::Map2DLocation& loc);
+    
+    /**
+    * Sets a new target, expressed in the map reference frame.
+    * @param target a three-elements vector containing the robot pose (x,y,theta)
+    */
     void          setNewAbsTarget(yarp::sig::Vector target);
+    
+    /**
+    * Sets a new target, expressed in the robot reference frame.
+    * @param target a three-elements vector containing the robot pose (x,y,theta)
+    */
     void          setNewRelTarget(yarp::sig::Vector target);
+    
+    /**
+    * Performs an open-loop movement: the robot is commanded to move in the desired direction for 
+    * a determined amount of time, regardless the presence of obstacle in the path.
+    * @param dir the desired direction (in the robot reference frame)
+    * @param speed the velocity of the movement, expressed in m/s
+    * @param time the duration of the approach command, expressed in seconds
+    */
     void          approachTarget(double dir, double speed, double time);
+    
+    /**
+    * Restores all internal parameters (such as max/min velocities, goal tolerance etc) to the values
+    * defined in the configuration files.
+    */
     void          resetParamsToDefaultValue();
+    
+    /**
+    * Terminates a previosuly started navigation task.
+    */
     void          stopMovement();
-    void          pauseMovement (double secs);
+    
+    /**
+    * Pauses the robot navigation
+    * @param sec the duration of the pause, expressed in seconds. A negative number means forever.
+    */
+    void          pauseMovement (double secs=-1);
+    
+    /**
+    * Resumes the robot navigation after a previous pauseMovement()
+    */
     void          resumeMovement();
+    
+    /**
+    * Returns the current navigation status used by the internal finite-state machine
+    * @return the internal navigation status, expressed as a string
+    */
     string        getNavigationStatusAsString();
-    int           getNavigationStatusAsInt();
-    Map2DLocation getCurrentAbsTarget();
-    Map2DLocation getCurrentRelTarget();
+    
+    /**
+    * Returns the current navigation status, used by the internal finite-state machine
+    * @return the internal navigation status, expressed as an enum
+    */
+    NavigationStatusEnum getNavigationStatusAsInt();
+    
+    /**
+    * Retrieves the current target, expressed in absolute (map) reference frame
+    * @param the current target (set by a setNewAbsTarget)
+    * @return true if the returned target is valid, false otherwise
+    */
+    bool getCurrentAbsTarget(Map2DLocation& target);
+    
+    /**
+    * Retrieves the current target, expressed in robot reference frame
+    * @param the current target (set by a setNewRelTarget)
+    * @return true if the returned target is valid, false otherwise
+    */
+    bool getCurrentRelTarget(Map2DLocation& target);
+    
+    /**
+    * Prints stats about the internal status of the module
+    */
     void          printStats();
     
 private:
+    /**
+    * Initializes the ROS system, opening the ROS node and the requested ROS topics.
+    * @param ros_group the configuration options defined in [ROS_GROUP]. Valid parameters are parameters are reported in module description.
+    * @return true if the ROS system initialization was succesfull.
+    */
     bool        rosInit(const yarp::os::Bottle& ros_group);
+    
+    /**
+    * Sends cartesian velocities commands to a yarp outport (typically connected to baseControl)
+    */
     void        sendOutput();
-    bool inline evaluateLocalization();
-    void inline evaluateGoalFromTopic();
-    void inline getLaserData();
-    void inline sendCurrentGoal();
-    void inline publishLocalPlan();
-    void inline saturateRobotControls();
+    
+    /**
+    * Obtains current robot position through a ILocalization2D interface.
+    * @return true if data is succesfully retrieved from the localization server, false otherwise
+    */
+    bool  evaluateLocalization();
+    
+    /**
+    * Returns robot current position.
+    * @param loc the current position
+    */
+    void evaluateGoalFromTopic();
+    
+    /**
+    * Obtains laser data through a IRangefinder2D interface.
+    */
+    void getLaserData();
+    
+    /**
+    * Publishes the current goal on the dedicated ROS topic.
+    */
+    void publishCurrentGoal();
+    
+    /**
+    * Publishes the current local plan on the dedicated ROS topic.
+    */
+    void publishLocalPlan();
+    
+    /**
+    * Checks the computed control outputs and saturates them if necessary.
+    */
+    void saturateRobotControls();
 
 };
 

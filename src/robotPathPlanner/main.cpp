@@ -307,7 +307,15 @@ public:
         }
         else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
         {
-            Map2DLocation loc = request == VOCAB_NAV_GET_ABS_TARGET ? plannerThread->getCurrentAbsTarget() : plannerThread->getCurrentRelTarget();
+            Map2DLocation loc;
+            if (request == VOCAB_NAV_GET_ABS_TARGET)
+            {
+                plannerThread->getCurrentAbsTarget(loc);
+            }
+            else
+            {
+                plannerThread->getCurrentRelTarget(loc);
+            }
             reply.addVocab(VOCAB_OK);
 
             if(request == VOCAB_NAV_GET_ABS_TARGET) reply.addString(loc.map_id);

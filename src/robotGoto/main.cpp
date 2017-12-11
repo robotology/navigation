@@ -36,6 +36,7 @@ public:
         gotoThread=NULL;
     }
 
+    //module configuration and parameters parsing
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
         yarp::os::Time::turboBoost();
@@ -67,10 +68,10 @@ public:
     virtual bool interruptModule()
     {
        // rpcPort.interrupt();
-
         return true;
     }
 
+    //module cleanup
     virtual bool close()
     {
         //rpcPort.interrupt();
@@ -84,12 +85,17 @@ public:
         return true;
     }
 
+    //returns the period of the main control loop
     virtual double getPeriod()
     { 
-        if (gotoThread) gotoThread->printStats();
+        if (gotoThread)
+        { 
+            gotoThread->printStats();
+        }
         return 1.0; 
     }
     
+    //the main control loop. Just checks periodically if the control thread is ok.
     virtual bool updateModule()
     { 
         if (isStopping())
@@ -264,7 +270,6 @@ public:
 
     bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
-
         int request = command.get(1).asVocab();
 
         if (request == VOCAB_NAV_GOTOABS)
@@ -321,7 +326,15 @@ public:
         }
         else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
         {
-            Map2DLocation loc = request == VOCAB_NAV_GET_ABS_TARGET ? gotoThread->getCurrentAbsTarget() : gotoThread->getCurrentRelTarget();
+            Map2DLocation loc;
+            if (request == VOCAB_NAV_GET_ABS_TARGET)
+            {
+                gotoThread->getCurrentAbsTarget(loc);
+            }
+            else
+            {
+                gotoThread->getCurrentRelTarget(loc);
+            }
             reply.addVocab(VOCAB_OK);
 
             if(request == VOCAB_NAV_GET_ABS_TARGET) reply.addString(loc.map_id);
@@ -337,6 +350,7 @@ public:
         return true;
     }
 
+    //This function parses the user commands received through the RPC port
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
     {
         reply.clear(); 
@@ -397,6 +411,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+    //Intializes the yarp network
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {
@@ -410,8 +425,8 @@ int main(int argc, char *argv[])
     rf.setDefaultContext("robotGoto");                  //overridden by --context parameter
     rf.configure(argc,argv);
     
+    //Starts the control module
     robotGotoModule robotGoto;
-
     return robotGoto.runModule(rf);
 }
 
