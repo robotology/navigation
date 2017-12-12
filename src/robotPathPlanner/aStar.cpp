@@ -28,9 +28,76 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace aStar_algorithm;
+
+namespace aStar_algorithm
+{
+    //forward declaration for heuristic_cost_estimate function() 
+    class node_type;
+
+    /**
+    * This method returns the cost to transverse a map from start node to goal node.
+    * @param start the start node
+    * @param goal the arrival node
+    * @return the cost (euclidean distance * 10)
+    */
+    double heuristic_cost_estimate (node_type start, node_type goal);
+
+    //definition of a map node. It stores x,y information associated to a crossing cost
+    class node_type
+    {
+        public:
+        bool empty;
+        int x;
+        int y;
+        double g_score;
+        double f_score;
+        double s_score;
+        yarp::dev::MapGrid2D::XYCell came_from;
+        node_type();
+        friend bool operator<  (const node_type &a, const node_type &b);
+    };
+
+    bool operator < (const node_type &a, const node_type &b);
+
+    //a node_map_type contains a square matrix of w*h cells, each cell is represented by a node_type with its associated cost
+    class node_map_type
+    {
+        public:
+        node_map_type();
+        node_map_type(yarp::dev::MapGrid2D& map);
+        ~node_map_type();
+
+        public:
+        int w;
+        int h;
+        node_type** nodes;
+    };
+
+    class ordered_set_type
+    {
+        std::vector<node_type> set;
+
+        public:
+        void insert (const node_type& t);
+        node_type get_smallest();
+        void print();
+        int size();
+        bool find(node_type t);
+    };
+
+    class unordered_set_type
+    {
+        std::vector<node_type> set;
+
+        public:
+        void insert (const node_type& t);
+        bool find(node_type t);
+    };
+};
 
 /////// node_type
-node_type::node_type()
+aStar_algorithm::node_type::node_type()
 {
     empty=true;
     x=0; 
@@ -42,13 +109,13 @@ node_type::node_type()
     came_from.y=-1;
 }
 
-bool operator < (const node_type &a, const node_type &b)
+bool aStar_algorithm::operator < (const node_type &a, const node_type &b)
 {
     return (a.f_score>b.f_score);
 }
 
 /////////// node_map_type
-node_map_type::node_map_type(yarp::dev::MapGrid2D& map)
+aStar_algorithm::node_map_type::node_map_type(yarp::dev::MapGrid2D& map)
 {
     w = map.width();
     h = map.height();
@@ -75,27 +142,27 @@ node_map_type::node_map_type(yarp::dev::MapGrid2D& map)
             }
 }
 
-node_map_type::~node_map_type()
+aStar_algorithm::node_map_type::~node_map_type()
 {
     for (int i = 0; i < w; ++i) delete[] nodes[i];
     delete[] nodes;
 }
 
 /////////// ordered_set_type
-void ordered_set_type::insert (const node_type& t)
+void aStar_algorithm::ordered_set_type::insert (const node_type& t)
 {
     set.push_back(t);
     push_heap (set.begin(),set.end()); 
 }
 
-node_type ordered_set_type::get_smallest()
+aStar_algorithm::node_type aStar_algorithm::ordered_set_type::get_smallest()
 {
     node_type t = set.front();
     pop_heap (set.begin(),set.end());
     set.pop_back();
     return t;
 }
-void ordered_set_type::print()
+void aStar_algorithm::ordered_set_type::print()
 {
     yDebug("front (smallest)%f \n", set.front().f_score);
     for (unsigned int i=0; i<set.size(); i++)
@@ -103,12 +170,12 @@ void ordered_set_type::print()
     yDebug("back (biggest) %f \n", set.back().f_score);
 }
 
-int ordered_set_type::size()
+int aStar_algorithm::ordered_set_type::size()
 {
     return set.size();
 }
 
-bool ordered_set_type::find(node_type t)
+bool aStar_algorithm::ordered_set_type::find(node_type t)
 {
     for (unsigned int i=0; i<set.size(); i++)
     {
@@ -120,12 +187,12 @@ bool ordered_set_type::find(node_type t)
 }
 
 /////////// unordered_set_type
-void unordered_set_type::insert (const node_type& t)
+void aStar_algorithm::unordered_set_type::insert (const node_type& t)
 {
     set.push_back(t);
 }
     
-bool unordered_set_type::find(node_type t)
+bool aStar_algorithm::unordered_set_type::find(node_type t)
 {
     for (unsigned int i=0; i<set.size(); i++)
     {
@@ -137,14 +204,21 @@ bool unordered_set_type::find(node_type t)
 }
 
 /////////// various
-bool find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
+bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
 {
+    //implementation of A* algorithm
     std::vector<MapGrid2D::XYCell> inverse_path;
     node_map_type node_map(map);
     int sx=start.x;
     int sy=start.y;
     int gx=goal.x;
     int gy=goal.y;
+
+    //checks that start and goal cells are inside the grid map
+    if (sx>node_map.w || gx>node_map.w) return false;
+    if (sy>node_map.h || gy>node_map.h) return false;
+    if (sx<0  || gx<0) return false;
+    if (sy<0  || gy<0) return false;
 
     unordered_set_type closed_set;
     ordered_set_type   open_set;  
@@ -187,6 +261,7 @@ bool find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid
 
         closed_set.insert(curr);
 
+        //computes the list of neighbors of the current node
         list<node_type> neighbors;
         //yDebug ("%d %d \n", curr.x, curr.y);
         if (node_map.nodes[curr.x][curr.y + 1].empty)   neighbors.push_back(node_map.nodes[curr.x][curr.y + 1]);
@@ -197,21 +272,8 @@ bool find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid
         if (node_map.nodes[curr.x + 1][curr.y - 1].empty) neighbors.push_back(node_map.nodes[curr.x + 1][curr.y - 1]);
         if (node_map.nodes[curr.x - 1][curr.y + 1].empty) neighbors.push_back(node_map.nodes[curr.x - 1][curr.y + 1]);
         if (node_map.nodes[curr.x - 1][curr.y - 1].empty) neighbors.push_back(node_map.nodes[curr.x - 1][curr.y - 1]);
-        /*int cl = curr.x-1>0?curr.x-1:0;
-        int cu = curr.y-1>0?curr.y-1:0;
-        int cr = curr.x+1<node_map.w?curr.x+1:node_map.w-1;
-        int cd = curr.y+1<node_map.h?curr.y+1:node_map.h-1;
 
-        neighbors.push_back(node_map.nodes[curr.x][cd]);
-        neighbors.push_back(node_map.nodes[curr.x][cu]);
-        neighbors.push_back(node_map.nodes[cr][curr.y]);
-        neighbors.push_back(node_map.nodes[cl][curr.y]);
-        neighbors.push_back(node_map.nodes[cr][cd]);
-        neighbors.push_back(node_map.nodes[cr][cu]);
-        neighbors.push_back(node_map.nodes[cl][cd]);
-        neighbors.push_back(node_map.nodes[cl][cd]);*/
-        //yDebug ("%d %d \n", curr.x, curr.y);
-
+        //process the list of neighbors
         while(neighbors.size()>0)
         {
             node_type neighbor = neighbors.front();
@@ -250,7 +312,6 @@ bool find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid
                     open_set.insert(node_map.nodes[nx][ny]);
                 }
             }
-
             neighbors.pop_front();
         }
     };
@@ -259,11 +320,11 @@ bool find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid
     return false;
 }
 
-double heuristic_cost_estimate (node_type start, node_type goal)
+double aStar_algorithm::heuristic_cost_estimate (node_type start, node_type goal)
 {
+    //estimate the cost from start to goal
     double dist = sqrt ( double((start.x-goal.x)*(start.x-goal.x) +
                                 (start.y-goal.y)*(start.y-goal.y)))*10;
-    //double dist = 0;
     return dist;
 }
 

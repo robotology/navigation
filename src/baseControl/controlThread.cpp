@@ -423,7 +423,7 @@ bool ControlThread::threadInit()
     ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt()==1;
     lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
     robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
-    useRos                = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();
+    useRos                = general_options.check("use_ROS",              Value(false),  "enable ROS communications").asBool();
     
     double tmp = 0;
     tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
@@ -500,7 +500,7 @@ bool ControlThread::threadInit()
         }
         else
         {
-            yError() << "[ROS_GENERAL] group is missing from configuration file. ROS comunication will not be initialized";
+            yError() << "[ROS_GENERAL] group is missing from configuration file. ROS communication will not be initialized";
         }
     }
 

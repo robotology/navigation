@@ -73,7 +73,7 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
         }
         else
         {
-            yError() << "Your current position is not in the same map of the current goal. Unpossibile to reach goal.";
+            yError() << "Your current position is not in the same map of the current goal. Unable to reach goal.";
         }
         yarp::os::Time::delay(1.0);
     }

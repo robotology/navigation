@@ -104,12 +104,12 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
 
                 if (!m_useGoalFromRosTopic)
                 {
-                    yInfo() << "goal from ros topic deactivated";
+                    yInfo() << "goal from ROS topic deactivated";
                 }
                 else
                 {
 
-                    yInfo() << "activating ros goal input";
+                    yInfo() << "activating ROS goal input";
 
                     if (ros_group.check("goalTopicName"))
                     {
@@ -193,7 +193,7 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
 
 bool GotoThread::threadInit()
 {
-    //read configuration parametes
+    //read configuration parameters
     m_robot_is_holonomic = false;
     m_default_beta_angle_threshold  = m_beta_angle_threshold = 5;
     m_default_gain_ang = m_gain_ang = 0.05;
@@ -215,7 +215,7 @@ bool GotoThread::threadInit()
     Bottle ros_group = m_rf.findGroup("ROS");
     if (ros_group.isNull())
     {
-        yInfo() << "Missing ROS group in configuration file. ros functionality will be deactivated";
+        yInfo() << "Missing ROS group in configuration file. ROS functionality will be deactivated";
     }
     else
     {
@@ -449,7 +449,7 @@ void GotoThread::evaluateGoalFromTopic()
 
     if (rosGoalData != 0)
     {
-        yInfo() << "received a goal from ros topic";
+        yInfo() << "received a goal from ROS topic";
         yarp::sig::Vector v(3);
         yarp::math::Quaternion q;
 
@@ -547,7 +547,7 @@ void GotoThread::publishLocalPlan()
         double cs = cos(m_localization_data.theta*DEG2RAD);
         double ss = sin(m_localization_data.theta*DEG2RAD);
 
-        //tranformation matrix from map to robot
+        //transformation matrix from map to robot
         map2robotMatrix[0][0] = cs; map2robotMatrix[0][1] = -ss; map2robotMatrix[0][3] = m_localization_data.x;
         map2robotMatrix[1][0] = ss; map2robotMatrix[1][1] =  cs; map2robotMatrix[0][3] = m_localization_data.y;
         map2robotMatrix[2][2] = 1;
@@ -586,7 +586,7 @@ bool GotoThread::getCurrentPos(yarp::dev::Map2DLocation& loc)
 
 double normalize_angle (double angle)
 {
-    //this function recevies an angle from (-inf,+inf) and returns an angle in (0,180) or (-180,0)
+    //this function receives an angle from (-inf,+inf) and returns an angle in (0,180) or (-180,0)
     angle = fmod(angle, 360);
 
     if (angle>180 && angle<360)
@@ -609,13 +609,13 @@ void GotoThread::saturateRobotControls()
     if (m_max_lin_speed < 0){ yError() << "Invalid m_max_lin_speed value"; m_max_lin_speed = fabs(m_max_lin_speed); }
 
     //control saturation.
-    //Beware! this test should not inclue the case ==0 to prevent the saturator to override the "do not move" command.
+    //Beware! this test should not include the case ==0 to prevent the saturator to override the "do not move" command.
     if      (m_control_out.angular_vel>0)
         m_control_out.angular_vel = std::max(m_min_ang_speed, std::min(m_control_out.angular_vel, m_max_ang_speed));
     else if (m_control_out.angular_vel<0)
         m_control_out.angular_vel = std::max(-m_max_ang_speed, std::min(m_control_out.angular_vel, -m_min_ang_speed));
 
-    //Beware! this test should not inclue the case ==0 to prevent the saturator to override the "do not move" command.
+    //Beware! this test should not include the case ==0 to prevent the saturator to override the "do not move" command.
     if      (m_control_out.linear_vel>0)
         m_control_out.linear_vel = std::max(m_min_lin_speed, std::min(m_control_out.linear_vel, m_max_lin_speed));
     else if (m_control_out.linear_vel<0)
@@ -771,7 +771,7 @@ void GotoThread::run()
                 }
             }
               
-            // check if you have to stop beacuse of an obstacle
+            // check if you have to stop because of an obstacle
             if (m_enable_obstacles_emergency_stop && obstacles_in_path)
             {
                 yInfo ("Obstacles detected, stopping");
@@ -988,7 +988,7 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
         m_target_data.weak_angle = true;
     }
     double a = m_localization_data.theta * DEG2RAD;
-    //this is the inverse of the tranformation matrix from world to robot
+    //this is the inverse of the transformation matrix from world to robot
     m_target_data.target.x     = +target[0] * cos(a) - target[1] * sin(a) + m_localization_data.x;
     m_target_data.target.y     = +target[0] * sin(a) + target[1] * cos(a) + m_localization_data.y;
     m_target_data.target.theta = target[2] + m_localization_data.theta;

@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     iNav->stopNavigation();
     yarp::os::Time::delay(0.1);
 
-    //opens a map2DClient device to dialogue with MapServer
+    //opens a map2DClient device to communicate with MapServer
     Property map_options;
     PolyDriver ddMapClient;
     map_options.put("device", "map2DClient");

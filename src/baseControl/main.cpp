@@ -88,7 +88,7 @@ public:
         ctrl_options.put("remote", remoteName.c_str());
         ctrl_options.put("local", localName.c_str());
 
-        //check for robotInterface availablity
+        //check for robotInterface availability
         yInfo("Checking for robotInterface availability");
         Port startport;
         startport.open ("/baseControl/robotInterfaceCheck:rpc");

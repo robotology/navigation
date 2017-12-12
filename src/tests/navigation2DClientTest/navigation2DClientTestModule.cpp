@@ -173,7 +173,7 @@ void NavTestModule::printRegisteredLocations()
     yInfo() << "Test: deleting 1st location";
     if(iNav->deleteLocation(locations[0]))
     {
-        yInfo() << "Succesful!!";
+        yInfo() << "Successful!!";
     }
     else
     {
@@ -245,7 +245,7 @@ void NavTestModule::suspResumeTest()
     yInfo() << "Test: suspending navigation";
     if(iNav->suspendNavigation())
     {
-        yInfo() << "Succesful!!";
+        yInfo() << "Successful!!";
     }
     else
     {
@@ -261,7 +261,7 @@ void NavTestModule::suspResumeTest()
     yInfo() << "Test: resuming navigation";
     if(iNav->resumeNavigation())
     {
-        yInfo() << "Succesful!!";
+        yInfo() << "Successful!!";
     }
     else
     {
@@ -377,7 +377,7 @@ bool NavTestModule::updateModule()
         }
         else
         {
-            yInfo() << "absolute location of current target succesfully tested";
+            yInfo() << "absolute location of current target successfully tested";
         }
         yInfo() << "goal" << stepVector[(i-1)%stepVector.size()].label << "reached! heading towards goal" << stepVector[currentGoal].label;
         time = Time::now();
@@ -412,13 +412,13 @@ bool NavTestModule::checkCurrentGoalReached()
     iNav->getCurrentPosition(cg);
     if(checkEqual(cg.x, f.x, linToll) && checkEqual(cg.y, f.y, linToll) && checkEqual(cg.theta, f.t, angToll))
     {
-        yInfo() << "tollerance:" << "linear:" << linToll << "angular:" << angToll;
+        yInfo() << "tolerance:" << "linear:" << linToll << "angular:" << angToll;
         yInfo() << "difference" << "x:" << cg.x-f.x << "y:" << cg.y-f.y << "t:" << cg.theta-f.t;
         return true;
     }
     else
     {
-        yInfo() << "tollerance:" << "linear:" << linToll << "angular:" << angToll;
+        yInfo() << "tolerance:" << "linear:" << linToll << "angular:" << angToll;
         yInfo() << "difference" << "x:" << cg.x-f.x << "y:" << cg.y-f.y << "t:" << cg.theta-f.t;
         return false;
     }

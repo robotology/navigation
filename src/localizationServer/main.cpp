@@ -115,7 +115,7 @@ protected:
 
 public:
     /**
-    * Default constructor and internal data intitialization.
+    * Default constructor and internal data initialization.
     */
     localizationModule()
     {
@@ -137,7 +137,7 @@ public:
     /**
     * Performs module configuration, parsing user options stored in the resource finder.
     * Available options are described in main module documentation.
-    * @return true if the module was succesfully configured and opened, false otherwise.
+    * @return true if the module was successfully configured and opened, false otherwise.
     */
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
@@ -148,7 +148,7 @@ public:
         //attachTerminal();
         m_rf = rf;
         
-        //configuration file cheking
+        //configuration file checking
         Bottle general_group = m_rf.findGroup("GENERAL");
         if (general_group.isNull())
         {
@@ -209,12 +209,12 @@ public:
         }
         m_ros_enabled = (general_group.find("enable_ros").asInt()==1);
 
-        //ros group
+        //ROS group
         if (m_ros_enabled)
         {
             m_rosNode = new yarp::os::Node("/"+m_module_name);
             
-            //initialize an occupancy grid publisher (every time the localization is re-initializzed, the map is published too)
+            //initialize an occupancy grid publisher (every time the localization is re-initialized, the map is published too)
             if (ros_group.check ("occupancygrid_topic"))
             {
                 m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
@@ -255,7 +255,7 @@ public:
 
         if (m_use_localization_from_odometry_port == true && m_use_localization_from_tf == true)
         {
-            yError() << "`use_localization_from_tf` and `use_localization_from_odometry_port` cannot be true simulteneously!";
+            yError() << "`use_localization_from_tf` and `use_localization_from_odometry_port` cannot be true simultaneously!";
             return false;
         }
 
@@ -349,7 +349,7 @@ public:
             }
         }
 
-        //initial location intialization
+        //initial location initialization
         if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
         else { yError() << "missing initial_x param"; return false; }
         if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
@@ -460,7 +460,7 @@ public:
             }
             if (current_time - m_last_odometry_data_received > 0.1)
             {
-                yWarning() << "No localization data recevied for more than 0.1s!";
+                yWarning() << "No localization data received for more than 0.1s!";
             }
         }
         //receives localization data from a tf server if m_use_localization_from_tf is enabled
@@ -498,7 +498,7 @@ public:
     * Parser for string commands. It is called by virtual bool respond().
     * @param command the bottle containing the user command
     * @param reply the bottle which will be returned to the RPC client
-    * @return true if the command was succesfully parsed
+    * @return true if the command was successfully parsed
     */
     bool parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
@@ -619,7 +619,7 @@ public:
     * Parser for VOCAB commands. It is called by virtual bool respond().
     * @param command the bottle containing the user command
     * @param reply the bottle which will be returned to the RPC client
-    * @return true if the command was succesfully parsed
+    * @return true if the command was successfully parsed
     */
     bool parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
     {
@@ -654,7 +654,7 @@ public:
     * Parser for user command received from the RPC port
     * @param command the bottle containing the user command
     * @param reply the bottle which will be returned to the RPC client
-    * @return true if the command was succesfully parsed
+    * @return true if the command was successfully parsed
     */
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
     {

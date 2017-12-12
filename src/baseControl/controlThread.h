@@ -79,7 +79,7 @@ private:
     double               input_desired_direction;
     double               input_pwm_gain;
                          
-    //controlpids
+    //control pids
     parlPID*             linear_speed_pid;
     parlPID*             angular_speed_pid;
     parlPID*             linear_ol_pid;
@@ -126,7 +126,7 @@ public:
     /**
     * Constructor
     * @param _period the rateThread period, expressed in milliseconds.
-    * @param _rf the resource finder containgin the configuration options (from .ini file)
+    * @param _rf the resource finder containing the configuration options (from .ini file)
     * @param options additional configuration options
     */
     ControlThread   (unsigned int _period, ResourceFinder &_rf, Property options);

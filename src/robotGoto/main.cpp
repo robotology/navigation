@@ -411,7 +411,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-    //Intializes the yarp network
+    //Initializes the yarp network
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {

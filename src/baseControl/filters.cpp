@@ -20,7 +20,7 @@
 
 double control_filters::lp_filter_8Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 2Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 2Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 
@@ -32,7 +32,7 @@ double control_filters::lp_filter_8Hz(double input, int i)
 
 double control_filters::lp_filter_4Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 4Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 4Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 
@@ -44,7 +44,7 @@ double control_filters::lp_filter_4Hz(double input, int i)
 
 double control_filters::lp_filter_2Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 2Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 2Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 
@@ -56,7 +56,7 @@ double control_filters::lp_filter_2Hz(double input, int i)
 
 double control_filters::lp_filter_1Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 1Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 1Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 
@@ -68,7 +68,7 @@ double control_filters::lp_filter_1Hz(double input, int i)
 
 double control_filters::lp_filter_0_5Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 0.5Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 0.5Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 

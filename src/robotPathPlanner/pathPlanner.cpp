@@ -28,6 +28,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/dev/IRangefinder2D.h>
+#include <yarp/dev/INavigation2D.h>
 #include <string>
 
 #define _USE_MATH_DEFINES
@@ -212,7 +213,7 @@ void  PlannerThread::readLaserData()
         m_laser_timeout_counter++;
     }
 
-    //transform the laser measurment in a temporary map
+    //transform the laser measurement in a temporary map
     for (size_t y=0; y< m_temporary_obstacles_map.height(); y++)
         for (size_t x=0; x< m_temporary_obstacles_map.width(); x++)
              m_temporary_obstacles_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
@@ -782,7 +783,7 @@ bool PlannerThread::startPath()
     }
 
     //just set the status to moving, do not set position commands.
-    //The wayypoint ist set in the main 'run' loop.
+    //The waypoint is set in the main 'run' loop.
     m_planner_status = navigation_status_moving;
     return true;
 }

@@ -199,7 +199,7 @@ bool Input::open(ResourceFinder &_rf, Property &_options)
         yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
         return false;
     }
-    useRos = general_options.check("use_ROS", Value(false), "enable Ros Comunication").asBool();
+    useRos = general_options.check("use_ROS", Value(false), "enable ROS communication").asBool();
 
     if (useRos)
     {
@@ -459,7 +459,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
                 wdt_old_joy_cmd = wdt_joy_cmd[id];
                 wdt_joy_cmd[id] = Time::now();
 
-            //Joystick commands have higher priorty respect to movement commands.
+            //Joystick commands have higher priority respect to movement commands.
             //this make the joystick to take control for 100*20 ms
                 if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
         }
@@ -476,7 +476,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
                 wdt_old_joy_cmd = wdt_joy_cmd[id];
                 wdt_joy_cmd[id] = Time::now();
 
-            //Joystick commands have higher priorty respect to movement commands.
+            //Joystick commands have higher priority respect to movement commands.
             //this make the joystick to take control for 100*20 ms
                 if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
         }
@@ -493,7 +493,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
                 wdt_old_joy_cmd = wdt_joy_cmd[id];
                 wdt_joy_cmd[id] = Time::now();
 
-            //Joystick commands have higher priorty respect to movement commands.
+            //Joystick commands have higher priority respect to movement commands.
             //this make the joystick to take control for 100*20 ms
                 if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
         }
@@ -516,7 +516,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
             wdt_old_joy_cmd = wdt_joy_cmd[id];
             wdt_joy_cmd[id] = Time::now();
 
-            //Joystick commands have higher priorty respect to movement commands.
+            //Joystick commands have higher priority respect to movement commands.
             //this make the joystick to take control for 100*20 ms
             if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
         }
@@ -582,7 +582,7 @@ void Input::read_inputs(double *linear_speed,double *angular_speed,double *desir
         }
     }
     
-    //- - - read ros commands - - -
+    //- - - read ROS commands - - -
     if (rosInputEnabled)
     {
         if (geometry_msgs_Twist* rosTwist = rosSubscriberPort_twist.read(false))

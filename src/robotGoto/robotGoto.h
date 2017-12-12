@@ -113,7 +113,7 @@ public:
     double m_default_approach_direction;
     double m_default_approach_speed;
 
-    //watchdogs for data recevied from external sources
+    //watchdogs for data received from external sources
     int    m_loc_timeout_counter;
     int    m_las_timeout_counter;
 
@@ -139,7 +139,7 @@ protected:
     BufferedPort<yarp::os::Bottle>  m_port_speak_output;
     BufferedPort<yarp::os::Bottle>  m_port_gui_output;
 
-    //ros topics
+    //ROS topics
     yarp::os::Node*                 m_rosNode;
     rosGoalSubscriber               m_rosGoalInputPort;
     rosGoalPublisher                m_rosCurrentGoal;
@@ -199,7 +199,7 @@ public:
     /**
     * Returns robot current position
     * @param loc the current absolute position of the robot
-    * @return true if the command is executed succesfully, false otherwise
+    * @return true if the command is executed successfully, false otherwise
     */
     bool          getCurrentPos(yarp::dev::Map2DLocation& loc);
     
@@ -231,21 +231,21 @@ public:
     void          resetParamsToDefaultValue();
     
     /**
-    * Terminates a previosuly started navigation task.
-    * @return true if the operation was succesfull, false otherwise.
+    * Terminates a previously started navigation task.
+    * @return true if the operation was successful, false otherwise.
     */
     bool          stopMovement();
     
     /**
     * Pauses the robot navigation
     * @param sec the duration of the pause, expressed in seconds. A negative number means forever.
-    * @return true if the operation was succesfull, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     bool          pauseMovement (double secs=-1);
     
     /**
     * Resumes the robot navigation after a previous pauseMovement()
-    * @return true if the operation was succesfull, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     bool          resumeMovement();
     
@@ -284,18 +284,18 @@ private:
     /**
     * Initializes the ROS system, opening the ROS node and the requested ROS topics.
     * @param ros_group the configuration options defined in [ROS_GROUP]. Valid parameters are parameters are reported in module description.
-    * @return true if the ROS system initialization was succesfull.
+    * @return true if the ROS system initialization was successful.
     */
     bool        rosInit(const yarp::os::Bottle& ros_group);
     
     /**
-    * Sends cartesian velocities commands to a yarp outport (typically connected to baseControl)
+    * Sends Cartesian velocities commands to a yarp output port (typically connected to baseControl)
     */
     void        sendOutput();
     
     /**
     * Obtains current robot position through a ILocalization2D interface.
-    * @return true if data is succesfully retrieved from the localization server, false otherwise
+    * @return true if data is successfully retrieved from the localization server, false otherwise
     */
     bool  evaluateLocalization();
     

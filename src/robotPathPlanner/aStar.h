@@ -24,58 +24,18 @@
 #include <vector>
 #include <queue>
 
-class node_type
+//! namespace containing a complete implementation of the classic A* algorithm
+namespace aStar_algorithm
 {
-    public:
-    bool empty;
-    int x;
-    int y;
-    double g_score;
-    double f_score;
-    double s_score;
-    yarp::dev::MapGrid2D::XYCell came_from;
-    node_type();
-    friend bool operator<  (const node_type &a, const node_type &b);
+    /**
+    * This method computes (if exists) a path  required to go from a start cell to a goal cell
+    * @param map the gridmap containing the obstacles
+    * @param start the start cell(x,y)
+    * @param goal the arrival cell(x,y)
+    * @param path the computed sequence of cells required to go from  start cell to goal cell
+    * @return true if the path exists, false if no valid path has been found
+    */
+    bool find_astar_path(yarp::dev::MapGrid2D& map, yarp::dev::MapGrid2D::XYCell start, yarp::dev::MapGrid2D::XYCell goal, std::queue<yarp::dev::MapGrid2D::XYCell>& path);
 };
-
-bool operator < (const node_type &a, const node_type &b);
-
-class node_map_type
-{
-    public:
-    node_map_type();
-    node_map_type(yarp::dev::MapGrid2D& map);
-    ~node_map_type();
-
-    public:
-    int w;
-    int h;
-    node_type** nodes;
-};
-
-double heuristic_cost_estimate (node_type start, node_type goal);
-
-class ordered_set_type
-{
-    std::vector<node_type> set;
-
-    public:
-    void insert (const node_type& t);
-    node_type get_smallest();
-    void print();
-    int size();
-    bool find(node_type t);
-};
-
-class unordered_set_type
-{
-    std::vector<node_type> set;
-
-    public:
-    void insert (const node_type& t);
-    bool find(node_type t);
-};
-
-bool find_astar_path(yarp::dev::MapGrid2D& map, yarp::dev::MapGrid2D::XYCell start, yarp::dev::MapGrid2D::XYCell goal, std::queue<yarp::dev::MapGrid2D::XYCell>& path);
 
 #endif

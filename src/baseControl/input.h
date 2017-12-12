@@ -149,7 +149,7 @@ public:
     /**
     * Opens the input module, parsing the given options
     * @param _options the configuration option for the module
-    * @return true if the motor module opened succesfully. False if a mandatatory parameter is missing or invalid.
+    * @return true if the motor module opened successfully. False if a mandatory parameter is missing or invalid.
     */
     bool   open(Property &_options);
 
@@ -159,17 +159,17 @@ public:
     void   close();
 
     /**
-    * Print some stats about the recevied input commands
+    * Print some stats about the received input commands
     */
     void   printStats();
  
     /**
     * Receives the user input commands inputs. These can come a YARPport, a device (joypad), a ROS topic etc.
-    * The robot commands are expressed as casrtesian velocity in the robot reference frame
+    * The robot commands are expressed as cartesian velocity in the robot reference frame
     * @param linear_speed the mobile base linear speed
     * @param desired_direction the mobile base heading (linear_speed will be applied taking in account robot reference frame).
     * @param angular_speed the mobile base angular speed (in-place rotation).
-    * @param pwm_gain the pwm gain (0-100). Joypad emergency button tipically sets this value to zero to stop the robot. User modules, instead, do not use this value (always set to 100)/
+    * @param pwm_gain the pwm gain (0-100). Joypad emergency button typically sets this value to zero to stop the robot. User modules, instead, do not use this value (always set to 100)/
     */
     void   read_inputs        (double& linear_speed, double& angular_speed, double& desired_direction, double& pwm_gain);
     
@@ -179,7 +179,7 @@ private:
     * Configures a joypad.
     * @param n the number of the joypad to be configured (0-1)
     * @param joypad_group the bottle containing the configuration options
-    * @return true/false if the joypad has been succesfully configured
+    * @return true/false if the joypad has been successfully configured
     */
     bool   configureJoypdad   (int n, const Bottle& joypad_group);
 

@@ -41,6 +41,7 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/ILocalization2D.h>
+#include <yarp/dev/INavigation2D.h>
 #include <string>
 #include <visualization_msgs_MarkerArray.h>
 
@@ -166,49 +167,49 @@ class PlannerThread: public yarp::os::RateThread
     bool          setNewRelTarget(yarp::sig::Vector target);
 
     /**
-    * Terminates a previosuly started navigation task.
-    * @return true if the operation was succesfull, false otherwise.
+    * Terminates a previously started navigation task.
+    * @return true if the operation was successful, false otherwise.
     */
     bool          stopMovement();
 
     /**
     * Pauses the robot navigation
     * @param sec the duration of the pause, expressed in seconds. A negative number means forever.
-    * @return true if the operation was succesfull, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     bool          pauseMovement(double secs=1);
 
     /**
     * Resumes the robot navigation after a previous pauseMovement()
-    * @return true if the operation was succesfull, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     bool          resumeMovement();
     
     /**
     * Returns robot current position
     * @param loc the current absolute position of the robot
-    * @return true if the command is executed succesfully, false otherwise
+    * @return true if the command is executed successfully, false otherwise
     */
     bool          getCurrentPos(Map2DLocation& v);
     
     /**
     * Sets as navigation target a location previously stored into the map server
     * @param location_name the name of the location to be reached
-    * @return true if the command is executed succesfully, false otherwise
+    * @return true if the command is executed successfully, false otherwise
     */
     bool          gotoLocation(std::string location_name);
     
     /**
     * Stores the current robot location in the map server, with the given name. Typically invoked by user through RPC.
     * @param location_name a string representing the location name
-    * @return true if the store operation was successfull, false otherwise
+    * @return true if the store operation was successful, false otherwise
     */
     bool          storeCurrentLocation(std::string location_name);
 
     /**
     * Removes the chosen location from the map server. Typically invoked by user through RPC.
     * @param location_name a string representing the location name
-    * @return true if the delete operation was successfull, false otherwise
+    * @return true if the delete operation was successful, false otherwise
     */
     bool          deleteLocation(std::string location_name);
     
@@ -258,7 +259,7 @@ class PlannerThread: public yarp::os::RateThread
     * Returns the name of the target previously set by a gotoLocation(), if available.
     * If the current target has been set using a different method e.g. setNewAbsTarget(), this method fails.
     * @param location_name the name of the location to be reached
-    * @return true if the command is executed succesfully, false otherwise
+    * @return true if the command is executed successfully, false otherwise
     */
     bool          getLastTarget(string& target_name);
 
@@ -276,7 +277,7 @@ class PlannerThread: public yarp::os::RateThread
 
     /**
     * Returns info about the current status of the navigation thread.
-    * In particular, it returns the number of tiemeouts occurred while communicating with external modules.
+    * In particular, it returns the number of timeouts occurred while communicating with external modules.
     * @param localiz the number of timeouts occurred while getting localization data
     * @param laser the number of timeouts occurred while getting laser data
     * @param inner_status the number of timeouts occurred while communicating with the local navigation module
@@ -307,6 +308,9 @@ class PlannerThread: public yarp::os::RateThread
     virtual bool threadInit();
     virtual void threadRelease();
     
+    /**
+    * Prints stats about the internal status of the module
+    */
     void printStats();
 
 };

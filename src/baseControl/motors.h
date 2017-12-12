@@ -85,7 +85,7 @@ protected:
     IPWMControl           *ipwm;
     IControlMode2         *icmd;
 
-    //ros
+    //ROS
     bool                                         enable_ROS;
     bool                                         enable_ROS_OUTPUT_GROUP;
     std::string                                  rosTopicName_cmd_twist;
@@ -114,19 +114,19 @@ public:
 
     /**
     * Sets all the robot joints to control mode velocity. BaseControl will send velocity reference to motor joints
-    * @return true if the operation was succesful, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     virtual bool set_control_velocity();
 
     /**
     * Sets all the robot joints to control mode openloop. BaseControl will send openloop commands to motor joints
-    * @return true if the operation was succesful, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     virtual bool set_control_openloop();
 
     /**
     * Sets all the robot joints to control mode idle.
-    * @return true if the operation was succesful, false otherwise.
+    * @return true if the operation was successful, false otherwise.
     */
     virtual bool set_control_idle();
 
@@ -149,7 +149,7 @@ public:
     /**
     * Opens the motors module, parsing the given options
     * @param _options the configuration option for the module
-    * @return true if the motor module opened succesfully. False if a mandatatory parameter is missing or invalid.
+    * @return true if the motor module opened successfully. False if a mandatory parameter is missing or invalid.
     */
     virtual bool open(Property &_options);
 

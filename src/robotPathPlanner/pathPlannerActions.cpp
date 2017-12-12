@@ -85,7 +85,7 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 
     double a = m_localization_data.theta * DEG2RAD;
     yDebug() << "current position:" << m_localization_data.x << m_localization_data.y << m_localization_data.theta;
-    //this is the inverse of the tranformation matrix from world to robot
+    //this is the inverse of the transformation matrix from world to robot
     m_final_goal.x = +target[0] * cos(a) - target[1] * sin(a) + m_localization_data.x;
     m_final_goal.y = +target[0] * sin(a) + target[1] * cos(a) + m_localization_data.y;
     m_final_goal.theta = target[2] + m_localization_data.theta;

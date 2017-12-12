@@ -129,7 +129,7 @@ public:
         }
 
         //initialize ROS
-        bool useRos   = general_options.check("use_ROS",              Value(false),  "enable ros comunications").asBool();
+        bool useRos   = general_options.check("use_ROS",              Value(false),  "enable ROS communications").asBool();
         if(useRos)
         {
             if (ctrl_options.check("ROS_GENERAL"))
@@ -146,7 +146,7 @@ public:
             }
             else
             {
-                yError() << "[ROS_GENERAL] group is missing from configuration file. ROS comunication will not be initialized";
+                yError() << "[ROS_GENERAL] group is missing from configuration file. ROS communication will not be initialized";
             }
         }
 

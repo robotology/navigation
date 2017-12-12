@@ -62,7 +62,7 @@ PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
 
 bool PlannerThread::threadInit()
 {
-    //read configuration parametes
+    //read configuration parameters
     std::string debug_rf = m_rf.toString();
     Bottle navigation_group = m_rf.findGroup("NAVIGATION");
     if (navigation_group.isNull())

@@ -171,7 +171,7 @@ bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementDat
         laser_data[i].get_polar(curr_d, curr_angle);
 
         if (curr_angle >= 0 - m_frontal_blind_angle*DEG2RAD &&
-            curr_angle <= 0 + m_frontal_blind_angle*DEG2RAD) continue; //skip frontalobstacles
+            curr_angle <= 0 + m_frontal_blind_angle*DEG2RAD) continue; //skip frontal obstacles
 
         if (curr_d < min_distance)
         {
@@ -198,7 +198,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     double verty[4];
     double theta              = 0.0;
     //the following 90 degrees rotation is needed to perform the following reference frame rotation.
-    //the refence frame of the robot is the one shown on the right.
+    //the reference frame of the robot is the one shown on the right.
     //      Y                 X
     //      |       -->       |
     //      O--X           Y--O
@@ -274,7 +274,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
         }
     }
 
-    //prevent noise to be detected as an obtacle;
+    //prevent noise to be detected as an obstacle;
     if (laser_obstacles>=2)
     {
         if (yarp::os::Time::now() - m_last_print_time > 1.0)

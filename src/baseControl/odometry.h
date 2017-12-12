@@ -67,7 +67,7 @@ protected:
     yarp::os::Stamp       timeStamp;
     double                last_time;
 
-    //ros
+    //ROS
     bool                                            enable_ROS;
     yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
     std::string                                     odometry_frame_id;
@@ -129,7 +129,7 @@ public:
     ~Odometry();
     
     /**
-    * Resets the robot odometry, meaning the the current robot pose becomes 0,0,0.
+    * Resets the robot odometry, meaning the current robot pose becomes 0,0,0.
     * @return true/false if the command is accepted.
     */
     virtual bool   reset_odometry() = 0;
@@ -137,7 +137,7 @@ public:
     /**
     * Initializes the odometry module.
     * @param options the options to be passed to odometry module.
-    * @return true/false if the odometry module is opened succesfully.
+    * @return true/false if the odometry module is opened successfully.
     */
     virtual bool   open(Property &options) = 0;
 

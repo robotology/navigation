@@ -100,17 +100,17 @@ bool CtrlThread::threadInit()
     //opens the ports to receive torques from WBD
     l_wrench_in_port.open ("/forceGuidance/l_wrenches:i");
     r_wrench_in_port.open ("/forceGuidance/r_wrenches:i");
-    //opens port to send vecloity command to baseControl
+    //opens port to send velocity command to baseControl
     commands_out_port.open("/forceGuidance/commands:o");
-    //performs automaatic connections
+    //performs automatic connections
     Network::connect("/wholeBodyDynamics/left_arm/cartesianEndEffectorWrench:o","/forceGuidance/l_wrenches:i");
     Network::connect("/wholeBodyDynamics/right_arm/cartesianEndEffectorWrench:o","/forceGuidance/r_wrenches:i");
 
-    //read initial wrences from WBD.
+    //read initial wrenches from WBD.
     yarp::sig::Vector* l_wrench = l_wrench_in_port.read(true);
     yarp::sig::Vector* r_wrench = r_wrench_in_port.read(true);
 
-    //These offsets will be substracted in main the control loop.
+    //These offsets will be subtracted in main the control loop.
     lx0=l_wrench->data()[0];
     ly0=l_wrench->data()[1];
     rx0=r_wrench->data()[0];
@@ -128,7 +128,7 @@ void CtrlThread::afterStart(bool s)
 
 double CtrlThread::lp_filter_1Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 1Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 1Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 
@@ -140,7 +140,7 @@ double CtrlThread::lp_filter_1Hz(double input, int i)
 
 double CtrlThread::lp_filter_0_5Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 0.5Hz
+    //This is a butterworth low pass first order, with a cut off frequency of 0.5Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 
@@ -176,7 +176,7 @@ void CtrlThread::run()
     rx = lp_filter_0_5Hz(rx,2);
     ry = lp_filter_0_5Hz(ry,3);
 
-    //use a simple admittance control to computes cartesian velocities
+    //use a simple admittance control to computes Cartesian velocities
     double linear_gain = 60;   // 60N  = 100%
     double angular_gain = 60;  // 60Nm = 100%
     double desired_direction = atan2( lx+rx, ly+ry ) * 180.0 / 3.14159265;

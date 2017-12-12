@@ -64,7 +64,7 @@ private:
 
     double m_last_print_time;
 public:
-    //obstacles avoiance stop block
+    //obstacles avoidance stop block
     double               m_max_obstacle_distance;
     double               m_frontal_blind_angle;
     double               m_speed_reduction_factor;
@@ -72,7 +72,7 @@ public:
     double               m_angle_t;
     double               m_angle_g;
     double               m_w_f; //perpendicular repulsion force
-    double               m_w_t; //tangential repulsition force
+    double               m_w_t; //tangential repulsion force
     double               m_w_g; //goal attraction force
 
     //obstacle emergency block

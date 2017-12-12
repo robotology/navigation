@@ -26,9 +26,8 @@
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/os/RateThread.h>
-#include <yarp/dev/IAnalogSensor.h>
+#include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/Map2DLocation.h>
 #include <string>
 #include <math.h>
 #include <cv.h>
@@ -186,6 +185,7 @@ bool map_utilites::drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laser
 
 void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
 {
+    //copies obstacles (and only them) from a source map to a destination map
     if (map_to_be_updated.width() != obstacles_map.width() ||
         map_to_be_updated.height() != map_to_be_updated.height())
     {
@@ -211,7 +211,8 @@ void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated,
 
 bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst)
 {
-    //here using the fast Bresenham algorithm
+    //here using the fast Bresenham algorithm to check if cells belonging to a straight line (from src to dst)
+    //are free or occupied by an obstacle
     int dx = abs(dst.x-src.x);
     int dy = abs(dst.y-src.y); 
     int err = dx-dy;
@@ -242,6 +243,6 @@ bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCel
 
 bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
 {
-    //return find_dijkstra_path(map, start, goal, path);
-    return find_astar_path(map, start, goal, path);
+    //computes path from start to goal using A* algorithm
+    return aStar_algorithm::find_astar_path(map, start, goal, path);
 }

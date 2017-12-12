@@ -89,26 +89,26 @@ public:
     
     /**
     * //Stops the current navigation task.
-    * @return true/false if the command is executed succesfully.
+    * @return true/false if the command is executed successfully.
     */
     bool stopMovement();
     
     /**
     * //Pauses the current navigation task.
-    * @return true/false if the command is executed succesfully.
+    * @return true/false if the command is executed successfully.
     */
     bool pauseMovement(double time);
     
     /**
-    * //Resumes a previosuly paused navigation task.
-    * @return true/false if the command is executed succesfully.
+    * //Resumes a previously paused navigation task.
+    * @return true/false if the command is executed successfully.
     */
     bool resumeMovement();
     
     /**
     * //Gets the current robot position. Typically obtained through the ILocalization2D interface.
     * @param loc the current robot location.
-    * @return true/false if the command is executed succesfully.
+    * @return true/false if the command is executed successfully.
     */
     bool getCurrentPos(yarp::dev::Map2DLocation& loc);
 
