@@ -111,8 +111,11 @@ This application is similar to the previous one, with the only exception that th
 
 <a name='templates'></a>
 ## Templates
-We included in the repository two template applications, **navigationTemplate** and **localizationTemplate**.
-These template are useful in case the user needs to develop a new navigation/localization module, either wrapping an existing library or implementing a new algorithm. These modules are constituted just by the skeleton application. The *respond()* function already implements all the required VOCABs which make these modules compliant with INavigation2D and ILocalization2d interfaces. The user has to complete the parts marked with the comment *//### TO BE IMPLEMENTED BY USER* in order to implement the navigation/localization functionalities.
+We included in the repository the following template applications:
+* **navigationTemplate**  [(link to the repo)](https://github.com/robotology/navigation/tree/master/src/templates/navigationTemplate)
+* **localizationTemplate** [(link to the repo)](https://github.com/robotology/navigation/tree/master/src/templates/localizationTemplate)
+
+These templates are useful in case the user needs to develop a new navigation/localization module, either wrapping an existing library or implementing a new algorithm. These modules are constituted just by the skeleton application. The *respond()* function already implements all the required VOCABs which make these modules compliant with INavigation2D and ILocalization2d interfaces. The user has to complete the parts marked with the comment *//### TO BE IMPLEMENTED BY USER* in order to implement the navigation/localization functionalities.
 
 <a name='additional'></a>
 ## AdditionalMaterial
