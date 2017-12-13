@@ -90,7 +90,7 @@ obstacles_class::obstacles_class(ResourceFinder &rf)
     if (obstacles_stop_group.check("enable_dynamic_max_distance", Value(0)).asInt() == 1)
         m_enable_dynamic_max_distance = true;
 
-    m_max_obstacle_waiting_time = obstacles_stop_group.check("max_wating_time", Value(60.0)).asDouble();
+    m_max_obstacle_waiting_time = obstacles_stop_group.check("max_waiting_time", Value(60.0)).asDouble();
     m_max_detection_distance = obstacles_stop_group.check("max_detection_distance", Value(1.5)).asDouble();
     m_min_detection_distance = obstacles_stop_group.check("min_detection_distance", Value(0.4)).asDouble();
 
