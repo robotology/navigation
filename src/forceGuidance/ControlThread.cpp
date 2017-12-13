@@ -29,7 +29,10 @@ CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 \section intro_sec Description
  
-@@@TODO
+ This module implements an admittance control which allows to an iKart platform to react to external forces
+applied to iCub F/T sensors.
+***WARNING***: This module has been imported from legacy iKart repository.
+It is untested and should be considered experimental/under development.
  
 \section portsa_sec Ports Accessed
  

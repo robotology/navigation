@@ -29,7 +29,10 @@ CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 \section intro_sec Description
  
-@@@TODO
+This module implements an admittance control which allows to an iKart platform to react to external forces
+applied to iCub F/T sensors.
+***WARNING***: This module has been imported from legacy iKart repository.
+It is untested and should be considered experimental/under development.
  
 \section portsa_sec Ports Accessed
  
@@ -103,7 +106,7 @@ protected:
     double              ly0;
     double              rx0;
     double              ry0;
-    //current measurments
+    //current measurements
     double              lx;
     double              ly;
     double              rx;
@@ -122,14 +125,14 @@ public:
     */
     CtrlThread(unsigned int _period, ResourceFinder &_rf);
 
-    //Inherithed from yarp::os::RateThread 
+    //Inherited from yarp::os::RateThread 
     virtual bool threadInit();
     virtual void afterStart(bool s);
     virtual void run();
     virtual void threadRelease();
 
     /**
-    * These functions implements a butterworth low pass first order, with a cut off frequency of 0.5-1Hz.
+    * These functions implement a butterworth low pass first order, with a cut off frequency of 0.5-1Hz.
     * Coefficients have been computed in order to be used with a sampling frequency of 50Hz (20ms)
     * @param input the value to be filtered
     * @param i the id(0-9) containing the variable history
