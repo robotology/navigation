@@ -28,7 +28,7 @@
 namespace aStar_algorithm
 {
     /**
-    * This method computes (if exists) a path  required to go from a start cell to a goal cell
+    * This method computes (if exists) the path required to go from a start cell to a goal cell
     * @param map the gridmap containing the obstacles
     * @param start the start cell(x,y)
     * @param goal the arrival cell(x,y)

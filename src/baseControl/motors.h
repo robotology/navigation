@@ -187,18 +187,18 @@ public:
 
     /**
     * Return the maximum value of joint velocity, as defined in the configuration parameters.
-    * @return the maximum value of joint velocity. joint the joint number
+    * @return the maximum value of joint velocity.
     */
     virtual double get_max_motor_vel()   {return max_motor_vel;}
    
     /**
     * Return the maximum value of motor pwm, as defined in the configuration parameters.
-    * @return the maximum value of motor pwm. joint the joint number
+    * @return the maximum value of motor pwm.
     */
     virtual double get_max_motor_pwm()   {return max_motor_pwm;}
 
     /**
-    * Apply a low pass filter to motor output. The frequency is defined by motors_filter_enabled
+    * Apply a low pass filter to motor output. The frequency is defined by motors_filter_enabled variable.
     * @param joint the joint number
     */
     virtual void  apply_motor_filter(int joint);

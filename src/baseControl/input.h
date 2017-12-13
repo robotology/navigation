@@ -164,8 +164,8 @@ public:
     void   printStats();
  
     /**
-    * Receives the user input commands inputs. These can come a YARPport, a device (joypad), a ROS topic etc.
-    * The robot commands are expressed as cartesian velocity in the robot reference frame
+    * Receives the user input commands inputs. These source of these inputs may be a YARP port, a device (joypad), a ROS topic etc.
+    * The robot commands are expressed as cartesian velocity in the robot reference frame.
     * @param linear_speed the mobile base linear speed
     * @param desired_direction the mobile base heading (linear_speed will be applied taking in account robot reference frame).
     * @param angular_speed the mobile base angular speed (in-place rotation).

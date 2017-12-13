@@ -42,7 +42,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_client</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_client  --ROS::useROS true --ROS::ROS_nodeName /fakeLaser --ROS::ROS_topicName /laser --ROS::frame_id mobile_base_body_link</parameters>
    <node>console</node>
 </module>
 

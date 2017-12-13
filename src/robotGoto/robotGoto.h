@@ -300,8 +300,7 @@ private:
     bool  evaluateLocalization();
     
     /**
-    * Returns robot current position.
-    * @param loc the current position
+    * Receives a new target from a ROS topic and starts the navigation
     */
     void evaluateGoalFromTopic();
     

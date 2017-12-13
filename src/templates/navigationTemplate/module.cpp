@@ -123,7 +123,7 @@ bool navigationModule::respond(const yarp::os::Bottle& command,yarp::os::Bottle&
             }
             else if (request == VOCAB_NAV_GET_STATUS)
             {
-                int nav_status = this->getNavigationStatusAsInt();
+                int nav_status = (int) this->getNavigationStatus();
                 reply.addVocab(VOCAB_OK);
                 reply.addInt(nav_status);
             }
@@ -230,7 +230,7 @@ bool navigationModule::setNewRelTarget(yarp::sig::Vector v)
     return false;
 }
 
-int navigationModule::getNavigationStatusAsInt()
+yarp::dev::NavigationStatusEnum navigationModule::getNavigationStatus()
 {
     return navigation_status;
 }

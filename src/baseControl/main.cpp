@@ -33,6 +33,46 @@
 
 #include "controlThread.h"
 
+/**
+ * \section baseControl
+ * This core module controls the robot joints in order to achieve the desired cartesian velocity command, sent either via a joystick or via YARP port/ROS topic
+ * The module requires the definition of the robot kinematics. So far only ikart_V1, ikart_V2, cer types are valid options.as robot_type parameter.
+ * Four control modes are available: velocity_no_pid sets the control modes of the motors to velocity and sends individual velocity references, computed by from user cartesian commands, to the joints.
+ * velocity_pid also controls the motors in velocity modes, but it also implements and external closed loop on the realized cartesian trajectory.
+ * openloop_no_pid/openloop_pid are similar, but the individual motors are controlled by sending pwm references instead of velocity commands.
+ * The module also performs the odometry computation and publishes it onto a yarp port/ROS topic.
+ *
+ *  Parameters required by this module are:
+ * | Parameter name | SubParameter         | Type    | Units    | Default Value      | Required     | Description                                                       | Notes |
+ * |:--------------:|:--------------------:|:-------:|:--------:|:------------------:|:-----------: |:-----------------------------------------------------------------:|:-----:|
+ * | GENERAL        |  robot_type          | string  | -        | -                  | Yes          | The robot kinematic model. Can be one of the following: ikart_V1,ikart_V2,cer                    |       |
+ * | GENERAL        |  control_mode        | string  | -        | velocity_no_pid    | Yes          | It can be one of the following: velocity_no_pid, velocity_pid, openloop_no_pid, openloop_pid     |       |
+ * | GENERAL        |  max_linear_vel      | double  | m/s      | 0.0                | Yes          | Limiter for robot maximum linear velocities                       | -     |
+ * | GENERAL        |  max_angular_vel     | double  | deg/s    | 0.0                | Yes          | Limiter for robot maximum angular velocities                      | -     |
+ * | GENERAL        |  max_linear_acc      | double  | m/s^2    | 0.0                | Yes          | Limiter for robot maximum linear accelerations                    | -     |
+ * | GENERAL        |  max_angular_acc     | double  | deg/s^2  | 0.0                | Yes          | Limiter for robot maximum angular accelerations                   | -     |
+ * | GENERAL        |  ratio_limiter_enabled  | int  | -        | 1                  | Yes          | Initial estimation of robot position                              | -     |
+ * | GENERAL        |  input_limiter_enabled  | int  | -        | 0                  | Yes          | Initial estimation of robot position                              | -     |
+ * | GENERAL        |  use_ROS             | bool    | -        | false              | Yes          | Globally enable/disable the ROS system: node, topics etc          | -     |
+ * | MOTORS         |  max_motor_pwm       | double  | -        | -                  | Yes          | Limiter for motor pwm (when control mode is openloop)             | -     |
+ * | MOTORS         |  max_motor_vel       | double  | deg/s    | -                  | Yes          | Limiter for motor velocity (when control mode is velocity)        | -     |
+ * | MOTORS         |  motors_filer_enabled        | string     | -     |   -        | Yes          | Enables a low-pass filter on motor controller to prevent jerky motion. Can be one of the following: 0,1,2,4,8 | -     |
+ * | JOYSTICK       |  linear_vel_at_full_control  | double     | m/s     | -        | Yes          | Robot linear velocity when the joypad stick is at its maximum     | e.g. 0.     |
+ * | JOYSTICK       |  angular_vel_at_full_control | double     | deg/s   | -        | Yes          | Robot angular velocity when the joypad stick is at its maximum    | e.g. 30     |
+ * | XXX_VELOCITY_PID   |  kp              | double  | -        |   -                | Yes          | Proportional gain for PID control on user cartesian command       | XXX can be one of the following: LINEAR, ANGULAR, HEADING     |
+ * | XXX_VELOCITY_PID   |  ki              | double  | -        |   -                | Yes          | Integral gain for PID control on user cartesian command           | -     |
+ * | XXX_VELOCITY_PID   |  kd              | double  | -        |   -                | Yes          | Derivative gain for PID control on user cartesian command         | -     |
+ * | XXX_VELOCITY_PID   |  max             | double  | -        |   -                | Yes          | Limiter for PID control on user cartesian command                 | -     |
+ * | XXX_VELOCITY_PID   |  min             | double  | -        |   -                | Yes          | Limiter for PID control on user cartesian command                 | -     |
+ * | ROS_GENERAL    |  node_name           | string  | -        |   -                | No           | Name of the ROS node                                              | e.g. baseControl    |
+ * | ROS_FOOTPRINT  |  topic_name          | string  | -        |   -                | No           | Name of the topic used to publish the robot footprint             | e.g. /footprint     |
+ * | ROS_FOOTPRINT  |  footprint_frame     | string  | -        |   -                | No           | Frame to which the footprint is attached                          | e.g. mobile_base_link |
+ * | ROS_FOOTPRINT  |  footprint_diameter  | double  | m        |   -                | No           | Diameter of the robot footprint                                   | e.g. 0.5    |
+ * | ROS_ODOMETRY   |  topic_name          | string  | -        |   -                | No           | Name of the topic used to publish odometry info                   | e.g. /odometry    |
+ * | ROS_ODOMETRY   |  odom_frame          | string  | -        |   -                | No           | Name of the odometry frame                                        | e.g. odom  |
+ * | ROS_ODOMETRY   |  base_frame          | string  | -        |   -                | No           | Name of the base frame                                            | e.g. mobile_base_body_link |
+ * | ROS_INPUT      |  topic_name          | string  |  -       |   -                | No           | Name of the topic used to control the robot from ROS              | e.g. /cmd_vel    |
+ */
 
 using namespace std;
 using namespace yarp::os;

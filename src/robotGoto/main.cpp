@@ -16,6 +16,54 @@
  * Public License for more details
 */
 
+/**
+ * \section robotGoto
+ * robotGoto is a local navigation module. It receives a position cartesian target, either absolute (respect to the map origin) or relative (respect to the robot frame) and computes 
+ * the cartesian velocity commands to be sent to baseControl module.
+ * Four control modes are available: velocity_no_pid sets the control modes of the motors to velocity and sends individual velocity references, computed by from user cartesian commands, to the joints.
+ * velocity_pid also controls the motors in velocity modes, but it also implements and external closed loop on the realized cartesian trajectory.
+ * openloop_no_pid/openloop_pid are similar, but the individual motors are controlled by sending pwm references instead of velocity commands.
+ * The module also performs the odometry computation and publishes it onto a yarp port/ROS topic.
+ *
+ *  Parameters required by this module are:
+ * | Parameter name   | SubParameter         | Type    | Units    | Default Value      | Required     | Description                                                       | Notes |
+ * |:----------------:|:--------------------:|:-------:|:--------:|:------------------:|:-----------: |:-----------------------------------------------------------------:|:-----:|
+ * | LOCALIZATION     |  robot_frame_id      | string  | -        | -                  | Yes          | The robot kinematic model. Can be one of the following: ikart_V1,ikart_V2,cer                    |       |
+ * | LOCALIZATION     |  map_frame_id        | string  | -        | -                  | Yes          | It can be one of the following: velocity_no_pid, velocity_pid, openloop_no_pid, openloop_pid     |       |
+ * | LASER            |  laser_port          | string  | -        | -                  | Yes          | Limiter for robot maximum linear velocities                       | -     |
+ * | ROBOT_GEOMETRY   |  robot_radius        | double  | m        | 0.0                | Yes          | Limiter for robot maximum angular velocities                      | -     |
+ * | ROBOT_GEOMETRY   |  laser_pos_x         | double  | m        | 0.0                | Yes          | Limiter for robot maximum linear accelerations                    | -     |
+ * | ROBOT_GEOMETRY   |  laser_pos_y         | double  | m        | 0.0                | Yes          | Limiter for robot maximum angular accelerations                   | -     |
+ * | ROBOT_GEOMETRY   |  laser_pos_theta     | double  | deg      | 0.0                | Yes          | Initial estimation of robot position                              | -     |
+ * | ROBOT_TRAJECTORY |  robot_is_holonomic  | int     | 0/1      | 0                  | Yes          | Initial estimation of robot position                              | -     |
+ * | ROBOT_TRAJECTORY |  max_beta_angle      | double  | -        |                    | Yes          | Initial estimation of robot position                              | -     |
+ * | ROBOT_TRAJECTORY |  ang_speed_gain      | double  | -        |                    | Yes          | Globally enable/disable the ROS system: node, topics etc          | -     |
+ * | ROBOT_TRAJECTORY |  lin_speed_gain      | double  | -        | -                  | Yes          | Limiter for motor pwm (when control mode is openloop)             | -     |
+ * | ROBOT_TRAJECTORY |  max_lin_speed       | double  | m/s      | -                  | Yes          | Limiter for motor velocity (when control mode is velocity)        | -     |
+ * | ROBOT_TRAJECTORY |  max_ang_speed       | double  | deg/s    | -                  | Yes          | Enables a low-pass filter on motor controller to prevent jerky motion. Can be one of the following: 0,1,2,4,8 | -     |
+ * | ROBOT_TRAJECTORY |  min_lin_speed       | double  | m/s      | -                  | Yes          | Robot linear velocity when the joypad stick is at its maximum     | e.g. 0.     |
+ * | ROBOT_TRAJECTORY |  min_ang_speed       | double  | deg/s    | -                  | Yes          | Robot angular velocity when the joypad stick is at its maximum    | e.g. 30     |
+ * | ROBOT_TRAJECTORY |  goal_tolerance_lin  | double  | m        |   -                | Yes          | Proportional gain for PID control on user cartesian command       | XXX can be one of the following: LINEAR, ANGULAR, HEADING     |
+ * | ROBOT_TRAJECTORY |  goal_tolerance_angle | double  | deg     |   -                | Yes          | Integral gain for PID control on user cartesian command           | -     |
+ * | RETREAT_OPTION   |  enable_retreat      | int     | 0/1      |   -                | Yes          | Derivative gain for PID control on user cartesian command         | -     |
+ * | RETREAT_OPTION   |  retreat_duration    | double  | s        |   -                | Yes          | Limiter for PID control on user cartesian command                 | -     |
+ * | OBSTACLES_EMERGENCY_STOP  | enable_obstacles_emergency_stop  | int | 0/1  |   -   | Yes          | Limiter for PID control on user cartesian command                 | -     |
+ * | OBSTACLES_EMERGENCY_STOP  | max_waiting_time            | double  | -     |   -   | Yes          | Name of the ROS node                                              | e.g. baseControl    |
+ * | OBSTACLES_EMERGENCY_STOP  | enable_dynamic_max_distance | int     | 0/1   |   -   | Yes          | Name of the topic used to publish the robot footprint             | e.g. /footprint     |
+ * | OBSTACLES_EMERGENCY_STOP  | max_detection_distance      | double  | m     |   -   | Yes          | Frame to which the footprint is attached                          | e.g. mobile_base_link |
+ * | OBSTACLES_EMERGENCY_STOP  | min_detection_distance      | double  | m     |   -   | Yes          | Diameter of the robot footprint                                   | e.g. 0.5    |
+ * | OBSTACLES_AVOIDANCE   |  enable_obstacles_avoidance     | int     | 0/1   |   -   | Yes          | Name of the topic used to publish odometry info                   | e.g. /odometry    |
+ * | OBSTACLES_AVOIDANCE   |  frontal_blind_angle            | double  | -     |   -   | Yes          | Name of the odometry frame                                        | e.g. odom  |
+ * | OBSTACLES_AVOIDANCE   |  speed_reduction_factor         | double  | -     |   -   | Yes          | Name of the base frame                                            | e.g. mobile_base_body_link |
+ * | ROS              |  rosNodeName          | string  |  -       |   -               | Yes          | Name of the ROS node              | e.g. /cmd_vel    |
+ * | ROS              |  useGoalFromRosTopic  | bool    |  -       |   -               | Yes          | Name of the topic used to control the robot from ROS              | e.g. /robotGoto    |
+ * | ROS              |  goalTopicName        | string  |  -       |   -               | Yes          | Name of the topic used to receive goals from ROS modules          | e.g. //move_base_simple/goal    |
+ * | ROS              |  publishRosStuff      | bool    |  -       |   -               | Yes          | Name of the topic used to control the robot from ROS              | e.g. /cmd_vel    |
+ * | ROS              |  currentGoalTopicName | string  |  -       |   -               | Yes          | Name of the topic used to publish the current goal                | e.g. /goal    |
+ * | ROS              |  localPlanTopicName   | string  |  -       |   -               | Yes          | Name of the topic used to control the current local plan          | e.g. /local_plan    |
+ * | ROS              |  globalPlanTopicName  | string  |  -       |   -               | Yes          | Name of the topic used to control the current global plan         | e.g. /global_plan   |
+ */
+
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>

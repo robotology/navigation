@@ -33,9 +33,10 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    //initializes YARP and the resource finder
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("navigation2DClienTest");
+    rf.setDefaultContext("navigation2DClientTest");
     rf.setDefaultConfigFile("navigation2DClientTest.ini");
     rf.configure(argc,argv);
 

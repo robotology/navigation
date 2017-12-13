@@ -47,32 +47,87 @@ using namespace yarp::dev;
 class Controller
 {
 private:
-    yarp::os::Stamp           m_timeStamp;
+    //robot description
+    bool                      m_is_holonomic;
+
+    //TF device driver
     PolyDriver                m_ptf;
     IFrameTransform*          m_iTf;
+
+    //robot position
     double                    m_current_theta;
     double                    m_current_x;
     double                    m_current_y;
+
+    //YARP ports
+    yarp::os::Stamp           m_timeStamp;
     BufferedPort<Bottle>      m_port_odometry;
     BufferedPort<Bottle>      m_port_odometer;
-    bool                      m_is_holonomic;
 
     //variables to control odometry simulated errors
     double              odometry_error_x_gain;
     double              odometry_error_y_gain;
     double              odometry_error_t_gain;
+
 public:
+    /**
+    * Default Constructor
+    */
     Controller();
+    
+    /**
+    * Destructor
+    */
     ~Controller();
+    
+    /**
+    * Performs the control action, moving the robot
+    * @param lin_spd robot linear speed, expressed in m/s
+    * @param ang_spd robot angular speed, expressed in deg/s 
+    * @param des_dir robot heading, expressed in deg w.r.t robot local reference frame
+    * @param pwm_gain the amount of power given to the simulated motors (0-100)
+    */
     void   apply_control(double& lin_spd , double& ang_spd, double& des_dir, double& pwm_gain);
+
+    /**
+    * Gets robot odometry data
+    * @param x robot pose (m)
+    * @param y robot pose (m)
+    * @param t robot pose (deg)
+    */
     void   get_odometry(double& x, double& y, double& theta);
+    
+    /**
+    * Initializes robot odometry data
+    * @param x robot pose (m)
+    * @param y robot pose (m)
+    * @param t robot pose (deg)
+    */
     void   reset(double x = 0, double y = 0, double t = 0);
+    
+    /**
+    * Publish robot odometry via tf server
+    */
     void   publish_tf();
+
+    /**
+    * Publish robot odometry data via yarp port
+    */
     void   publish_port();
+    
+    /**
+    * Initialize the system
+    * @param holonomic if true, a fully holonomic model is used. Otherwise robot velocity along y axis is constrained to be zero.
+    */
     bool   init(bool holonomic);
+    
+    /**
+    * Sets x,y,t gains to simulate a systemic error, similar to wheels slippage, during odometry computation.
+    * @param gain on x axis. A value of 1.0 means no error.
+    * @param gain on y axis. A value of 1.0 means no error.
+    * @param gain on robot heading. A value of 1.0 means no error.
+    */
     void   set_odometry_error (double xgain, double ygain, double tgain);
-
-
 };
 
 #endif

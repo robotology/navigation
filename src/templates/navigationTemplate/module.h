@@ -32,10 +32,12 @@
 class navigationModule : public yarp::os::RFModule
 {
 protected:
-    yarp::os::Port              rpcPort;
-    int                         navigation_status;
-    yarp::dev::PolyDriver       pLoc;
-    yarp::dev::ILocalization2D* iLoc;
+    yarp::os::Port                    rpcPort;
+    yarp::dev::NavigationStatusEnum   navigation_status;
+    
+    //localization driver and interface
+    yarp::dev::PolyDriver             pLoc;
+    yarp::dev::ILocalization2D*       iLoc;
 
 public:
     /**
@@ -54,7 +56,7 @@ public:
 
 public:
     /**
-    * Sets a new navigation target, expressed in absolute (map) coordinate frame.
+    * Sets a new navigation target, expressed in the absolute (map) coordinate frame.
     * @param loc the location to be reached
     * @return true/false if the command is accepted
     */
@@ -68,24 +70,24 @@ public:
     bool setNewRelTarget(yarp::sig::Vector v);
 
     /**
-    * //Gets the last target set through a setNewAbsTarget command.
+    * //Gets the last target set through a setNewAbsTarget() command.
     * @return a Map2DLocation containing data of the current target.
-    * @return true if a target is current available, false otherwise (in this case returned target is invalid)
+    * @return true if a target is currently available, false otherwise (in this case returned target is invalid)
     */
     bool getCurrentAbsTarget(yarp::dev::Map2DLocation& target);
     
     /**
     * //Gets the last target set through a setNewRelTarget command, expressed in absolute coordinates.
     * @param a Map2DLocation containing data of the current target.
-    * @return true if a target is current available, false otherwise (in this case returned target is invalid)
+    * @return true if a target is currently available, false otherwise (in this case returned target is invalid)
     */
     bool getCurrentRelTarget(yarp::dev::Map2DLocation& target);
     
     /**
     * //Gets the status of the current navigation task. Typically stored into navigation_status variable.
-    * @return the current navigation status expressed as int.
+    * @return the current navigation status expressed as NavigationStatusEnum.
     */
-    int getNavigationStatusAsInt();
+    yarp::dev::NavigationStatusEnum getNavigationStatus();
     
     /**
     * //Stops the current navigation task.

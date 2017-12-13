@@ -27,7 +27,7 @@ namespace control_filters
     * These functions implement a butterworth low pass first order, with a cut off frequency of 0.5-8Hz.
     * Coefficients have been computed in order to be used with a sampling frequency of 50Hz (20ms)
     * @param input the value to be filtered
-    * @param i the joint number
+    * @param i the joint number (0-9)
     * @return the filtered value
     */
     double lp_filter_8Hz    (double input, int i);

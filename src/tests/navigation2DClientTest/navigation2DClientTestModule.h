@@ -33,26 +33,40 @@ typedef struct navigationTestStep
 
 }navStep;
 
+//This module is used to test internally interface functionalities
 class NavTestModule : public yarp::os::RFModule
 {
 private:
-    bool                       locationsStored;
     double                     period;
-    yarp::dev::INavigation2D*  iNav;
+
+    //device drivers and interfaces
     yarp::dev::PolyDriver      ddNavClient;
     yarp::dev::PolyDriver      ddLocServer;
+    yarp::dev::INavigation2D*  iNav;
+
+    //goal/location variables
     std::vector<navStep>       stepVector;
     unsigned int               currentGoal;
     double                     linToll;
     double                     angToll;
+    bool                       locationsStored;
+
+    //tests
     bool                       checkCurrentGoalReached();
-    void                       printRegisteredLocations();
     bool                       executeStep(navStep s);
     inline void                absLocationTest();
     inline void                suspResumeTest();
+
+    //debug methods
+    void                       printRegisteredLocations();
+
 public:
-                    NavTestModule();
-                    ~NavTestModule();
+    //constructor/destructor
+    NavTestModule();
+    ~NavTestModule();
+
+protected:
+    //methods inherited from yarp::os::RFModule
     virtual bool    configure(yarp::os::ResourceFinder& rf );
     virtual bool    close();
     virtual double  getPeriod();

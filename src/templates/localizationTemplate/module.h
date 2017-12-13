@@ -56,7 +56,7 @@ public:
     bool initializeLocalization(yarp::dev::Map2DLocation loc);
 
     /**
-    * Get the current position of the robot, estimated by the localization algorithm
+    * Gets the current position of the robot, estimated by the localization algorithm
     * @param loc the current position of the robot
     * @return true/false if the command is accepted
     */

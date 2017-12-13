@@ -245,7 +245,7 @@ bool MotorControl::set_control_velocity()
 
 bool MotorControl::set_control_idle()
 {
-    yInfo ("Setting ilde mode");
+    yInfo ("Setting idle mode");
     for (int i=0; i<motors_num; i++)
     {
         icmd->setControlMode(i, VOCAB_CM_IDLE);
