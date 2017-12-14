@@ -1,6 +1,7 @@
 # robotGoto
  This module performs a point-to-point local navigation. It receives a goal from the user either via RPC command or via yarp iNavigation2D interface and it computes the Cartesian velocities to be sent to  [**baseControl**](https://github.com/robotology/navigation/tree/master/src/baseControl) module. 
- 
+ The module can be configured to stop the navigation if an obstacle is detected, or perform obstacle avoidance using an APF-based approach.
+
 ## YARP Connections
 * **/robotGoto/rpc**   standard rpc port
 * **/robotGoto/control:o** this port is used by the module to send cartesian velocities commands to baseControl module.

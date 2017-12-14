@@ -16,6 +16,14 @@
  * Public License for more details
 */
 
+/**
+ * \section robotPathPlanner
+ * This module performs global path-planning by generating a sequence of waypoints to be tracked by a local navigation algorithm.
+ *  It receives a goal from the user either via RPC command or via yarp iNavigation2D interface and it computes a sequence of waypoints which are sent one by one to a local navigator module.
+ * If the local navigation module fails to reach one of these waypoints, the global navigation is aborted too. 
+ * A detailed description of configuration parameters available for the module is provided in the README.md file.
+ */
+
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>

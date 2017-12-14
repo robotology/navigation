@@ -12,7 +12,7 @@
 
 <module>
    <name>fakeMobileBaseTest</name>
-   <parameters>--holonomic</parameters>
+   <parameters>--context fakeMobileBaseTest --holonomic</parameters>
    <node>console</node>
 </module>
 
