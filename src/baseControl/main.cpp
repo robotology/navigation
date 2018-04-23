@@ -101,7 +101,7 @@ public:
         //check for robotInterface availability
         yInfo("Checking for robotInterface availability");
         Port startport;
-        startport.open ("/baseControl/robotInterfaceCheck:rpc");
+        startport.open (localName + "/baseControl/robotInterfaceCheck:rpc");
         
 
         Bottle cmd; cmd.addString("is_ready");
@@ -123,7 +123,7 @@ public:
             {
                if (not_yet_connected)
                {
-                  bool rc = yarp::os::Network::connect (localName + "/baseControl/robotInterfaceCheck:rpc","/" + robotName + "/robotInterface");
+                  bool rc = yarp::os::Network::connect (localName + "/baseControl/robotInterfaceCheck:rpc","/" + robotName + "/yarprobotinterface");
                   if (rc == false)
                   {
                      yWarning ("Problems trying to connect to RobotInterface %d", rc_count ++);
