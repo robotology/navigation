@@ -77,7 +77,6 @@ public:
         ctrlName=rf.check("local",Value("baseControl")).asString();
         robotName=rf.check("robot",Value("cer")).asString();
         partName = rf.check("part", Value("mobile_base")).asString();
-
         remoteName=slash+robotName+slash+partName;
         localName=slash+ctrlName;
         
@@ -99,9 +98,9 @@ public:
         ctrl_options.put("local", localName.c_str());
 
         //check for robotInterface availability
-        yInfo("Checking for robotInterface availability");
+        yInfo("Checking for yarpRobotInterface availability");
         Port startport;
-        startport.open ("/baseControl/robotInterfaceCheck:rpc");
+        startport.open (localName + "/yarpRobotInterfaceCheck:rpc");
         
 
         Bottle cmd; cmd.addString("is_ready");
@@ -115,7 +114,7 @@ public:
         bool skip_robot_interface_check = rf.check("skip_robot_interface_check");
         if (skip_robot_interface_check)
         {
-            yInfo("skipping robotInterface check");
+            yInfo("skipping yarpRobotInterface check");
         }
         else
         {
@@ -123,27 +122,27 @@ public:
             {
                if (not_yet_connected)
                {
-                  bool rc = yarp::os::Network::connect (localName + "/baseControl/robotInterfaceCheck:rpc","/" + robotName + "/robotInterface");
+                  bool rc = yarp::os::Network::connect (localName + "/yarpRobotInterfaceCheck:rpc","/" + robotName + "/yarprobotinterface");
                   if (rc == false)
                   {
-                     yWarning ("Problems trying to connect to RobotInterface %d", rc_count ++);
+                     yWarning ("Problems trying to connect to %s %d", std::string("/" + robotName + "/yarprobotinterface").c_str(), rc_count ++);
                      yarp::os::Time::delay (1.0);
                      continue;
                   }
                   else 
                   {
                      not_yet_connected = false;  
-                     yDebug ("Connection established with robotInterface");
+                     yDebug ("Connection established with yarpRobotInterface");
                   }
                }
     
                bool rp = startport.write (cmd, response);
                if (rp == false)
                {
-                  yWarning ("Problems trying to connect to RobotInterface %d", rp_count ++);
+                  yWarning ("Problems trying to connect to yarpRobotInterface %d", rp_count ++);
                   if (yarp::os::Time::now()-start_time>30)
                   {
-                     yError ("Timeout expired while trying to connect to robotInterface");
+                     yError ("Timeout expired while trying to connect to yarpRobotInterface");
                      return false;
                   }
                   yarp::os::Time::delay (1.0);
@@ -153,10 +152,10 @@ public:
                {
                   if (response.get(0).asString() != "ok")
                   {
-                     yWarning ("RobotInterface is not ready yet, retrying... %d", rf_count++);
+                     yWarning ("yarpRobotInterface is not ready yet, retrying... %d", rf_count++);
                      if (yarp::os::Time::now()-start_time>30)
                      {
-                        yError ("Timeout expired while waiting for robotInterface availability");
+                        yError ("Timeout expired while waiting for yarpRobotInterface availability");
                         return false;
                      }
                      yarp::os::Time::delay (1.0);
@@ -164,7 +163,7 @@ public:
                   }
                   else
                   {
-                     yInfo ("RobotInterface is ready");
+                     yInfo ("yarpRobotInterface is ready");
                      break;
                   }
                }
@@ -201,7 +200,7 @@ public:
             do
             {
                 yarp::os::Time::delay(1.0);
-                if (yarp::os::Network::connect("/joystickCtrl:o","/baseControl/joystick1:i"))
+                if (yarp::os::Network::connect("/joystickCtrl:o",localName+"/joystick1:i"))
                     {
                         yInfo("Joystick has been automatically connected");
                         break;
