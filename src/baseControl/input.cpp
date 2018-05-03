@@ -593,6 +593,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
             b.addDouble(rosTwist->linear.x);
             b.addDouble(rosTwist->linear.y);
             b.addDouble(rosTwist->angular.z * 180 / M_PI);
+            b.addDouble(100);
             read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
             wdt_old_ros_cmd   = wdt_ros_cmd;
             wdt_ros_cmd       = Time::now();
