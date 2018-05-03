@@ -460,7 +460,7 @@ void GotoThread::evaluateGoalFromTopic()
 
         v[0] = rosGoalData->pose.position.x;
         v[1] = rosGoalData->pose.position.y;
-        v[2] = -yarp::math::dcm2rpy(q.toRotationMatrix())[2] * RAD2DEG;
+        v[2] = -yarp::math::dcm2rpy(q.toRotationMatrix4x4())[2] * RAD2DEG;
 
         setNewAbsTarget(v);
     }
