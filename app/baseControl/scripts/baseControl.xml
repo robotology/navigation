@@ -25,7 +25,7 @@ cerSrv
 
 <module>
    <name>joystickCtrl</name>
-   <parameters>--context joystickCtrl --from conf/cer.ini</parameters>
+   <parameters>--context joystickCtrl --from cer_linux.ini</parameters>
    <node>r1-base</node>
 </module>
 
