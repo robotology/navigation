@@ -248,7 +248,7 @@ bool MotorControl::set_control_idle()
     yInfo ("Setting idle mode");
     for (int i=0; i<motors_num; i++)
     {
-        icmd->setControlMode(i, VOCAB_CM_IDLE);
+        icmd->setControlMode(i, VOCAB_CM_FORCE_IDLE);
     }
     yInfo("Motors now off");
     return true;
