@@ -23,7 +23,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 
 PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
-        RateThread(_period), m_rf(_rf)
+        PeriodicThread(_period), m_rf(_rf)
 {
     m_planner_status = navigation_status_idle;
     m_inner_status = navigation_status_idle;

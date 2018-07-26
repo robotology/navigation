@@ -48,10 +48,8 @@ public:
     //module configuration and parameters parsing
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
-        yarp::os::Time::turboBoost();
-
         Property p;
-        ConstString configFile = rf.findFile("from");
+        std::string configFile = rf.findFile("from");
         if (configFile!="") p.fromConfigFile(configFile.c_str());
 
         gotoThread = new GotoThread(10,rf,p);

@@ -33,8 +33,6 @@ navigationModule::navigationModule()
 
 bool navigationModule::configure(yarp::os::ResourceFinder &rf)
 {
-    yarp::os::Time::turboBoost();
-
     //open the rpc port
     bool ret = rpcPort.open("/navigationModule/rpc");
     if (ret == false)

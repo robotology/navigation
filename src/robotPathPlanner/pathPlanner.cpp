@@ -99,7 +99,7 @@ void PlannerThread::readTargetFromYarpView()
 
 bool  PlannerThread::updateLocations()
 {
-    std::vector<yarp::os::ConstString> all_locations;
+    std::vector<std::string> all_locations;
     m_iMap->getLocationsList(all_locations);
     Map2DLocation tmp_loc;
     m_locations_list.clear();
@@ -190,8 +190,8 @@ void  PlannerThread::readLaserData()
     if (ret)
     {
         m_laser_map_cells.clear();
-        unsigned int scansize = scan.size();
-        for (unsigned int i = 0; i<scansize; i++)
+        size_t scansize = scan.size();
+        for (size_t i = 0; i<scansize; i++)
         {
             double las_x = 0;
             double las_y = 0;
@@ -366,7 +366,7 @@ void PlannerThread::run()
     /////////////////////////////
     // the finite-state-machine
     /////////////////////////////
-    int path_size = m_current_path->size();
+    size_t path_size = m_current_path->size();
     if (m_planner_status == navigation_status_moving)
     {
         if (m_inner_status == navigation_status_goal_reached)
@@ -686,7 +686,7 @@ bool PlannerThread::getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const
 
 void PlannerThread::sendWaypoint()
 {
-    int path_size = m_current_path->size();
+    size_t path_size = m_current_path->size();
     if (path_size==0)
     {
         yWarning ("Path queue is empty!");
@@ -770,7 +770,7 @@ bool PlannerThread::startPath()
 
     //search for an simpler path (waypoint optimization)
     map_utilites::simplifyPath(m_current_map, m_computed_path, m_computed_simplified_path);
-    yInfo("path size:%d simplified path size:%d time: %.2f", m_computed_path.size(), m_computed_simplified_path.size(), t2 - t1);
+    yInfo("path size:%d simplified path size:%d time: %.2f", (int)m_computed_path.size(), (int)m_computed_simplified_path.size(), t2 - t1);
 
     //choose the path to use
     if (m_use_optimized_path)

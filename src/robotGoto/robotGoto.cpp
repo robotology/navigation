@@ -60,7 +60,7 @@ std::string getStatusAsString(NavigationStatusEnum status)
 }
 
 GotoThread::GotoThread(unsigned int _period, ResourceFinder &_rf, Property options) :
-            RateThread(_period),
+    PeriodicThread(_period),
             m_rf(_rf),
             m_robotCtrl_options(options)
 {
@@ -445,7 +445,7 @@ bool GotoThread::evaluateLocalization()
 
 void GotoThread::evaluateGoalFromTopic()
 {
-    geometry_msgs_PoseStamped* rosGoalData = m_rosGoalInputPort.read(false);
+    yarp::rosmsg::geometry_msgs::PoseStamped* rosGoalData = m_rosGoalInputPort.read(false);
 
     if (rosGoalData != 0)
     {
@@ -488,7 +488,7 @@ void GotoThread::publishCurrentGoal()
     {
         return;
     }
-    geometry_msgs_PoseStamped& goal = m_rosCurrentGoal.prepare();
+    yarp::rosmsg::geometry_msgs::PoseStamped& goal = m_rosCurrentGoal.prepare();
     static int        seq;
     yarp::math::Quaternion q;
     yarp::sig::Vector rpy(3);
@@ -524,10 +524,10 @@ void GotoThread::publishLocalPlan()
         static int                seq;
         double                    radius, angle, distance;
         size_t                    pointCount;
-        nav_msgs_Path&            path = m_localPlan.prepare();
+        yarp::rosmsg::nav_msgs::Path&            path = m_localPlan.prepare();
         yarp::sig::Matrix         map2robotMatrix(4,4);
         map2robotMatrix.zero();
-        geometry_msgs_PoseStamped pose;
+        yarp::rosmsg::geometry_msgs::PoseStamped pose;
         yarp::sig::Vector         pos(4);
 
         //preparing header

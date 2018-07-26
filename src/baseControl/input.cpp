@@ -586,7 +586,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     //- - - read ROS commands - - -
     if (rosInputEnabled)
     {
-        if (geometry_msgs_Twist* rosTwist = rosSubscriberPort_twist.read(false))
+        if (yarp::rosmsg::geometry_msgs::Twist* rosTwist = rosSubscriberPort_twist.read(false))
         {
             Bottle b;
             b.addInt(3);

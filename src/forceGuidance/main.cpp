@@ -105,8 +105,6 @@ public:
         string remoteName;
         string localName;
 
-        Time::turboBoost();
-
         // get params from the RF
         ctrlName=rf.check("local",Value("forceGuidance")).asString();
         robotName=rf.check("robot",Value("ikart")).asString();

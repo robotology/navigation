@@ -76,8 +76,6 @@ public:
         string remoteName;
         string localName;
 
-        Time::turboBoost();
-
         // get params from the RF
         ctrlName=rf.check("local",Value("fakeMobileBaseTest")).asString();
         robotName=rf.check("robot",Value("fakeRobot")).asString();
@@ -92,7 +90,7 @@ public:
         //reads the configuration file
         Property ctrl_options;
 
-        ConstString configFile=rf.findFile("from");
+        std::string configFile=rf.findFile("from");
         if (configFile=="") //--from fakeMobileBaseTest.ini
         {
             yWarning("Cannot find .ini configuration file. By default I'm searching for fakeMobileBaseTest.ini");

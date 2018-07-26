@@ -43,7 +43,7 @@
 #include <yarp/dev/ILocalization2D.h>
 #include <yarp/dev/INavigation2D.h>
 #include <string>
-#include <visualization_msgs_MarkerArray.h>
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 
 #include "map.h"
 
@@ -60,7 +60,7 @@ const double DEG2RAD = M_PI / 180.0;
 
 #define TIMEOUT_MAX 100
 
-class PlannerThread: public yarp::os::RateThread
+class PlannerThread: public yarp::os::PeriodicThread
 {
     protected:
     //parameters affecting navigation behavior

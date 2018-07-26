@@ -42,18 +42,18 @@
 #include <yarp/dev/ILocalization2D.h>
 #include <string>
 #include <math.h>
-#include <visualization_msgs_MarkerArray.h>
-#include <geometry_msgs_PoseStamped.h>
-#include <nav_msgs_Path.h>
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
+#include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
+#include <yarp/rosmsg/nav_msgs/Path.h>
 #include "obstacles.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-typedef yarp::os::Subscriber<geometry_msgs_PoseStamped> rosGoalSubscriber;
-typedef yarp::os::Publisher<geometry_msgs_PoseStamped>  rosGoalPublisher;
-typedef yarp::os::Publisher<nav_msgs_Path>              rosPathPublisher;
+typedef yarp::os::Subscriber<yarp::rosmsg::geometry_msgs::PoseStamped> rosGoalSubscriber;
+typedef yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseStamped>  rosGoalPublisher;
+typedef yarp::os::Publisher<yarp::rosmsg::nav_msgs::Path>              rosPathPublisher;
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -71,7 +71,7 @@ struct target_type
     target_type() {weak_angle = false;}
 };
 
-class GotoThread: public yarp::os::RateThread
+class GotoThread: public yarp::os::PeriodicThread
 {
     /////////////////////////////////////
     //PROPERTIES

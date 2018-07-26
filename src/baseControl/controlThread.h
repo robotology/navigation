@@ -65,7 +65,7 @@ enum control_type_enum
 
 typedef iCub::ctrl::parallelPID parlPID;
 
-class ControlThread : public yarp::os::RateThread
+class ControlThread : public yarp::os::PeriodicThread
 {
 private:
     Property             ctrl_options;

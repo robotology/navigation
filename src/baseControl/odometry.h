@@ -38,10 +38,10 @@
 #include <string>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
-#include <nav_msgs_Odometry.h>
-#include <geometry_msgs_PolygonStamped.h>
-#include <geometry_msgs_TransformStamped.h>
-#include <tf2_msgs_TFMessage.h>
+#include <yarp/rosmsg/nav_msgs/Odometry.h>
+#include <yarp/rosmsg/geometry_msgs/PolygonStamped.h>
+#include <yarp/rosmsg/geometry_msgs/TransformStamped.h>
+#include <yarp/rosmsg/tf2_msgs/TFMessage.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -69,19 +69,19 @@ protected:
 
     //ROS
     bool                                            enable_ROS;
-    yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
+    yarp::os::Publisher<yarp::rosmsg::nav_msgs::Odometry>          rosPublisherPort_odometry;
     std::string                                     odometry_frame_id;
     std::string                                     child_frame_id;
     std::string                                     rosTopicName_odometry;
     yarp::os::NetUint32                             rosMsgCounter;
 
-    yarp::os::Publisher<geometry_msgs_PolygonStamped>          rosPublisherPort_footprint;
+    yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PolygonStamped>          rosPublisherPort_footprint;
     double                                                     footprint_diameter;
     std::string                                                rosTopicName_footprint;
-    geometry_msgs_PolygonStamped                               footprint;
+    yarp::rosmsg::geometry_msgs::PolygonStamped                footprint;
     std::string                                                footprint_frame_id;
 
-    yarp::os::Publisher<tf2_msgs_TFMessage>                    rosPublisherPort_tf;
+    yarp::os::Publisher<yarp::rosmsg::tf2_msgs::TFMessage>                    rosPublisherPort_tf;
 
 protected:
     //estimated cartesian velocity in the fixed odometry reference frame (world)

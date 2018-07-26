@@ -47,8 +47,6 @@ public:
 
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
-        yarp::os::Time::turboBoost();
-
         plannerThread = new PlannerThread(20,rf);
 
         bool ret = rpcPort.open("/robotPathPlanner/rpc");

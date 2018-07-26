@@ -26,7 +26,7 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Subscriber.h>
 #include <yarp/os/Node.h>
-#include <geometry_msgs_Twist.h>
+#include <yarp/rosmsg/geometry_msgs/Twist.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
@@ -116,7 +116,7 @@ private:
 
 protected:
     // ROS input
-    Subscriber<geometry_msgs_Twist>   rosSubscriberPort_twist;
+    Subscriber<yarp::rosmsg::geometry_msgs::Twist>   rosSubscriberPort_twist;
     string                            rosTopicName_twist;
     bool                              useRos;
     bool                              rosInputEnabled;

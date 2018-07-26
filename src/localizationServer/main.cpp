@@ -32,10 +32,10 @@
 #include <yarp/dev/IMap2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IFrameTransform.h>
-#include <visualization_msgs_MarkerArray.h>
-#include <geometry_msgs_PoseStamped.h>
-#include <geometry_msgs_PoseWithCovarianceStamped.h>
-#include <nav_msgs_OccupancyGrid.h>
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
+#include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
+#include <yarp/rosmsg/geometry_msgs/PoseWithCovarianceStamped.h>
+#include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
 
 #include <math.h>
 
@@ -110,8 +110,8 @@ protected:
     yarp::os::Node*                   m_rosNode;
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
-    yarp::os::Publisher<geometry_msgs_PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
-    yarp::os::Publisher<nav_msgs_OccupancyGrid> m_rosPublisher_occupancyGrid;
+    yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
+    yarp::os::Publisher<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosPublisher_occupancyGrid;
 
 public:
     /**
@@ -141,8 +141,6 @@ public:
     */
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
-        yarp::os::Time::turboBoost();
-
         m_rpcPort.open("/"+m_module_name+"/rpc");
         attach(m_rpcPort);
         //attachTerminal();
@@ -547,7 +545,7 @@ public:
                 if (m_rosNode)
                 {
                     double tmp=0;
-                    nav_msgs_OccupancyGrid& ogrid = m_rosPublisher_occupancyGrid.prepare();
+                    yarp::rosmsg::nav_msgs::OccupancyGrid& ogrid = m_rosPublisher_occupancyGrid.prepare();
                     ogrid.clear();
                     ogrid.info.height=m_current_map.height();
                     ogrid.info.width=m_current_map.width();
@@ -590,7 +588,7 @@ public:
         if (m_rosNode)
         {
             //send data to ROS localization module
-            geometry_msgs_PoseWithCovarianceStamped& pos = m_rosPublisher_initial_pose.prepare();
+            yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped& pos = m_rosPublisher_initial_pose.prepare();
             pos.clear();
             pos.header.frame_id=m_frame_robot_id;
             pos.header.seq=0;

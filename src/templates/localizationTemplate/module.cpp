@@ -32,8 +32,6 @@ localizationModule::localizationModule()
 
 bool localizationModule::configure(yarp::os::ResourceFinder &rf)
 {
-    yarp::os::Time::turboBoost();
-
     bool ret = rpcPort.open("/localizationModule/rpc");
     if (ret == false)
     {
