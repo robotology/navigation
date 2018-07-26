@@ -47,7 +47,7 @@ public:
 
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
-        plannerThread = new PlannerThread(20,rf);
+        plannerThread = new PlannerThread(0.020,rf);
 
         bool ret = rpcPort.open("/robotPathPlanner/rpc");
         if (ret == false)

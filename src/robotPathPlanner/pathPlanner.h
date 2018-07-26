@@ -298,10 +298,10 @@ class PlannerThread: public yarp::os::PeriodicThread
     public:
     /**
     * Constructor.
-    * @param _period the main thread period (typical value 20ms)
+    * @param _period the main thread period (typical value 0.020s)
     * @param _rf the resource finder containing the configuration options
     */
-    PlannerThread(unsigned int _period, ResourceFinder &_rf);
+    PlannerThread(double _period, ResourceFinder &_rf);
 
     //methods inherited from yarp::os::RateThread
     virtual void run();

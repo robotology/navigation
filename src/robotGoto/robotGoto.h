@@ -190,11 +190,11 @@ public:
 
     /**
     * Constructor.
-    * @param _period the control loop period (default 20ms)
+    * @param _period the control loop period (default 0.020s)
     * @param _rf the resource finder containing the configuration options (from .ini file)
     * @param options additional configuration options
     */
-    GotoThread(unsigned int _period, ResourceFinder &_rf, Property options);
+    GotoThread(double _period, ResourceFinder &_rf, Property options);
 
     /**
     * Returns robot current position

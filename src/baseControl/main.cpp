@@ -169,8 +169,8 @@ public:
         }
 
         //set the thread rate
-        int period = rf.check("period",Value(20)).asInt();
-        yInfo("baseCtrl thread rate: %d ms.",period);
+        double period = rf.check("period",Value(0.020)).asDouble();
+        yInfo("baseCtrl thread period: %f s.",period);
 
         // the motor control thread
         bool motors_enabled=true;

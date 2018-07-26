@@ -47,7 +47,6 @@ bool navigationModule::configure(yarp::os::ResourceFinder &rf)
     loc_options.put("device", "localization2DClient");
     loc_options.put("local", "/robotGoto/localizationClient");
     loc_options.put("remote", "/localizationServer");
-    loc_options.put("period", 10);
 
     if (pLoc.open(loc_options) == false)
     {

@@ -22,7 +22,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-PlannerThread::PlannerThread(unsigned int _period, ResourceFinder &_rf) :
+PlannerThread::PlannerThread(double _period, ResourceFinder &_rf) :
         PeriodicThread(_period), m_rf(_rf)
 {
     m_planner_status = navigation_status_idle;
@@ -199,7 +199,6 @@ bool PlannerThread::threadInit()
     las_options.put("device", "Rangefinder2DClient");
     las_options.put("local", "/robotPathPlanner/laser:i");
     las_options.put("remote", laser_remote_port);
-    las_options.put("period", "10");
     if (m_pLas.open(las_options) == false)
     {
         yError() << "Unable to open laser driver";

@@ -110,9 +110,9 @@ public:
         double start_time=yarp::os::Time::now();
         bool not_yet_connected=true;
 
-        //set the thread rate
-        int period = rf.check("period",Value(20)).asInt();
-        yInfo("fakeMobileBaseTest thread rate: %d ms.",period);
+        //set the thread period
+        double period = rf.check("period",Value(0.020)).asDouble();
+        yInfo("fakeMobileBaseTest thread period: %f s.",period);
 
         //GENERAL options
         yarp::os::Bottle general_options;
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         yInfo("Possible options: ");
-        yInfo("'period <r>' sets the threads period (default 20ms).");
+        yInfo("'period <r>' sets the threads period (default 0.020s).");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
         yInfo("'holonomic' if set, the robot will be holonomic");
         return 0;

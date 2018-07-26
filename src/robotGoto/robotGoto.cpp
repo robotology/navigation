@@ -59,7 +59,7 @@ std::string getStatusAsString(NavigationStatusEnum status)
     return std::string("unknown");
 }
 
-GotoThread::GotoThread(unsigned int _period, ResourceFinder &_rf, Property options) :
+GotoThread::GotoThread(double _period, ResourceFinder &_rf, Property options) :
     PeriodicThread(_period),
             m_rf(_rf),
             m_robotCtrl_options(options)
@@ -312,7 +312,6 @@ bool GotoThread::threadInit()
     loc_options.put("device", "localization2DClient");
     loc_options.put("local", "/robotGoto/localizationClient");
     loc_options.put("remote", "/localizationServer");
-    loc_options.put("period", 10);
 
     if (m_pLoc.open(loc_options) == false)
     {
@@ -349,7 +348,6 @@ bool GotoThread::threadInit()
     options.put("device", "Rangefinder2DClient");
     options.put("local", "/robotGoto/laser:i");
     options.put("remote", laser_remote_port);
-    options.put("period", 10);
     if (m_pLas.open(options) == false)
     {
         yError() << "Unable to open laser driver";

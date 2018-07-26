@@ -61,7 +61,7 @@ void ControlThread::threadRelease()
 double ControlThread::get_max_linear_vel()  { return max_linear_vel; }
 double ControlThread::get_max_angular_vel() { return max_angular_vel; }
 
-ControlThread::ControlThread (unsigned int _period, ResourceFinder &_rf, Property options) : PeriodicThread(_period), rf(_rf), ctrl_options(options)
+ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property options) : PeriodicThread(_period), rf(_rf), ctrl_options(options)
 {
     rosNode                  = NULL;
     control_board_driver     = 0;
