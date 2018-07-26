@@ -129,7 +129,7 @@ void ControlThread::apply_ratio_limiter (double max, double& linear_speed, doubl
 
 void ControlThread::apply_acceleration_limiter(double& linear_speed, double& angular_speed, double& desired_direction)
 {
-    double period = this->getPeriod()/1000;
+    double period = this->getPeriod();
     angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc*period);
 #if 0
     linear_speed = control_filters::ratelim_filter_0(linear_speed, 8, max_linear_acc*period);
