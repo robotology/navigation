@@ -4,8 +4,7 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-set(PROJECTNAME robotPathPlanner)
-project(${PROJECTNAME})
+project(robotPathPlanner)
 
 file(GLOB folder_source *.cpp)
 file(GLOB folder_header *.h)
@@ -13,12 +12,8 @@ file(GLOB folder_header *.h)
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
 
-include (YarpIDL)
-yarp_add_idl (ROS_MSG "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/visualization_msgs/MarkerArray.msg"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/nav_msgs/OccupancyGrid.msg")
-
-include_directories(${OpenCV_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
-add_executable(${PROJECTNAME} ${folder_source} ${folder_header} ${ROS_MSG})
-target_link_libraries(${PROJECTNAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} ${ICUB_LIBRARIES})
-install(TARGETS ${PROJECTNAME} DESTINATION bin)
+include_directories(${OpenCV_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
+add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} YARP::YARP_rosmsg ${ICUB_LIBRARIES})
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

@@ -4,58 +4,40 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 
 project(navigation)
-if(WIN32)
-    #disable annoying warnings about use of deprecated c functions
-    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
-    add_definitions(/wd4250)
+
+include(GNUInstallDirs)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+if(MSVC)
+    set(CMAKE_DEBUG_POSTFIX "d")
 endif()
 
-# Enable C++11
-include(CheckCXXCompilerFlag)
-unset(CXX11_FLAGS)
-check_cxx_compiler_flag("-std=c++11" CXX_HAS_STD_CXX11)
-if(CXX_HAS_STD_CXX11)
-  set(CXX11_FLAGS "-std=c++11")
-endif()
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED 11)
-if(NOT CMAKE_MINIMUM_REQUIRED_VERSION VERSION_LESS 3.1)
-  message(AUTHOR_WARNING "CMAKE_MINIMUM_REQUIRED_VERSION is now ${CMAKE_MINIMUM_REQUIRED_VERSION}. This check can be removed.")
-endif()
-if(${CMAKE_VERSION} VERSION_LESS 3.1)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS}")
-endif()
 
 #### Find YARP, require that YARP version is at least ICUB_REQYARP_VERSION
-set(ICUB_REQYARP_VERSION_MAJOR "3")
-set(ICUB_REQYARP_VERSION_MINOR "0")
-set(ICUB_REQYARP_VERSION_PATCH "0")
-set(ICUB_REQYARP_VERSION_TWEAK "")
-if(ICUB_REQYARP_VERSION_TWEAK)
-    set(ICUB_REQYARP_VERSION ${ICUB_REQYARP_VERSION_MAJOR}.${ICUB_REQYARP_VERSION_MINOR}.${ICUB_REQYARP_VERSION_PATCH}.${ICUB_REQYARP_VERSION_TWEAK})
-else()
-    set(ICUB_REQYARP_VERSION ${ICUB_REQYARP_VERSION_MAJOR}.${ICUB_REQYARP_VERSION_MINOR}.${ICUB_REQYARP_VERSION_PATCH})
-endif()
-find_package(YARP ${ICUB_REQYARP_VERSION} COMPONENTS OS sig dev math gsl REQUIRED)
+find_package(YARP 3.1 COMPONENTS OS sig dev math gsl rosmsg idl_tools REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
+
+yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
 #### Find iCub 
 find_package(ICUB)
 
-list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
-include(YarpInstallationHelpers)
-
-find_package(ICUBcontrib)
-list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
-include(ICUBcontribHelpers)
-include(ICUBcontribOptions)
-icubcontrib_set_default_prefix()
 
 find_package(OpenCV)
 find_package(GSL)
@@ -64,5 +46,4 @@ find_package(SDL)
 add_subdirectory(src)
 add_subdirectory(app)
 
-icubcontrib_add_uninstall_target()
-
+#icubcontrib_add_uninstall_target()

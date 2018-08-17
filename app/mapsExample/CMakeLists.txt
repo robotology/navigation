@@ -6,4 +6,4 @@
 
 file(GLOB maps ${CMAKE_CURRENT_SOURCE_DIR}/*.*)
 
-yarp_install(FILES ${maps}    DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/mapsExample)
+yarp_install(FILES ${maps}    DESTINATION ${NAVIGATION_CONTEXTS_INSTALL_DIR}/mapsExample)

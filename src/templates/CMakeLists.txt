@@ -5,4 +5,5 @@
 #
 
 add_subdirectory(navigationTemplate)
+add_subdirectory(navigationDeviceTemplate)
 add_subdirectory(localizationTemplate)
