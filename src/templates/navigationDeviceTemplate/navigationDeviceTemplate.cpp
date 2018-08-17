@@ -123,7 +123,7 @@ bool navigationDeviceTemplate::getRelativeLocationOfCurrentTarget(double& x, dou
     return true;
 }
 
-bool navigationDeviceTemplate::getNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+bool navigationDeviceTemplate::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;
@@ -156,4 +156,10 @@ bool navigationDeviceTemplate::resumeNavigation()
     }
     yError() << "Unable to resume any paused navigation task";
     return false;
+}
+
+bool navigationDeviceTemplate::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+{
+    //### TO BE IMPLEMENTED BY USER
+    return true;
 }

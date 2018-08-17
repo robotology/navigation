@@ -217,3 +217,20 @@ bool rosNavigator::resumeNavigation()
     yError() << "Unable to resume any paused navigation task";
     return false;
 }
+
+bool rosNavigator::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+{
+    yDebug() << "Not yet implemented";
+    return false;
+}
+
+/**
+* Returns the current waypoint pursued by the navigation algorithm
+* @param curr_waypoint the current waypoint pursued by the navigation algorithm
+* @return true/false
+*/
+bool rosNavigator::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+{
+    yDebug() << "Not yet implemented";
+    return false;
+}

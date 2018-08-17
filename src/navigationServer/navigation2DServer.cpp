@@ -236,7 +236,7 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
             else if (request == VOCAB_NAV_GET_NAVIGATION_WAYPOINTS)
             {
                 std::vector<yarp::dev::Map2DLocation> locs;
-                bool b = iNav_ctrl->getNavigationWaypoints(locs);
+                bool b = iNav_ctrl->getAllNavigationWaypoints(locs);
                 if (b)
                 {
                     reply.addVocab(VOCAB_OK);
@@ -273,6 +273,20 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
                     //no waypoint available
                     reply.addVocab(VOCAB_OK);
                     reply.addString("invalid");
+                }
+            }
+            else if (request == VOCAB_GET_NAV_MAP)
+            {
+                yarp::dev::MapGrid2D map;
+                if (iNav_ctrl->getCurrentNavigationMap((yarp::dev::NavigationMapTypeEnum)(command.get(1).asInt()), map))
+                {
+                    reply.addVocab(VOCAB_OK);
+                    yarp::os::Bottle& mapbot = reply.addList();
+                    Property::copyPortable(map, mapbot);
+                }
+                else
+                {
+                    reply.addVocab(VOCAB_ERR);
                 }
             }
             else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
