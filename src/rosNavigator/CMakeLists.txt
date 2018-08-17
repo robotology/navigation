@@ -6,8 +6,10 @@ yarp_prepare_plugin(rosNavigator
 
 yarp_add_idl (ROS_MSG "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/actionlib_msgs/GoalID.msg"
                       "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/actionlib_msgs/GoalStatusArray.msg"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/move_base_msgs/MoveBaseActionGoal.msg")
-
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/move_base_msgs/MoveBaseActionGoal.msg"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/move_base_msgs/MoveBaseActionFeedback.msg"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../ros_messages/move_base_msgs/MoveBaseActionResult.msg")
+                                            
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(rosNavigator rosNavigator.h
