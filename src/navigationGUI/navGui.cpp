@@ -112,6 +112,7 @@ bool  NavGuiThread::updateLocations()
 bool  NavGuiThread::readMaps()
 {
     m_iNav->getCurrentNavigationMap(yarp::dev::global_map, m_current_map);
+    return true;
 }
 
 bool  NavGuiThread::readLocalizationData()
@@ -310,13 +311,15 @@ void NavGuiThread::draw_map()
         m_navigation_status != navigation_status_error &&
         m_navigation_status != navigation_status_failing)
     {
-        map_utilites::drawPath(map_with_path, start, m_current_path, *m_current_path, color);
+//@@@@@@@@@@@@@@@@@@@@@        map_utilites::drawPath(map_with_path, start, m_current_path, *m_current_path, color);
     }
 
     //draw locations
     static IplImage* map_with_location = 0;
     prepare_image(map_with_location,map_with_path);
 
+
+    //finished, send to port
     map_utilites::sendToPort(&m_port_map_output, map_with_location);
 }
 

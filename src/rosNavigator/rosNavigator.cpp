@@ -154,12 +154,31 @@ bool rosNavigator::threadInit()
 
 void rosNavigator::threadRelease()
 {
-    //### TO BE IMPLEMENTED BY USER
+    m_pLoc.close();
 }
 
 void rosNavigator::run()
 {
     bool b = m_iLoc->getCurrentPosition(m_current_position);
+
+    yarp::rosmsg::move_base_msgs::MoveBaseActionFeedback* feedback = m_rosPublisher_feedback.read(false);
+    if (feedback)
+    {
+        switch (feedback->status.status)
+        {
+           case feedback->status.PENDING: {} break;
+           case feedback->status.ACTIVE: {} break;
+           case feedback->status.PREEMPTED: {} break;
+           case feedback->status.SUCCEEDED: {} break;
+           case feedback->status.ABORTED: {} break;
+           case feedback->status.REJECTED: {} break;
+           case feedback->status.PREEMPTING: {} break;
+           case feedback->status.RECALLING: {} break;
+           case feedback->status.RECALLED: {} break;
+           case feedback->status.LOST: {} break;
+           default: {} break;
+        }
+    }
 }
 
 bool rosNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
@@ -231,7 +250,11 @@ bool rosNavigator::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
 
 bool rosNavigator::stopNavigation()
 {
-    //### TO BE IMPLEMENTED BY USER
+    yarp::rosmsg::actionlib_msgs::GoalID& goal_id =  m_rosPublisher_cancel.prepare();
+    goal_id.clear();
+    goal_id.id = "0";
+    m_rosPublisher_cancel.write();
+
     m_navigation_status = yarp::dev::navigation_status_idle;
     return true;
 }
