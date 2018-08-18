@@ -13,7 +13,6 @@ add_subdirectory(baseControl)
 add_subdirectory(localizationServer)
 add_subdirectory(mapper2D)
 add_subdirectory(mapsExample)
-add_subdirectory(fakeMobileBaseTest)
 add_subdirectory(baseControl_SIM)
 add_subdirectory(navigationGUI)
 
