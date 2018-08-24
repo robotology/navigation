@@ -87,6 +87,8 @@ GotoThread::GotoThread(double _period, Searchable &_cfg) :
     m_robot_laser_y = 0;
     m_robot_laser_t = 0;
     m_rosNode = 0;
+    m_stats_time_curr = yarp::os::Time::now();
+    m_stats_time_last = yarp::os::Time::now();
 }
 
 bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)

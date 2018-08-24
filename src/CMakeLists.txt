@@ -16,6 +16,8 @@ yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
                                  DOC "devices plugins")
 add_subdirectory(navigationServer)
 add_subdirectory(rosNavigator)
+add_subdirectory(robotGotoDevice)
+add_subdirectory(robotPathPlannerDevice)
 
 yarp_end_plugin_library(navmod)
 
