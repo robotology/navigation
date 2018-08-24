@@ -31,6 +31,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace std;
 
 #ifndef RAD2DEG
 #define RAD2DEG 180.0/M_PI
@@ -83,25 +84,28 @@ bool navigation2DServer::open(Searchable& config)
 {
     Property params;
     params.fromString(config.toString().c_str());
+    yDebug() << "navigation2DServer configuration: \n" << config.toString().c_str();
 
     if (!config.check("period"))
     {
-        yError() << "navigation2DServer: missing 'period' parameter. Check you configuration file\n";
-        return false;
+        yInfo() << "navigation2DServer: missing 'period' parameter. Using default value: 0.010";
+        m_period = 0.010;
     }
     else
-        m_period = config.find("period").asInt32() / 1000.0;
+    {
+        m_period = config.find("period").asDouble();
+    }
 
+    string local_name = "/navigationServer";
     if (!config.check("name"))
     {
-        yError() << "navigation2DServer: missing 'name' parameter. Check you configuration file; it must be like:";
-        yError() << "   name:         full name of the port, like /robotName/deviceId/sensorType:o";
-        return false;
+        yInfo() << "navigation2DServer: missing 'name' parameter. Using default value: /navigationServer";
     }
     else
     {
-        m_rpcPortName = m_streamingPortName + "/rpc:i";
     }
+    m_rpcPortName = local_name + "/rpc";
+    m_streamingPortName = local_name + "/streaming:o";
 
     if (!initialize_YARP(config))
     {

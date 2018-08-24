@@ -42,15 +42,25 @@ void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 bool robotGotoDev :: open(yarp::os::Searchable& config)
 {
 #if 1
+
+    yDebug() << "config configuration: \n" << config.toString().c_str();
+
+    std::string context_name = "robotGoto";
+    std::string file_name = "robotGoto_cer.ini";
+    
+    if (config.check("context"))   context_name = config.find("context").asString();
+    if (config.check("from")) file_name    = config.find("from").asString();
+
     yarp::os::ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultConfigFile("robotGoto_cer.ini");           //overridden by --from parameter
-    rf.setDefaultContext("robotGoto");                  //overridden by --context parameter
-  //  rf.configure(argc, argv);
+    rf.setDefaultContext(context_name.c_str());
+    rf.setDefaultConfigFile(file_name.c_str());
 
     Property p;
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
+    yDebug() << "robotGotoDev configuration: \n" << p.toString().c_str();
+
 #else
     Property p;
     p.fromString(config.toString());
@@ -356,7 +366,7 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     }
     else
     {
-        yError() << "Invalid command type";
+        yError() << "RobotGotoDev: Received invalid command type on RPC port";
         reply.addVocab(VOCAB_ERR);
     }
 

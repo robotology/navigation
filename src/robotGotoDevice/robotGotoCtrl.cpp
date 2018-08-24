@@ -63,7 +63,6 @@ GotoThread::GotoThread(double _period, Searchable &_cfg) :
     PeriodicThread(_period),
             m_cfg(_cfg)
 {
-    yDebug() << m_cfg.toString();
     yarp::os::Time::now();
     m_status = navigation_status_idle;
     m_obstacle_handler = 0;
@@ -372,16 +371,10 @@ bool GotoThread::threadInit()
 
     //automatic connections for debug
     bool b = true;
-    b = yarp::os::Network::connect("/robot/laser:o", "/yarpLaserScannerGui/laser:i");
-    b = yarp::os::Network::connect("/robotGoto/gui:o", "/yarpLaserScannerGui/nav_display:i");
+    b = yarp::os::Network::connect("/robotGoto/gui:o", "/yarpLaserScannerGui/nav_display:i","udp",false);
 
     //automatic port connections
-    b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i");
-
-    /*
-    b = Network::connect((localName+"/commands:o").c_str(),"/robot/control:i", "udp", false);
-    if (!b) {yError ("Unable to connect the output command port!"); return false;}
-    */
+    b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i","udp",false);
 
     return true;
 }
@@ -647,7 +640,7 @@ void GotoThread::saturateRobotControls()
 void GotoThread::run()
 {
     double m_stats_time_curr = yarp::os::Time::now();
-    if (m_stats_time_curr - m_stats_time_last > 1.0)
+    if (m_stats_time_curr - m_stats_time_last > 5.0)
     {
         m_stats_time_last = m_stats_time_curr;
         bool err = false;
@@ -663,7 +656,9 @@ void GotoThread::run()
         }
 
         if (err == false)
-            yInfo("module running, ALL ok");
+        {
+            yInfo() << "robotGoto running, ALL ok, status:" << getStatusAsString(m_status);
+        }
     }
 
     m_mutex.wait();
