@@ -154,7 +154,9 @@ bool NavGuiThread::threadInit()
     Property nav_options;
     nav_options.put("device", "navigation2DClient");
     nav_options.put("local", m_local_name_prefix + "/navigation2DClient");
-    nav_options.put("remote", m_remote_navigation);
+    nav_options.put("navigation_server", m_remote_navigation);
+    nav_options.put("map_locations_server", m_remote_map);
+    nav_options.put("localization_server", m_remote_localization);
     if (m_pNav.open(nav_options) == false)
     {
         yError() << "Unable to open navigation2DClient";

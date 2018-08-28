@@ -108,8 +108,6 @@ class NavGuiThread: public yarp::os::PeriodicThread
     //storage for the environment map
     yarp::dev::MapGrid2D m_current_map;
     yarp::dev::MapGrid2D m_temporary_obstacles_map;
-    yarp::dev::MapGrid2D m_augmented_map;
-
     std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
 
     //the path computed by the planner, stored a sequence of waypoints to be reached

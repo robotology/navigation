@@ -129,6 +129,9 @@ bool  NavGuiThread::readLocalizationData()
         return false;
     }
 
+    m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::global_map, m_current_map);
+    m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
+
     return true;
 }
 
@@ -190,17 +193,6 @@ void  NavGuiThread::readLaserData()
     {
         m_laser_timeout_counter++;
     }
-
-    //transform the laser measurement in a temporary map
-    for (size_t y=0; y< m_temporary_obstacles_map.height(); y++)
-        for (size_t x=0; x< m_temporary_obstacles_map.width(); x++)
-             m_temporary_obstacles_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
-    for (size_t i=0; i< m_laser_map_cells.size(); i++)
-    {
-        m_temporary_obstacles_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
-    }
-    //enlarge the laser scanner data
-    m_temporary_obstacles_map.enlargeObstacles(m_robot_radius);
 }
 
 bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_image)
@@ -311,7 +303,17 @@ void NavGuiThread::draw_map()
         m_navigation_status != navigation_status_error &&
         m_navigation_status != navigation_status_failing)
     {
-//@@@@@@@@@@@@@@@@@@@@@        map_utilites::drawPath(map_with_path, start, m_current_path, *m_current_path, color);
+        std::queue <MapGrid2D::XYCell> all_waypoints_cell;
+        for (int i = 0; i < m_all_waypoints.size(); i++)
+        {
+            MapGrid2D::XYWorld curr_waypoint_world(m_all_waypoints[i].x, m_all_waypoints[i].y);
+            MapGrid2D::XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+            all_waypoints_cell.push(curr_waypoint_cell);
+        }
+
+        MapGrid2D::XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
+        MapGrid2D::XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+        map_utilites::drawPath(map_with_path, start, curr_waypoint_cell, all_waypoints_cell, color);
     }
 
     //draw locations
