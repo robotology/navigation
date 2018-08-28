@@ -51,9 +51,9 @@ class robotPathPlannerDev : public yarp::dev::DeviceDriver,
                             public yarp::dev::INavigation2DControlActions
 {
 public:
-    PlannerThread     *plannerThread;
-    robotPathPlannerRPCHandler rpcPortHandler;
-    yarp::os::Port      rpcPort;
+    PlannerThread*                 m_plannerThread;
+    robotPathPlannerRPCHandler     m_rpcPortHandler;
+    yarp::os::Port                 m_rpcPort;
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;

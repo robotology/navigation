@@ -116,15 +116,13 @@ class PlannerThread: public yarp::os::PeriodicThread
     ILocalization2D*                                       m_iLoc;
 
     //yarp ports
-    BufferedPort<yarp::os::Bottle>                         m_port_status_input;
-    BufferedPort<yarp::os::Bottle>                         m_port_yarpview_target_input;
-    BufferedPort<yarp::os::Bottle>                         m_port_yarpview_target_output;
     BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > m_port_map_output;
     BufferedPort<yarp::os::Bottle>                         m_port_status_output;
     RpcClient                                              m_port_commands_output;
-    yarp::dev::PolyDriver                                  p_innerNav;
-    yarp::dev::INavigation2DControlActions*                i_innerNav_ctrl;
-    yarp::dev::INavigation2DTargetActions*                 i_innerNav_target;
+    yarp::dev::PolyDriver                                  m_pInnerNav;
+    yarp::dev::INavigation2DControlActions*                m_iInnerNav_ctrl;
+    yarp::dev::INavigation2DTargetActions*                 m_iInnerNav_target;
+    std::string                                            m_localNavigatorPlugin_name;
 
     //internal data
     Searchable                             &m_cfg;
@@ -289,10 +287,13 @@ class PlannerThread: public yarp::os::PeriodicThread
     */
     void          getTimeouts(int& localiz, int& laser, int& inner_status);
 
+    bool          getCurrentWaypoint(yarp::dev::Map2DLocation &loc) const;
+    bool          getCurrentPath(std::vector<yarp::dev::Map2DLocation>& path) const;
+    bool          getCurrentMap(yarp::dev::MapGrid2D& current_map) const;
+
     private:
     bool          startPath();
     void          sendWaypoint();
-    void          readTargetFromYarpView();
     bool          readLocalizationData();
     void          readLaserData();
     bool          readInnerNavigationStatus();

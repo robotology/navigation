@@ -36,28 +36,37 @@
 
 robotPathPlannerDev::robotPathPlannerDev()
 {
-    plannerThread=NULL;
+    m_plannerThread=NULL;
 }
 
 bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 {
 #if 1
+    yDebug() << "config configuration: \n" << config.toString().c_str();
+
+    std::string context_name = " robotPathPlanner";
+    std::string file_name = " robotPathPlanner_cer.ini";
+
+    if (config.check("context"))   context_name = config.find("context").asString();
+    if (config.check("from")) file_name = config.find("from").asString();
+
     yarp::os::ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultConfigFile("robotGoto_cer.ini");           //overridden by --from parameter
-    rf.setDefaultContext("robotGoto");                  //overridden by --context parameter
-                                                        //  rf.configure(argc, argv);
+    rf.setDefaultContext(context_name.c_str());
+    rf.setDefaultConfigFile(file_name.c_str());
 
     Property p;
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
+    yDebug() << "robotPathPlannerDev configuration: \n" << p.toString().c_str();
 #else
     Property p;
     p.fromString(config.toString());
 #endif
-    plannerThread = new PlannerThread(0.020,p);
 
-    bool ret = rpcPort.open("/robotPathPlanner/rpc");
+    m_plannerThread = new PlannerThread(0.020,p);
+
+    bool ret = m_rpcPort.open("/robotPathPlanner/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";
@@ -66,9 +75,9 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 //    attach(rpcPort);//@@@@@@@@@
     //attachTerminal();
 
-    if (!plannerThread->start())
+    if (!m_plannerThread->start())
     {
-        delete plannerThread;
+        delete m_plannerThread;
         return false;
     }
 
@@ -77,13 +86,13 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 
 bool robotPathPlannerDev::close()
 {
-    rpcPort.interrupt();
-    rpcPort.close();
+    m_rpcPort.interrupt();
+    m_rpcPort.close();
 
     //gotoThread->shutdown();
-    plannerThread->stop();
-    delete plannerThread;
-    plannerThread=NULL;
+    m_plannerThread->stop();
+    delete m_plannerThread;
+    m_plannerThread=NULL;
 
     return true;
 }
@@ -93,12 +102,12 @@ bool robotPathPlannerRPCHandler::respond(const yarp::os::Bottle& command, yarp::
 {
     reply.clear(); 
 
-    interface->plannerThread->m_mutex.wait();
+    interface->m_plannerThread->m_mutex.wait();
     if (command.get(0).isString())
     {
         if (command.get(0).asString()=="quit")
         {
-            interface->plannerThread->m_mutex.post();
+            interface->m_plannerThread->m_mutex.post();
             return false;
         }
 
@@ -127,14 +136,14 @@ bool robotPathPlannerRPCHandler::respond(const yarp::os::Bottle& command, yarp::
         yError() << "Invalid command type";
         reply.addVocab(VOCAB_ERR);
     }
-    interface->plannerThread->m_mutex.post();
+    interface->m_plannerThread->m_mutex.post();
     return true;
 }
 
 
 bool robotPathPlannerDev::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
 {
-    bool b = plannerThread->setNewAbsTarget(loc);
+    bool b = m_plannerThread->setNewAbsTarget(loc);
     return b;
 }
 
@@ -144,7 +153,7 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
     v.push_back(x);
     v.push_back(y);
     v.push_back(theta);
-    bool b = plannerThread->setNewRelTarget(v);
+    bool b = m_plannerThread->setNewRelTarget(v);
     return b;
 }
 
@@ -153,20 +162,20 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
     yarp::sig::Vector v;
     v.push_back(x);
     v.push_back(y);
-    bool b = plannerThread->setNewRelTarget(v);
+    bool b = m_plannerThread->setNewRelTarget(v);
     return b;
 }
 
 bool robotPathPlannerDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
 {
-    plannerThread->getCurrentAbsTarget(target);
+    m_plannerThread->getCurrentAbsTarget(target);
     return true;
 }
 
 bool robotPathPlannerDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
     Map2DLocation loc;
-    plannerThread->getCurrentRelTarget(loc);
+    m_plannerThread->getCurrentRelTarget(loc);
     x=loc.x;
     y=loc.y;
     theta=loc.theta;
@@ -175,42 +184,53 @@ bool robotPathPlannerDev::getRelativeLocationOfCurrentTarget(double& x, double& 
 
 bool robotPathPlannerDev::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
 {
-     int nav_status = plannerThread->getNavigationStatusAsInt();
+     int nav_status = m_plannerThread->getNavigationStatusAsInt();
      status = (yarp::dev::NavigationStatusEnum)(nav_status);
      return true;
 }
 
 bool robotPathPlannerDev::stopNavigation()
 {
-     bool b = plannerThread->stopMovement();
+     bool b = m_plannerThread->stopMovement();
      return true;
 }
 
 bool robotPathPlannerDev::suspendNavigation(double time)
 {
-     bool b = plannerThread->pauseMovement(time);
+     bool b = m_plannerThread->pauseMovement(time);
      return b;
 }
 
 bool robotPathPlannerDev::resumeNavigation()
 {
-     bool b = plannerThread->resumeMovement();
+     bool b = m_plannerThread->resumeMovement();
      return b;
 }
 
 bool robotPathPlannerDev::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
 {
-    return false; //@@@
+    bool b = m_plannerThread->getCurrentPath(waypoints);
+    return b;
 }
 
 bool robotPathPlannerDev::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
 {
-    return false; //@@@
+    bool b = m_plannerThread->getCurrentWaypoint(curr_waypoint);
+    return b;
 }
 
 bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
 {
-    return false; //@@@
+    if (map_type == yarp::dev::NavigationMapTypeEnum::global_map)
+    {
+        m_plannerThread->getCurrentMap(map);
+        return true;
+    }
+    else if (map_type == yarp::dev::NavigationMapTypeEnum::local_map)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
@@ -222,8 +242,8 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
         loc.y = command.get(2).asDouble();
         if (command.size() == 4) { loc.theta = command.get(3).asDouble(); }
         else { loc.theta = nan(""); }
-        loc.map_id = plannerThread->getCurrentMapId();
-        plannerThread->setNewAbsTarget(loc);
+        loc.map_id = m_plannerThread->getCurrentMapId();
+        m_plannerThread->setNewAbsTarget(loc);
         reply.addString("new absolute target received");
     }
 
@@ -234,14 +254,14 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
         v.push_back(command.get(2).asDouble());
         if (command.size() == 4) { v.push_back(command.get(3).asDouble()); }
         else { v.push_back(nan("")); }
-        plannerThread->setNewRelTarget(v);
+        m_plannerThread->setNewRelTarget(v);
         reply.addString("new relative target received");
     }
 
     else if (command.get(0).isString() && command.get(0).asString() == "goto")
     {
         std::string location_name = command.get(1).asString();
-        if (plannerThread->gotoLocation(location_name))
+        if (m_plannerThread->gotoLocation(location_name))
         {
             reply.addString("goto done");
         }
@@ -254,21 +274,21 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
     else if (command.get(0).isString() && command.get(0).asString() == "store_current_location")
     {
         std::string location_name = command.get(1).asString();
-        plannerThread->storeCurrentLocation(location_name);
+        m_plannerThread->storeCurrentLocation(location_name);
         reply.addString("store_current_location done");
     }
 
     else if (command.get(0).isString() && command.get(0).asString() == "delete_location")
     {
         std::string location_name = command.get(1).asString();
-        plannerThread->deleteLocation(location_name);
+        m_plannerThread->deleteLocation(location_name);
         reply.addString("delete_location done");
     }
 
     else if (command.get(0).isString() && command.get(0).asString() == "get_last_target")
     {
         string last_target;
-        bool b = plannerThread->getLastTarget(last_target);
+        bool b = m_plannerThread->getLastTarget(last_target);
         if (b)
         {
             reply.addString(last_target);
@@ -284,14 +304,14 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
     {
         if (command.get(1).asString() == "navigation_status")
         {
-            string s = plannerThread->getNavigationStatusAsString();
+            string s = m_plannerThread->getNavigationStatusAsString();
             reply.addString(s.c_str());
         }
     }
     else if (command.get(0).isString() && command.get(0).asString() == "stop")
 
     {
-        plannerThread->stopMovement();
+        m_plannerThread->stopMovement();
         reply.addString("Stopping movement.");
     }
     else if (command.get(0).isString() && command.get(0).asString() == "pause")
@@ -299,24 +319,24 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
         double time = -1;
         if (command.size() > 1)
             time = command.get(1).asDouble();
-        plannerThread->pauseMovement(time);
+        m_plannerThread->pauseMovement(time);
         reply.addString("Pausing.");
     }
     else if (command.get(0).isString() && command.get(0).asString() == "resume")
     {
-        plannerThread->resumeMovement();
+        m_plannerThread->resumeMovement();
         reply.addString("Resuming.");
     }
     else if (command.get(0).isString() && command.get(0).asString() == "draw_locations")
     {
         if (command.get(1).asInt() == 1)
         {
-            plannerThread->m_enable_draw_all_locations = true;
+            m_plannerThread->m_enable_draw_all_locations = true;
             yDebug() << "locations drawing enabled";
         }
         else
         {
-            plannerThread->m_enable_draw_all_locations = false;
+            m_plannerThread->m_enable_draw_all_locations = false;
             yDebug() << "locations drawing disabled";
         }
     }
@@ -324,12 +344,12 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
     {
         if (command.get(1).asInt() == 1)
         {
-            plannerThread->m_enable_draw_enlarged_scans = true;
+            m_plannerThread->m_enable_draw_enlarged_scans = true;
             yDebug() << "enlarged scans drawing enabled";
         }
         else
         {
-            plannerThread->m_enable_draw_enlarged_scans = false;
+            m_plannerThread->m_enable_draw_enlarged_scans = false;
             yDebug() << "enlarged scans drawing disabled";
         }
     }

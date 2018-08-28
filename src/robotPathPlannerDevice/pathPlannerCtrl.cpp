@@ -48,55 +48,6 @@ using namespace yarp::dev;
 #define DEG2RAD M_PI/180
 #endif
 
-void PlannerThread::readTargetFromYarpView()
-{
-    yarp::os::Bottle *gui_targ = m_port_yarpview_target_input.read(false);
-    if (gui_targ)
-    {
-        if (gui_targ->size() == 2)
-        {
-            MapGrid2D::XYCell c_start;
-            c_start.x = (*gui_targ).get(0).asInt();
-            c_start.y = (*gui_targ).get(1).asInt();
-            yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_start));
-            yInfo("selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
-            yarp::os::Bottle& out = m_port_yarpview_target_output.prepare();
-            out.clear();
-            out.addString("gotoAbs");
-            out.addDouble(v[0]);
-            out.addDouble(v[1]);
-            m_port_yarpview_target_output.write();
-        }
-        else if (gui_targ->size() == 4)
-        {
-            MapGrid2D::XYCell c_start_gui;
-            MapGrid2D::XYCell c_end_gui;
-            MapGrid2D::XYWorld c_start_world;
-            MapGrid2D::XYWorld c_end_world;
-            c_start_gui.x = (*gui_targ).get(0).asInt();
-            c_start_gui.y = (*gui_targ).get(1).asInt();
-            c_end_gui.x = (*gui_targ).get(2).asInt();
-            c_end_gui.y = (*gui_targ).get(3).asInt();
-            c_start_world = (m_current_map.cell2World(c_start_gui));
-            c_end_world = (m_current_map.cell2World(c_end_gui));
-            double angle = atan2(c_end_world.y - c_start_world.y, c_end_world.x - c_start_world.x) * 180.0 / M_PI;
-            yarp::sig::Vector v = static_cast<yarp::sig::Vector>(c_start_world);
-            yInfo("selected point is located at (%6.3f, %6.3f), angle: %6.3f", v[0], v[1], angle);
-            yarp::os::Bottle& out = m_port_yarpview_target_output.prepare();
-            out.clear();
-            out.addString("gotoAbs");
-            out.addDouble(v[0]);
-            out.addDouble(v[1]);
-            out.addDouble(angle);
-            m_port_yarpview_target_output.write();
-        }
-        else
-        {
-            yError() << "Received data with an invalid format.";
-        }
-    }
-}
-
 bool  PlannerThread::updateLocations()
 {
     std::vector<std::string> all_locations;
@@ -164,7 +115,7 @@ bool  PlannerThread::readInnerNavigationStatus()
 
     //read the internal navigation status
     NavigationStatusEnum inner_status;
-    i_innerNav_ctrl->getNavigationStatus(inner_status);
+    m_iInnerNav_ctrl->getNavigationStatus(inner_status);
     m_inner_status = inner_status;
     if (m_inner_status == navigation_status_error)
     {
@@ -346,7 +297,7 @@ void PlannerThread::draw_map()
 void PlannerThread::run()
 {
     double m_stats_time_curr = yarp::os::Time::now();
-    if (m_stats_time_curr - m_stats_time_last > 1.0)
+    if (m_stats_time_curr - m_stats_time_last > 5.0)
     {
         m_stats_time_last = m_stats_time_curr;
         bool err = false;
@@ -366,12 +317,11 @@ void PlannerThread::run()
             err = true;
         }
         if (err == false)
-            yInfo() << "module running, ALL ok. Navigation status:" << this->getNavigationStatusAsString();
+            yInfo() << "robotPathPlanner running, ALL ok. Navigation status:" << this->getNavigationStatusAsString();
     }
     
     m_mutex.wait();
     //double check1 = yarp::os::Time::now();
-    readTargetFromYarpView();
     readLocalizationData();
     readLaserData();
     //double check2 = yarp::os::Time::now();
@@ -689,6 +639,51 @@ void PlannerThread::run()
     m_mutex.post();
 }
 
+bool PlannerThread::getCurrentPath(std::vector<yarp::dev::Map2DLocation>& path) const
+{
+    if (m_current_path != NULL)
+    {
+        std::queue<MapGrid2D::XYCell> cells_path = *(m_current_path);
+        while (cells_path.size() != 0)
+        {
+            MapGrid2D::XYCell cell = cells_path.front();
+            Map2DLocation loc;
+            loc.map_id = m_current_map.getMapName();
+            MapGrid2D::XYWorld w = m_current_map.cell2World(cell);
+            loc.x = w.x;
+            loc.y = w.y;
+            loc.theta = 0;
+            path.push_back(loc);
+            cells_path.pop();
+        }
+
+        return true;
+    }
+    return false;
+}
+
+bool PlannerThread::getCurrentWaypoint(yarp::dev::Map2DLocation &loc) const
+{
+    if (m_current_path->size() > 0)
+    {
+        yarp::dev::MapGrid2D::XYCell c = m_current_path->front();
+        loc.map_id = m_current_map.getMapName();
+        yarp::dev::MapGrid2D::XYWorld w = m_current_map.cell2World(c);
+        loc.x = w.x;
+        loc.y = w.y;
+        loc.theta = 0;
+        return true;
+    }
+    yInfo() << "robotPathPlanner::getCurrentWaypoint(): info not available, no waypoint set";
+    return false;
+}
+
+bool PlannerThread::getCurrentMap(yarp::dev::MapGrid2D& map) const
+{
+    map = m_current_map;
+    return true;
+}
+
 bool PlannerThread::getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const
 {
     if (m_current_path == NULL)
@@ -735,11 +730,11 @@ void PlannerThread::sendWaypoint()
         loc.theta = m_final_goal.theta;
     }
     yDebug("sending command: %s", loc.toString().c_str());
-    i_innerNav_target->gotoTargetByAbsoluteLocation(loc);
+    m_iInnerNav_target->gotoTargetByAbsoluteLocation(loc);
 
     //get inner navigation status
     NavigationStatusEnum inner_status;
-    i_innerNav_ctrl->getNavigationStatus(inner_status);
+    m_iInnerNav_ctrl->getNavigationStatus(inner_status);
     m_inner_status = inner_status;
 }
 
