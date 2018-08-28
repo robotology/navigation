@@ -257,7 +257,10 @@ bool robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
     yarp::sig::Vector v;
     v.push_back(loc.x);
     v.push_back(loc.y);
-    if (loc.theta != std::nan("")) v.push_back(loc.theta); //@@@check this
+    if (std::isnan(loc.theta)==false)
+    {
+        v.push_back(loc.theta);
+    }
     bool b = true;
     gotoThread->setNewAbsTarget(v);
     return b;
