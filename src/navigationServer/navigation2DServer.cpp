@@ -246,7 +246,7 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
                     reply.addVocab(VOCAB_OK);
                     for (size_t i = 0; i < locs.size(); i++)
                     {
-                        Bottle waypoint = reply.addList();
+                        Bottle& waypoint = reply.addList();
                         waypoint.addString(locs[i].map_id);
                         waypoint.addFloat64(locs[i].x);
                         waypoint.addFloat64(locs[i].y);
@@ -282,7 +282,7 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
             else if (request == VOCAB_GET_NAV_MAP)
             {
                 yarp::dev::MapGrid2D map;
-                if (iNav_ctrl->getCurrentNavigationMap((yarp::dev::NavigationMapTypeEnum)(command.get(1).asInt()), map))
+                if (iNav_ctrl->getCurrentNavigationMap((yarp::dev::NavigationMapTypeEnum)(command.get(2).asInt()), map))
                 {
                     reply.addVocab(VOCAB_OK);
                     yarp::os::Bottle& mapbot = reply.addList();
@@ -322,6 +322,18 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
             yError() << "Invalid vocab received";
             reply.addVocab(VOCAB_ERR);
         }
+    }
+    else if (command.get(0).asString() == "help")
+    {
+        reply.addVocab(Vocab::encode("many"));
+        reply.addString("Available commands are:");
+        reply.addString("stop");
+        reply.addString("quit");
+    }
+    else if (command.get(0).asString() == "stop")
+    {
+        iNav_ctrl->stopNavigation();
+        reply.addVocab(VOCAB_OK);
     }
     else
     {
