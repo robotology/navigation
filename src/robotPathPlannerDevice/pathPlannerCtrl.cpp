@@ -83,7 +83,9 @@ bool  PlannerThread::readLocalizationData()
         bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
         if (map_get_succesfull)
         {
+            m_temporary_obstacles_map_mutex.lock();
             m_temporary_obstacles_map = m_current_map;
+            m_temporary_obstacles_map_mutex.unlock();
             yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
             m_current_map.enlargeObstacles(m_robot_radius);
             m_augmented_map = m_current_map;
@@ -162,15 +164,23 @@ void  PlannerThread::readLaserData()
     }
 
     //transform the laser measurement in a temporary map
-    for (size_t y=0; y< m_temporary_obstacles_map.height(); y++)
-        for (size_t x=0; x< m_temporary_obstacles_map.width(); x++)
-             m_temporary_obstacles_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
+    //the purpose of the following copy of m_temporary_obstacles_map in temp_map is to minimize the duration of the critical section
+    //protected by the mutex. Indeed enlargeObstacles() can take some time and should be outside the mutex.
+    m_temporary_obstacles_map_mutex.lock();
+    yarp::dev::MapGrid2D temp_map = m_temporary_obstacles_map;
+    m_temporary_obstacles_map_mutex.unlock();
+    for (size_t y=0; y< temp_map.height(); y++)
+        for (size_t x=0; x< temp_map.width(); x++)
+            temp_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
     for (size_t i=0; i< m_laser_map_cells.size(); i++)
     {
-        m_temporary_obstacles_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
+        temp_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
     }
     //enlarge the laser scanner data
-    m_temporary_obstacles_map.enlargeObstacles(m_robot_radius);
+    temp_map.enlargeObstacles(m_robot_radius);
+    m_temporary_obstacles_map_mutex.lock();
+    m_temporary_obstacles_map = temp_map;
+    m_temporary_obstacles_map_mutex.unlock();
 }
 
 bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_image)
@@ -681,6 +691,14 @@ bool PlannerThread::getCurrentWaypoint(yarp::dev::Map2DLocation &loc) const
 bool PlannerThread::getCurrentMap(yarp::dev::MapGrid2D& map) const
 {
     map = m_current_map;
+    return true;
+}
+
+bool PlannerThread::getOstaclesMap(yarp::dev::MapGrid2D& obstacles_map) 
+{
+    m_temporary_obstacles_map_mutex.lock();
+    obstacles_map = m_temporary_obstacles_map;
+    m_temporary_obstacles_map_mutex.unlock();
     return true;
 }
 

@@ -228,6 +228,7 @@ bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEn
     }
     else if (map_type == yarp::dev::NavigationMapTypeEnum::local_map)
     {
+        m_plannerThread->getOstaclesMap(map);
         return true;
     }
     return false;

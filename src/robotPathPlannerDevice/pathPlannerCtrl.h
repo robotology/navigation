@@ -104,6 +104,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     //storage for the environment map
     yarp::dev::MapGrid2D m_current_map;
     yarp::dev::MapGrid2D m_temporary_obstacles_map;
+    yarp::os::Mutex m_temporary_obstacles_map_mutex;
     yarp::dev::MapGrid2D m_augmented_map;
 
     //yarp device drivers and interfaces
@@ -290,6 +291,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool          getCurrentWaypoint(yarp::dev::Map2DLocation &loc) const;
     bool          getCurrentPath(std::vector<yarp::dev::Map2DLocation>& path) const;
     bool          getCurrentMap(yarp::dev::MapGrid2D& current_map) const;
+    bool          getOstaclesMap(yarp::dev::MapGrid2D& obstacles_map);
 
     private:
     bool          startPath();
