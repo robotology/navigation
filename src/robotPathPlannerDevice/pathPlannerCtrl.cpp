@@ -207,103 +207,6 @@ bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_im
     return true;
 }
 
-void PlannerThread::draw_map()
-{
-    CvFont font;
-    cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.28, 0.28);
-    static CvScalar red_color   = cvScalar(200, 80, 80);
-    static CvScalar green_color = cvScalar(80, 200, 80);
-    static CvScalar blue_color  = cvScalar(0, 0, 200);
-    static CvScalar azure_color = cvScalar(80, 80, 200);
-    MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
-    MapGrid2D::XYCell final_goal = m_current_map.world2Cell(yarp::dev::MapGrid2D::XYWorld(m_final_goal.x, m_final_goal.y));
-
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
-    m_current_map.getMapImage(map_image);
-    static IplImage*   processed_map_with_scan = 0;
-    prepare_image(processed_map_with_scan,(const IplImage*) map_image.getIplImage());
-    if (m_laser_timeout_counter<TIMEOUT_MAX)
-    {
-        if (m_enable_draw_enlarged_scans)
-        {
-            map_utilites::drawLaserMap(processed_map_with_scan, m_temporary_obstacles_map, azure_color);
-        }
-        if (m_enable_draw_laser_scans)
-        {
-            map_utilites::drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
-        }
-    }
-
-    //draw goal
-    switch (m_planner_status)
-    {
-        case navigation_status_preparing_before_move:
-        case navigation_status_moving:
-        case navigation_status_waiting_obstacle:
-        case navigation_status_aborted:
-        case navigation_status_failing:
-        case navigation_status_paused:
-        case navigation_status_thinking:
-            map_utilites::drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, red_color);
-        break;
-        case navigation_status_goal_reached:
-            map_utilites::drawGoal(processed_map_with_scan, final_goal, m_final_goal.theta* DEG2RAD, green_color);
-        break;
-        case navigation_status_idle:
-        default:
-            //do nothing
-        break;
-    }
-
-    if (m_enable_draw_all_locations)
-    {
-        for (size_t i=0; i<m_locations_list.size(); i++)
-        {
-            map_utilites::drawGoal(processed_map_with_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
-        }
-    }
-
-    map_utilites::drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
-#define DRAW_INFO
-#ifdef DRAW_INFO
-    MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
-    MapGrid2D::XYWorld w_y_axis; w_y_axis.x = 0; w_y_axis.y = 2;
-    MapGrid2D::XYWorld w_orig; w_orig.x = 0; w_orig.y = 0;
-    MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
-    MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
-    MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
-    map_utilites::drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, m_localization_data, font, blue_color);
-#endif
-    static IplImage* map_with_path = 0;
-    prepare_image(map_with_path,processed_map_with_scan);
-
-    CvScalar color = cvScalar(0, 200, 0);
-    CvScalar color2 = cvScalar(0, 200, 100);
-
-    if (m_planner_status != navigation_status_idle &&
-        m_planner_status != navigation_status_goal_reached &&
-        m_planner_status != navigation_status_aborted &&
-        m_planner_status != navigation_status_error &&
-        m_planner_status != navigation_status_failing)
-    {
-#ifdef DRAW_BOTH_PATHS
-        drawPath(map_with_path, start, computed_path, color);
-        drawPath(map_with_path, start, computed_simplified_path, color2);
-#else
-        MapGrid2D::XYCell current_path;
-        if (getCurrentWaypoint(current_path))
-        {
-            map_utilites::drawPath(map_with_path, start, current_path, *m_current_path, color);
-        }
-#endif
-    }
-
-    static IplImage* map_with_location = 0;
-    prepare_image(map_with_location,map_with_path);
-
-    map_utilites::sendToPort(&m_port_map_output, map_with_location);
-}
-
 void PlannerThread::run()
 {
     double m_stats_time_curr = yarp::os::Time::now();
@@ -633,17 +536,6 @@ void PlannerThread::run()
         b.clear();
         b.addString(s.c_str());
         m_port_status_output.write();
-    }
-    
-    static double last_drawn = yarp::os::Time::now();
-    double elapsed_time = yarp::os::Time::now() - last_drawn;
-    if ( elapsed_time > m_imagemap_refresh_time)
-    {
-        //double check3 = yarp::os::Time::now();
-        draw_map();
-        //double check4 = yarp::os::Time::now();
-        //yDebug() << check4-check3;
-        last_drawn = yarp::os::Time::now();
     }
     
     m_mutex.post();

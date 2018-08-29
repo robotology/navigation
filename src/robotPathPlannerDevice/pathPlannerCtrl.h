@@ -299,7 +299,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool          readLocalizationData();
     void          readLaserData();
     bool          readInnerNavigationStatus();
-    void          draw_map();
     bool          getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const;
     bool          updateLocations();
 

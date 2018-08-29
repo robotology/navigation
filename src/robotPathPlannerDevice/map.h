@@ -42,17 +42,6 @@ using namespace yarp::dev;
 //! Helper functions which operates on a map grid, computing a path, drawing an image etc.
 namespace map_utilites
 {
-    //draw stuff on the map image
-    bool drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
-    bool drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color);
-    bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
-    bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
-    bool drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color);
-    bool drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color);
-
-    //sends and image through the given port
-    bool sendToPort(BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send);
-
     //return true if the straight line that connects src with dst does not contain any obstacles
     bool checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst);
 
