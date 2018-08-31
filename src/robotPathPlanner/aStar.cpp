@@ -252,9 +252,9 @@ bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCe
                 }
 
                 //reverse the path
-                for (size_t i=inverse_path.size()-1; i>=0; i--)
+                for (auto it= inverse_path.rbegin(); it!=inverse_path.rend(); it++)
                 {
-                    path.push(inverse_path[i]);
+                    path.push(*it);
                 }
                 return true;
             }
