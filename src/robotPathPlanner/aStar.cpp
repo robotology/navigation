@@ -69,8 +69,8 @@ namespace aStar_algorithm
         ~node_map_type();
 
         public:
-        int w;
-        int h;
+        size_t w;
+        size_t h;
         node_type** nodes;
     };
 
@@ -82,7 +82,7 @@ namespace aStar_algorithm
         void insert (const node_type& t);
         node_type get_smallest();
         void print();
-        int size();
+        size_t size();
         bool find(node_type t);
     };
 
@@ -170,7 +170,7 @@ void aStar_algorithm::ordered_set_type::print()
     yDebug("back (biggest) %f \n", set.back().f_score);
 }
 
-int aStar_algorithm::ordered_set_type::size()
+size_t aStar_algorithm::ordered_set_type::size()
 {
     return set.size();
 }
@@ -252,9 +252,9 @@ bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCe
                 }
 
                 //reverse the path
-                for (int i=inverse_path.size()-1; i>=0; i--)
+                for (auto it= inverse_path.rbegin(); it!=inverse_path.rend(); it++)
                 {
-                    path.push(inverse_path[i]);
+                    path.push(*it);
                 }
                 return true;
             }
