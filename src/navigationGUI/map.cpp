@@ -96,12 +96,20 @@ bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double ang
     return true;
 }
 
-bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
+bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
 {
     if (map==0) return false;
     char txt[255];
-    sprintf(txt, "%.1f %.1f %.1f", localiz.x, localiz.y, localiz.theta);
-    cvPutText(map, txt, cvPoint(current.x, current.y), &font, color);
+    if (1)
+    {
+        snprintf(txt, 255, "%s", status.c_str());
+        cvPutText(map, txt, cvPoint(current.x, current.y - 15), &font, color);
+    }
+    if (1)
+    {
+        snprintf(txt, 255, "%.1f %.1f %.1f", localiz.x, localiz.y, localiz.theta);
+        cvPutText(map, txt, cvPoint(current.x, current.y), &font, color);
+    }
     cvLine(map, cvPoint(orig.x, orig.y), cvPoint(x_axis.x, x_axis.y), cvScalar(211, 0, 0));
     cvLine(map, cvPoint(orig.x, orig.y), cvPoint(y_axis.x, y_axis.y), cvScalar(0, 211, 0));
     return true;

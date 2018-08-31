@@ -207,6 +207,13 @@ bool NavGuiThread::threadInit()
         m_laser_angle_of_view = fabs(m_min_laser_angle) + fabs(m_max_laser_angle);
     }
 
+    //Get the maps
+    readMaps();
+
+    //update
+    m_period_draw_laser = 0.3; //seconds;
+    m_period_draw_enalarged_obstacles = 1.0; //seconds
+
     return true;
 }
 

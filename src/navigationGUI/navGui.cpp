@@ -112,6 +112,7 @@ bool  NavGuiThread::updateLocations()
 bool  NavGuiThread::readMaps()
 {
     m_iNav->getCurrentNavigationMap(yarp::dev::global_map, m_current_map);
+    m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
     return true;
 }
 
@@ -128,9 +129,6 @@ bool  NavGuiThread::readLocalizationData()
         if (m_loc_timeout_counter>TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
         return false;
     }
-
-    m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::global_map, m_current_map);
-    m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
 
     return true;
 }
@@ -287,7 +285,7 @@ void NavGuiThread::draw_map()
     MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
     MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
     MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
-    map_utilites::drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, m_localization_data, font, blue_color);
+    map_utilites::drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString() ,m_localization_data, font, blue_color);
 #endif
 
     //draw path
@@ -336,7 +334,21 @@ void NavGuiThread::run()
 
     readTargetFromYarpView();
     readLocalizationData();
-    readLaserData();
+
+    static double last_drawn_laser = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_drawn_laser > m_period_draw_laser)
+    {
+        readLaserData();
+        last_drawn_laser = yarp::os::Time::now();
+    }
+
+    static double last_drawn_enlarged_obstacles = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_drawn_enlarged_obstacles > m_period_draw_enalarged_obstacles)
+    {
+        m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
+        last_drawn_enlarged_obstacles = yarp::os::Time::now();
+    }
+
     //double check2 = yarp::os::Time::now();
     //yDebug() << check2-check1;
 

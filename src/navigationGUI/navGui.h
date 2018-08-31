@@ -122,6 +122,10 @@ class NavGuiThread: public yarp::os::PeriodicThread
     int                 m_loc_timeout_counter;
     int                 m_laser_timeout_counter;
     int                 m_nav_status_timeout_counter;
+    
+    //refresh periods
+    double              m_period_draw_laser;
+    double              m_period_draw_enalarged_obstacles;
 
     //drawing flags: enable/disable drawing of particular objects on the GUI
     public:
