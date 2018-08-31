@@ -133,6 +133,7 @@ bool navigation2DServer::open(Searchable& config)
             return false;
         }
     }
+    m_stats_time_last = yarp::os::Time::now();
     return true;
 }
 
@@ -352,4 +353,34 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
 
 void navigation2DServer::run()
 {
+    bool ok = iNav_ctrl->getNavigationStatus(m_navigation_status);
+
+    double m_stats_time_curr = yarp::os::Time::now();
+    if (m_stats_time_curr - m_stats_time_last > 5.0)
+    {
+        if (!ok)
+        {
+            yError("navigation2DServer, unable to get Navigation Status!\n");
+        }
+        else
+        {
+            yInfo() << "navigation2DServer running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
+        }
+        m_stats_time_last = yarp::os::Time::now();
+    }
+}
+
+std::string navigation2DServer::getStatusAsString(NavigationStatusEnum status)
+{
+    if (status == navigation_status_idle) return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
+    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
+    else if (status == navigation_status_failing) return std::string("navigation_status_failing");
+    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+    else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
+    else if (status == navigation_status_thinking) return std::string("navigation_status_thinking");
+    else if (status == navigation_status_error) return std::string("navigation_status_error");
+    return std::string("navigation_status_error");
 }
