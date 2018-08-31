@@ -8,8 +8,19 @@ add_subdirectory(baseControl)
 add_subdirectory(forceGuidance)
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
-add_subdirectory(fakeMobileBaseTest)
+add_subdirectory(navigationGUI)
 add_subdirectory(localizationServer)
+
+yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
+                                 DEFAULT ON
+                                 DOC "devices plugins")
+add_subdirectory(navigationServer)
+add_subdirectory(rosNavigator)
+add_subdirectory(robotGotoDevice)
+add_subdirectory(robotPathPlannerDevice)
+
+yarp_end_plugin_library(navmod)
+
 #add_subdirectory(mapper2D)
 
 

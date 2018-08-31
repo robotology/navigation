@@ -55,6 +55,7 @@ protected:
     yarp::dev::INavigation2DTargetActions*  iNav_target;
 
     double                                  m_period;
+    double                                  m_stats_time_last;
 
 public:
     /**
@@ -72,6 +73,8 @@ public:
     bool initialize_YARP(yarp::os::Searchable &config);
     virtual bool read(yarp::os::ConnectionReader& connection) override;
 
+private:
+    std::string navigation2DServer::getStatusAsString(yarp::dev::NavigationStatusEnum status);
 };
 
 #endif

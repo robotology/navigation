@@ -37,8 +37,16 @@ using namespace yarp::os;
 
 rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
+    m_rosNodeName = "rosNavigator";
+    m_rosTopicName_goal = "/move_base/goal";
+    m_rosTopicName_cancel = "/move_base/cancel";
+    m_rosTopicName_simple_goal = "/move_base_simple/goal";
+    m_rosTopicName_feedback = "/move_base/feedback";
+    m_rosTopicName_status = "/move_base/status";
+    m_rosTopicName_result = "/move_base/result";
     m_navigation_status = yarp::dev::navigation_status_idle;
-    //### TO BE IMPLEMENTED BY USER
+    m_local_name_prefix = "/rosNavigator";
+    m_remote_localization = "/localizationServer";
 }
 
 bool rosNavigator::open(yarp::os::Searchable& config)
@@ -46,27 +54,29 @@ bool rosNavigator::open(yarp::os::Searchable& config)
     Bottle &rosGroup = config.findGroup("ROS");
     if (rosGroup.isNull())
     {
-        yError() << "rosNavigator: 'ROS' group params is not a valid group or empty";
-        return false;
+        //do nothing
+        yInfo() << "rosNavigator: 'ROS' group param not found. Using defaults.";
     }
-
-    // check for ROS_nodeName parameter
-    if (!rosGroup.check("ROS_nodeName"))
+    else
     {
-        yError() << "rosNavigator: cannot find ROS_nodeName parameter, mandatory when using ROS message";
-        return false;
-    }
-    m_rosNodeName = rosGroup.find("ROS_nodeName").asString();  // TODO: check name is correct
-    yInfo() << "rosNavigator: rosNodeName is " << m_rosNodeName;
+        // check for ROS_nodeName parameter
+        if (!rosGroup.check("ROS_nodeName"))
+        {
+            yError() << "rosNavigator: cannot find ROS_nodeName parameter, mandatory when using ROS message";
+            return false;
+        }
+        m_rosNodeName = rosGroup.find("ROS_nodeName").asString();  // TODO: check name is correct
+        yInfo() << "rosNavigator: rosNodeName is " << m_rosNodeName;
 
-    // check for ROS_topicName parameter
-    if (!rosGroup.check("ROS_topicName"))
-    {
-        yError() << " rosNavigator: cannot find ROS_topicName parameter, mandatory when using ROS message";
-        return false;
+        // check for ROS_topicName parameter
+        if (!rosGroup.check("ROS_topicName_goal"))
+        {
+            yError() << " rosNavigator: cannot find ROS_topicName parameter, mandatory when using ROS message";
+            return false;
+        }
+        m_rosTopicName_goal = rosGroup.find("ROS_topicName_goal").asString();
+        yInfo() << "rosNavigator: ROS_topicName_goal is " << m_rosTopicName_goal;
     }
-    m_rosTopicName = rosGroup.find("ROS_topicName").asString();
-    yInfo() << "rosNavigator: rosTopicName is " << m_rosTopicName;
 
     //open ROS stuff
     m_rosNode = new yarp::os::Node(m_rosNodeName);
@@ -75,9 +85,34 @@ bool rosNavigator::open(yarp::os::Searchable& config)
         yError() << " opening " << m_rosNodeName << " Node, check your yarp-ROS network configuration\n";
         return false;
     }
-    if (!m_rosPublisherPort.topic(m_rosTopicName))
+    if (!m_rosPublisher_goal.topic(m_rosTopicName_goal))
     {
-        yError() << " opening " << m_rosTopicName << " Topic, check your yarp-ROS network configuration\n";
+        yError() << " opening " << m_rosTopicName_goal << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosPublisher_cancel.topic(m_rosTopicName_cancel))
+    {
+        yError() << " opening " << m_rosTopicName_cancel << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosPublisher_simple_goal.topic(m_rosTopicName_simple_goal))
+    {
+        yError() << " opening " << m_rosTopicName_simple_goal << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosPublisher_feedback.topic(m_rosTopicName_feedback))
+    {
+        yError() << " opening " << m_rosTopicName_feedback << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosPublisher_status.topic(m_rosTopicName_status))
+    {
+        yError() << " opening " << m_rosTopicName_status << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosPublisher_result.topic(m_rosTopicName_result))
+    {
+        yError() << " opening " << m_rosTopicName_result << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
 
@@ -97,25 +132,60 @@ bool rosNavigator::close()
 
 bool rosNavigator::threadInit()
 {
-    //### TO BE IMPLEMENTED BY USER
+    //localization
+    Property loc_options;
+    loc_options.put("device", "localization2DClient");
+    loc_options.put("local", m_local_name_prefix + "/localizationClient");
+    loc_options.put("remote", m_remote_localization);
+    if (m_pLoc.open(loc_options) == false)
+    {
+        yError() << "Unable to open localization driver";
+        return false;
+    }
+    m_pLoc.view(m_iLoc);
+    if (m_pLoc.isValid() == false || m_iLoc == 0)
+    {
+        yError() << "Unable to view localization interface";
+        return false;
+    }
+
     return true;
 }
 
 void rosNavigator::threadRelease()
 {
-    //### TO BE IMPLEMENTED BY USER
+    m_pLoc.close();
 }
 
 void rosNavigator::run()
 {
-    //### TO BE IMPLEMENTED BY USER
+    bool b = m_iLoc->getCurrentPosition(m_current_position);
+
+    yarp::rosmsg::move_base_msgs::MoveBaseActionFeedback* feedback = m_rosPublisher_feedback.read(false);
+    if (feedback)
+    {
+        switch (feedback->status.status)
+        {
+           case feedback->status.PENDING: {} break;
+           case feedback->status.ACTIVE: {} break;
+           case feedback->status.PREEMPTED: {} break;
+           case feedback->status.SUCCEEDED: {} break;
+           case feedback->status.ABORTED: {} break;
+           case feedback->status.REJECTED: {} break;
+           case feedback->status.PREEMPTING: {} break;
+           case feedback->status.RECALLING: {} break;
+           case feedback->status.RECALLED: {} break;
+           case feedback->status.LOST: {} break;
+           default: {} break;
+        }
+    }
 }
 
 bool rosNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
-        yarp::rosmsg::geometry_msgs::PoseStamped& pos = m_rosPublisherPort.prepare();
+        yarp::rosmsg::geometry_msgs::PoseStamped& pos = m_rosPublisher_simple_goal.prepare();
         pos.clear();
         pos.header.frame_id = m_abs_frame_id;
         pos.header.seq = 0;
@@ -135,7 +205,7 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
         pos.pose.orientation.y = q.y();
         pos.pose.orientation.z = q.z();
         pos.pose.orientation.w = q.w();
-        m_rosPublisherPort.write();
+        m_rosPublisher_simple_goal.write();
         return true;
     }
     yError() << "A navigation task is already running. Stop it first";
@@ -146,8 +216,12 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y, double theta
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
-        //### TO BE IMPLEMENTED BY USER
-        return true;
+        yarp::dev::Map2DLocation loc;
+        loc.map_id = m_current_position.map_id;
+        loc.x = m_current_position.x - x; //@@@THIS NEEDS TO BE FIXED
+        loc.y = m_current_position.y - y; //@@@THIS NEEDS TO BE FIXED
+        loc.theta = m_current_position.theta - theta; //@@@THIS NEEDS TO BE FIXED
+        return gotoTargetByAbsoluteLocation(loc);
     }
     yError() << "A navigation task is already running. Stop it first";
     return false;
@@ -157,8 +231,12 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y)
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
-        //### TO BE IMPLEMENTED BY USER
-        return true;
+        yarp::dev::Map2DLocation loc;
+        loc.map_id = m_current_position.map_id;
+        loc.x = m_current_position.x - x; //@@@THIS NEEDS TO BE FIXED
+        loc.y = m_current_position.y - y; //@@@THIS NEEDS TO BE FIXED
+        loc.theta = m_current_position.theta - 0; //@@@THIS NEEDS TO BE FIXED
+        return gotoTargetByAbsoluteLocation(loc);
     }
     yError() << "A navigation task is already running. Stop it first";
     return false;
@@ -172,48 +250,60 @@ bool rosNavigator::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
 
 bool rosNavigator::stopNavigation()
 {
-    //### TO BE IMPLEMENTED BY USER
+    yarp::rosmsg::actionlib_msgs::GoalID& goal_id =  m_rosPublisher_cancel.prepare();
+    goal_id.clear();
+    goal_id.id = "0";
+    m_rosPublisher_cancel.write();
+
     m_navigation_status = yarp::dev::navigation_status_idle;
     return true;
 }
 
 bool rosNavigator::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
 {
-    //### TO BE IMPLEMENTED BY USER
-    yarp::dev::Map2DLocation curr;
-    target = curr;
+    target = m_current_goal;
     return true;
 }
 
 bool rosNavigator::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
-    //### TO BE IMPLEMENTED BY USER
-    yarp::dev::Map2DLocation curr;
-    x = curr.x;
-    y = curr.y;
-    theta = curr.theta;
+    x = m_current_goal.x- m_current_position.x; // @@@THIS NEEDS TO BE FIXED
+    y = m_current_goal.y - m_current_position.y; // @@@THIS NEEDS TO BE FIXED
+    theta = m_current_goal.theta - m_current_position.theta; // @@@THIS NEEDS TO BE FIXED
     return true;
 }
 
 bool rosNavigator::suspendNavigation(double time)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_moving)
-    {
-        //### TO BE IMPLEMENTED BY USER
-        m_navigation_status = yarp::dev::navigation_status_paused;
-        return true;
-    }
     yError() << "Unable to pause current navigation task";
     return false;
 }
 
 bool rosNavigator::resumeNavigation()
 {
-    if (m_navigation_status == yarp::dev::navigation_status_paused)
-    {
-        //### TO BE IMPLEMENTED BY USER
-        return true;
-    }
     yError() << "Unable to resume any paused navigation task";
+    return false;
+}
+
+bool rosNavigator::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+{
+    yDebug() << "Not yet implemented";
+    return false;
+}
+
+/**
+* Returns the current waypoint pursued by the navigation algorithm
+* @param curr_waypoint the current waypoint pursued by the navigation algorithm
+* @return true/false
+*/
+bool rosNavigator::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+{
+    yDebug() << "Not yet implemented";
+    return false;
+}
+
+bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+{
+    yDebug() << "Not yet implemented";
     return false;
 }

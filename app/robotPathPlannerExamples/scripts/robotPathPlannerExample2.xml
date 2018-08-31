@@ -11,8 +11,14 @@
 </module>
 
 <module>
-   <name>fakeMobileBaseTest</name>
-   <parameters>--context fakeMobileBaseTest --holonomic</parameters>
+   <name>yarpdev</name>
+   <parameters>--device fakeMotionControl --name /robot_2wheels/mobile_base --GENERAL::Joints 2</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>baseControl</name>
+   <parameters>--context baseControl_SIM --from robot_2wheels.ini --skip_robot_interface_check</parameters>
    <node>console</node>
 </module>
 
@@ -42,7 +48,7 @@
 
 <module>
    <name>robotPathPlanner</name>
-   <parameters>--context robotPathPlannerExample --from robotPathPlanner_ikart.ini </parameters>
+   <parameters>--context robotPathPlannerExamples --from robotPathPlanner_ikart.ini </parameters>
    <node>console</node>
 </module>
 
@@ -60,7 +66,7 @@
 
 <connection>
   <from>/robotGoto/control:o</from>
-  <to>/fakeMobileBaseTest/control:i</to>
+  <to>/baseControl/control:i</to>
   <protocol>udp</protocol>
 </connection>
 
@@ -89,7 +95,7 @@
 </connection>
 
 <connection>
-  <from>/fakeMobileBaseTest/odometry:o</from>
+  <from>/baseControl/odometry:o</from>
   <to>/fakeLaser/location:i</to>
   <protocol>tcp</protocol>
 </connection>

@@ -31,6 +31,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace std;
 
 #ifndef RAD2DEG
 #define RAD2DEG 180.0/M_PI
@@ -83,25 +84,28 @@ bool navigation2DServer::open(Searchable& config)
 {
     Property params;
     params.fromString(config.toString().c_str());
+    yDebug() << "navigation2DServer configuration: \n" << config.toString().c_str();
 
     if (!config.check("period"))
     {
-        yError() << "navigation2DServer: missing 'period' parameter. Check you configuration file\n";
-        return false;
+        yInfo() << "navigation2DServer: missing 'period' parameter. Using default value: 0.010";
+        m_period = 0.010;
     }
     else
-        m_period = config.find("period").asInt32() / 1000.0;
+    {
+        m_period = config.find("period").asDouble();
+    }
 
+    string local_name = "/navigationServer";
     if (!config.check("name"))
     {
-        yError() << "navigation2DServer: missing 'name' parameter. Check you configuration file; it must be like:";
-        yError() << "   name:         full name of the port, like /robotName/deviceId/sensorType:o";
-        return false;
+        yInfo() << "navigation2DServer: missing 'name' parameter. Using default value: /navigationServer";
     }
     else
     {
-        m_rpcPortName = m_streamingPortName + "/rpc:i";
     }
+    m_rpcPortName = local_name + "/rpc";
+    m_streamingPortName = local_name + "/streaming:o";
 
     if (!initialize_YARP(config))
     {
@@ -129,6 +133,7 @@ bool navigation2DServer::open(Searchable& config)
             return false;
         }
     }
+    m_stats_time_last = yarp::os::Time::now();
     return true;
 }
 
@@ -236,17 +241,18 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
             else if (request == VOCAB_NAV_GET_NAVIGATION_WAYPOINTS)
             {
                 std::vector<yarp::dev::Map2DLocation> locs;
-                bool b = iNav_ctrl->getNavigationWaypoints(locs);
+                bool b = iNav_ctrl->getAllNavigationWaypoints(locs);
                 if (b)
                 {
                     reply.addVocab(VOCAB_OK);
+                    Bottle& waypoints = reply.addList();
                     for (size_t i = 0; i < locs.size(); i++)
                     {
-                        Bottle waypoint = reply.addList();
-                        waypoint.addString(locs[i].map_id);
-                        waypoint.addFloat64(locs[i].x);
-                        waypoint.addFloat64(locs[i].y);
-                        waypoint.addFloat64(locs[i].theta);
+                        Bottle& the_waypoint = waypoints.addList();
+                        the_waypoint.addString(locs[i].map_id);
+                        the_waypoint.addFloat64(locs[i].x);
+                        the_waypoint.addFloat64(locs[i].y);
+                        the_waypoint.addFloat64(locs[i].theta);
                     }
                 }
                 else
@@ -273,6 +279,20 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
                     //no waypoint available
                     reply.addVocab(VOCAB_OK);
                     reply.addString("invalid");
+                }
+            }
+            else if (request == VOCAB_GET_NAV_MAP)
+            {
+                yarp::dev::MapGrid2D map;
+                if (iNav_ctrl->getCurrentNavigationMap((yarp::dev::NavigationMapTypeEnum)(command.get(2).asInt()), map))
+                {
+                    reply.addVocab(VOCAB_OK);
+                    yarp::os::Bottle& mapbot = reply.addList();
+                    Property::copyPortable(map, mapbot);
+                }
+                else
+                {
+                    reply.addVocab(VOCAB_ERR);
                 }
             }
             else if (request == VOCAB_NAV_GET_ABS_TARGET || request == VOCAB_NAV_GET_REL_TARGET)
@@ -305,6 +325,18 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
             reply.addVocab(VOCAB_ERR);
         }
     }
+    else if (command.get(0).asString() == "help")
+    {
+        reply.addVocab(Vocab::encode("many"));
+        reply.addString("Available commands are:");
+        reply.addString("stop");
+        reply.addString("quit");
+    }
+    else if (command.get(0).asString() == "stop")
+    {
+        iNav_ctrl->stopNavigation();
+        reply.addVocab(VOCAB_OK);
+    }
     else
     {
         yError() << "Invalid command type";
@@ -322,4 +354,34 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
 
 void navigation2DServer::run()
 {
+    bool ok = iNav_ctrl->getNavigationStatus(m_navigation_status);
+
+    double m_stats_time_curr = yarp::os::Time::now();
+    if (m_stats_time_curr - m_stats_time_last > 5.0)
+    {
+        if (!ok)
+        {
+            yError("navigation2DServer, unable to get Navigation Status!\n");
+        }
+        else
+        {
+            yInfo() << "navigation2DServer running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
+        }
+        m_stats_time_last = yarp::os::Time::now();
+    }
+}
+
+std::string navigation2DServer::getStatusAsString(NavigationStatusEnum status)
+{
+    if (status == navigation_status_idle) return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
+    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
+    else if (status == navigation_status_failing) return std::string("navigation_status_failing");
+    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+    else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
+    else if (status == navigation_status_thinking) return std::string("navigation_status_thinking");
+    else if (status == navigation_status_error) return std::string("navigation_status_error");
+    return std::string("navigation_status_error");
 }

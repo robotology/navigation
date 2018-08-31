@@ -1,5 +1,5 @@
 <application>
-<name>ros EXAMPLE3 (Experimental)/name>
+<name>ros EXAMPLE3 (Experimental)</name>
 
 <dependencies>
 </dependencies>
@@ -12,13 +12,13 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device fakeMotionControl --name /cer_sim/mobile_base --GENERAL::Joints 2</parameters>
+   <parameters>--device fakeMotionControl --name /robot_2wheels/mobile_base --GENERAL::Joints 2</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>baseControl</name>
-   <parameters>--context baseControl_SIM --from baseCtrl_cer.ini --skip_robot_interface_check</parameters>
+   <parameters>--context baseControl_SIM --from robot_2wheels.ini --skip_robot_interface_check</parameters>
    <node>console</node>
 </module>
 
@@ -50,6 +50,18 @@
    <name>yarpdev</name>
    <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_client  --ROS::useROS true --ROS::ROS_nodeName /fakeLaser --ROS::ROS_topicName /laser --ROS::frame_id mobile_base_body_link</parameters>
    <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device rosNavigator</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>roslaunch</name>
+   <parameters>~/navigation/app/rosExamples/launch/amcl_map_from_ros.launch</parameters>
+   <node>ros_pc</node>
 </module>
 
 <connection>
