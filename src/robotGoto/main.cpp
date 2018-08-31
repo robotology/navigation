@@ -54,7 +54,7 @@ public:
         ConstString configFile = rf.findFile("from");
         if (configFile!="") p.fromConfigFile(configFile.c_str());
 
-        gotoThread = new GotoThread(10,rf,p);
+        gotoThread = new GotoThread(0.010,rf,p);
 
         if (!gotoThread->start())
         {
