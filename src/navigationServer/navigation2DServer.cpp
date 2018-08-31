@@ -245,13 +245,14 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
                 if (b)
                 {
                     reply.addVocab(VOCAB_OK);
+                    Bottle& waypoints = reply.addList();
                     for (size_t i = 0; i < locs.size(); i++)
                     {
-                        Bottle& waypoint = reply.addList();
-                        waypoint.addString(locs[i].map_id);
-                        waypoint.addFloat64(locs[i].x);
-                        waypoint.addFloat64(locs[i].y);
-                        waypoint.addFloat64(locs[i].theta);
+                        Bottle& the_waypoint = waypoints.addList();
+                        the_waypoint.addString(locs[i].map_id);
+                        the_waypoint.addFloat64(locs[i].x);
+                        the_waypoint.addFloat64(locs[i].y);
+                        the_waypoint.addFloat64(locs[i].theta);
                     }
                 }
                 else
