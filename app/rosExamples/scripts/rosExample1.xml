@@ -47,14 +47,14 @@
 </module>
 
 <module>
-   <name>robotGoto</name>
-   <parameters>--context rosExamples --from robotGoto_ikart.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context robotPathPlannerExamples --from robotPathPlanner_robot_2wheels.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
-   <name>robotPathPlanner</name>
-   <parameters>--context robotPathPlannerExample --from robotPathPlanner_ikart.ini </parameters>
+   <name>navigationGUI</name>
+   <parameters></parameters>
    <node>console</node>
 </module>
 

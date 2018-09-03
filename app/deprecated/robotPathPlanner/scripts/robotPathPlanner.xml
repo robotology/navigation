@@ -5,8 +5,14 @@
 </dependencies>
 
 <module>
-   <name>yarpdev</name>
-   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context robotPathPlanner --from robotPathPlanner_ikart.ini</parameters>
+   <name>robotGoto</name>
+   <parameters>--context robotGoto --from robotGoto_ikart.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotPathPlanner</name>
+   <parameters>--context robotPathPlanner --from robotPathPlanner_ikart.ini </parameters>
    <node>console</node>
 </module>
 

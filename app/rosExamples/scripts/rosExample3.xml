@@ -54,7 +54,13 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device rosNavigator</parameters>
+   <parameters>--device navigation2DServer --subdevice rosNavigator</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>navigationGUI</name>
+   <parameters></parameters>
    <node>console</node>
 </module>
 

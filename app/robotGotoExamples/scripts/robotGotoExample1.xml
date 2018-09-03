@@ -41,8 +41,8 @@
 </module>
 
 <module>
-   <name>robotGoto</name>
-   <parameters>--context robotGotoExamples --from robotGoto_ikart.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotGotoDev --context robotGotoExamples --from robotGoto_robot_2wheels.ini</parameters>
    <node>console</node>
 </module>
 

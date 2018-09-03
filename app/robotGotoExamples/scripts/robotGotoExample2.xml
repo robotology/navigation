@@ -36,19 +36,20 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\maps\\map_test.map</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /robot_2wheels/laser:o --test use_mapfile --map_file C:\\software\\maps\\map_test.map</parameters>
    <node>console</node>
 </module>
 
 <module>
-   <name>robotGoto</name>
-   <parameters>--context robotGotoExamples --from robotGoto_ikart.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotGotoDev --context robotGotoExamples --from robotGoto_robot_2wheels.ini</parameters>
    <node>console</node>
 </module>
+
 
 <module>
    <name>robotGotoExample</name>
-   <parameters></parameters>
+   <parameters>--navServer_name /navigationServer</parameters>
    <node>console</node>
 </module>
 

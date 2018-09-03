@@ -1,12 +1,12 @@
 <application>
-<name>robotGoto</name>
+<name>robotGoto_no_laser</name>
 
 <dependencies>
 </dependencies>
 
 <module>
-   <name>yarpdev</name>
-   <parameters>--device navigation2DServer --subdevice robotGotoDev --context robotGoto --from robotGoto_ikart.ini</parameters>
+   <name>robotGoto</name>
+   <parameters>--context robotGoto --from robotGoto_ikart.ini --no_stop_on_obstacles</parameters>
    <node>console</node>
 </module>
 

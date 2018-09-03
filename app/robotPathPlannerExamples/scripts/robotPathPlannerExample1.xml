@@ -41,20 +41,20 @@
 </module>
 
 <module>
-   <name>robotGoto</name>
-   <parameters>--context robotPathPlannerExamples --from robotGoto_ikart.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context robotPathPlannerExamples --from robotPathPlanner_robot_2wheels.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
-   <name>robotPathPlanner</name>
-   <parameters>--context robotPathPlannerExamples --from robotPathPlanner_ikart.ini </parameters>
+   <name>navigationGUI</name>
+   <parameters></parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpview</name>
-   <parameters>--name /plannerView:i --out /mapClick:o</parameters>
+   <parameters>--name /navView:i --out /mapClick:o</parameters>
    <node>console</node>
 </module>
 
@@ -65,8 +65,8 @@
 </connection>
 
 <connection>
-  <from>/robotPathPlanner/map:o</from>
-  <to>/plannerView:i</to>
+  <from>/navigationGui/map:o</from>
+  <to>/navView:i</to>
   <protocol>udp</protocol>
 </connection>
 
@@ -76,11 +76,7 @@
   <protocol>tcp</protocol>
 </connection>
 
-<connection>
-  <from>/robotGoto/status:o</from>
-  <to>/robotPathPlanner/navigationStatus:i</to>
-  <protocol>tcp</protocol>
-</connection>
+
 
 <connection>
   <from>/mapClick:o</from>
@@ -88,11 +84,7 @@
   <protocol>tcp</protocol>
 </connection>
 
-<connection>
-  <from>/robotPathPlanner/yarpviewTarget:o</from>
-  <to>/robotPathPlanner/rpc</to>
-  <protocol>tcp</protocol>
-</connection>
+
 
 <connection>
   <from>/baseControl/odometry:o</from>
