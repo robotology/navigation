@@ -74,7 +74,7 @@ public:
     virtual bool read(yarp::os::ConnectionReader& connection) override;
 
 private:
-    std::string navigation2DServer::getStatusAsString(yarp::dev::NavigationStatusEnum status);
+    std::string getStatusAsString(yarp::dev::NavigationStatusEnum status);
 };
 
 #endif
