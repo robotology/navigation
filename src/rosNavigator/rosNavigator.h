@@ -100,6 +100,9 @@ public:
     virtual void threadRelease() override;
     virtual void run() override;
 
+private:
+    std::string getStatusAsString(yarp::dev::NavigationStatusEnum status);
+
 public:
     /**
     * Sets a new navigation target, expressed in the absolute (map) coordinate frame.

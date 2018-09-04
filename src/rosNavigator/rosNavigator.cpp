@@ -50,6 +50,8 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_remote_localization = "/localizationServer";
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
+//    m_abs_frame_id = "/odom";
+    m_abs_frame_id = "/map";
 }
 
 bool rosNavigator::open(yarp::os::Searchable& config)
@@ -227,7 +229,7 @@ void rosNavigator::run()
             err = true;
         }*/
         if (err == false)
-            yInfo() << "rosNavigator running, ALL ok. Navigation status:" << m_navigation_status;
+            yInfo() << "rosNavigator running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
     }
 
     bool b1 = m_iLoc->getCurrentPosition(m_current_position);
@@ -302,10 +304,10 @@ void rosNavigator::run()
         switch (feedback->status.status)
         {
            case feedback->status.PENDING: {} break;
-           case feedback->status.ACTIVE: {} break;
+           case feedback->status.ACTIVE: {m_navigation_status = yarp::dev::navigation_status_moving; } break;
            case feedback->status.PREEMPTED: {} break;
-           case feedback->status.SUCCEEDED: {} break;
-           case feedback->status.ABORTED: {} break;
+           case feedback->status.SUCCEEDED: {m_navigation_status = yarp::dev::navigation_status_goal_reached; } break;
+           case feedback->status.ABORTED: {m_navigation_status = yarp::dev::navigation_status_aborted; } break;
            case feedback->status.REJECTED: {} break;
            case feedback->status.PREEMPTING: {} break;
            case feedback->status.RECALLING: {} break;
@@ -320,15 +322,10 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
-        yarp::rosmsg::geometry_msgs::PoseStamped& pos = m_rosPublisher_simple_goal.prepare();
-        pos.clear();
-        pos.header.frame_id = m_abs_frame_id;
-        pos.header.seq = 0;
-        pos.header.stamp.sec = 0;
-        pos.header.stamp.nsec = 0;
-        pos.pose.position.x = loc.x;
-        pos.pose.position.y = loc.y;
-        pos.pose.position.z = 0;
+        yarp::rosmsg::geometry_msgs::Pose gpose;
+        gpose.position.x = loc.x;
+        gpose.position.y = loc.y;
+        gpose.position.z = 0;
         yarp::math::Quaternion q;
         yarp::sig::Vector v(4);
         v[0] = 0;
@@ -336,11 +333,40 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
         v[2] = 1;
         v[3] = loc.theta*DEG2RAD;
         q.fromAxisAngle(v);
-        pos.pose.orientation.x = q.x();
-        pos.pose.orientation.y = q.y();
-        pos.pose.orientation.z = q.z();
-        pos.pose.orientation.w = q.w();
-        m_rosPublisher_simple_goal.write();
+        gpose.orientation.x = q.x();
+        gpose.orientation.y = q.y();
+        gpose.orientation.z = q.z();
+        gpose.orientation.w = q.w();
+        m_current_goal = loc;
+        //m_current_goal.map_id = "ros_map";
+
+        if (1)
+        {
+            yarp::rosmsg::move_base_msgs::MoveBaseActionGoal& goal = m_rosPublisher_goal.prepare();
+            goal.clear();
+            goal.header.frame_id = m_abs_frame_id;
+            goal.header.seq = 0;
+            goal.header.stamp.sec = 0;
+            goal.header.stamp.nsec = 0;
+            goal.goal_id.id = "goal_0";
+            goal.goal.target_pose.header.frame_id = m_abs_frame_id;
+            goal.goal.target_pose.header.seq = 0;
+            goal.goal.target_pose.header.stamp.sec = 0;
+            goal.goal.target_pose.header.stamp.nsec = 0;
+            goal.goal.target_pose.pose = gpose;
+            m_rosPublisher_goal.write();
+        }
+        else
+        {
+            yarp::rosmsg::geometry_msgs::PoseStamped& pos = m_rosPublisher_simple_goal.prepare();
+            pos.clear();
+            pos.header.frame_id = m_abs_frame_id;
+            pos.header.seq = 0;
+            pos.header.stamp.sec = 0;
+            pos.header.stamp.nsec = 0;
+            pos.pose = gpose;
+            m_rosPublisher_simple_goal.write();
+        }
         return true;
     }
     yError() << "A navigation task is already running. Stop it first";
@@ -387,7 +413,7 @@ bool rosNavigator::stopNavigation()
 {
     yarp::rosmsg::actionlib_msgs::GoalID& goal_id =  m_rosPublisher_cancel.prepare();
     goal_id.clear();
-    goal_id.id = "0";
+    goal_id.id = "goal_0";
     m_rosPublisher_cancel.write();
 
     m_navigation_status = yarp::dev::navigation_status_idle;
@@ -451,4 +477,19 @@ bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_
     }
     yError() << "rosNavigator::getCurrentNavigationMap invalid type";
     return false;
+}
+
+std::string rosNavigator::getStatusAsString(NavigationStatusEnum status)
+{
+    if (status == navigation_status_idle) return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
+    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
+    else if (status == navigation_status_failing) return std::string("navigation_status_failing");
+    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+    else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
+    else if (status == navigation_status_thinking) return std::string("navigation_status_thinking");
+    else if (status == navigation_status_error) return std::string("navigation_status_error");
+    return std::string("navigation_status_error");
 }
