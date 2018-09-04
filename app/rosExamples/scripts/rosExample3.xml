@@ -60,7 +60,7 @@
 
 <module>
    <name>navigationGUI</name>
-   <parameters></parameters>
+   <parameters>--from navigationGUI_robot_2wheels.ini --remote_laser /robot_2wheels/laser:o</parameters>
    <node>console</node>
 </module>
 
@@ -75,5 +75,17 @@
   <to>/fakeLaser/location:i</to>
   <protocol>tcp</protocol>
 </connection>
+
+<connection>
+  <from>/mapClick:o</from>
+  <to>/navigationGui/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /navView:i --out /mapClick:o</parameters>
+   <node>console</node>
+</module>
 
 </application>
