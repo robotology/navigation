@@ -28,6 +28,7 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ILocalization2D.h>
+#include <yarp/dev/IMap2D.h>
 #include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
 #include <yarp/rosmsg/geometry_msgs/PoseWithCovarianceStamped.h>
 #include <yarp/rosmsg/move_base_msgs/MoveBaseGoal.h>
@@ -36,6 +37,7 @@
 #include <yarp/rosmsg/move_base_msgs/MoveBaseActionFeedback.h>
 #include <yarp/rosmsg/actionlib_msgs/GoalID.h>
 #include <yarp/rosmsg/actionlib_msgs/GoalStatusArray.h>
+#include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
 #include <math.h>
 
 #ifndef ROS_NAVIGATOR_H
@@ -51,6 +53,9 @@ class rosNavigator : public yarp::dev::DeviceDriver,
 protected:
     yarp::dev::PolyDriver             m_pLoc;
     yarp::dev::ILocalization2D*       m_iLoc;
+    yarp::dev::PolyDriver             m_pMap;
+    yarp::dev::IMap2D*                m_iMap;
+
     yarp::dev::NavigationStatusEnum   m_navigation_status;
     std::string                       m_abs_frame_id;
     std::string                       m_local_name_prefix;
@@ -58,9 +63,14 @@ protected:
     yarp::dev::Map2DLocation          m_current_position;
     yarp::dev::Map2DLocation          m_current_goal;
 
+    double                            m_stats_time_curr;
+    double                            m_stats_time_last;
+    
     std::string                       m_rosNodeName;
-    yarp::os::Node                                      *m_rosNode;                   // add a ROS node
-    yarp::os::NetUint32                                  m_rosMsgCounter;             // incremental counter in the ROS message
+    yarp::os::Node                    *m_rosNode;                  // add a ROS node
+    yarp::os::NetUint32               m_rosMsgCounter;             // incremental counter in the ROS message
+    yarp::dev::MapGrid2D              m_local_map;
+    yarp::dev::MapGrid2D              m_global_map;
 
     std::string                       m_rosTopicName_goal;
     std::string                       m_rosTopicName_cancel;
@@ -68,12 +78,16 @@ protected:
     std::string                       m_rosTopicName_feedback;
     std::string                       m_rosTopicName_status;
     std::string                       m_rosTopicName_result;
+    std::string                       m_rosTopicName_globalOccupancyGrid;
+    std::string                       m_rosTopicName_localOccupancyGrid;
     yarp::os::Publisher<yarp::rosmsg::move_base_msgs::MoveBaseActionGoal> m_rosPublisher_goal;
     yarp::os::Publisher<yarp::rosmsg::actionlib_msgs::GoalID> m_rosPublisher_cancel;
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseStamped> m_rosPublisher_simple_goal;
-    yarp::os::Subscriber<yarp::rosmsg::move_base_msgs::MoveBaseActionFeedback> m_rosPublisher_feedback;
-    yarp::os::Subscriber<yarp::rosmsg::actionlib_msgs::GoalStatusArray> m_rosPublisher_status;
-    yarp::os::Subscriber<yarp::rosmsg::move_base_msgs::MoveBaseActionResult> m_rosPublisher_result;
+    yarp::os::Subscriber<yarp::rosmsg::move_base_msgs::MoveBaseActionFeedback> m_rosSubscriber_feedback;
+    yarp::os::Subscriber<yarp::rosmsg::actionlib_msgs::GoalStatusArray> m_rosSubscriber_status;
+    yarp::os::Subscriber<yarp::rosmsg::move_base_msgs::MoveBaseActionResult> m_rosSubscriber_result;
+    yarp::os::Subscriber<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosSubscriber_localOccupancyGrid;
+    yarp::os::Subscriber<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosSubscriber_globalOccupancyGrid;
 
 public:
     rosNavigator();

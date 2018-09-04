@@ -30,6 +30,7 @@
 #include "rosNavigator.h"
 
 using namespace yarp::os;
+using namespace yarp::dev;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180.0
@@ -37,7 +38,7 @@ using namespace yarp::os;
 
 rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
-    m_rosNodeName = "rosNavigator";
+    m_rosNodeName = "/rosNavigator";
     m_rosTopicName_goal = "/move_base/goal";
     m_rosTopicName_cancel = "/move_base/cancel";
     m_rosTopicName_simple_goal = "/move_base_simple/goal";
@@ -47,6 +48,8 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_navigation_status = yarp::dev::navigation_status_idle;
     m_local_name_prefix = "/rosNavigator";
     m_remote_localization = "/localizationServer";
+    m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
+    m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
 }
 
 bool rosNavigator::open(yarp::os::Searchable& config)
@@ -100,22 +103,33 @@ bool rosNavigator::open(yarp::os::Searchable& config)
         yError() << " opening " << m_rosTopicName_simple_goal << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
-    if (!m_rosPublisher_feedback.topic(m_rosTopicName_feedback))
+    if (!m_rosSubscriber_feedback.topic(m_rosTopicName_feedback))
     {
         yError() << " opening " << m_rosTopicName_feedback << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
-    if (!m_rosPublisher_status.topic(m_rosTopicName_status))
+    if (!m_rosSubscriber_status.topic(m_rosTopicName_status))
     {
         yError() << " opening " << m_rosTopicName_status << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
-    if (!m_rosPublisher_result.topic(m_rosTopicName_result))
+    if (!m_rosSubscriber_result.topic(m_rosTopicName_result))
     {
         yError() << " opening " << m_rosTopicName_result << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
+    if (!m_rosSubscriber_globalOccupancyGrid.topic(m_rosTopicName_globalOccupancyGrid))
+    {
+        yError() << " opening " << m_rosTopicName_globalOccupancyGrid << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosSubscriber_localOccupancyGrid.topic(m_rosTopicName_localOccupancyGrid))
+    {
+        yError() << " opening " << m_rosTopicName_localOccupancyGrid << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
 
+    this->start();
     return true;
 }
 
@@ -149,6 +163,39 @@ bool rosNavigator::threadInit()
         return false;
     }
 
+    //map_server
+    Property map_options;
+    map_options.put("device", "map2DClient");
+    map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
+    map_options.put("remote", "/mapServer");
+    if (m_pMap.open(map_options) == false)
+    {
+        yError() << "Unable to open mapClient";
+        return false;
+    }
+    m_pMap.view(m_iMap);
+    if (m_iMap == 0)
+    {
+        yError() << "Unable to open map interface";
+        return false;
+    }
+
+    //get the map
+    yInfo() << "Asking for map 'ros_map'...";
+    bool b = m_iMap->get_map("ros_map",m_global_map);
+    m_global_map.crop(-1,-1,-1,-1);
+    if (b)
+    {
+        yInfo() << "'ros_map' received";
+    }
+    else
+    {
+        yError() << "'ros_map' not found";
+    }
+
+    m_stats_time_curr = yarp::os::Time::now();
+    m_stats_time_last = yarp::os::Time::now();
+
     return true;
 }
 
@@ -159,9 +206,97 @@ void rosNavigator::threadRelease()
 
 void rosNavigator::run()
 {
-    bool b = m_iLoc->getCurrentPosition(m_current_position);
+    double m_stats_time_curr = yarp::os::Time::now();
+    if (m_stats_time_curr - m_stats_time_last > 5.0)
+    {
+        m_stats_time_last = m_stats_time_curr;
+        bool err = false;
+        /*if (m_laser_timeout_counter > TIMEOUT_MAX)
+        {
+            yError("timeout, no laser data received!\n");
+            err = true;
+        }
+        if (m_loc_timeout_counter > TIMEOUT_MAX)
+        {
+            yError(" timeout, no localization data received!\n");
+            err = true;
+        }
+        if (m_inner_status_timeout_counter > TIMEOUT_MAX)
+        {
+            yError("timeout, no status info received!\n");
+            err = true;
+        }*/
+        if (err == false)
+            yInfo() << "rosNavigator running, ALL ok. Navigation status:" << m_navigation_status;
+    }
 
-    yarp::rosmsg::move_base_msgs::MoveBaseActionFeedback* feedback = m_rosPublisher_feedback.read(false);
+    bool b1 = m_iLoc->getCurrentPosition(m_current_position);
+
+    if (0)
+    {
+        yarp::rosmsg::nav_msgs::OccupancyGrid* ros_global_map = m_rosSubscriber_globalOccupancyGrid.read(false);
+        if (global_map)
+        {
+            m_global_map.setSize_in_cells(ros_global_map->info.width, ros_global_map->info.height);
+            m_global_map.setResolution(ros_global_map->info.resolution);
+            m_global_map.setMapName("global_map");
+            yarp::math::Quaternion quat(ros_global_map->info.origin.orientation.x,
+                ros_global_map->info.origin.orientation.y,
+                ros_global_map->info.origin.orientation.z,
+                ros_global_map->info.origin.orientation.w);
+            yarp::sig::Matrix mat = quat.toRotationMatrix4x4();
+            yarp::sig::Vector vec = yarp::math::dcm2rpy(mat);
+            double orig_angle = vec[2];
+            m_global_map.setOrigin(ros_global_map->info.origin.position.x, ros_global_map->info.origin.position.y, orig_angle);
+            for (size_t y = 0; y < ros_global_map->info.height; y++)
+            {
+                for (size_t x = 0; x < ros_global_map->info.width; x++)
+                {
+                    MapGrid2D::XYCell cell(x, ros_global_map->info.height - 1 - y);
+                    double occ = ros_global_map->data[x + y * ros_global_map->info.width];
+                    m_global_map.setOccupancyData(cell, occ);
+
+                    if (occ >= 0 && occ <= 70)         m_global_map.setMapFlag(cell, MapGrid2D::MAP_CELL_FREE);
+                    else if (occ >= 71 && occ <= 100)  m_global_map.setMapFlag(cell, MapGrid2D::MAP_CELL_WALL);
+                    else                               m_global_map.setMapFlag(cell, MapGrid2D::MAP_CELL_UNKNOWN);
+                }
+            }
+        }
+    }
+
+    if (0)
+    {
+        yarp::rosmsg::nav_msgs::OccupancyGrid* ros_local_map = m_rosSubscriber_localOccupancyGrid.read(false);
+        if (local_map)
+        {
+            m_local_map.setSize_in_cells(ros_local_map->info.width, ros_local_map->info.height);
+            m_local_map.setResolution(ros_local_map->info.resolution);
+            m_local_map.setMapName("local_map");
+            yarp::math::Quaternion quat(ros_local_map->info.origin.orientation.x,
+                ros_local_map->info.origin.orientation.y,
+                ros_local_map->info.origin.orientation.z,
+                ros_local_map->info.origin.orientation.w);
+            yarp::sig::Matrix mat = quat.toRotationMatrix4x4();
+            yarp::sig::Vector vec = yarp::math::dcm2rpy(mat);
+            double orig_angle = vec[2];
+            m_local_map.setOrigin(ros_local_map->info.origin.position.x, ros_local_map->info.origin.position.y, orig_angle);
+            for (size_t y = 0; y < ros_local_map->info.height; y++)
+            {
+                for (size_t x = 0; x < ros_local_map->info.width; x++)
+                {
+                    MapGrid2D::XYCell cell(x, ros_local_map->info.height - 1 - y);
+                    double occ = ros_local_map->data[x + y * ros_local_map->info.width];
+                    m_local_map.setOccupancyData(cell, occ);
+
+                    if (occ >= 0 && occ <= 70)         m_local_map.setMapFlag(cell, MapGrid2D::MAP_CELL_FREE);
+                    else if (occ >= 71 && occ <= 100)  m_local_map.setMapFlag(cell, MapGrid2D::MAP_CELL_WALL);
+                    else                               m_local_map.setMapFlag(cell, MapGrid2D::MAP_CELL_UNKNOWN);
+                }
+            }
+        }
+    }
+    
+    yarp::rosmsg::move_base_msgs::MoveBaseActionFeedback* feedback = m_rosSubscriber_feedback.read(false);
     if (feedback)
     {
         switch (feedback->status.status)
@@ -304,6 +439,16 @@ bool rosNavigator::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_w
 
 bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
 {
-    yDebug() << "Not yet implemented";
+    if (map_type == yarp::dev::NavigationMapTypeEnum::global_map)
+    {
+        map = m_global_map;
+        return true;
+    }
+    else if (map_type == yarp::dev::NavigationMapTypeEnum::local_map)
+    {
+        map = m_local_map;
+        return true;
+    }
+    yError() << "rosNavigator::getCurrentNavigationMap invalid type";
     return false;
 }
