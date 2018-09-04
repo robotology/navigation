@@ -70,6 +70,12 @@
    <node>ros_pc</node>
 </module>
 
+<module>
+   <name>yarpview</name>
+   <parameters>--name /navView:i --out /mapClick:o</parameters>
+   <node>console</node>
+</module>
+
 <connection>
   <from>/baseControl/odometry:o</from>
   <to>/fakeLaser/location:i</to>
@@ -82,10 +88,10 @@
   <protocol>tcp</protocol>
 </connection>
 
-<module>
-   <name>yarpview</name>
-   <parameters>--name /navView:i --out /mapClick:o</parameters>
-   <node>console</node>
-</module>
+<connection>
+  <from>/navigationGui/map:o</from>
+  <to>/navView:i</to>
+  <protocol>udp</protocol>
+</connection>
 
 </application>

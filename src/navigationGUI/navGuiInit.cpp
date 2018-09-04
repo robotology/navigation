@@ -61,6 +61,14 @@ bool NavGuiThread::threadInit()
         yError() << "Missing GENERAL group!";
         return false;
     }
+
+    Bottle laser_group = m_rf.findGroup("LASER");
+    if (laser_group.isNull())
+    {
+        yError() << "Missing LASER group!";
+        return false;
+    }
+
     if (general_group.check("period"))   { m_imagemap_refresh_period = general_group.find("period").asDouble(); }
 
 /*
@@ -104,9 +112,9 @@ bool NavGuiThread::threadInit()
     {
         m_remote_map = general_group.find("remote_map").asString();
     }
-    if (general_group.check("remote_laser"))
+    if (laser_group.check("remote_laser"))
     {
-        m_remote_laser = general_group.find("remote_laser").asString();
+        m_remote_laser = laser_group.find("remote_laser").asString();
     }
     ret &= m_port_map_output.open((m_local_name_prefix + "/map:o").c_str());
     ret &= m_port_yarpview_target_input.open((m_local_name_prefix + "/yarpviewTarget:i").c_str());
