@@ -14,7 +14,6 @@ add_subdirectory(localizationServer)
 yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
                                  DEFAULT ON
                                  DOC "devices plugins")
-add_subdirectory(navigationServer)
 add_subdirectory(rosNavigator)
 add_subdirectory(robotGotoDevice)
 add_subdirectory(robotPathPlannerDevice)
