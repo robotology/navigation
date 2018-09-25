@@ -118,7 +118,7 @@ bool navigationModule::respond(const yarp::os::Bottle& command,yarp::os::Bottle&
                 this->setNewRelTarget(v);
                 reply.addVocab(VOCAB_OK);
             }
-            else if (request == VOCAB_NAV_GET_STATUS)
+            else if (request == VOCAB_NAV_GET_NAVIGATION_STATUS)
             {
                 int nav_status = (int) this->getNavigationStatus();
                 reply.addVocab(VOCAB_OK);

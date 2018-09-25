@@ -186,9 +186,9 @@ protected:
     ///////////////////////////////////////
 public:
     //methods inherited from yarp::os::RateThread
-    virtual bool threadInit();
-    virtual void run();
-    virtual void threadRelease();
+    virtual bool threadInit() override;
+    virtual void run() override;
+    virtual void threadRelease() override;
 
     /**
     * Constructor.

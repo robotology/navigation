@@ -9,12 +9,13 @@
 add_subdirectory(baseControl)
 add_subdirectory(forceGuidance)
 add_subdirectory(navigationGUI)
-add_subdirectory(localizationServer)
 
 yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
                                  DEFAULT ON
                                  DOC "devices plugins")
 add_subdirectory(rosNavigator)
+add_subdirectory(rosLocalizer)
+add_subdirectory(odomLocalizer)
 add_subdirectory(robotGotoDevice)
 add_subdirectory(robotPathPlannerDevice)
 

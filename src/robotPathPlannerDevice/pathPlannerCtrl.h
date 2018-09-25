@@ -311,9 +311,9 @@ class PlannerThread: public yarp::os::PeriodicThread
     PlannerThread(double _period, Searchable &_cfg);
 
     //methods inherited from yarp::os::RateThread
-    virtual void run();
-    virtual bool threadInit();
-    virtual void threadRelease();
+    virtual void run() override;
+    virtual bool threadInit() override;
+    virtual void threadRelease() override;
     
     /**
     * Prints stats about the internal status of the module
