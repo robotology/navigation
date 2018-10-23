@@ -128,6 +128,7 @@ protected:
     //general
     std::string                  m_module_name;
     double                       m_last_statistics_printed;
+    double                       m_last_published_map;
     yarp::dev::MapGrid2D         m_current_map;
     yarp::dev::Map2DLocation     m_initial_loc;
     yarp::dev::Map2DLocation     m_localization_data;
@@ -164,6 +165,7 @@ public:
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;
+    void publish_map();
 
 public:
     bool initializeLocalization(yarp::dev::Map2DLocation& loc);

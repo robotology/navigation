@@ -76,12 +76,22 @@ bool   rosLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& po
 
 bool   rosLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
 {
-    return true;
+	if (thread)
+	{
+		return thread->getCurrentLoc(loc);
+	}
+	yError() << "rosLocalizer thread not running";
+    return false;
 }
 
 bool   rosLocalizer::setInitialPose(yarp::dev::Map2DLocation& loc)
 {
-    return true;
+	if (thread)
+	{
+		return thread->initializeLocalization(loc);
+	}
+	yError() << "rosLocalizer thread not running";
+    return false;
 }
 
 //////////////////////////
@@ -102,6 +112,43 @@ rosLocalizerThread::rosLocalizerThread(double _period, yarp::os::Searchable& _cf
     m_localization_data.theta = nan("");
 }
 
+void rosLocalizerThread::publish_map()
+{		
+	double tmp=0;
+	yarp::rosmsg::nav_msgs::OccupancyGrid& ogrid = m_rosPublisher_occupancyGrid.prepare();
+	ogrid.clear();
+	ogrid.info.height=m_current_map.height();
+	ogrid.info.width=m_current_map.width();
+	m_current_map.getResolution(tmp);
+	ogrid.info.resolution=tmp;
+	ogrid.header.frame_id="map";
+	ogrid.info.map_load_time.sec=0;
+	ogrid.info.map_load_time.nsec=0;
+	double x, y, t;
+	m_current_map.getOrigin(x,y,t);
+	ogrid.info.origin.position.x=x;
+	ogrid.info.origin.position.y=y;
+	yarp::math::Quaternion q;
+	yarp::sig::Vector v(4);
+	v[0]=0; v[1]=0; v[2]=1; v[3]=t*DEG2RAD;
+	q.fromAxisAngle(v);
+	ogrid.info.origin.orientation.x = q.x();
+	ogrid.info.origin.orientation.y = q.y();
+	ogrid.info.origin.orientation.z = q.z();
+	ogrid.info.origin.orientation.w = q.w();
+	ogrid.data.resize(m_current_map.width()*m_current_map.height());
+	int index=0;
+	yarp::dev::MapGrid2D::XYCell cell;
+	for (cell.y=m_current_map.height()-1; cell.y>-1; cell.y--)
+	  for (cell.x=0; cell.x<m_current_map.width(); cell.x++)
+	  {
+		m_current_map.getOccupancyData(cell,tmp);
+		ogrid.data[index++]=(int)tmp;
+	  }
+	  
+	m_rosPublisher_occupancyGrid.write();
+}
+		
 void rosLocalizerThread::run()
 {
     double current_time = yarp::os::Time::now();
@@ -130,6 +177,16 @@ void rosLocalizerThread::run()
     {
         yWarning() << "No localization data received for more than 0.1s!";
     }
+    
+    //republish the map periodically
+    if (0)
+    {
+		if (current_time - m_last_published_map > 5.0)
+		{
+			publish_map();
+			m_last_published_map = yarp::os::Time::now();
+		}
+	}
 }
 
 bool rosLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
@@ -145,39 +202,7 @@ bool rosLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
         }
         else
         {
-            double tmp=0;
-            yarp::rosmsg::nav_msgs::OccupancyGrid& ogrid = m_rosPublisher_occupancyGrid.prepare();
-            ogrid.clear();
-            ogrid.info.height=m_current_map.height();
-            ogrid.info.width=m_current_map.width();
-            m_current_map.getResolution(tmp);
-            ogrid.info.resolution=tmp;
-            ogrid.header.frame_id="map";
-            ogrid.info.map_load_time.sec=0;
-            ogrid.info.map_load_time.nsec=0;
-            double x, y, t;
-            m_current_map.getOrigin(x,y,t);
-            ogrid.info.origin.position.x=x;
-            ogrid.info.origin.position.y=y;
-            yarp::math::Quaternion q;
-            yarp::sig::Vector v(4);
-            v[0]=0; v[1]=0; v[2]=1; v[3]=t*DEG2RAD;
-            q.fromAxisAngle(v);
-            ogrid.info.origin.orientation.x = q.x();
-            ogrid.info.origin.orientation.y = q.y();
-            ogrid.info.origin.orientation.z = q.z();
-            ogrid.info.origin.orientation.w = q.w();
-            ogrid.data.resize(m_current_map.width()*m_current_map.height());
-            int index=0;
-            yarp::dev::MapGrid2D::XYCell cell;
-            for (cell.y=m_current_map.height()-1; cell.y>-1; cell.y--)
-              for (cell.x=0; cell.x<m_current_map.width(); cell.x++)
-              {
-                m_current_map.getOccupancyData(cell,tmp);
-                ogrid.data[index++]=(int)tmp;
-              }
-              
-            m_rosPublisher_occupancyGrid.write();
+			publish_map();
         }
     }
 
