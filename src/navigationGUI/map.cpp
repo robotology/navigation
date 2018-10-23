@@ -96,6 +96,17 @@ bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double ang
     return true;
 }
 
+bool map_utilites::drawPoses(IplImage *map, std::vector <Map2DLocation>& poses, const CvScalar& color)
+{
+    for (int i = 0; i < poses.size(); i++)
+    {
+        int orient_x = poses[i].x + int(6 * cos(-poses[i].theta));
+        int orient_y = poses[i].y + int(6 * sin(-poses[i].theta));
+        cvLine(map, cvPoint(poses[i].x, poses[i].y), cvPoint(orient_x, orient_y), color);
+    }
+    return true;
+}
+
 bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
 {
     if (map==0) return false;

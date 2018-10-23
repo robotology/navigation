@@ -242,6 +242,7 @@ bool odomLocalizer::open(yarp::os::Searchable& config)
     if (!thread->start())
     {
         delete thread;
+        thread = NULL;
         return false;
     }
 

@@ -317,10 +317,15 @@ void NavGuiThread::draw_map()
     //draw locations
     static IplImage* map_with_location = 0;
     prepare_image(map_with_location,map_with_path);
+    //to be completed
 
+    //draw poses
+    static IplImage* map_with_poses = 0;
+    prepare_image(map_with_poses, map_with_location);
+    map_utilites::drawPoses(map_with_path, m_estimated_poses, color);
 
     //finished, send to port
-    map_utilites::sendToPort(&m_port_map_output, map_with_location);
+    map_utilites::sendToPort(&m_port_map_output, map_with_poses);
 }
 
 void NavGuiThread::run()
@@ -347,6 +352,13 @@ void NavGuiThread::run()
     {
         m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
         last_drawn_enlarged_obstacles = yarp::os::Time::now();
+    }
+
+    static double last_drawn_estimated_poses = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_drawn_estimated_poses > m_period_draw_estimated_poses)
+    {
+        m_iNav->getEstimatedPoses(m_estimated_poses);
+        last_drawn_estimated_poses = yarp::os::Time::now();
     }
 
     //double check2 = yarp::os::Time::now();

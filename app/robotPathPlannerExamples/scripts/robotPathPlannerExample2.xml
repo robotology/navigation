@@ -29,8 +29,8 @@
 </module>
 
 <module>
-   <name>localizationServer</name>
-   <parameters>--context robotPathPlannerExamples --from localizationServer.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice odomLocalizer --context robotPathPlannerExamples --from localizationServer.ini</parameters>
    <node>console</node>
 </module>
 
@@ -48,7 +48,7 @@
 
 <module>
    <name>navigationGUI</name>
-   <parameters></parameters>
+   <parameters>--context navigationGUI --from navigationGUI_robot_2wheels.ini</parameters>
    <node>console</node>
 </module>
 

@@ -16,6 +16,7 @@ yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
 add_subdirectory(rosNavigator)
 add_subdirectory(rosLocalizer)
 add_subdirectory(odomLocalizer)
+#add_subdirectory(amclLocalizer)
 add_subdirectory(robotGotoDevice)
 add_subdirectory(robotPathPlannerDevice)
 

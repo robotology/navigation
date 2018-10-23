@@ -98,7 +98,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     double    m_laser_angle_of_view;
     string    m_frame_robot_id;
     string    m_frame_map_id;
-    double    m_imagemap_refresh_time;
     bool      m_enable_try_recovery;
 
     //storage for the environment map

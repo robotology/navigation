@@ -23,8 +23,8 @@
 </module>
 
 <module>
-   <name>localizationServer</name>
-   <parameters>--context robotGotoExamples --from localizationServer.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice odomLocalizer --context robotGotoExamples --from localizationServer.ini</parameters>
    <node>console</node>
 </module>
 

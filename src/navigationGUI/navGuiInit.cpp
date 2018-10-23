@@ -69,7 +69,8 @@ bool NavGuiThread::threadInit()
         return false;
     }
 
-    if (general_group.check("period"))   { m_imagemap_refresh_period = general_group.find("period").asDouble(); }
+//    if (general_group.check("publish_map_image_Hz"))       { m_imagemap_refresh_period = 1/general_group.find("publish_map_image_Hz").asDouble(); }
+    if (general_group.check("publish_estimated_poses_Hz")) { m_period_draw_estimated_poses = 1/general_group.find("publish_estimated_poses_Hz").asDouble(); }
 
 /*
     Bottle geometry_group = m_rf.findGroup("ROBOT_GEOMETRY");
@@ -221,6 +222,7 @@ bool NavGuiThread::threadInit()
     //update
     m_period_draw_laser = 0.3; //seconds;
     m_period_draw_enalarged_obstacles = 1.0; //seconds
+    m_period_draw_estimated_poses = 1.0; //seconds
 
     return true;
 }

@@ -117,6 +117,9 @@ class NavGuiThread: public yarp::os::PeriodicThread
     NavigationStatusEnum   m_navigation_status;
     NavigationStatusEnum   m_previous_navigation_status;
 
+    //estimated poses (pointcloud localization)
+    std::vector<yarp::dev::Map2DLocation> m_estimated_poses;
+
     //timeout counters (watchdog on the communication with external modules)
     protected:
     int                 m_loc_timeout_counter;
@@ -126,6 +129,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     //refresh periods
     double              m_period_draw_laser;
     double              m_period_draw_enalarged_obstacles;
+    double              m_period_draw_estimated_poses;
 
     //drawing flags: enable/disable drawing of particular objects on the GUI
     public:

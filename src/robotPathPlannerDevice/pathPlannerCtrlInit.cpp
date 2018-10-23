@@ -53,7 +53,6 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_robot_laser_x = 0;
     m_robot_laser_y = 0;
     m_robot_laser_t = 0;
-    m_imagemap_refresh_time = 0.033;
     m_enable_draw_all_locations=true;
     m_enable_draw_enlarged_scans=true;
     m_enable_draw_laser_scans=true;
@@ -119,8 +118,6 @@ bool PlannerThread::threadInit()
         yError() << "Missing GENERAL group!";
         return false;
     }
-    if (general_group.check("publish_map_image_Hz")) { m_imagemap_refresh_time = 1 / (general_group.find("publish_map_image_Hz").asDouble()); }
-    else { yError() << "Missing publish_map_image_Hz parameter"; return false; }
 
     Bottle geometry_group = m_cfg.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
