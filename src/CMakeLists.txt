@@ -19,6 +19,7 @@ add_subdirectory(odomLocalizer)
 #add_subdirectory(amclLocalizer)
 add_subdirectory(robotGotoDevice)
 add_subdirectory(robotPathPlannerDevice)
+add_subdirectory(map2Gazebo)
 
 yarp_end_plugin_library(navmod)
 
