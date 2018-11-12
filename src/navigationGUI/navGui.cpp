@@ -121,7 +121,18 @@ void NavGuiThread::readTargetFromYarpView()
             loc.x = v[0];
             loc.y = v[1];
             loc.theta = 0; //@@@@TO BE IMPROVED
-            m_iNav->gotoTargetByAbsoluteLocation(loc);
+            if (button3_status == button_status_goto)
+            {
+                m_iNav->gotoTargetByAbsoluteLocation(loc);
+            }
+            else if (button3_status == button_status_localize)
+            {
+                m_iNav->setInitialPose(loc);
+            }
+            else
+            {
+                yError() << "Invalid button state";
+            }
         }
         else if (gui_targ->size() == 4)
         {
