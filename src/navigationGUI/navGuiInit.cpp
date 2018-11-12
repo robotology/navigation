@@ -48,6 +48,31 @@ NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
     m_remote_map = "/mapServer";
     m_remote_laser = "/ikart/laser:o";
     m_remote_navigation = "/navigationServer";
+
+    const int button_w = 70;
+    const int button_h = 20;
+
+    button1_l = 0;
+    button1_r = button1_l+ button_w;
+    button1_t = 0;
+    button1_b = button1_t+ button_h;
+
+    button2_l = button1_r + 20;
+    button2_r = button2_l + button_w;
+    button2_t = 0;
+    button2_b = button2_t + button_h;
+
+    button3_l = button2_r + 20;
+    button3_r = button3_l + button_w;
+    button3_t = 0;
+    button3_b = button3_t + button_h;
+
+    button3_status = button_status_goto;
+
+    i1_map = nullptr;
+    i2_map_menu = nullptr;
+    i3_map_menu_scan = nullptr;
+    i4_map_with_path = nullptr;
 }
 
 bool NavGuiThread::threadInit()

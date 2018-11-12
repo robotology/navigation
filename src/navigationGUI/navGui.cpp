@@ -47,11 +47,68 @@ using namespace yarp::dev;
 #define DEG2RAD M_PI/180
 #endif
 
+bool NavGuiThread::click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p)
+{
+    int yoff = i1_map->height;
+    int xw = i1_map->width;
+    int yh = i1_map->height;
+    click_p.x = (*gui_targ).get(0).asInt();
+    click_p.y = (*gui_targ).get(1).asInt();
+    if (click_p.x > 0 && click_p.x < xw &&
+        click_p.y > button1_t && click_p.y < button1_b)
+    {
+        click_p.x -= 0;
+        click_p.y -= 0;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void NavGuiThread::readTargetFromYarpView()
 {
     yarp::os::Bottle *gui_targ = m_port_yarpview_target_input.read(false);
     if (gui_targ)
     {
+        yarp::math::Vec2D<int> click_p;
+        if (click_in_menu(gui_targ, click_p))
+        {
+            if (click_p.x > button1_l && click_p.x < button1_r &&
+                click_p.y > button1_t && click_p.y < button1_b)
+                {
+                    m_iNav->stopNavigation();
+                }
+            else 
+                if (click_p.x > button2_l && click_p.x < button2_r &&
+                    click_p.y > button2_t && click_p.y < button2_b)
+                {
+                    if (m_navigation_status== navigation_status_moving)
+                    {
+                        m_iNav->suspendNavigation();
+                    }
+                    else if (m_navigation_status == navigation_status_paused)
+                    {
+                        m_iNav->resumeNavigation();
+                    }
+                }
+            else
+                if (click_p.x > button3_l && click_p.x < button3_r &&
+                    click_p.y > button3_t && click_p.y < button3_b)
+                {
+                    if (button3_status == button_status_localize)
+                    {
+                        button3_status = button_status_goto;
+                    }
+                    else
+                    {
+                        button3_status = button_status_localize;
+                    }
+                }
+            return;
+        }
+
         if (gui_targ->size() == 2)
         {
             MapGrid2D::XYCell c_end_gui;
@@ -86,7 +143,18 @@ void NavGuiThread::readTargetFromYarpView()
             loc.x = v[0];
             loc.y = v[1];
             loc.theta = angle;
-            m_iNav->gotoTargetByAbsoluteLocation(loc);
+            if (button3_status == button_status_goto)
+            {
+                m_iNav->gotoTargetByAbsoluteLocation(loc);
+            }
+            else if (button3_status == button_status_localize)
+            {
+                m_iNav->setInitialPose(loc);
+            }
+            else
+            {
+                yError() << "Invalid button state";
+            }
         }
         else
         {
@@ -217,6 +285,59 @@ bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_im
     return true;
 }
 
+void NavGuiThread::addMenu(CvFont& font)
+{
+    button1_t = i1_map->height;
+    button1_b = button1_t + 20;
+    button2_t = i1_map->height;
+    button2_b = button2_t + 20;
+    button3_t = i1_map->height;
+    button3_b = button3_t + 20;
+    cvRectangle(i2_map_menu, CvPoint(button1_l, button1_t), CvPoint(button1_r, button1_b), CvScalar(200, 0, 0), -1);
+    cvRectangle(i2_map_menu, CvPoint(button2_l, button2_t), CvPoint(button2_r, button2_b), CvScalar(0, 200, 0), -1);
+    cvRectangle(i2_map_menu, CvPoint(button3_l, button3_t), CvPoint(button3_r, button3_b), CvScalar(0, 0, 200), -1);
+    cvRectangle(i2_map_menu, CvPoint(button1_l + 2, button1_t + 2), CvPoint(button1_r - 2, button1_b - 2), CvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, CvPoint(button2_l + 2, button2_t + 2), CvPoint(button2_r - 2, button2_b - 2), CvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, CvPoint(button3_l + 2, button3_t + 2), CvPoint(button3_r - 2, button3_b - 2), CvScalar(0, 0, 0));
+    char txt[255];
+
+    if (m_navigation_status == navigation_status_moving || 
+        m_navigation_status == navigation_status_paused )
+    {
+        snprintf(txt, 255, "Stop");
+    }
+    else
+    {
+        snprintf(txt, 255, "- - -");
+    }
+    cvPutText(i2_map_menu, txt, cvPoint(button1_l + 5, button1_t + 12), &font, CvScalar(0, 0, 0));
+
+    if (m_navigation_status == navigation_status_moving)
+    {
+        snprintf(txt, 255, "Suspend");
+    }
+    else if (m_navigation_status == navigation_status_paused)
+    {
+        snprintf(txt, 255, "Resume");
+    }
+    else
+    {
+        snprintf(txt, 255, "- - -");
+    }
+    cvPutText(i2_map_menu, txt, cvPoint(button2_l + 5, button2_t + 12), &font, CvScalar(0, 0, 0));
+
+    if (button3_status == button_status_goto)
+    {
+        snprintf(txt, 255, "Goto");
+    }
+    else if (button3_status == button_status_localize)
+    {
+        snprintf(txt, 255, "Localize");
+    }
+
+    cvPutText(i2_map_menu, txt, cvPoint(button3_l + 5, button3_t + 12), &font, CvScalar(0, 0, 0));
+}
+
 void NavGuiThread::draw_map()
 {
     CvFont font;
@@ -228,19 +349,40 @@ void NavGuiThread::draw_map()
     MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
     MapGrid2D::XYCell final_goal = m_current_map.world2Cell(yarp::dev::MapGrid2D::XYWorld(m_curr_goal.x, m_curr_goal.y));
 
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
-    m_current_map.getMapImage(map_image);
-    static IplImage*   processed_map_with_scan = 0;
-    prepare_image(processed_map_with_scan,(const IplImage*) map_image.getIplImage());
+    if (i1_map == nullptr)
+    {
+        yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
+        m_current_map.getMapImage(map_image);
+        IplImage* tmp = (IplImage*)map_image.getIplImage();
+        int w = tmp->width;
+        int h = tmp->height;
+        i1_map = cvCreateImage(CvSize(w,h), 8, 3);
+        cvCopy(tmp, i1_map);
+    }
+    if (i2_map_menu == nullptr)
+    {
+        //i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height), 8, 3);
+        //cvCopy(i1_map, i2_map_menu);
+        i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height+20), 8, 3);
+        cvCopyMakeBorder(i1_map, i2_map_menu, CvPoint(0, 0), cv::BORDER_ISOLATED);
+    }
+    addMenu(font);
+
+    if (i3_map_menu_scan == nullptr)
+    {
+        i3_map_menu_scan = cvCreateImage(CvSize(i2_map_menu->width, i2_map_menu->height), 8, 3);
+    }
+    cvCopy(i2_map_menu, i3_map_menu_scan);
+
     if (m_laser_timeout_counter<TIMEOUT_MAX)
     {
         if (m_enable_draw_enlarged_scans)
         {
-            map_utilites::drawLaserMap(processed_map_with_scan, m_temporary_obstacles_map, azure_color);
+            map_utilites::drawLaserMap(i3_map_menu_scan, m_temporary_obstacles_map, azure_color);
         }
         if (m_enable_draw_laser_scans)
         {
-            map_utilites::drawLaserScan(processed_map_with_scan, m_laser_map_cells, blue_color);
+            map_utilites::drawLaserScan(i3_map_menu_scan, m_laser_map_cells, blue_color);
         }
     }
 
@@ -254,10 +396,10 @@ void NavGuiThread::draw_map()
         case navigation_status_failing:
         case navigation_status_paused:
         case navigation_status_thinking:
-            map_utilites::drawGoal(processed_map_with_scan, final_goal, m_curr_goal.theta* DEG2RAD, red_color);
+            map_utilites::drawGoal(i3_map_menu_scan, final_goal, m_curr_goal.theta* DEG2RAD, red_color);
         break;
         case navigation_status_goal_reached:
-            map_utilites::drawGoal(processed_map_with_scan, final_goal, m_curr_goal.theta* DEG2RAD, green_color);
+            map_utilites::drawGoal(i3_map_menu_scan, final_goal, m_curr_goal.theta* DEG2RAD, green_color);
         break;
         case navigation_status_idle:
         default:
@@ -269,12 +411,12 @@ void NavGuiThread::draw_map()
     {
         for (size_t i=0; i<m_locations_list.size(); i++)
         {
-            map_utilites::drawGoal(processed_map_with_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
+            map_utilites::drawGoal(i3_map_menu_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
         }
     }
 
     //draw Current Position
-    map_utilites::drawCurrentPosition(processed_map_with_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
+    map_utilites::drawCurrentPosition(i3_map_menu_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
 
     //draw Infos
 #define DRAW_INFO
@@ -285,12 +427,11 @@ void NavGuiThread::draw_map()
     MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
     MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
     MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
-    map_utilites::drawInfo(processed_map_with_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString() ,m_localization_data, font, blue_color);
+    map_utilites::drawInfo(i3_map_menu_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString() ,m_localization_data, font, blue_color);
 #endif
 
     //draw path
-    static IplImage* map_with_path = 0;
-    prepare_image(map_with_path,processed_map_with_scan);
+    prepare_image(i4_map_with_path, i3_map_menu_scan);
 
     CvScalar color = cvScalar(0, 200, 0);
     CvScalar color2 = cvScalar(0, 200, 100);
@@ -311,18 +452,18 @@ void NavGuiThread::draw_map()
 
         MapGrid2D::XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
         MapGrid2D::XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-        map_utilites::drawPath(map_with_path, start, curr_waypoint_cell, all_waypoints_cell, color);
+        map_utilites::drawPath(i4_map_with_path, start, curr_waypoint_cell, all_waypoints_cell, color);
     }
 
     //draw locations
     static IplImage* map_with_location = 0;
-    prepare_image(map_with_location,map_with_path);
+    prepare_image(map_with_location, i4_map_with_path);
     //to be completed
 
     //draw poses
     static IplImage* map_with_poses = 0;
     prepare_image(map_with_poses, map_with_location);
-    map_utilites::drawPoses(map_with_path, m_estimated_poses, color);
+    map_utilites::drawPoses(i4_map_with_path, m_estimated_poses, color);
 
     //finished, send to port
     map_utilites::sendToPort(&m_port_map_output, map_with_poses);
@@ -389,6 +530,18 @@ void NavGuiThread::run()
         //do nothing, just wait.
     }
     else if (m_navigation_status == navigation_status_error)
+    {
+        //do nothing, just wait.
+    }
+    else if (m_navigation_status == navigation_status_paused)
+    {
+        //do nothing, just wait.
+    }
+    else if (m_navigation_status == navigation_status_waiting_obstacle)
+    {
+        //do nothing, just wait.
+    }
+    else if (m_navigation_status == navigation_status_preparing_before_move)
     {
         //do nothing, just wait.
     }

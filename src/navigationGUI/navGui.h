@@ -136,7 +136,32 @@ class NavGuiThread: public yarp::os::PeriodicThread
     bool                m_enable_draw_all_locations;
     bool                m_enable_draw_laser_scans;
     bool                m_enable_draw_enlarged_scans;
-    
+  
+    //images to be displayed
+    IplImage* i1_map;
+    IplImage* i2_map_menu;
+    IplImage* i3_map_menu_scan;
+    IplImage* i4_map_with_path;
+
+    //buttons
+    size_t button1_l;
+    size_t button1_r;
+    size_t button1_t;
+    size_t button1_b;
+    size_t button2_l;
+    size_t button2_r;
+    size_t button2_t;
+    size_t button2_b;
+    size_t button3_l;
+    size_t button3_r;
+    size_t button3_t;
+    size_t button3_b;
+
+    enum
+    {
+      button_status_localize,
+      button_status_goto
+    } button3_status;
 
     /**
     * Returns the current navigation status used by the internal finite-state machine
@@ -169,6 +194,8 @@ class NavGuiThread: public yarp::os::PeriodicThread
     bool          readNavigationStatus(bool& changed);
     void          draw_map();
     bool          updateLocations();
+    bool          click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p);
+    void          addMenu(CvFont& font);
 
     private:
     std::string   getStatusAsString(NavigationStatusEnum status);
