@@ -293,9 +293,9 @@ void NavGuiThread::addMenu(CvFont& font)
     button2_b = button2_t + 20;
     button3_t = i1_map->height;
     button3_b = button3_t + 20;
-    cvRectangle(i2_map_menu, CvPoint(button1_l, button1_t), CvPoint(button1_r, button1_b), CvScalar(200, 0, 0), -1);
-    cvRectangle(i2_map_menu, CvPoint(button2_l, button2_t), CvPoint(button2_r, button2_b), CvScalar(0, 200, 0), -1);
-    cvRectangle(i2_map_menu, CvPoint(button3_l, button3_t), CvPoint(button3_r, button3_b), CvScalar(0, 0, 200), -1);
+    cvRectangle(i2_map_menu, CvPoint(button1_l, button1_t), CvPoint(button1_r, button1_b), CvScalar(200, 50, 50), -1);
+    cvRectangle(i2_map_menu, CvPoint(button2_l, button2_t), CvPoint(button2_r, button2_b), CvScalar(50, 200, 50), -1);
+    cvRectangle(i2_map_menu, CvPoint(button3_l, button3_t), CvPoint(button3_r, button3_b), CvScalar(50, 50, 200), -1);
     cvRectangle(i2_map_menu, CvPoint(button1_l + 2, button1_t + 2), CvPoint(button1_r - 2, button1_b - 2), CvScalar(0, 0, 0));
     cvRectangle(i2_map_menu, CvPoint(button2_l + 2, button2_t + 2), CvPoint(button2_r - 2, button2_b - 2), CvScalar(0, 0, 0));
     cvRectangle(i2_map_menu, CvPoint(button3_l + 2, button3_t + 2), CvPoint(button3_r - 2, button3_b - 2), CvScalar(0, 0, 0));
@@ -356,8 +356,10 @@ void NavGuiThread::draw_map()
         IplImage* tmp = (IplImage*)map_image.getIplImage();
         int w = tmp->width;
         int h = tmp->height;
+        if (w < 320) w = 320;
         i1_map = cvCreateImage(CvSize(w,h), 8, 3);
-        cvCopy(tmp, i1_map);
+      //  cvCopy(tmp, i1_map);
+        cvCopyMakeBorder(tmp, i1_map, CvPoint(0, 0), cv::BORDER_ISOLATED);
     }
     if (i2_map_menu == nullptr)
     {
