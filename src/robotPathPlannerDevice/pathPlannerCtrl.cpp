@@ -251,114 +251,227 @@ void PlannerThread::run()
     // the finite-state-machine
     /////////////////////////////
     size_t path_size = m_current_path->size();
-    if (m_planner_status == navigation_status_moving)
+    switch (m_planner_status)
     {
-        if (m_inner_status == navigation_status_goal_reached)
+        case navigation_status_moving:
         {
-            yInfo ("waypoint reached");
-            if (path_size == 0)
+            if (m_inner_status == navigation_status_goal_reached)
             {
-                //navigation is complete
-                yInfo("navigation complete");
-                m_planner_status = navigation_status_goal_reached;
+                yInfo("waypoint reached");
+                if (path_size == 0)
+                {
+                    //navigation is complete
+                    yInfo("navigation complete");
+                    m_planner_status = navigation_status_goal_reached;
+                }
+                else if (path_size == 1)
+                {
+                    //remove the current waypoint, just reached
+                    m_current_path->pop();
+                    //send the next waypoint
+                    yInfo("sending the last waypoint");
+                    {
+                        //send the tolerance to the inner controller
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("linear_tol");
+                        cmd.addDouble(m_goal_tolerance_lin);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd2, ans2;
+                        cmd2.addString("set");
+                        cmd2.addString("angular_tol");
+                        cmd2.addDouble(m_goal_tolerance_ang);
+                        m_port_commands_output.write(cmd2, ans2);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("min_lin_speed");
+                        cmd.addDouble(m_goal_min_lin_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("max_lin_speed");
+                        cmd.addDouble(m_goal_max_lin_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("min_ang_speed");
+                        cmd.addDouble(m_goal_min_ang_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("max_ang_speed");
+                        cmd.addDouble(m_goal_max_ang_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("ang_speed_gain");
+                        cmd.addDouble(m_goal_ang_gain);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("lin_speed_gain");
+                        cmd.addDouble(m_goal_lin_gain);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    sendWaypoint();
+                }
+                else
+                {
+                    //remove the current waypoint, just reached
+                    m_current_path->pop();
+                    //send the next waypoint
+                    yInfo("sending the next waypoint");
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("min_lin_speed");
+                        cmd.addDouble(m_waypoint_min_lin_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("max_lin_speed");
+                        cmd.addDouble(m_waypoint_max_lin_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("min_ang_speed");
+                        cmd.addDouble(m_waypoint_min_ang_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("max_ang_speed");
+                        cmd.addDouble(m_waypoint_max_ang_speed);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("ang_speed_gain");
+                        cmd.addDouble(m_waypoint_ang_gain);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    {
+                        Bottle cmd, ans;
+                        cmd.addString("set");
+                        cmd.addString("lin_speed_gain");
+                        cmd.addDouble(m_waypoint_lin_gain);
+                        m_port_commands_output.write(cmd, ans);
+                    }
+                    sendWaypoint();
+                }
             }
-            else if (path_size == 1)
+            else if (m_inner_status == navigation_status_preparing_before_move)
             {
-                //remove the current waypoint, just reached
-                m_current_path->pop();
-                //send the next waypoint
-                yInfo("sending the last waypoint");
-                {
-                    //send the tolerance to the inner controller
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("linear_tol");
-                    cmd.addDouble(m_goal_tolerance_lin);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                {
-                    Bottle cmd2, ans2;
-                    cmd2.addString("set");
-                    cmd2.addString("angular_tol");
-                    cmd2.addDouble(m_goal_tolerance_ang);
-                    m_port_commands_output.write(cmd2, ans2);
-                }
-                {
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("min_lin_speed");
-                    cmd.addDouble(m_goal_min_lin_speed);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                {
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("max_lin_speed");
-                    cmd.addDouble(m_goal_max_lin_speed);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                {
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("min_ang_speed");
-                    cmd.addDouble(m_goal_min_ang_speed);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                {
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("max_ang_speed");
-                    cmd.addDouble(m_goal_max_ang_speed);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                {
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("ang_speed_gain");
-                    cmd.addDouble(m_goal_ang_gain);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                {
-                    Bottle cmd, ans;
-                    cmd.addString("set");
-                    cmd.addString("lin_speed_gain");
-                    cmd.addDouble(m_goal_lin_gain);
-                    m_port_commands_output.write(cmd, ans);
-                }
-                sendWaypoint();
+                //do nothing, just wait
             }
-            else
+            else if (m_inner_status == navigation_status_moving)
             {
-                //remove the current waypoint, just reached
-                m_current_path->pop();
-                //send the next waypoint
-                yInfo("sending the next waypoint");
+                //do nothing, just wait
+            }
+            else if (m_inner_status == navigation_status_waiting_obstacle)
+            {
+                //do nothing, just wait
+            }
+            else if (m_inner_status == navigation_status_failing)
+            {
+                if (m_enable_try_recovery)
+                {
+                    //try to avoid obstacles
+                    yError("unable to reach next waypoint, trying new solution");
+
+                    Bottle cmd, ans;
+                    cmd.addString("stop");
+                    m_port_commands_output.write(cmd, ans);
+                    map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
+                    sendWaypoint();
+                }
+                else
+                {
+                    //terminate navigation
+                    Bottle cmd, ans;
+                    cmd.addString("stop");
+                    m_port_commands_output.write(cmd, ans);
+                    m_planner_status = navigation_status_aborted;
+                    yError("unable to reach next waypoint, aborting navigation");
+                }
+            }
+            else if (m_inner_status == navigation_status_aborted)
+            {
+                //terminate navigation
+                m_planner_status = navigation_status_aborted;
+                yError("unable to reach next waypoint, aborting navigation");
+                //current_path.clear();
+            }
+            else if (m_inner_status == navigation_status_error)
+            {
+                yError("PathPlanner in error status");
+                m_planner_status = navigation_status_error;
+            }
+            else if (m_inner_status == navigation_status_idle)
+            {
+                //send the first waypoint
+                yInfo("sending the first waypoint");
+                //send the tolerance to the inner controller
+                {
+                    Bottle cmd1, ans1;
+                    cmd1.addString("set");
+                    cmd1.addString("linear_tol");
+                    cmd1.addDouble(m_waypoint_tolerance_lin);
+                    m_port_commands_output.write(cmd1, ans1);
+                }
                 {
                     Bottle cmd, ans;
-                    cmd.addString("set"); 
-                    cmd.addString("min_lin_speed");
-                    cmd.addDouble(m_waypoint_min_lin_speed);
+                    cmd.addString("set");
+                    cmd.addString("angular_tol");
+                    cmd.addDouble(m_waypoint_tolerance_ang);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
-                    cmd.addString("set"); 
+                    cmd.addString("set");
                     cmd.addString("max_lin_speed");
                     cmd.addDouble(m_waypoint_max_lin_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
-                    cmd.addString("set"); 
-                    cmd.addString("min_ang_speed");
-                    cmd.addDouble(m_waypoint_min_ang_speed);
+                    cmd.addString("set");
+                    cmd.addString("max_ang_speed");
+                    cmd.addDouble(m_waypoint_max_ang_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
-                    cmd.addString("set"); 
-                    cmd.addString("max_ang_speed");
-                    cmd.addDouble(m_waypoint_max_ang_speed);
+                    cmd.addString("set");
+                    cmd.addString("min_lin_speed");
+                    cmd.addDouble(m_waypoint_min_lin_speed);
+                    m_port_commands_output.write(cmd, ans);
+                }
+                {
+                    Bottle cmd, ans;
+                    cmd.addString("set");
+                    cmd.addString("min_ang_speed");
+                    cmd.addDouble(m_waypoint_min_ang_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
@@ -377,155 +490,68 @@ void PlannerThread::run()
                 }
                 sendWaypoint();
             }
-        }
-        else if (m_inner_status == navigation_status_preparing_before_move)
-        {
-            //do nothing, just wait
-        }
-        else if (m_inner_status == navigation_status_moving)
-        {
-            //do nothing, just wait
-        }
-        else if (m_inner_status == navigation_status_waiting_obstacle)
-        {
-            //do nothing, just wait
-        }
-        else if (m_inner_status == navigation_status_failing)
-        {
-            if (m_enable_try_recovery)
-            {
-                //try to avoid obstacles
-                yError ("unable to reach next waypoint, trying new solution");
-
-                Bottle cmd, ans;
-                cmd.addString("stop");
-                m_port_commands_output.write(cmd, ans);
-                map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
-                sendWaypoint();
-            }
             else
             {
-                //terminate navigation
-                Bottle cmd, ans;
-                cmd.addString("stop");
-                m_port_commands_output.write(cmd, ans);
-                m_planner_status = navigation_status_aborted;
-                yError ("unable to reach next waypoint, aborting navigation");
+                yError("unrecognized inner status: %d", m_inner_status);
             }
         }
-        else if (m_inner_status == navigation_status_aborted)
+        break;
+        case navigation_status_goal_reached:
         {
-            //terminate navigation
-            m_planner_status = navigation_status_aborted;
-            yError ("unable to reach next waypoint, aborting navigation");
-            //current_path.clear();
+            //do nothing, just wait
         }
-        else if (m_inner_status == navigation_status_error)
+        break;
+        case navigation_status_waiting_obstacle:
         {
-            yError("PathPlanner in error status");
+            //do nothing, just wait
+        }
+        break;
+        case navigation_status_preparing_before_move:
+        {
+            //do nothing, just wait
+        }
+        break;
+        case navigation_status_idle:
+        {
+            //do nothing, just wait
+        }
+        break;
+        case  navigation_status_thinking:
+        {
+            //do nothing, just wait
+        }
+        break;
+        case  navigation_status_paused:
+        {
+            //do nothing, just wait
+        }
+        break;
+        case navigation_status_aborted:
+        {
+            //do nothing, just wait
+        }
+        break;
+        case navigation_status_failing:
+        {
+            //do nothing, just wait.
+            //this status should be not reached by the high-level planner.
+        }
+        break;
+        case navigation_status_error:
+        {
+            if (m_inner_status != navigation_status_error)
+            {
+                m_planner_status = navigation_status_aborted;
+            }
+        }
+        break;
+        default:
+        {
+            //unknown status
+            yError("m_planner_status: unknown status:%d", m_planner_status);
             m_planner_status = navigation_status_error;
         }
-        else if (m_inner_status == navigation_status_idle)
-        {
-            //send the first waypoint
-            yInfo ("sending the first waypoint");
-            //send the tolerance to the inner controller
-            {
-                Bottle cmd1, ans1;
-                cmd1.addString("set"); 
-                cmd1.addString("linear_tol");
-                cmd1.addDouble(m_waypoint_tolerance_lin);
-                m_port_commands_output.write(cmd1, ans1);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set"); 
-                cmd.addString("angular_tol");
-                cmd.addDouble(m_waypoint_tolerance_ang);
-                m_port_commands_output.write(cmd, ans);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set"); 
-                cmd.addString("max_lin_speed");
-                cmd.addDouble(m_waypoint_max_lin_speed);
-                m_port_commands_output.write(cmd, ans);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set"); 
-                cmd.addString("max_ang_speed");
-                cmd.addDouble(m_waypoint_max_ang_speed);
-                m_port_commands_output.write(cmd, ans);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set"); 
-                cmd.addString("min_lin_speed");
-                cmd.addDouble(m_waypoint_min_lin_speed);
-                m_port_commands_output.write(cmd, ans);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set"); 
-                cmd.addString("min_ang_speed");
-                cmd.addDouble(m_waypoint_min_ang_speed);
-                m_port_commands_output.write(cmd, ans);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set");
-                cmd.addString("ang_speed_gain");
-                cmd.addDouble(m_waypoint_ang_gain);
-                m_port_commands_output.write(cmd, ans);
-            }
-            {
-                Bottle cmd, ans;
-                cmd.addString("set");
-                cmd.addString("lin_speed_gain");
-                cmd.addDouble(m_waypoint_lin_gain);
-                m_port_commands_output.write(cmd, ans);
-            }
-            sendWaypoint();
-        }
-        else
-        {
-            yError("unrecognized inner status: %d", m_inner_status);
-        }
-    }
-    else if (m_planner_status == navigation_status_goal_reached)
-    {
-        //do nothing, just wait
-    }
-    else if (m_planner_status == navigation_status_idle)
-    {
-        //do nothing, just wait
-    }
-    else if (m_planner_status == navigation_status_thinking)
-    {
-        //do nothing, just wait
-    }
-    else if (m_planner_status == navigation_status_aborted)
-    {
-        //do nothing, just wait
-    }
-    else if (m_planner_status == navigation_status_failing)
-    {
-        //do nothing, just wait.
-        //this status should be not reached by the high-level planner.
-    }
-    else if (m_planner_status == navigation_status_error)
-    {
-        if (m_inner_status != navigation_status_error)
-        {
-            m_planner_status = navigation_status_aborted;
-        }
-    }
-    else
-    {
-        //unknown status
-        yError("unknown status:%d", m_planner_status);
-        m_planner_status = navigation_status_error;
+        break;
     }
 
     //broadcast the planner status
