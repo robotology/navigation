@@ -114,6 +114,7 @@ protected:
     double                       m_last_statistics_printed;
     yarp::dev::Map2DLocation     m_initial_loc;
     yarp::dev::Map2DLocation     m_localization_data;
+    yarp::dev::Map2DLocation     m_odom_data;
     yarp::os::Mutex              m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;

@@ -91,9 +91,9 @@ odomLocalizerThread::odomLocalizerThread(double _period, yarp::os::Searchable& _
     m_last_statistics_printed = -1;
 
     m_localization_data.map_id = "unknown";
-    m_localization_data.x = nan("");
-    m_localization_data.y = nan("");
-    m_localization_data.theta = nan("");
+    m_localization_data.x = 0;
+    m_localization_data.y = 0;
+    m_localization_data.theta = 0;
 }
 
 void odomLocalizerThread::run()
@@ -111,9 +111,14 @@ void odomLocalizerThread::run()
     if (loc)
     {
         m_last_odometry_data_received = yarp::os::Time::now();
-        m_localization_data.x = loc->data()[0];
-        m_localization_data.y = loc->data()[1];
-        m_localization_data.theta = loc->data()[2];
+        m_odom_data.x     = loc->data()[0];
+        m_odom_data.y     = loc->data()[1];
+        m_odom_data.theta = loc->data()[2];
+        m_localization_data.x     = m_odom_data.x     + m_initial_loc.x;
+        m_localization_data.y     = m_odom_data.y     + m_initial_loc.y;
+        m_localization_data.theta = m_odom_data.theta + m_initial_loc.theta;
+        if      (m_localization_data.theta >= +360) m_localization_data.theta -= 360;
+        else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
     }
     if (current_time - m_last_odometry_data_received > 0.1)
     {
@@ -123,15 +128,28 @@ void odomLocalizerThread::run()
 
 bool odomLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
 {
-    m_localization_data.map_id = loc.map_id;
-    m_localization_data.x = loc.x;
-    m_localization_data.y = loc.y;
-    m_localization_data.theta = loc.theta;
+    yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
+    LockGuard lock(m_mutex);
+    m_initial_loc.map_id = loc.map_id;
+    m_initial_loc.x = -m_odom_data.x + loc.x;
+    m_initial_loc.y = -m_odom_data.y + loc.y;
+    m_initial_loc.theta = -m_odom_data.theta + loc.theta;
+
+    if (m_localization_data.map_id != m_initial_loc.map_id)
+    {
+        yInfo() << "Map changed to: " << m_localization_data.map_id;
+        m_localization_data.map_id = m_initial_loc.map_id;
+        //@@@TO BE COMPLETED
+        m_localization_data.x = 0+m_initial_loc.x;
+        m_localization_data.y = 0+m_initial_loc.y;
+        m_localization_data.theta = 0+m_initial_loc.theta;
+    }
     return true;
 }
 
 bool odomLocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
 {
+    LockGuard lock(m_mutex);
     loc = m_localization_data;
     return true;
 }
@@ -198,15 +216,16 @@ bool odomLocalizerThread::threadInit()
     }
 
     //initial location initialization
-    if (initial_group.check("initial_x")) { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
+    yarp::dev::Map2DLocation tmp_loc;
+    if (initial_group.check("initial_x")) { tmp_loc.x = initial_group.find("initial_x").asDouble(); }
     else { yError() << "missing initial_x param"; return false; }
-    if (initial_group.check("initial_y")) { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
+    if (initial_group.check("initial_y")) { tmp_loc.y = initial_group.find("initial_y").asDouble(); }
     else { yError() << "missing initial_y param"; return false; }
-    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
+    if (initial_group.check("initial_theta")) { tmp_loc.theta = initial_group.find("initial_theta").asDouble(); }
     else { yError() << "missing initial_theta param"; return false; }
-    if (initial_group.check("initial_map")) { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
+    if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
     else { yError() << "missing initial_map param"; return false; }
-    this->initializeLocalization(m_initial_loc);
+    this->initializeLocalization(tmp_loc);
 
    return true;
 }
