@@ -133,9 +133,11 @@ class NavGuiThread: public yarp::os::PeriodicThread
 
     //drawing flags: enable/disable drawing of particular objects on the GUI
     public:
+    int                 m_enable_estimated_particles; //this sets a max number on the particles drawn
     bool                m_enable_draw_all_locations;
     bool                m_enable_draw_laser_scans;
     bool                m_enable_draw_enlarged_scans;
+    bool                m_enable_draw_infos;
   
     //images to be displayed
     IplImage* i1_map;

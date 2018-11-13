@@ -96,13 +96,15 @@ bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double ang
     return true;
 }
 
-bool map_utilites::drawPoses(IplImage *map, std::vector <Map2DLocation>& poses, const CvScalar& color)
+bool map_utilites::drawPose(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
 {
-    for (int i = 0; i < poses.size(); i++)
+    if (map == 0) return false;
+    cvCircle(map, cvPoint(current.x, current.y), 2, color);
+    if (std::isnan(angle) == false)
     {
-        int orient_x = poses[i].x + int(6 * cos(-poses[i].theta));
-        int orient_y = poses[i].y + int(6 * sin(-poses[i].theta));
-        cvLine(map, cvPoint(poses[i].x, poses[i].y), cvPoint(orient_x, orient_y), color);
+        int orient_x = current.x + int(6 * cos(-angle));
+        int orient_y = current.y + int(6 * sin(-angle));
+        cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
     }
     return true;
 }

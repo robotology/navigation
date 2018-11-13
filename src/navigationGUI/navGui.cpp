@@ -30,6 +30,7 @@
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/INavigation2D.h>
 #include <string>
+#include <algorithm>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -387,6 +388,7 @@ void NavGuiThread::draw_map()
     }
     cvCopy(i2_map_menu, i3_map_menu_scan);
 
+    //############### draw laser
     if (m_laser_timeout_counter<TIMEOUT_MAX)
     {
         if (m_enable_draw_enlarged_scans)
@@ -399,7 +401,7 @@ void NavGuiThread::draw_map()
         }
     }
 
-    //draw goal
+    //############### draw goal
     switch (m_navigation_status)
     {
         case navigation_status_preparing_before_move:
@@ -420,6 +422,14 @@ void NavGuiThread::draw_map()
         break;
     }
 
+    //############### draw localization particles
+    int particles_to_be_drawn = std::min((int)m_enable_estimated_particles, (int)m_estimated_poses.size());
+    for (size_t i = 0; i < particles_to_be_drawn; i++)
+    {
+         map_utilites::drawPose(i3_map_menu_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_estimated_poses[i].x, m_estimated_poses[i].y)), m_estimated_poses[i].theta* DEG2RAD, green_color);
+    }
+
+    //############### draw locations
     if (m_enable_draw_all_locations)
     {
         for (size_t i=0; i<m_locations_list.size(); i++)
@@ -428,22 +438,22 @@ void NavGuiThread::draw_map()
         }
     }
 
-    //draw Current Position
+    //############### draw Current Position
     map_utilites::drawCurrentPosition(i3_map_menu_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
 
-    //draw Infos
-#define DRAW_INFO
-#ifdef DRAW_INFO
-    MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
-    MapGrid2D::XYWorld w_y_axis; w_y_axis.x = 0; w_y_axis.y = 2;
-    MapGrid2D::XYWorld w_orig; w_orig.x = 0; w_orig.y = 0;
-    MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
-    MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
-    MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
-    map_utilites::drawInfo(i3_map_menu_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString() ,m_localization_data, font, blue_color);
-#endif
+    //############### draw Infos
+    if (m_enable_draw_infos)
+    {
+        MapGrid2D::XYWorld w_x_axis; w_x_axis.x = 2; w_x_axis.y = 0;
+        MapGrid2D::XYWorld w_y_axis; w_y_axis.x = 0; w_y_axis.y = 2;
+        MapGrid2D::XYWorld w_orig; w_orig.x = 0; w_orig.y = 0;
+        MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
+        MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
+        MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
+        map_utilites::drawInfo(i3_map_menu_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font, blue_color);
+    }
 
-    //draw path
+    //############### draw path
     prepare_image(i4_map_with_path, i3_map_menu_scan);
 
     CvScalar color = cvScalar(0, 200, 0);
@@ -454,32 +464,22 @@ void NavGuiThread::draw_map()
         m_navigation_status != navigation_status_aborted &&
         m_navigation_status != navigation_status_error &&
         m_navigation_status != navigation_status_failing)
-    {
-        std::queue <MapGrid2D::XYCell> all_waypoints_cell;
-        for (int i = 0; i < m_all_waypoints.size(); i++)
         {
-            MapGrid2D::XYWorld curr_waypoint_world(m_all_waypoints[i].x, m_all_waypoints[i].y);
+            std::queue <MapGrid2D::XYCell> all_waypoints_cell;
+            for (int i = 0; i < m_all_waypoints.size(); i++)
+            {
+                MapGrid2D::XYWorld curr_waypoint_world(m_all_waypoints[i].x, m_all_waypoints[i].y);
+                MapGrid2D::XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+                all_waypoints_cell.push(curr_waypoint_cell);
+            }
+
+            MapGrid2D::XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
             MapGrid2D::XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-            all_waypoints_cell.push(curr_waypoint_cell);
+            map_utilites::drawPath(i4_map_with_path, start, curr_waypoint_cell, all_waypoints_cell, color);
         }
 
-        MapGrid2D::XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
-        MapGrid2D::XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-        map_utilites::drawPath(i4_map_with_path, start, curr_waypoint_cell, all_waypoints_cell, color);
-    }
-
-    //draw locations
-    static IplImage* map_with_location = 0;
-    prepare_image(map_with_location, i4_map_with_path);
-    //to be completed
-
-    //draw poses
-    static IplImage* map_with_poses = 0;
-    prepare_image(map_with_poses, map_with_location);
-    map_utilites::drawPoses(i4_map_with_path, m_estimated_poses, color);
-
-    //finished, send to port
-    map_utilites::sendToPort(&m_port_map_output, map_with_poses);
+    //############### finished, send to port
+    map_utilites::sendToPort(&m_port_map_output, i4_map_with_path);
 }
 
 void NavGuiThread::run()

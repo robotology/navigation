@@ -43,6 +43,7 @@ NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
     m_enable_draw_all_locations=true;
     m_enable_draw_enlarged_scans=true;
     m_enable_draw_laser_scans=true;
+    m_enable_estimated_particles = 50;
     m_local_name_prefix = "/navigationGui";
     m_remote_localization = "/localizationServer";
     m_remote_map = "/mapServer";
