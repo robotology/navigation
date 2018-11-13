@@ -30,6 +30,8 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <math.h>
+#include <random>
+#include <chrono>
 #include "odomLocalizer.h"
 
 using namespace yarp::os;
@@ -68,6 +70,25 @@ bool   odomLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& p
     yarp::dev::Map2DLocation loc;
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
+#if 0
+    //The following block is used only for development and debug purposes.
+    //It should be never used in a real scenario
+    for (int i = 0; i < 10; i++)
+    {
+        yarp::dev::Map2DLocation newloc=loc;
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::default_random_engine generator(seed);
+        std::uniform_real_distribution<double> dist(-1, 1);
+        std::uniform_real_distribution<double> dist_t(-180, 180);
+        double numberx = dist(generator);
+        double numbery = dist(generator);
+        double numbert = dist_t(generator);
+        newloc.x += numberx;
+        newloc.y += numbery;
+        newloc.theta += numbert;
+        poses.push_back(newloc);
+    }
+#endif
     return true;
 }
 
