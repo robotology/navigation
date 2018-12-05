@@ -188,14 +188,20 @@ void t265LocalizerThread::run()
     }
     else
     {
-        m_current_device_data.x = pose_data.translation.z;
-        m_current_device_data.y = pose_data.translation.x;
+        m_current_device_data.x = -pose_data.translation.z;
+        m_current_device_data.y = -pose_data.translation.x;
         yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
+    //    yDebug()<<"********************************";
+     //   yDebug() << "quat" << q.toString();
         auto m = q.toRotationMatrix3x3();
-        auto v = yarp::math::dcm2euler(m);
+    //    yDebug() << "Mat" << m.toString();
+   //     auto v = yarp::math::dcm2euler(m);
+   //     yDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+        auto v = yarp::math::dcm2rpy(m);
+     //   yDebug() << "A2" << v2.toString() << v2[0] *RAD2DEG  << v2[1] *RAD2DEG << v2[2] *RAD2DEG;
         m_current_device_data.theta =  v[1]*RAD2DEG;
     }
-    yDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
+  //  yDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //relocate data in robot frame
     relocate_data(m_current_device_data);
@@ -397,7 +403,7 @@ bool t265LocalizerThread::threadInit()
     }
 
     //the odometry port
-    if (m_odometry_handler)
+    if (m_odometry_handler==nullptr)
     {
         m_odometry_handler = new odometry_handler(m_realsense_pipe.get_active_profile().get_device());
         m_odometry_handler->useCallback();  // input should go to onRead() callback
