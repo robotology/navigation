@@ -30,7 +30,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device localization2DServer --subdevice odomLocalizer --context robotPathPlannerExamples --from localizationServer.ini</parameters>
+   <parameters>--device localization2DServer --subdevice odomLocalizer --context robotPathPlannerExamples --from odomLocalizer.ini</parameters>
    <node>console</node>
 </module>
 
