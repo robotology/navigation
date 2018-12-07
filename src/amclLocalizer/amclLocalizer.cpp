@@ -260,6 +260,7 @@ void amclLocalizerThread::updateFilter()
         if (!(++m_resample_count % m_resample_interval))
         {
             pf_update_resample(m_handler_pf);
+            yDebug("Resampled");
             resampled = true;
         }
 
@@ -540,6 +541,13 @@ bool amclLocalizerThread::threadInit()
         return false;
     }
 
+    Bottle amcl_group = m_cfg.findGroup("AMCL");
+    if (amcl_group.isNull())
+    {
+        yError() << "Missing AMCL group!";
+        return false;
+    }
+
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
@@ -614,32 +622,32 @@ bool amclLocalizerThread::threadInit()
     m_first_map_only = initial_group.check("first_map_only", Value(false)).asBool();
 
     double tmp;
-    m_config.m_laser_min_range = initial_group.check("laser_min_range", Value(-1.0)).asDouble();
-    m_config.m_laser_max_range = initial_group.check("laser_max_range", Value(-1.0)).asDouble();
-    m_config.m_max_beams = initial_group.check("laser_max_beams", Value(30)).asDouble();
-    m_config.m_min_particles = initial_group.check("min_particles", Value(100)).asInt();
-    m_config.m_max_particles = initial_group.check("max_particles", Value(5000)).asInt();
-    m_config.m_pf_err = initial_group.check("kld_err", Value(0.01)).asDouble();
-    m_config.m_pf_z = initial_group.check("kld_z", Value(0.99)).asDouble();
-    m_config.m_alpha1 = initial_group.check("odom_alpha1", Value(0.2)).asDouble();
-    m_config.m_alpha2 = initial_group.check("odom_alpha2", Value(0.2)).asDouble();
-    m_config.m_alpha3 = initial_group.check("odom_alpha3", Value(0.2)).asDouble();
-    m_config.m_alpha4 = initial_group.check("odom_alpha4", Value(0.2)).asDouble();
-    m_config.m_alpha5 = initial_group.check("odom_alpha5", Value(0.2)).asDouble();
+    m_config.m_laser_min_range = amcl_group.check("laser_min_range", Value(-1.0)).asDouble();
+    m_config.m_laser_max_range = amcl_group.check("laser_max_range", Value(-1.0)).asDouble();
+    m_config.m_max_beams = amcl_group.check("laser_max_beams", Value(30)).asDouble();
+    m_config.m_min_particles = amcl_group.check("min_particles", Value(100)).asInt();
+    m_config.m_max_particles = amcl_group.check("max_particles", Value(5000)).asInt();
+    m_config.m_pf_err = amcl_group.check("kld_err", Value(0.01)).asDouble();
+    m_config.m_pf_z = amcl_group.check("kld_z", Value(0.99)).asDouble();
+    m_config.m_alpha1 = amcl_group.check("odom_alpha1", Value(0.2)).asDouble();
+    m_config.m_alpha2 = amcl_group.check("odom_alpha2", Value(0.2)).asDouble();
+    m_config.m_alpha3 = amcl_group.check("odom_alpha3", Value(0.2)).asDouble();
+    m_config.m_alpha4 = amcl_group.check("odom_alpha4", Value(0.2)).asDouble();
+    m_config.m_alpha5 = amcl_group.check("odom_alpha5", Value(0.2)).asDouble();
 
-    m_config.m_do_beamskip = initial_group.check("do_beamskip", Value(false)).asBool();
-    m_config.m_beam_skip_distance = initial_group.check("beam_skip_distance", Value(0.5)).asDouble();
-    m_config.m_beam_skip_threshold = initial_group.check("beam_skip_threshold", Value(0.3)).asDouble();
-    m_config.m_beam_skip_error_threshold = initial_group.check("beam_skip_error_threshold", Value(0.9)).asDouble();
+    m_config.m_do_beamskip = amcl_group.check("do_beamskip", Value(false)).asBool();
+    m_config.m_beam_skip_distance = amcl_group.check("beam_skip_distance", Value(0.5)).asDouble();
+    m_config.m_beam_skip_threshold = amcl_group.check("beam_skip_threshold", Value(0.3)).asDouble();
+    m_config.m_beam_skip_error_threshold = amcl_group.check("beam_skip_error_threshold", Value(0.9)).asDouble();
 
-    m_config.m_z_hit = initial_group.check("laser_z_hit", Value(0.95)).asDouble();
-    m_config.m_z_short = initial_group.check("laser_z_short", Value(0.1)).asDouble();
-    m_config.m_z_max = initial_group.check("laser_z_max", Value(0.05)).asDouble();
-    m_config.m_z_rand = initial_group.check("laser_z_rand", Value(0.05)).asDouble();
-    m_config.m_sigma_hit = initial_group.check("laser_sigma_hit", Value(0.2)).asDouble();
-    m_config.m_lambda_short = initial_group.check("laser_lambda_short", Value(0.1)).asDouble();
-    m_config.m_laser_likelihood_max_dist = initial_group.check("laser_likelihood_max_dist", Value(2.0)).asDouble();
-    std::string tmp_laser_model_type = initial_group.check("laser_model_type", Value("likelihood_field")).asString();
+    m_config.m_z_hit = amcl_group.check("laser_z_hit", Value(0.95)).asDouble();
+    m_config.m_z_short = amcl_group.check("laser_z_short", Value(0.1)).asDouble();
+    m_config.m_z_max = amcl_group.check("laser_z_max", Value(0.05)).asDouble();
+    m_config.m_z_rand = amcl_group.check("laser_z_rand", Value(0.05)).asDouble();
+    m_config.m_sigma_hit = amcl_group.check("laser_sigma_hit", Value(0.2)).asDouble();
+    m_config.m_lambda_short = amcl_group.check("laser_lambda_short", Value(0.1)).asDouble();
+    m_config.m_laser_likelihood_max_dist = amcl_group.check("laser_likelihood_max_dist", Value(2.0)).asDouble();
+    std::string tmp_laser_model_type = amcl_group.check("laser_model_type", Value("likelihood_field")).asString();
 
     if (tmp_laser_model_type == "beam")
     {
@@ -660,7 +668,7 @@ bool amclLocalizerThread::threadInit()
                  m_laser_model_type = LASER_MODEL_LIKELIHOOD_FIELD;
     }
 
-    std::string tmp_odom_model_type = initial_group.check("odom_model_type", Value("diff")).asString();
+    std::string tmp_odom_model_type = amcl_group.check("odom_model_type", Value("diff")).asString();
     if (tmp_odom_model_type == "diff")
         m_odom_model_type = ODOM_MODEL_DIFF;
     else if (tmp_odom_model_type == "omni")
@@ -676,20 +684,16 @@ bool amclLocalizerThread::threadInit()
         m_odom_model_type = ODOM_MODEL_DIFF;
     }
 
-    m_config.m_d_thresh = initial_group.check("update_min_d", Value(0.2)).asDouble();
-    m_config.m_a_thresh = initial_group.check("update_min_a", Value(M_PI / 6.0)).asDouble();
-    m_odom_frame_id = initial_group.check("odom_frame_id", Value("odom")).asString();
-    m_base_frame_id = initial_group.check("base_frame_id", Value("base_link")).asString();
-    m_global_frame_id = initial_group.check("global_frame_id", Value("map")).asString();
-    m_resample_interval = initial_group.check("resample_interval", Value(2)).asDouble();
+    m_config.m_d_thresh = amcl_group.check("update_min_d", Value(0.2)).asDouble();
+    m_config.m_a_thresh = amcl_group.check("update_min_a", Value(M_PI / 6.0)).asDouble();
+    m_odom_frame_id = amcl_group.check("odom_frame_id", Value("odom")).asString();
+    m_base_frame_id = amcl_group.check("base_frame_id", Value("base_link")).asString();
+    m_global_frame_id = amcl_group.check("global_frame_id", Value("map")).asString();
+    m_resample_interval = amcl_group.check("resample_interval", Value(2)).asDouble();
      
-    m_config.m_alpha_slow = initial_group.check("recovery_alpha_slow", Value(0.001)).asDouble();
-    m_config.m_alpha_fast = initial_group.check("recovery_alpha_fast", Value(0.1)).asDouble();
-    m_tf_broadcast = initial_group.check("tf_broadcast", Value(true)).asBool();
-
-    //double tmp_tol;
-    //private_nh_.param("transform_tolerance", tmp_tol, 0.1);
-    //transform_tolerance_.fromSec(tmp_tol);
+    m_config.m_alpha_slow = amcl_group.check("recovery_alpha_slow", Value(0.001)).asDouble();
+    m_config.m_alpha_fast = amcl_group.check("recovery_alpha_fast", Value(0.1)).asDouble();
+    m_tf_broadcast = amcl_group.check("tf_broadcast", Value(true)).asBool();
 
     //get the map from the map_server
     Property map_options;
