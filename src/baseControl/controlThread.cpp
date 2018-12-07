@@ -33,14 +33,15 @@ void ControlThread::afterStart(bool s)
 
 void ControlThread::threadRelease()
 {
-    if (odometry_handler)  {delete odometry_handler; odometry_handler=0;}
-    if (motor_handler)     {delete motor_handler; motor_handler=0;}
-    if (input_handler)     {delete input_handler; input_handler = 0; }
-
-    if (linear_speed_pid)  {delete linear_speed_pid;  linear_speed_pid=0;}
-    if (angular_speed_pid) {delete angular_speed_pid; angular_speed_pid=0;}
-    if (linear_ol_pid)     {delete linear_ol_pid;  linear_ol_pid=0;}
-    if (angular_ol_pid)    {delete angular_ol_pid; angular_ol_pid=0;}
+    if (odometry_handler)     {delete odometry_handler; odometry_handler=0;}
+    if (odometry_handler_aux) {delete odometry_handler_aux; odometry_handler_aux = 0;}
+    if (motor_handler)        {delete motor_handler; motor_handler=0;}
+    if (input_handler)        {delete input_handler; input_handler = 0; }
+                              
+    if (linear_speed_pid)     {delete linear_speed_pid;  linear_speed_pid=0;}
+    if (angular_speed_pid)    {delete angular_speed_pid; angular_speed_pid=0;}
+    if (linear_ol_pid)        {delete linear_ol_pid;  linear_ol_pid=0;}
+    if (angular_ol_pid)       {delete angular_ol_pid; angular_ol_pid=0;}
 
     if (debug_enabled)
     {
@@ -91,6 +92,7 @@ ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property opti
     remoteName               = ctrl_options.find("remote").asString();
     localName                = ctrl_options.find("local").asString();
     odometry_handler         = 0;
+    odometry_handler_aux     = 0;
     motor_handler            = 0;
     input_handler            = 0;
 }
@@ -220,8 +222,8 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,doubl
 {
     double feedback_linear_speed = 0;
     double feedback_angular_speed = 0;
-    if (odometry_handler) this->odometry_handler->get_base_vel_lin();
-    if (odometry_handler) this->odometry_handler->get_base_vel_theta();
+    if (odometry_handler) feedback_linear_speed = this->odometry_handler->get_base_vel_lin();
+    if (odometry_handler) feedback_angular_speed = this->odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_speed_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_throttle = 1.0 * tmp[0];
@@ -255,8 +257,8 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
 {
     double feedback_linear_speed = 0; 
     double feedback_angular_speed = 0; 
-    if (odometry_handler) this->odometry_handler->get_base_vel_lin();
-    if (odometry_handler) this->odometry_handler->get_base_vel_theta();
+    if (odometry_handler) feedback_linear_speed = this->odometry_handler->get_base_vel_lin();
+    if (odometry_handler) feedback_angular_speed = this->odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_ol_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_throttle = 1.0 * tmp[0];
@@ -284,6 +286,8 @@ void ControlThread::run()
 {
     if (odometry_handler) this->odometry_handler->compute();
     if (odometry_handler) this->odometry_handler->broadcast();
+    if (odometry_handler_aux) this->odometry_handler_aux->compute();
+    if (odometry_handler_aux) this->odometry_handler_aux->broadcast();
 
     double pidout_linear_throttle = 0;
     double pidout_angular_throttle = 0;
@@ -410,21 +414,21 @@ bool ControlThread::threadInit()
     if (general_options.check("input_filter_enabled") == false) { yError() << "Missing 'input_filter_enabled' param"; return false; }
     if (general_options.check("linear_angular_ratio") == false) { yError() << "Missing 'linear_angular_ratio' param"; return false; }
     if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
-    if (general_options.check("max_linear_vel") == false)  { yError() << "Missing 'max_linear_vel' param";  return false; }
-    if (general_options.check("max_angular_vel") == false)   { yError() << "Missing 'max_angular_vel' param";   return false; }
-    if (general_options.check("max_linear_acc") == false)  { yError() << "Missing 'max_linear_acc' param";  return false; }
-    if (general_options.check("max_angular_acc") == false)   { yError() << "Missing 'max_angular_acc' param";   return false; }
+    if (general_options.check("max_linear_vel") == false) { yError() << "Missing 'max_linear_vel' param";  return false; }
+    if (general_options.check("max_angular_vel") == false) { yError() << "Missing 'max_angular_vel' param";   return false; }
+    if (general_options.check("max_linear_acc") == false) { yError() << "Missing 'max_linear_acc' param";  return false; }
+    if (general_options.check("max_angular_acc") == false) { yError() << "Missing 'max_angular_acc' param";   return false; }
 
     string control_type, robot_type_s;
     bool useRos;
-    
-    control_type          = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
-    input_filter_enabled  = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt();
-    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt()==1;
-    lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
-    robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
-    useRos                = general_options.check("use_ROS",              Value(false),  "enable ROS communications").asBool();
-    
+
+    control_type = general_options.check("control_mode", Value("none"), "type of control for the wheels").asString().c_str();
+    input_filter_enabled = general_options.check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt();
+    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0), "1=enabled, 0 = disabled").asInt() == 1;
+    lin_ang_ratio = general_options.check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
+    robot_type_s = general_options.check("robot_type", Value("none"), "geometry of the robot").asString();
+    useRos = general_options.check("use_ROS", Value(false), "enable ROS communications").asBool();
+
     double tmp = 0;
     tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
     if (tmp >= 0) { max_angular_vel = tmp; }
@@ -442,7 +446,7 @@ bool ControlThread::threadInit()
     // open the control board driver
     yInfo("Opening the motors interface...\n");
 
-    int trials  = 0;
+    int trials = 0;
     double      start_time = yarp::os::Time::now();
     Property    control_board_options("(device remote_controlboard)");
 
@@ -461,8 +465,8 @@ bool ControlThread::threadInit()
         }
 
         //creates the new device driver
-        control_board_driver    = new PolyDriver(control_board_options);
-        bool connected          = control_board_driver->isValid();
+        control_board_driver = new PolyDriver(control_board_options);
+        bool connected = control_board_driver->isValid();
 
         //check if the driver is connected
         if (connected) break;
@@ -485,7 +489,7 @@ bool ControlThread::threadInit()
     } while (true);
 
     //initialize ROS
-    if(useRos)
+    if (useRos)
     {
         if (ctrl_options.check("ROS_GENERAL"))
         {
@@ -496,7 +500,7 @@ bool ControlThread::threadInit()
                 yError() << "Missing node_name parameter"; return false;
             }
             rosNodeName = r_group.find("node_name").asString();
-            rosNode     = new yarp::os::Node(rosNodeName);
+            rosNode = new yarp::os::Node(rosNodeName);
         }
         else
         {
@@ -506,18 +510,30 @@ bool ControlThread::threadInit()
 
     //create the odometry and the motor handlers
     odometry_enabled = true;
-    if (rf.check("no_odometry")) 
+    odometry_aux_enabled = false;
+    if (rf.check("no_odometry"))
     {
-        odometry_enabled=false;
+        odometry_enabled = false;
+    }
+    if (rf.check("enable_aux_odometry"))
+    {
+        odometry_aux_enabled = true;
     }
 
     if (robot_type_s == "cer")
     {
         yInfo("Using cer robot type");
-        robot_type       = ROBOT_TYPE_DIFFERENTIAL;
-        if (odometry_enabled) odometry_handler = new CER_Odometry(control_board_driver);
-        motor_handler    = new CER_MotorControl(control_board_driver);
-        input_handler    = new Input();
+        robot_type = ROBOT_TYPE_DIFFERENTIAL;
+        if (odometry_enabled)
+        {
+            odometry_handler = new CER_Odometry(control_board_driver);
+            if (odometry_aux_enabled)
+            {
+                odometry_handler_aux = new CER_Odometry(control_board_driver);
+            }
+        }
+        motor_handler = new CER_MotorControl(control_board_driver);
+        input_handler = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 320.0 / 2 / 1000.0);
         robot_geom.put("geom_L", 338 / 1000.0);
@@ -525,10 +541,17 @@ bool ControlThread::threadInit()
     else if (robot_type_s == "ikart_V1")
     {
         yInfo("Using ikart_V1 robot type");
-        robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
-        if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
-        motor_handler    = new iKart_MotorControl(control_board_driver);
-        input_handler    = new Input();
+        robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
+        if (odometry_enabled)
+        {
+            odometry_handler = new iKart_Odometry(control_board_driver);
+            if (odometry_aux_enabled)
+            {
+                odometry_handler_aux = new CER_Odometry(control_board_driver);
+            }
+        }
+        motor_handler = new iKart_MotorControl(control_board_driver);
+        input_handler = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 62.5 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);
@@ -537,10 +560,17 @@ bool ControlThread::threadInit()
     else if (robot_type_s == "ikart_V2")
     {
         yInfo("Using ikart_V2 robot type");
-        robot_type       = ROBOT_TYPE_THREE_MECHANUM;
-        if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
-        motor_handler    = new iKart_MotorControl(control_board_driver);
-        input_handler    = new Input();
+        robot_type = ROBOT_TYPE_THREE_MECHANUM;
+        if (odometry_enabled)
+        {
+            odometry_handler = new iKart_Odometry(control_board_driver);
+            if (odometry_aux_enabled)
+            {
+                odometry_handler_aux = new CER_Odometry(control_board_driver);
+            }
+        }
+        motor_handler = new iKart_MotorControl(control_board_driver);
+        input_handler = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 76.15 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);
@@ -551,17 +581,47 @@ bool ControlThread::threadInit()
         yError() << "Invalid Robot type selected: ROBOT_TYPE_NONE";
         return false;
     }
-    
-    if(useRos)
-    {
-        //odometry_handler->rosNode = rosNode;
-        //input_handler->rosNode    = rosNode;
-    }
-    
+
     if (odometry_handler && odometry_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening odometry handler";
         return false;
+    }
+
+    if (odometry_handler_aux)
+    {
+        Property aux_options = ctrl_options;
+        yarp::os::Bottle& robot_geom = aux_options.findGroup("ROBOT_GEOMETRY");
+        string s1 = aux_options.toString();
+        Value& geom_r = robot_geom.find("geom_r");
+        Value& geom_L = robot_geom.find("geom_L");
+        if (ctrl_options.check("ODOMETRY_SIMULATED_ERROR") == false)
+        {
+            yError() << "Requested odometry aux with parameter --enable_aux_odometry, but group [ODOMETRY_SIMULATED_ERROR] was not found.";
+            return false;
+        }
+        yarp::os::Bottle& odometry_error = ctrl_options.findGroup("ODOMETRY_SIMULATED_ERROR");
+        if (ctrl_options.check("c1_r") == false) { yError() << "Missing param ODOMETRY_SIMULATED_ERROR::c1_r"; }
+        if (ctrl_options.check("c2_L") == false) { yError() << "Missing param ODOMETRY_SIMULATED_ERROR::c2_L"; }
+        double c1 = odometry_error.find("c1_r").asDouble();
+        double c2 = odometry_error.find("c2_L").asDouble();
+        geom_r = Value(geom_r.asDouble() * c1);
+        geom_L = Value(geom_L.asDouble() * c2);
+        string s2 = aux_options.toString();
+        aux_options.put("odometry_portname_suffix", "/aux/odometry_aux:o");
+        aux_options.put("odometer_portname_suffix", "/aux/odometer_aux:o");
+        aux_options.put("velocity_portname_suffix", "/aux/velocity_aux:o");
+        aux_options.unput("ROS_GENERAL");
+        aux_options.unput("ROS_ODOMETRY");
+        aux_options.unput("ROS_FOOTPRINT");
+        aux_options.unput("ROS_INPUT");
+        Value& use_ros = aux_options.findGroup("GENERAL").find("use_ROS");
+        use_ros = Value(false);
+        if (odometry_handler_aux->open(aux_options) == false)
+        {
+            yError() << "Problem occurred while opening odometry aux handler";
+            return false;
+        }
     }
 
     if (motor_handler->open(ctrl_options) == false)

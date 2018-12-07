@@ -111,6 +111,9 @@ protected:
     BufferedPort<Bottle>            port_odometer;
     BufferedPort<Bottle>            port_vels;
     string                          localName;
+    string                          odometry_portname_suffix;
+    string                          odometer_portname_suffix;
+    string                          velocity_portname_suffix;
 
     //motor control interfaces 
     PolyDriver                      *control_board_driver;

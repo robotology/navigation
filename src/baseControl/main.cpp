@@ -360,6 +360,17 @@ public:
                 {pOdometry->reset_odometry(); reply.addString("Odometry reset done.");}
                 else
                 {reply.addString("No Odometry available.");}
+
+                Odometry* pOdometry_aux = 0;
+                pOdometry_aux = control_thr->get_odometry_handler_aux();
+                if (pOdometry_aux)
+                {
+                    pOdometry_aux->reset_odometry(); reply.addString("Odometry aux reset done.");
+                }
+                else
+                {
+                    reply.addString("No Odometry aux available.");
+                }
             }
             return true;
         }

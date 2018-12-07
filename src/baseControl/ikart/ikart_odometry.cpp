@@ -75,40 +75,6 @@ iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : Odometry(_driver)
 
 bool iKart_Odometry::open(const Property &_options)
 {
-    ctrl_options = _options;
-    localName = ctrl_options.find("local").asString();
-
-    // open the control board driver
-    yInfo("Opening the motors interface...");
-
-    Property control_board_options("(device remote_controlboard)");
-    if (!control_board_driver)
-    {
-        yError("control board driver not ready!");
-        return false;
-    }
-    // open the interfaces for the control boards
-    bool ok = true;
-    ok = ok & control_board_driver->view(ienc);
-    if(!ok)
-    {
-        yError("one or more devices has not been viewed");
-        return false;
-    }
-    // open control input ports
-    bool ret= true;
-    ret &= port_odometry.open((localName+"/odometry:o").c_str());
-    ret &= port_odometer.open((localName+"/odometer:o").c_str());
-    ret &= port_vels.open((localName+"/velocity:o").c_str());
-    if (ret == false)
-    {
-        yError() << "Unable to open module ports";
-        return false;
-    }
-
-    //reset odometry
-    reset_odometry();
-
     //the base class open
     if (!Odometry::open(_options))
     {

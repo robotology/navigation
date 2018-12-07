@@ -64,10 +64,61 @@ Odometry::Odometry(PolyDriver* _driver)
     traveled_distance    = 0;
     traveled_angle       = 0;
     rosMsgCounter        = 0;
+    odometry_portname_suffix = "/odometry:o";
+    odometer_portname_suffix = "/odometer:o";
+    velocity_portname_suffix = "/velocity:o";
 }
 
 bool Odometry::open(const Property &options)
 {
+    ctrl_options = options;
+    localName = ctrl_options.find("local").asString();
+
+    if (ctrl_options.check("odometry_portname_suffix"))
+    {
+        odometry_portname_suffix = ctrl_options.find("odometry_portname_suffix").asString();
+    }
+    if (ctrl_options.check("odometer_portname_suffix"))
+    {
+        odometer_portname_suffix = ctrl_options.find("odometer_portname_suffix").asString();
+    }
+    if (ctrl_options.check("velocity_portname_suffix"))
+    {
+        velocity_portname_suffix = ctrl_options.find("velocity_portname_suffix").asString();
+    }
+
+    // open the control board driver
+    yInfo("Opening the motors interface...");
+
+    Property control_board_options("(device remote_controlboard)");
+    if (!control_board_driver)
+    {
+        yError("control board driver not ready!");
+        return false;
+    }
+    // open the interfaces for the control boards
+    bool ok = true;
+    ok = ok & control_board_driver->view(ienc);
+    if (!ok)
+    {
+        yError("one or more devices has not been viewed");
+        return false;
+    }
+    // open control input ports
+    bool ret = true;
+    ret &= port_odometry.open((localName + odometry_portname_suffix).c_str());
+    ret &= port_odometer.open((localName + odometer_portname_suffix).c_str());
+    ret &= port_vels.open((localName + velocity_portname_suffix).c_str());
+    if (ret == false)
+    {
+        yError() << "Unable to open module ports";
+        return false;
+    }
+
+    //reset odometry
+    reset_odometry();
+
+    //the ROS part
     if (ctrl_options.check("GENERAL"))
     {
         yarp::os::Bottle g_group = ctrl_options.findGroup("GENERAL");
@@ -82,36 +133,42 @@ bool Odometry::open(const Property &options)
         return false;
     }
 
-    if (ctrl_options.check("ROS_ODOMETRY"))
+    if (enable_ROS)
     {
-        yarp::os::Bottle ro_group = ctrl_options.findGroup("ROS_ODOMETRY");
-        if (ro_group.check("odom_frame") == false) { yError() << "Missing odom_frame parameter"; return false; }
-        if (ro_group.check("base_frame") == false) { yError() << "Missing base_frame parameter"; return false; }
-        if (ro_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
-        odometry_frame_id = ro_group.find("odom_frame").asString();
-        child_frame_id = ro_group.find("base_frame").asString();
-        rosTopicName_odometry = ro_group.find("topic_name").asString();
-    }
-    else
-    {
-        yError() << "Missing [ROS_ODOMETRY] section";
-        return false;
+        if (ctrl_options.check("ROS_ODOMETRY"))
+        {
+            yarp::os::Bottle ro_group = ctrl_options.findGroup("ROS_ODOMETRY");
+            if (ro_group.check("odom_frame") == false) { yError() << "Missing odom_frame parameter"; return false; }
+            if (ro_group.check("base_frame") == false) { yError() << "Missing base_frame parameter"; return false; }
+            if (ro_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
+            odometry_frame_id = ro_group.find("odom_frame").asString();
+            child_frame_id = ro_group.find("base_frame").asString();
+            rosTopicName_odometry = ro_group.find("topic_name").asString();
+        }
+        else
+        {
+            yError() << "Missing [ROS_ODOMETRY] section";
+            return false;
+        }
     }
 
-    if (ctrl_options.check("ROS_FOOTPRINT"))
+    if (enable_ROS)
     {
-        yarp::os::Bottle rf_group = ctrl_options.findGroup("ROS_FOOTPRINT");
-        if (rf_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
-        if (rf_group.check("footprint_diameter") == false)  { yError() << "Missing footprint_diameter parameter"; return false; }
-        if (rf_group.check("footprint_frame") == false) { yError() << "Missing footprint_frame parameter"; return false; }
-        footprint_frame_id = rf_group.find("footprint_frame").asString();
-        rosTopicName_footprint = rf_group.find("topic_name").asString();
-        footprint_diameter = rf_group.find("footprint_diameter").asDouble();
-    }
-    else
-    {
-        yError() << "Missing [ROS_FOOTPRINT] section";
-        return false;
+        if (ctrl_options.check("ROS_FOOTPRINT"))
+        {
+            yarp::os::Bottle rf_group = ctrl_options.findGroup("ROS_FOOTPRINT");
+            if (rf_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
+            if (rf_group.check("footprint_diameter") == false) { yError() << "Missing footprint_diameter parameter"; return false; }
+            if (rf_group.check("footprint_frame") == false) { yError() << "Missing footprint_frame parameter"; return false; }
+            footprint_frame_id = rf_group.find("footprint_frame").asString();
+            rosTopicName_footprint = rf_group.find("topic_name").asString();
+            footprint_diameter = rf_group.find("footprint_diameter").asDouble();
+        }
+        else
+        {
+            yError() << "Missing [ROS_FOOTPRINT] section";
+            return false;
+        }
     }
 
     if (enable_ROS)

@@ -108,18 +108,21 @@ protected:
     BufferedPort<Bottle> port_debug_angular;
 
     Odometry*            odometry_handler;
+    Odometry*            odometry_handler_aux;
     MotorControl*        motor_handler;
     Input*               input_handler;
 
     string               remoteName;
     string               localName;
     bool                 odometry_enabled;
+    bool                 odometry_aux_enabled;
 
 public:
     //Odometry, MotorControl and Input are instantiated by ControlThread.
-    Odometry* const      get_odometry_handler() { return odometry_handler;}
-    MotorControl* const  get_motor_handler()    { return motor_handler;}
-    Input* const         get_input_handler()    { return input_handler; }
+    Odometry* const      get_odometry_handler()     { return odometry_handler;}
+    Odometry* const      get_odometry_handler_aux() { return odometry_handler_aux;}
+    MotorControl* const  get_motor_handler()        { return motor_handler;}
+    Input* const         get_input_handler()        { return input_handler; }
     void                 enable_debug(bool b);
 
 public:

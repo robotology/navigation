@@ -1,0 +1,107 @@
+<application>
+<name>robotPathPlanner EXAMPLE3 (AMCL)</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device fakeMotionControl --name /robot_2wheels/mobile_base --GENERAL::Joints 2</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>baseControl</name>
+   <parameters>--context baseControl_SIM --from robot_2wheels_with_odometry_error.ini --skip_robot_interface_check --enable_aux_odometry</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /robot_2wheels/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_port</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice amclLocalizer --context robotPathPlannerExamples --from amclLocalizer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context robotPathPlannerExamples --from robotPathPlanner_robot_2wheels.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>navigationGUI</name>
+   <parameters>--context navigationGUI --from navigationGUI_robot_2wheels.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /navView:i --out /mapClick:o</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>robotPathPlannerExample</name>
+   <parameters>--navServer_name /navigationServer</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/baseControl/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/baseControl/odometry:o</from>
+  <to>/fakeLaser/location:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/navigationGui/map:o</from>
+  <to>/navView:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/commands:o</from>
+  <to>/robotGoto/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
+
+
+
+<connection>
+  <from>/mapClick:o</from>
+  <to>/navigationGui/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+
+
+<connection>
+  <from>/baseControl/aux/odometry_aux:o</from>
+  <to>/fakeLaser/location:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>
