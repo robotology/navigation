@@ -479,6 +479,17 @@ bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_
     return false;
 }
 
+bool rosNavigator::recomputeCurrentNavigationPath()
+{
+    if (m_navigation_status == yarp::dev::navigation_status_moving)
+    {
+        yDebug() << "Not yet implemented";
+        return false;
+    }
+    yError() << "Unable to recompute path. Navigation task not assigned yet.";
+    return false;
+}
+
 std::string rosNavigator::getStatusAsString(NavigationStatusEnum status)
 {
     if (status == navigation_status_idle) return std::string("navigation_status_idle");

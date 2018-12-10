@@ -131,7 +131,14 @@ public:
     * @param map the map, currently used by the navigation algorithm
     * @return true/false
     */
-    virtual bool getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map) override;
+    bool getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map) override;
+
+    /**
+    * Forces the navigation system to recompute the path from the current robot position to the current goal.
+    * If no goal has been set, the command has no effect.
+    * @return true/false
+    */
+    bool recomputeCurrentNavigationPath() override;
 };
 
 #endif

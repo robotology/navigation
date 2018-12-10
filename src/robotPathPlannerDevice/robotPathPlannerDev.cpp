@@ -157,6 +157,42 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
     return b;
 }
 
+bool robotPathPlannerDev::recomputeCurrentNavigationPath()
+{
+    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_idle)
+    {
+        yError() << "Unable to recompute path. Navigation task not assigned yet.";
+        return false;
+    }
+    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_paused)
+    {
+        yError() << "Unable to recompute path. Navigation task is currently paused.";
+        return false;
+    }
+    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_goal_reached)
+    {
+        yError() << "Unable to recompute path. Navigation Goal has been already reached.";
+        return false;
+    }
+    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_thinking)
+    {
+        yError() << "Unable to recompute path. A navigation plan is already under computation.";
+        return false;
+    }
+
+    yarp::dev::Map2DLocation loc;
+    bool b = true;
+    b &= m_plannerThread->getCurrentAbsTarget(loc);
+    b &= m_plannerThread->stopMovement();
+    b &= m_plannerThread->setNewAbsTarget(loc);
+    if (b==false)
+    {
+        yError() << "robotPathPlannerDev::recomputeCurrentNavigationPath(). An error occurred while performing the requested operation.";
+        return false;
+    }
+    return true;
+}
+
 bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
 {
     yarp::sig::Vector v;

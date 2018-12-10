@@ -158,6 +158,17 @@ bool navigationDeviceTemplate::resumeNavigation()
     return false;
 }
 
+bool navigationDeviceTemplate::recomputeCurrentNavigationPath()
+{
+    if (m_navigation_status == yarp::dev::navigation_status_moving)
+    {
+        //### TO BE IMPLEMENTED BY USER
+        return true;
+    }
+    yError() << "Unable to recompute path. Navigation task not assigned yet.";
+    return false;
+}
+
 bool navigationDeviceTemplate::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
 {
     //### TO BE IMPLEMENTED BY USER

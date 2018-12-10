@@ -383,6 +383,12 @@ bool robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& 
     return b;
 }
 
+bool robotGotoDev::recomputeCurrentNavigationPath()
+{
+    yWarning() << "robotGotoDev is not a navigation planner. recomputeCurrentNavigationPath() is not implemented.";
+    return false;
+}
+
 bool robotGotoDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
     yarp::dev::Map2DLocation loc;
