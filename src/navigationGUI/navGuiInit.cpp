@@ -71,6 +71,11 @@ NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
 
     button3_status = button_status_goto;
 
+    button4_l = button3_r + 20;
+    button4_r = button4_l + button_w;
+    button4_t = 0;
+    button4_b = button4_t + button_h;
+
     i1_map = nullptr;
     i2_map_menu = nullptr;
     i3_map_menu_scan = nullptr;

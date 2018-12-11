@@ -107,6 +107,12 @@ void NavGuiThread::readTargetFromYarpView()
                         button3_status = button_status_localize;
                     }
                 }
+                else
+                    if (click_p.x > button4_l && click_p.x < button4_r &&
+                        click_p.y > button4_t && click_p.y < button4_b)
+                    {
+                        m_iNav->recomputeCurrentNavigationPath();
+                    }
             return;
         }
 
@@ -305,14 +311,19 @@ void NavGuiThread::addMenu(CvFont& font)
     button2_b = button2_t + 20;
     button3_t = i1_map->height;
     button3_b = button3_t + 20;
+    button4_t = i1_map->height;
+    button4_b = button4_t + 20;
     cvRectangle(i2_map_menu, CvPoint(button1_l, button1_t), CvPoint(button1_r, button1_b), CvScalar(200, 50, 50), -1);
     cvRectangle(i2_map_menu, CvPoint(button2_l, button2_t), CvPoint(button2_r, button2_b), CvScalar(50, 200, 50), -1);
     cvRectangle(i2_map_menu, CvPoint(button3_l, button3_t), CvPoint(button3_r, button3_b), CvScalar(50, 50, 200), -1);
+    cvRectangle(i2_map_menu, CvPoint(button4_l, button4_t), CvPoint(button4_r, button4_b), CvScalar(50, 150, 200), -1);
     cvRectangle(i2_map_menu, CvPoint(button1_l + 2, button1_t + 2), CvPoint(button1_r - 2, button1_b - 2), CvScalar(0, 0, 0));
     cvRectangle(i2_map_menu, CvPoint(button2_l + 2, button2_t + 2), CvPoint(button2_r - 2, button2_b - 2), CvScalar(0, 0, 0));
     cvRectangle(i2_map_menu, CvPoint(button3_l + 2, button3_t + 2), CvPoint(button3_r - 2, button3_b - 2), CvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, CvPoint(button4_l + 2, button4_t + 2), CvPoint(button4_r - 2, button4_b - 2), CvScalar(0, 0, 0));
     char txt[255];
 
+    //button 1
     if (m_navigation_status == navigation_status_moving || 
         m_navigation_status == navigation_status_paused )
     {
@@ -324,6 +335,21 @@ void NavGuiThread::addMenu(CvFont& font)
     }
     cvPutText(i2_map_menu, txt, cvPoint(button1_l + 5, button1_t + 12), &font, CvScalar(0, 0, 0));
 
+    //button 4
+    if (m_navigation_status == navigation_status_moving ||
+        m_navigation_status == navigation_status_paused ||
+        m_navigation_status == navigation_status_failing ||
+        m_navigation_status == navigation_status_waiting_obstacle)
+    {
+        snprintf(txt, 255, "Recompute");
+    }
+    else
+    {
+        snprintf(txt, 255, "- - -");
+    }
+    cvPutText(i2_map_menu, txt, cvPoint(button4_l + 5, button4_t + 12), &font, CvScalar(0, 0, 0));
+
+    //button 2
     if (m_navigation_status == navigation_status_moving)
     {
         snprintf(txt, 255, "Suspend");
@@ -338,6 +364,7 @@ void NavGuiThread::addMenu(CvFont& font)
     }
     cvPutText(i2_map_menu, txt, cvPoint(button2_l + 5, button2_t + 12), &font, CvScalar(0, 0, 0));
 
+    //button 3
     if (button3_status == button_status_goto)
     {
         snprintf(txt, 255, "Goto");
@@ -346,7 +373,6 @@ void NavGuiThread::addMenu(CvFont& font)
     {
         snprintf(txt, 255, "Localize");
     }
-
     cvPutText(i2_map_menu, txt, cvPoint(button3_l + 5, button3_t + 12), &font, CvScalar(0, 0, 0));
 }
 
