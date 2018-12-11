@@ -158,6 +158,10 @@ class NavGuiThread: public yarp::os::PeriodicThread
     size_t button3_r;
     size_t button3_t;
     size_t button3_b;
+    size_t button4_l;
+    size_t button4_r;
+    size_t button4_t;
+    size_t button4_b;
 
     enum
     {

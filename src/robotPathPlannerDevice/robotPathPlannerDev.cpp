@@ -183,7 +183,11 @@ bool robotPathPlannerDev::recomputeCurrentNavigationPath()
     yarp::dev::Map2DLocation loc;
     bool b = true;
     b &= m_plannerThread->getCurrentAbsTarget(loc);
+    //@@@ check timing here
+    yarp::os::Time::delay(0.2);
     b &= m_plannerThread->stopMovement();
+    //@@@ check timing here
+    yarp::os::Time::delay(0.2);
     b &= m_plannerThread->setNewAbsTarget(loc);
     if (b==false)
     {
