@@ -30,7 +30,9 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/os/PeriodicThread.h>
+#include <yarp/dev/Polydriver.h>
 #include <math.h>
+#include <yarp/dev/IMap2D.h>
 
 #ifndef POZYX_LOCALIZER_H
 #define POZYX_LOCALIZER_H
@@ -100,12 +102,25 @@ class pozyxLocalizerThread : public yarp::os::PeriodicThread
 protected:
     //general
     double                       m_last_statistics_printed;
-    yarp::dev::Map2DLocation     m_initial_loc;
+    yarp::dev::Map2DLocation     m_map_to_pozyx_transform;
     yarp::dev::Map2DLocation     m_localization_data;
     yarp::dev::Map2DLocation     m_pozyx_data;
+    std::vector<yarp::dev::Map2DLocation> m_anchors_pos;
     yarp::os::Mutex              m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
+    std::string                  m_local_name_prefix;
+
+    //publish anchors onto map as locations
+    bool                         m_publish_anchors_as_map_locations;
+    std::string                  m_remote_map;
+    yarp::dev::PolyDriver        m_pMap;
+    yarp::dev::IMap2D*           m_iMap;
+
+private:
+    bool publish_anchors_location();
+    bool get_anchors_location();
+    bool open_pozyx();
 
 public:
     pozyxLocalizerThread(double _period, yarp::os::Searchable& _cfg);

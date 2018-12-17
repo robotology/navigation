@@ -541,6 +541,13 @@ void NavGuiThread::run()
         last_drawn_estimated_poses = yarp::os::Time::now();
     }
 
+    static double last_drawn_map_locations = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_drawn_map_locations > m_period_draw_map_locations)
+    {
+        updateLocations();
+        last_drawn_map_locations = yarp::os::Time::now();
+    }
+
     //double check2 = yarp::os::Time::now();
     //yDebug() << check2-check1;
 

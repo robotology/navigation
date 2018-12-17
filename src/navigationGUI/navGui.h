@@ -130,6 +130,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     double              m_period_draw_laser;
     double              m_period_draw_enalarged_obstacles;
     double              m_period_draw_estimated_poses;
+    double              m_period_draw_map_locations;
 
     //drawing flags: enable/disable drawing of particular objects on the GUI
     public:
