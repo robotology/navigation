@@ -210,7 +210,7 @@ protected:
     //the robot most probable position
     yarp::os::Mutex m_localization_data_mutex;
     yarp::dev::Map2DLocation     m_localization_data;
-
+    yarp::sig::Matrix    m_initial_covariance_msg;
 public:
     amclLocalizerThread(double _period, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;

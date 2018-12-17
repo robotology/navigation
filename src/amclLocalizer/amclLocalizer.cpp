@@ -44,6 +44,9 @@ using namespace amcl;
 #define RAD2DEG 180/M_PI
 #define DEG2RAD M_PI/180
 
+#define  LOWLEVEL_DEBUG
+
+
 static double normalize(double z)
 {
     return atan2(sin(z), cos(z));
@@ -137,6 +140,9 @@ void amclLocalizerThread::updateFilter()
 
     if (m_pf_init)
     {
+#ifdef LOWLEVEL_DEBUG
+        yDebug() << "m_pf_init=true, it means pf is initialized";
+#endif
         // Compute change in pose
         delta.v[0] = pose.v[0] - m_pf_odom_pose.v[0];
         delta.v[1] = pose.v[1] - m_pf_odom_pose.v[1];
@@ -146,6 +152,18 @@ void amclLocalizerThread::updateFilter()
         bool update = fabs(delta.v[0]) > m_config.m_d_thresh ||
                       fabs(delta.v[1]) > m_config.m_d_thresh ||
                       fabs(delta.v[2]) > m_config.m_a_thresh;
+
+#ifdef LOWLEVEL_DEBUG
+        if (update)
+        {   yDebug() << "Update requested by thresholds";   }
+        else
+        {   yDebug() << "No threshold update requested";   }
+        if(m_force_update)
+        {
+            yDebug() << "Force Update requested";
+        }
+#endif
+
         update = update || m_force_update;
         m_force_update = false;
 
@@ -156,6 +174,15 @@ void amclLocalizerThread::updateFilter()
             {
                 m_lasers_update[i] = true;
             }
+#ifdef LOWLEVEL_DEBUG
+            yDebug() << "1. Laser updated = true";
+#endif
+        }
+        else
+        {
+#ifdef LOWLEVEL_DEBUG
+            yDebug() << "1. Laser updated unrequested";
+#endif
         }
     }
 
@@ -163,6 +190,9 @@ void amclLocalizerThread::updateFilter()
     //first run, filter initialization
     if (!m_pf_init)
     {
+#ifdef LOWLEVEL_DEBUG
+        yDebug() << "m_pf_init=false, it means pf is NOT YET initialized";
+#endif
         // Pose at last filter update
         m_pf_odom_pose = pose;
         // Filter is now initialized
@@ -178,6 +208,9 @@ void amclLocalizerThread::updateFilter()
     // If the robot has moved, update the filter
     else if (m_pf_init && m_lasers_update[laser_index])
     {
+#ifdef LOWLEVEL_DEBUG
+        yDebug() << "m_pf_init=true, m_lasers_update=true. update odometry";
+#endif
         //printf("pose\n");
         //pf_vector_fprintf(pose, stdout, "%.3f");
 
@@ -199,6 +232,9 @@ void amclLocalizerThread::updateFilter()
     // If the robot has moved, update the filter
     if (m_lasers_update[laser_index])
     {
+#ifdef LOWLEVEL_DEBUG
+        yDebug() << "m_lasers_update=true, update laser data";
+#endif
         AMCLLaserData ldata;
         ldata.sensor = m_lasers[laser_index];
         ldata.range_count = m_laser_measurement_data.size(); //@@@ 360? get this form the laser
@@ -207,7 +243,9 @@ void amclLocalizerThread::updateFilter()
 
         // wrapping angle to [-pi .. pi]
         angle_increment = fmod(angle_increment + 5 * M_PI, 2 * M_PI) - M_PI; //@@@CHEKC THIS
+#ifdef  LOWLEVEL_DEBUG 
         yDebug("Laser %d angles in base frame: min: %.3f inc: %.3f", laser_index, angle_min, angle_increment);
+#endif
 
         // Apply range min/max thresholds, if the user supplied them
         if (m_config.m_laser_max_range > 0.0)
@@ -260,13 +298,14 @@ void amclLocalizerThread::updateFilter()
         if (!(++m_resample_count % m_resample_interval))
         {
             pf_update_resample(m_handler_pf);
-            yDebug("Resampled");
+            yDebug("Resampled by time (count %d / %d)", m_resample_count, m_resample_interval);
             resampled = true;
         }
 
         pf_sample_set_t* set = m_handler_pf->sets + m_handler_pf->current_set;
+#ifdef LOWLEVEL_DEBUG
         yDebug("Num samples: %d\n", set->sample_count);
-
+#endif
         // Publish the resulting cloud
         // TODO: set maximum rate for publishing
         if (!m_force_update)
@@ -318,10 +357,11 @@ void amclLocalizerThread::updateFilter()
 
         if (max_weight > 0.0)
         {
-            yDebug("Max weight pose: %.3f %.3f %.3f",
+            yDebug("Max weight pose: %.3f %.3f %.3f (%.3f)",
                 hyps[max_weight_hyp].pf_pose_mean.v[0],
                 hyps[max_weight_hyp].pf_pose_mean.v[1],
-                hyps[max_weight_hyp].pf_pose_mean.v[2]);
+                hyps[max_weight_hyp].pf_pose_mean.v[2],
+                hyps[max_weight_hyp].pf_pose_mean.v[2]*RAD2DEG);
 
             m_localization_data_mutex.lock();
             m_localization_data.x = hyps[max_weight_hyp].pf_pose_mean.v[0];
@@ -330,100 +370,6 @@ void amclLocalizerThread::updateFilter()
             m_localization_data_mutex.unlock();
         }
 
-#if 0
-            //currently, we are not interested in publishing the covariance
-            // Copy in the covariance, converting from 3-D to 6-D
-            pf_sample_set_t* set = m_handler_pf->sets + m_handler_pf->current_set;
-            for (int i = 0; i<2; i++)
-            {
-                for (int j = 0; j<2; j++)
-                {
-                    // Report the overall filter covariance, rather than the
-                    // covariance for the highest-weight cluster
-                    //p.covariance[6*i+j] = hyps[max_weight_hyp].pf_pose_cov.m[i][j];
-                    p.pose.covariance[6 * i + j] = set->cov.m[i][j];
-                }
-            }
-            // Report the overall filter covariance, rather than the
-            // covariance for the highest-weight cluster
-            //p.covariance[6*5+5] = hyps[max_weight_hyp].pf_pose_cov.m[2][2];
-            p.pose.covariance[6 * 5 + 5] = set->cov.m[2][2];
-
-            /*
-            printf("cov:\n");
-            for(int i=0; i<6; i++)
-            {
-                for(int j=0; j<6; j++)
-                printf("%6.3f ", p.covariance[6*i+j]);
-                puts("");
-            }
-            */
-#endif
-
-#if PUSBLISH_ON_TF
-            pose_pub_.publish(p);
-            last_published_pose = p;
-
-            yDebug("New pose: %6.3f %6.3f %6.3f",
-                hyps[max_weight_hyp].pf_pose_mean.v[0],
-                hyps[max_weight_hyp].pf_pose_mean.v[1],
-                hyps[max_weight_hyp].pf_pose_mean.v[2]);
-
-            // subtracting base to odom from map to base and send map to odom instead
-            geometry_msgs::PoseStamped odom_to_map;
-            try
-            {
-                tf2::Quaternion q;
-                q.setRPY(0, 0, hyps[max_weight_hyp].pf_pose_mean.v[2]);
-                tf2::Transform tmp_tf(q, tf2::Vector3(hyps[max_weight_hyp].pf_pose_mean.v[0],
-                    hyps[max_weight_hyp].pf_pose_mean.v[1],
-                    0.0));
-
-                geometry_msgs::PoseStamped tmp_tf_stamped;
-                tmp_tf_stamped.header.frame_id = base_frame_id_;
-                tf2::toMsg(tmp_tf.inverse(), tmp_tf_stamped.pose);
-
-                this->tf_->transform(tmp_tf_stamped, odom_to_map, odom_frame_id_);
-            }
-            catch (tf2::TransformException)
-            {
-                yDebug("Failed to subtract base to odom transform");
-                return;
-            }
-
-            tf2::convert(odom_to_map.pose, latest_tf_);
-            latest_tf_valid_ = true;
-
-            if (tf_broadcast_ == true)
-            {
-                // We want to send a transform that is good up until a
-                // tolerance time so that odom can be used
-                geometry_msgs::TransformStamped tmp_tf_stamped;
-                tmp_tf_stamped.header.frame_id = global_frame_id_;
-                tmp_tf_stamped.child_frame_id = odom_frame_id_;
-                tf2::convert(latest_tf_.inverse(), tmp_tf_stamped.transform);
-                this->tfb_->sendTransform(tmp_tf_stamped);
-                sent_first_transform_ = true;
-            }
-        }
-        else
-        {
-            yError("No pose!");
-        }
-    }
-    else if (latest_tf_valid_)
-    {
-        if (tf_broadcast_ == true)
-        {
-            // Nothing changed, so we'll just republish the last transform, to keep
-            // everybody happy.
-            geometry_msgs::TransformStamped tmp_tf_stamped;
-            tmp_tf_stamped.header.frame_id = global_frame_id_;
-            tmp_tf_stamped.child_frame_id = odom_frame_id_;
-            tf2::convert(latest_tf_.inverse(), tmp_tf_stamped.transform);
-            this->tfb_->sendTransform(tmp_tf_stamped);
-        }
-#endif
     }
 }
 
@@ -436,6 +382,10 @@ bool amclLocalizerThread::getPoses(std::vector<yarp::dev::Map2DLocation>& poses)
 
 void amclLocalizerThread::run()
 {
+#ifdef LOWLEVEL_DEBUG
+    yDebug();
+#endif // LOWLEVEL_DEBUG
+
     double current_time = yarp::os::Time::now();
 
     //print some stats every 10 seconds
@@ -470,7 +420,6 @@ void amclLocalizerThread::run()
         pose_v.v[0] = 0;
         pose_v.v[1] = 0;
         pose_v.v[2] = 0;
-        m_lasers_update[0] = true;
         m_lasers[0]->SetLaserPose(pose_v);
     }
 
@@ -480,6 +429,7 @@ void amclLocalizerThread::run()
 
 bool amclLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
 {
+    LockGuard lock(m_mutex);
     m_localization_data.map_id = loc.map_id;
     m_localization_data.x = loc.x;
     m_localization_data.y = loc.y;
@@ -491,6 +441,13 @@ bool amclLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
     pf_init_pose_mean.v[1] = loc.y;
     pf_init_pose_mean.v[2] = loc.theta * DEG2RAD; //@@@@ check me
     pf_matrix_t pf_init_pose_cov = pf_matrix_zero();
+
+    pf_init_pose_cov.m[0][0] = m_initial_covariance_msg[0][0];
+    pf_init_pose_cov.m[0][1] = m_initial_covariance_msg[0][1];
+    pf_init_pose_cov.m[1][0] = m_initial_covariance_msg[1][0];
+    pf_init_pose_cov.m[1][1] = m_initial_covariance_msg[1][1];
+    pf_init_pose_cov.m[2][2] = m_initial_covariance_msg[2][2];
+
     // Copy in the covariance, converting from 6-D to 3-D
     /*
     // @@@@@@ check me
@@ -615,8 +572,7 @@ bool amclLocalizerThread::threadInit()
     else { yError() << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map")) { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
     else { yError() << "missing initial_map param"; return false; }
-    this->initializeLocalization(m_initial_loc);
-
+    
     // Grab params off the param server
     m_use_map_topic = initial_group.check("use_map_topic", Value(false)).asBool();
     m_first_map_only = initial_group.check("first_map_only", Value(false)).asBool();
@@ -648,6 +604,13 @@ bool amclLocalizerThread::threadInit()
     m_config.m_lambda_short = amcl_group.check("laser_lambda_short", Value(0.1)).asDouble();
     m_config.m_laser_likelihood_max_dist = amcl_group.check("laser_likelihood_max_dist", Value(2.0)).asDouble();
     std::string tmp_laser_model_type = amcl_group.check("laser_model_type", Value("likelihood_field")).asString();
+
+    m_initial_covariance_msg.resize(3, 3);
+    m_initial_covariance_msg.zero();
+    //the following default numbers have been taken from initialization message posted by rviz
+    m_initial_covariance_msg[0][0] = 0.25;
+    m_initial_covariance_msg[1][1] = 0.25;
+    m_initial_covariance_msg[2][2] = 0.06853891945200942;
 
     if (tmp_laser_model_type == "beam")
     {
@@ -743,18 +706,15 @@ bool amclLocalizerThread::threadInit()
     // Initialize the filter
     pf_vector_t pf_init_pose_mean = pf_vector_zero();
     pf_matrix_t pf_init_pose_cov = pf_matrix_zero();
-#if 0
-    pf_init_pose_mean.v[0] = last_published_pose.pose.pose.position.x;
-    pf_init_pose_mean.v[1] = last_published_pose.pose.pose.position.y;
-    pf_init_pose_mean.v[2] = tf2::getYaw(last_published_pose.pose.pose.orientation);
-    pf_init_pose_cov.m[0][0] = last_published_pose.pose.covariance[6 * 0 + 0];
-    pf_init_pose_cov.m[1][1] = last_published_pose.pose.covariance[6 * 1 + 1];
-    pf_init_pose_cov.m[2][2] = last_published_pose.pose.covariance[6 * 5 + 5];
-#else
+    pf_init_pose_cov.m[0][0] = m_initial_covariance_msg[0][0];
+    pf_init_pose_cov.m[0][1] = m_initial_covariance_msg[0][1];
+    pf_init_pose_cov.m[1][0] = m_initial_covariance_msg[1][0];
+    pf_init_pose_cov.m[1][1] = m_initial_covariance_msg[1][1];
+    pf_init_pose_cov.m[2][2] = m_initial_covariance_msg[2][2];
     pf_init_pose_mean.v[0] = m_initial_loc.x;
     pf_init_pose_mean.v[1] = m_initial_loc.y;
     pf_init_pose_mean.v[2] = m_initial_loc.theta *DEG2RAD;
-#endif
+
     pf_init(m_handler_pf, pf_init_pose_mean, pf_init_pose_cov);
     m_pf_init = false;
 
@@ -832,6 +792,8 @@ bool amclLocalizerThread::threadInit()
     m_lasers.push_back(new AMCLLaser(*m_handler_laser));
     m_lasers_update.push_back(true);
 
+    //@@@CHECK the position of this call
+    this->initializeLocalization(m_initial_loc);
     return true;
 }
 
@@ -997,7 +959,12 @@ bool amclLocalizer::open(yarp::os::Searchable& config)
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "amclLocalizer configuration: \n" << p.toString().c_str();
 
-    thread = new amclLocalizerThread(0.010, p);
+    double amclThreadPeriod = 1.000; //1000 ms
+    if (p.check("period"))
+    {
+        amclThreadPeriod = p.find("period").asDouble();
+    }
+    thread = new amclLocalizerThread(amclThreadPeriod, p);
 
     if (!thread->start())
     {
