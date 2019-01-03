@@ -255,7 +255,7 @@ bool NavGuiThread::threadInit()
     m_period_draw_laser = 0.3; //seconds;
     m_period_draw_enalarged_obstacles = 1.0; //seconds
     m_period_draw_estimated_poses = 1.0; //seconds
-    m_period_draw_estimated_poses = 5.0; //seconds
+    m_period_draw_map_locations = 5.0; //seconds
 
     return true;
 }
