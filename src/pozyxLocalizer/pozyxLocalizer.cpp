@@ -24,7 +24,6 @@
 #include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
-#include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>

@@ -30,7 +30,6 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/dev/Polydriver.h>
 #include <math.h>
 #include <yarp/dev/IMap2D.h>
 
