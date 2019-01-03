@@ -123,25 +123,6 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
         reply.addString("approach command received");
     }
 
-    else if (command.get(0).isString() && command.get(0).asString() == "gotoAbs")
-    {
-        yarp::sig::Vector v;
-        v.push_back(command.get(1).asDouble());
-        v.push_back(command.get(2).asDouble());
-        if (command.size() == 4) v.push_back(command.get(3).asDouble());
-        gotoThread->setNewAbsTarget(v);
-        reply.addString("new absolute target received");
-    }
-
-    else if (command.get(0).isString() && command.get(0).asString() == "gotoRel")
-    {
-        yarp::sig::Vector v;
-        v.push_back(command.get(1).asDouble());
-        v.push_back(command.get(2).asDouble());
-        if (command.size() == 4) v.push_back(command.get(3).asDouble());
-        gotoThread->setNewRelTarget(v);
-        reply.addString("new relative target received");
-    }
     else if (command.get(0).asString() == "set")
     {
         if (command.get(1).asString() == "linear_tol")
@@ -226,24 +207,6 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
         {
             reply.addString("Unknown get.");
         }
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "stop")
-    {
-        gotoThread->stopMovement();
-        reply.addString("Stopping movement.");
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "pause")
-    {
-        double time = -1;
-        if (command.size() > 1)
-            time = command.get(1).asDouble();
-        gotoThread->pauseMovement(time);
-        reply.addString("Pausing.");
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "resume")
-    {
-        gotoThread->resumeMovement();
-        reply.addString("Resuming.");
     }
     else
     {
@@ -336,23 +299,12 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     reply.clear();
 
     interface->gotoThread->m_mutex.wait();
-    if (command.get(0).asString() == "quit")
-    {
-        interface->gotoThread->m_mutex.post();
-        return false;
-    }
 
-    else if (command.get(0).asString() == "help")
+    if (command.get(0).asString() == "help")
     {
         reply.addVocab(Vocab::encode("many"));
         reply.addString("Available commands are:");
-        reply.addString("gotoAbs <x> <y> <angle in degrees>");
-        reply.addString("gotoRel <x> <y> <angle in degrees>");
         reply.addString("approach <angle in degrees> <linear velocity> <time>");
-        reply.addString("stop");
-        reply.addString("pause");
-        reply.addString("resume");
-        reply.addString("quit");
         reply.addString("reset_params");
         reply.addString("set linear_tol <m>");
         reply.addString("set linear_ang <deg>");
@@ -398,16 +350,3 @@ bool robotGotoDev::getRelativeLocationOfCurrentTarget(double& x, double& y, doub
     theta = loc.theta;
     return b;
 }
-
-/*
-if (request == VOCAB_NAV_GET_CURRENT_POS)
-{
-    Map2DLocation position;
-    gotoThread->getCurrentPos(position);
-    reply.addVocab(VOCAB_OK);
-    reply.addString(position.map_id);
-    reply.addDouble(position.x);
-    reply.addDouble(position.y);
-    reply.addDouble(position.theta);
-}
-*/
