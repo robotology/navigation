@@ -557,7 +557,7 @@ void PlannerThread::run()
     //broadcast the planner status
     if (m_port_status_output.getOutputCount()>0)
     {
-        string s = pathPlannerHelpers::getStatusAsString(m_planner_status);
+        string s = yarp::dev::NavigationStatusEnumHelpers::statusToString(m_planner_status);
         Bottle &b = m_port_status_output.prepare();
         b.clear();
         b.addString(s.c_str());

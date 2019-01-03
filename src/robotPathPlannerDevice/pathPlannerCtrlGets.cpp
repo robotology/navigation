@@ -105,14 +105,3 @@ void  PlannerThread::getTimeouts(int& localiz, int& laser, int& inner_status)
     laser = m_laser_timeout_counter;
     inner_status = m_inner_status_timeout_counter;
 }
-
-bool PlannerThread::getLastTarget(string& target_name)
-{
-    if (m_last_target=="")
-    {
-        target_name = "";
-        return false;
-    }
-    target_name = m_last_target;
-    return true;
-}

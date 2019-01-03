@@ -249,7 +249,10 @@ bool NavGuiThread::threadInit()
     }
 
     //Get the maps
-    readMaps();
+    if (readMaps() == false)
+    {
+        yError() << "Error while reading maps";
+    }
 
     //update
     m_period_draw_laser = 0.3; //seconds;
