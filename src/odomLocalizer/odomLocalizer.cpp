@@ -158,7 +158,7 @@ bool odomLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
 
     if (m_localization_data.map_id != m_initial_loc.map_id)
     {
-        yInfo() << "Map changed to: " << m_localization_data.map_id;
+        yInfo() << "Map changed from: " <<m_localization_data.map_id << " to: " << m_initial_loc.map_id;
         m_localization_data.map_id = m_initial_loc.map_id;
         //@@@TO BE COMPLETED
         m_localization_data.x = 0+m_initial_loc.x;

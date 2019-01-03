@@ -35,8 +35,8 @@
 using namespace yarp::os;
 
 /**
- * \section localizationModule
- * A module which acts as the server side for a Localization2DClient.
+ * \section odomLocalizer
+ * A localization device which can be wrapped by a Localization2DServer.
  *
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value      | Required     | Description                                                       | Notes |
