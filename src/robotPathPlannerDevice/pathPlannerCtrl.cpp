@@ -76,8 +76,14 @@ bool  PlannerThread::readLocalizationData()
         return false;
     }
 
-    if (m_localization_data.map_id != m_current_map.getMapName())
+    if (m_localization_data.map_id != m_current_map.getMapName() ||
+        m_force_map_reload == true)
     {
+        if (m_force_map_reload)
+        {
+            yInfo() << "m_force_map_reload requested";
+        }
+        m_force_map_reload = false;
         yWarning() << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
         yInfo() << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
         bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
@@ -86,7 +92,7 @@ bool  PlannerThread::readLocalizationData()
             m_temporary_obstacles_map_mutex.lock();
             m_temporary_obstacles_map = m_current_map;
             m_temporary_obstacles_map_mutex.unlock();
-            yInfo() << "Map '" << m_localization_data.map_id << "' succesfully obtained from server";
+            yInfo() << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
             m_current_map.enlargeObstacles(m_robot_radius);
             m_augmented_map = m_current_map;
             yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
@@ -108,6 +114,13 @@ bool  PlannerThread::readLocalizationData()
         }
     }
 
+    return true;
+}
+
+bool  PlannerThread::setRobotRadius(double size)
+{
+    m_robot_radius = size;
+    m_force_map_reload = true;
     return true;
 }
 

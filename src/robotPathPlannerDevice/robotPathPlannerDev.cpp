@@ -72,8 +72,8 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
         yError() << "Unable to open module ports";
         return false;
     }
-//    attach(rpcPort);//@@@@@@@@@
-    //attachTerminal();
+
+    m_rpcPort.setReader(*this);
 
     if (!m_plannerThread->start())
     {
@@ -97,22 +97,27 @@ bool robotPathPlannerDev::close()
     return true;
 }
 
-    
-bool robotPathPlannerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
-{
-    reply.clear(); 
 
-    interface->m_plannerThread->m_mutex.wait();
+bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
+{
+    yDebug();
+    yarp::os::Bottle command;
+    yarp::os::Bottle reply;
+    bool ok = command.read(connection);
+    if (!ok) return false;
+    reply.clear();
+
+    m_plannerThread->m_mutex.wait();
     if (command.get(0).isString())
     {
         if (command.get(0).asString()=="help")
         {
             reply.addVocab(Vocab::encode("many"));
-            reply.addString("No commands available.");
+            reply.addString("set_robot_radius <size_m>");
         }
         else if (command.get(0).isString())
         {
-            interface->parse_respond_string(command, reply);
+            parse_respond_string(command, reply);
         }
     }
     else
@@ -120,7 +125,13 @@ bool robotPathPlannerRPCHandler::respond(const yarp::os::Bottle& command, yarp::
         yError() << "Invalid command type";
         reply.addVocab(VOCAB_ERR);
     }
-    interface->m_plannerThread->m_mutex.post();
+
+    yarp::os::ConnectionWriter *returnToSender = connection.getWriter();
+    if (returnToSender != nullptr)
+    {
+        reply.write(*returnToSender);
+    }
+    m_plannerThread->m_mutex.post();
     return true;
 }
 
@@ -260,6 +271,17 @@ bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEn
 
 bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
-    reply.addString("Unknown command.");
+    if (command.get(0).asString() == "set_robot_radius")
+    {
+        bool ret = this->m_plannerThread->setRobotRadius(command.get(1).asFloat64());
+        if (ret)
+        {
+            reply.addString("set_robot_radius done");
+        }
+        else
+        {
+            reply.addString("set_robot_radius failed");
+        }
+    }
     return true;
 }

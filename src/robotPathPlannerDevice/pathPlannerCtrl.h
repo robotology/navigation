@@ -105,6 +105,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     yarp::dev::MapGrid2D m_temporary_obstacles_map;
     yarp::os::Mutex m_temporary_obstacles_map_mutex;
     yarp::dev::MapGrid2D m_augmented_map;
+    bool      m_force_map_reload;
 
     //yarp device drivers and interfaces
     PolyDriver                                             m_ptf;
@@ -263,6 +264,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool          getCurrentPath(std::vector<yarp::dev::Map2DLocation>& path) const;
     bool          getCurrentMap(yarp::dev::MapGrid2D& current_map) const;
     bool          getOstaclesMap(yarp::dev::MapGrid2D& obstacles_map);
+    bool          setRobotRadius(double size);
 
     private:
     bool          startPath();

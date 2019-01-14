@@ -33,26 +33,13 @@
 #include "pathPlannerCtrl.h"
 #include <math.h>
 
-class robotPathPlannerDev;
-
-class robotPathPlannerRPCHandler : public yarp::dev::DeviceResponder
-{
-protected:
-    robotPathPlannerDev* interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response);
-
-public:
-    robotPathPlannerRPCHandler() : interface(NULL) { }
-    void setInterface(robotPathPlannerDev* iface);
-};
-
 class robotPathPlannerDev : public yarp::dev::DeviceDriver,
                             public yarp::dev::INavigation2DTargetActions,
-                            public yarp::dev::INavigation2DControlActions
+                            public yarp::dev::INavigation2DControlActions,
+                            public yarp::os::PortReader
 {
 public:
     PlannerThread*                 m_plannerThread;
-    robotPathPlannerRPCHandler     m_rpcPortHandler;
     yarp::os::Port                 m_rpcPort;
 
 public:
@@ -63,7 +50,9 @@ public:
     //module cleanup
     virtual bool close() override;
 
+    /* RPC responder */
     bool parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply);
+    virtual bool read(yarp::os::ConnectionReader& connection) override;
 
 public:
     /**

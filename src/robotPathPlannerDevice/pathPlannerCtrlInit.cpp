@@ -58,6 +58,7 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_stats_time_last = yarp::os::Time::now();
     m_iInnerNav_ctrl = 0;
     m_iInnerNav_target = 0;
+    m_force_map_reload = false;
 }
 
 bool PlannerThread::threadInit()
