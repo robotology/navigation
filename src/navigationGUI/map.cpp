@@ -128,6 +128,20 @@ bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D:
     return true;
 }
 
+bool map_utilites::drawInfoFixed(IplImage *map, MapGrid2D::XYCell whereToDraw, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
+{
+    if (map == 0) return false;
+    char txt[255];
+    if (1)
+    {
+        snprintf(txt, 255, "Loc= x:%.2f y:%.2f t:%.1f, status= %s", localiz.x, localiz.y, localiz.theta, status.c_str());
+        cvPutText(map, txt, cvPoint(whereToDraw.x, whereToDraw.y), &font, color);
+    }
+    cvLine(map, cvPoint(orig.x, orig.y), cvPoint(x_axis.x, x_axis.y), cvScalar(211, 0, 0));
+    cvLine(map, cvPoint(orig.x, orig.y), cvPoint(y_axis.x, y_axis.y), cvScalar(0, 211, 0));
+    return true;
+}
+
 bool map_utilites::drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color)
 {
     if (map==0) return false;

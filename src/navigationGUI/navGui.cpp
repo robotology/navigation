@@ -381,10 +381,13 @@ void NavGuiThread::draw_map()
 {
     CvFont font;
     cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.28, 0.28);
+    CvFont font2;
+    cvInitFont(&font2, CV_FONT_HERSHEY_SIMPLEX, 0.33, 0.33);
     static CvScalar red_color   = cvScalar(200, 80, 80);
     static CvScalar green_color = cvScalar(80, 200, 80);
     static CvScalar blue_color  = cvScalar(0, 0, 200);
     static CvScalar azure_color = cvScalar(80, 80, 200);
+    static CvScalar azure_color2 = cvScalar(130, 130, 200);
     MapGrid2D::XYCell start = m_current_map.world2Cell(MapGrid2D::XYWorld(m_localization_data.x, m_localization_data.y));
     MapGrid2D::XYCell final_goal = m_current_map.world2Cell(yarp::dev::MapGrid2D::XYWorld(m_curr_goal.x, m_curr_goal.y));
 
@@ -404,7 +407,7 @@ void NavGuiThread::draw_map()
     {
         //i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height), 8, 3);
         //cvCopy(i1_map, i2_map_menu);
-        i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height+20), 8, 3);
+        i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height+40), 8, 3);
         cvCopyMakeBorder(i1_map, i2_map_menu, CvPoint(0, 0), cv::BORDER_ISOLATED);
     }
     addMenu(font);
@@ -477,7 +480,10 @@ void NavGuiThread::draw_map()
         MapGrid2D::XYCell x_axis = m_current_map.world2Cell(w_x_axis);
         MapGrid2D::XYCell y_axis = m_current_map.world2Cell(w_y_axis);
         MapGrid2D::XYCell orig = m_current_map.world2Cell(w_orig);
-        map_utilites::drawInfo(i3_map_menu_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font, blue_color);
+//        map_utilites::drawInfo(i3_map_menu_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font, blue_color);
+
+        MapGrid2D::XYCell whereToDraw(10, i1_map->height+32);
+        map_utilites::drawInfoFixed(i3_map_menu_scan, whereToDraw, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font2, azure_color2);
     }
 
     //############### draw path

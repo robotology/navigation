@@ -44,6 +44,7 @@ namespace map_utilites
 {
     //draw stuff on the map image
     bool drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
+    bool drawInfoFixed(IplImage *map, MapGrid2D::XYCell whereToDraw, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
     bool drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color);
     bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
     bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
