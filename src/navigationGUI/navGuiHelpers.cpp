@@ -41,6 +41,6 @@ NavigationStatusEnum NavGuiThread::getNavigationStatusAsInt()
 
 string NavGuiThread::getNavigationStatusAsString()
 {
-    string s = yarp::dev::NavigationStatusEnumHelpers::statusToString(m_navigation_status);
+    string s = yarp::dev::INavigation2DHelpers::statusToString(m_navigation_status);
     return s;
 }
