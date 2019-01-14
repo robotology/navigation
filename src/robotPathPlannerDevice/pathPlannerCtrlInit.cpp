@@ -53,9 +53,6 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_robot_laser_x = 0;
     m_robot_laser_y = 0;
     m_robot_laser_t = 0;
-    m_enable_draw_all_locations=true;
-    m_enable_draw_enlarged_scans=true;
-    m_enable_draw_laser_scans=true;
     m_enable_try_recovery=false;
     m_stats_time_curr = yarp::os::Time::now();
     m_stats_time_last = yarp::os::Time::now();

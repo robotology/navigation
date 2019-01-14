@@ -188,20 +188,6 @@ bool PlannerThread::gotoLocation(std::string location_name)
     }
 }
 
-bool PlannerThread::storeCurrentLocation(std::string location_name)
-{
-    bool b = m_iMap->storeLocation(location_name,m_localization_data);
-    updateLocations();
-    return b;
-}
-
-bool PlannerThread::deleteLocation(std::string location_name)
-{
-     bool b = m_iMap->deleteLocation(location_name);
-    updateLocations();
-    return b;
-}
-
 void PlannerThread::printStats()
 {
 }

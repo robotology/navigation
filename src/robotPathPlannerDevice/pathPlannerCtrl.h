@@ -150,12 +150,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     double              m_stats_time_curr;
     double              m_stats_time_last;
 
-    //drawing flags: enable/disable drawing of particular objects on the GUI
-    public:
-    bool                m_enable_draw_all_locations;
-    bool                m_enable_draw_laser_scans;
-    bool                m_enable_draw_enlarged_scans;
-    
     public:
     /**
     * Sets a new target, expressed in the map reference frame.
@@ -203,20 +197,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool          gotoLocation(std::string location_name);
     
     /**
-    * Stores the current robot location in the map server, with the given name. Typically invoked by user through RPC.
-    * @param location_name a string representing the location name
-    * @return true if the store operation was successful, false otherwise
-    */
-    bool          storeCurrentLocation(std::string location_name);
-
-    /**
-    * Removes the chosen location from the map server. Typically invoked by user through RPC.
-    * @param location_name a string representing the location name
-    * @return true if the delete operation was successful, false otherwise
-    */
-    bool          deleteLocation(std::string location_name);
-    
-    /**
     * Retrieves the current waypoint in the target queue, expressed in absolute (map) reference frame.
     * @param the current goal (computed by the pathplanner algorithm)
     * @return true if the returned target is valid, false otherwise
@@ -257,14 +237,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @return the map name
     */
     string        getFinalMapId();
-
-    /**
-    * Returns the name of the target previously set by a gotoLocation(), if available.
-    * If the current target has been set using a different method e.g. setNewAbsTarget(), this method fails.
-    * @param location_name the name of the location to be reached
-    * @return true if the command is executed successfully, false otherwise
-    */
-    bool          getLastTarget(string& target_name);
 
     /**
     * Returns the current navigation status used by the internal finite-state machine

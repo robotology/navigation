@@ -204,10 +204,6 @@ class NavGuiThread: public yarp::os::PeriodicThread
     bool          click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p);
     void          addMenu(CvFont& font);
 
-    private:
-    std::string   getStatusAsString(NavigationStatusEnum status);
-    NavigationStatusEnum string2status(string s);
-
     public:
     /**
     * Constructor.

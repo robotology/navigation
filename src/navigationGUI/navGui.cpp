@@ -197,9 +197,10 @@ bool  NavGuiThread::updateLocations()
 
 bool  NavGuiThread::readMaps()
 {
-    m_iNav->getCurrentNavigationMap(yarp::dev::global_map, m_current_map);
-    m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
-    return true;
+    bool ret = true;
+    ret &= m_iNav->getCurrentNavigationMap(yarp::dev::global_map, m_current_map);
+    ret &= m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
+    return ret;
 }
 
 bool  NavGuiThread::readLocalizationData()

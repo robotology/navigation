@@ -105,26 +105,10 @@ bool robotPathPlannerRPCHandler::respond(const yarp::os::Bottle& command, yarp::
     interface->m_plannerThread->m_mutex.wait();
     if (command.get(0).isString())
     {
-        if (command.get(0).asString()=="quit")
-        {
-            interface->m_plannerThread->m_mutex.post();
-            return false;
-        }
-
-        else if (command.get(0).asString()=="help")
+        if (command.get(0).asString()=="help")
         {
             reply.addVocab(Vocab::encode("many"));
-            reply.addString("Available commands are:");
-            reply.addString("goto <locationName>");
-            reply.addString("gotoAbs <x> <y> <angle in degrees>");
-            reply.addString("gotoRel <x> <y> <angle in degrees>");
-            reply.addString("store_current_location <location_name>");
-            reply.addString("delete_location <location_name>");
-            reply.addString("stop");
-            reply.addString("pause");
-            reply.addString("resume");
-            reply.addString("quit");
-            reply.addString("draw_locations <0/1>");
+            reply.addString("No commands available.");
         }
         else if (command.get(0).isString())
         {
@@ -276,127 +260,6 @@ bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEn
 
 bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
-    if (command.get(0).isString() && command.get(0).asString() == "gotoAbs")
-    {
-        yarp::dev::Map2DLocation loc;
-        loc.x = command.get(1).asDouble();
-        loc.y = command.get(2).asDouble();
-        if (command.size() == 4) { loc.theta = command.get(3).asDouble(); }
-        else { loc.theta = nan(""); }
-        loc.map_id = m_plannerThread->getCurrentMapId();
-        m_plannerThread->setNewAbsTarget(loc);
-        reply.addString("new absolute target received");
-    }
-
-    else if (command.get(0).isString() && command.get(0).asString() == "gotoRel")
-    {
-        yarp::sig::Vector v;
-        v.push_back(command.get(1).asDouble());
-        v.push_back(command.get(2).asDouble());
-        if (command.size() == 4) { v.push_back(command.get(3).asDouble()); }
-        else { v.push_back(nan("")); }
-        m_plannerThread->setNewRelTarget(v);
-        reply.addString("new relative target received");
-    }
-
-    else if (command.get(0).isString() && command.get(0).asString() == "goto")
-    {
-        std::string location_name = command.get(1).asString();
-        if (m_plannerThread->gotoLocation(location_name))
-        {
-            reply.addString("goto done");
-        }
-        else
-        {
-            reply.addString("goto error");
-        }
-    }
-
-    else if (command.get(0).isString() && command.get(0).asString() == "store_current_location")
-    {
-        std::string location_name = command.get(1).asString();
-        m_plannerThread->storeCurrentLocation(location_name);
-        reply.addString("store_current_location done");
-    }
-
-    else if (command.get(0).isString() && command.get(0).asString() == "delete_location")
-    {
-        std::string location_name = command.get(1).asString();
-        m_plannerThread->deleteLocation(location_name);
-        reply.addString("delete_location done");
-    }
-
-    else if (command.get(0).isString() && command.get(0).asString() == "get_last_target")
-    {
-        string last_target;
-        bool b = m_plannerThread->getLastTarget(last_target);
-        if (b)
-        {
-            reply.addString(last_target);
-        }
-        else
-        {
-            yError() << "get_last_target failed: goto <location_name> target not found.";
-            reply.addString("not found");
-        }
-    }
-
-    else if (command.get(0).asString() == "get")
-    {
-        if (command.get(1).asString() == "navigation_status")
-        {
-            string s = m_plannerThread->getNavigationStatusAsString();
-            reply.addString(s.c_str());
-        }
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "stop")
-
-    {
-        m_plannerThread->stopMovement();
-        reply.addString("Stopping movement.");
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "pause")
-    {
-        double time = -1;
-        if (command.size() > 1)
-            time = command.get(1).asDouble();
-        m_plannerThread->pauseMovement(time);
-        reply.addString("Pausing.");
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "resume")
-    {
-        m_plannerThread->resumeMovement();
-        reply.addString("Resuming.");
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "draw_locations")
-    {
-        if (command.get(1).asInt() == 1)
-        {
-            m_plannerThread->m_enable_draw_all_locations = true;
-            yDebug() << "locations drawing enabled";
-        }
-        else
-        {
-            m_plannerThread->m_enable_draw_all_locations = false;
-            yDebug() << "locations drawing disabled";
-        }
-    }
-    else if (command.get(0).isString() && command.get(0).asString() == "draw_enlarged_scans")
-    {
-        if (command.get(1).asInt() == 1)
-        {
-            m_plannerThread->m_enable_draw_enlarged_scans = true;
-            yDebug() << "enlarged scans drawing enabled";
-        }
-        else
-        {
-            m_plannerThread->m_enable_draw_enlarged_scans = false;
-            yDebug() << "enlarged scans drawing disabled";
-        }
-    }
-    else
-    {
-        reply.addString("Unknown command.");
-    }
+    reply.addString("Unknown command.");
     return true;
 }

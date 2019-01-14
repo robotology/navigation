@@ -24,12 +24,7 @@
 
 namespace pathPlannerHelpers
 {
-    //converts a string to a NavigationStatusEnum.
-    //navigation_status_error is returned if the string is not recognized.
-    yarp::dev::NavigationStatusEnum string2status(std::string s);
- 
-    //converts a NavigationStatusEnum to a string.
-    std::string getStatusAsString(yarp::dev::NavigationStatusEnum status);
+    //reserved for future use!
 }
 
 #endif
