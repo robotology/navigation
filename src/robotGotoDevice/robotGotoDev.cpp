@@ -167,7 +167,7 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
         }
         else if (command.get(1).asString() == "obstacle_avoidance")
         {
-            if (gotoThread->m_enable_obstacles_avoidance)
+            if (command.get(2).asInt() == 0)
             {
                 reply.addString("enable_obstacles_avoidance=false");
                 gotoThread->m_enable_obstacles_avoidance = false;
@@ -180,7 +180,7 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
         }
         else if (command.get(1).asString() == "obstacle_stop")
         {
-            if (gotoThread->m_enable_obstacles_emergency_stop)
+            if (command.get(2).asInt()==0)
             {
                 reply.addString("enable_obstacle_stop=false");
                 gotoThread->m_enable_obstacles_emergency_stop = false;
@@ -312,8 +312,8 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
         reply.addString("set max_ang_speed <deg/s>");
         reply.addString("set min_lin_speed <m/s>");
         reply.addString("set min_ang_speed <deg/s>");
-        reply.addString("set obstacle_stop");
-        reply.addString("set obstacle_avoidance");
+        reply.addString("set obstacle_stop <0/1>");
+        reply.addString("set obstacle_avoidance <0/1>");
     }
     else if (command.get(0).isString())
     {
