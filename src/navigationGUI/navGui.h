@@ -104,6 +104,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     yarp::dev::Map2DLocation               m_curr_waypoint;
     std::vector<Map2DLocation>             m_all_waypoints;
     std::vector<Map2DLocation>             m_locations_list;
+    std::vector<Map2DArea>                 m_areas_list;
 
     //storage for the environment map
     yarp::dev::MapGrid2D m_current_map;
@@ -201,6 +202,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     bool          readNavigationStatus(bool& changed);
     void          draw_map();
     bool          updateLocations();
+    bool          updateAreas();
     bool          click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p);
     void          addMenu(CvFont& font);
 

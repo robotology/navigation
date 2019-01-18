@@ -195,6 +195,20 @@ bool  NavGuiThread::updateLocations()
     return true;
 }
 
+bool  NavGuiThread::updateAreas()
+{
+    std::vector<std::string> all_areas;
+    m_iMap->getAreasList(all_areas);
+    Map2DArea tmp_area;
+    m_areas_list.clear();
+    for (size_t i = 0; i<all_areas.size(); i++)
+    {
+        m_iMap->getArea(all_areas[i], tmp_area);
+        m_areas_list.push_back(tmp_area);
+    }
+    return true;
+}
+
 bool  NavGuiThread::readMaps()
 {
     bool ret = true;
@@ -466,6 +480,16 @@ void NavGuiThread::draw_map()
         {
             map_utilites::drawGoal(i3_map_menu_scan, m_current_map.world2Cell(MapGrid2D::XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
         }
+        for (size_t i = 0; i<m_areas_list.size(); i++)
+        {
+            std::vector<MapGrid2D::XYCell> area;
+            for (size_t j = 0; j < m_areas_list[i].points.size(); j++)
+            {
+                area.push_back(m_current_map.world2Cell(MapGrid2D::XYWorld(m_areas_list[i].points[j].x, m_areas_list[i].points[j].y)));
+            }
+            map_utilites::drawArea(i3_map_menu_scan, area, blue_color);
+        }
+
     }
 
     //############### draw Current Position
@@ -552,6 +576,7 @@ void NavGuiThread::run()
     if (yarp::os::Time::now() - last_drawn_map_locations > m_period_draw_map_locations)
     {
         updateLocations();
+        updateAreas();
         last_drawn_map_locations = yarp::os::Time::now();
     }
 

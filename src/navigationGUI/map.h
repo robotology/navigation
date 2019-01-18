@@ -48,6 +48,7 @@ namespace map_utilites
     bool drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color);
     bool drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
     bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
+    bool drawArea(IplImage *map, std::vector<MapGrid2D::XYCell> area, const CvScalar& color);
     bool drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color);
     bool drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color);
     bool drawPose(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);

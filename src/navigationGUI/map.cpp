@@ -96,6 +96,19 @@ bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double ang
     return true;
 }
 
+bool map_utilites::drawArea(IplImage *map, std::vector<MapGrid2D::XYCell> area, const CvScalar& color)
+{
+    if (map == 0) return false;
+    if (area.size() < 3) return false;
+    size_t last = area.size();
+    for (size_t i = 0; i < last-1; i++)
+    {
+        cvLine(map, cvPoint(area[i].x, area[i].y), cvPoint(area[i+1].x, area[i+1].y), color);
+    }
+    cvLine(map, cvPoint(area[last-1].x, area[last-1].y), cvPoint(area[0].x, area[0].y), color);
+    return true;
+}
+
 bool map_utilites::drawPose(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
 {
     if (map == 0) return false;
