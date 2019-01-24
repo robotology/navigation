@@ -124,6 +124,12 @@ bool  PlannerThread::setRobotRadius(double size)
     return true;
 }
 
+bool  PlannerThread::getRobotRadius(double& size)
+{
+    size = m_robot_radius;
+    return true;
+}
+
 bool  PlannerThread::readInnerNavigationStatus()
 {
     static double last_print_time = 0;

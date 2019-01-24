@@ -114,6 +114,7 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
         {
             reply.addVocab(Vocab::encode("many"));
             reply.addString("set_robot_radius <size_m>");
+            reply.addString("get_robot_radius");
         }
         else if (command.get(0).isString())
         {
@@ -281,6 +282,19 @@ bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, 
         else
         {
             reply.addString("set_robot_radius failed");
+        }
+    }
+    if (command.get(0).asString() == "get_robot_radius")
+    {
+        double value = 0;
+        bool ret = this->m_plannerThread->getRobotRadius(value);
+        if (ret)
+        {
+            reply.addFloat64(value);
+        }
+        else
+        {
+            reply.addString("get_robot_radius failed");
         }
     }
     return true;

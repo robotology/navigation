@@ -265,6 +265,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool          getCurrentMap(yarp::dev::MapGrid2D& current_map) const;
     bool          getOstaclesMap(yarp::dev::MapGrid2D& obstacles_map);
     bool          setRobotRadius(double size);
+    bool          getRobotRadius(double& size);
 
     private:
     bool          startPath();
