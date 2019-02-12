@@ -24,6 +24,7 @@
 
 #include "TargetRetriver.h"
 #include "SimFramePainter.h"
+#include "GazeController.h"
 
 namespace FollowerTarget
 {
@@ -79,7 +80,7 @@ namespace FollowerTarget
 
     enum class FollowerStateMachine
     {
-        none=0, initted=1, configured=2, running=3
+        none=0, initted=1, configured=2, runEnabled=3, running=4
     };
 
     class Follower
@@ -115,7 +116,7 @@ namespace FollowerTarget
         yarp::os::Port m_rpcPort;
 
         yarp::os::BufferedPort<yarp::os::Bottle>  m_outputPort2baseCtr; //I send commands to baseControl interruptModule
-        yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller
+        //yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller
 
         FollowerConfig m_cfg;
         FollowerTargetType m_targetType;
@@ -124,6 +125,8 @@ namespace FollowerTarget
         Target_t m_lastValidTarget;
 
         std::mutex m_mutex;
+
+        GazeController m_gazeCtrl;
 
 
         bool transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
@@ -135,8 +138,8 @@ namespace FollowerTarget
 
         bool sendCommand2BaseControl(double linearDirection, double linearVelocity, double angularVelocity);
         bool sendCommand2GazeControl(double x, double y, double z);
-        bool sendCommand2GazeControl_lookAtPixel(double u, double v);
-        bool sendCommand2GazeControl_lookAtPoint(const  yarp::sig::Vector &x);
+//         bool sendCommand2GazeControl_lookAtPixel(double u, double v);
+//         bool sendCommand2GazeControl_lookAtPoint(const  yarp::sig::Vector &x);
         void paintTargetPoint(const  yarp::sig::Vector &target);
         void paintTargetPoint2(yarp::sig::Vector &target);
         bool isRunningInsimulation(void) {return((m_simmanager_ptr==nullptr) ? false :true);}

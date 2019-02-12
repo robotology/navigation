@@ -54,6 +54,16 @@ Follower::~Follower()
 
 void Follower::followTarget(Target_t &target)
 {
+
+    {
+        //if I didn't received the start command than return
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if(m_stateMachine_st < FollowerStateMachine::runEnabled)
+        {
+            return;
+        }
+
+
     //1. read target position
     if(!target.second)
     {
@@ -61,26 +71,35 @@ void Follower::followTarget(Target_t &target)
             yDebug() << "I can't see the target!!!";
         //TODO:in here start a timer with timeout T seconds (configurable).
         //      if timer expires and I don't see the target than start autonomous navigation toward last valid position of target
+        GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookupTarget();
+        if(GazeCtrlLookupStates::finished == gaze_st)
+        {
+            m_gazeCtrl.resetLookupstateMachine();
+            //start the autonomous navigation
+            //currently I stop myself and wait the user brings me to the target
+            m_stateMachine_st = FollowerStateMachine::runEnabled;
+            if(m_cfg.debug.enabled)
+                yDebug() << "I looked around but I cannot find the target!Start navigation autonomous toward last target";
+        }
         return;
     }
     else
     {
         m_lastValidTarget = target;
-        //TODO: stop here the target
+        m_gazeCtrl.resetLookupstateMachine();
+        //TODO: stop here the timer
+        m_stateMachine_st = FollowerStateMachine::running;
         if(m_cfg.debug.enabled)
             yDebug() << "I received a valid target!!! (I see the target=" << target.first[0] << target.first[1] << target.first[2] <<")" ;
     }
 
+    if( FollowerStateMachine::running != m_stateMachine_st)
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if(m_stateMachine_st != FollowerStateMachine::running)
-        {
-            return;
-        }
+        return;
     }
 
 
-
+    }
     //2. transform the ball-point from camera point of view to base point of view.
     yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
     targetOnCamFrame[0] = target.first[0];
@@ -146,7 +165,9 @@ void Follower::followTarget(Target_t &target)
     //yDebug() << "Point of image: " << ballPointU << ballPointV;
     //sendCommand2GazeControl_lookAtPixel(ballPointU, ballPointV);
     //    yDebug() << "Look at point " << targetOnCamFrame.toString();
-    sendCommand2GazeControl_lookAtPoint(targetOnBaseFrame);
+
+    //sendCommand2GazeControl_lookAtPoint(targetOnBaseFrame);
+    m_gazeCtrl.lookAtPoint(targetOnBaseFrame);
 
     //the following steps lose interest on real robot
     if(!isRunningInsimulation())
@@ -199,11 +220,18 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-     if(!m_outputPort2gazeCtr.open("/follower/gazetargets:o"))
-    {
-        yError() << "Error opening output port for gaze control";
+//      if(!m_outputPort2gazeCtr.open("/follower/gazetargets:o"))
+//     {
+//         yError() << "Error opening output port for gaze control";
+//         return false;
+//     }
+
+    GazeCtrlUsedCamera cam = GazeCtrlUsedCamera::left;
+    if(m_targetType==FollowerTargetType::person)
+        cam = GazeCtrlUsedCamera::depth;
+
+    if(!m_gazeCtrl.init( cam, m_cfg.debug.enabled))
         return false;
-    }
 
     if(m_onSimulation)
     {
@@ -230,8 +258,10 @@ bool Follower::close()
     m_outputPort2baseCtr.interrupt();
     m_outputPort2baseCtr.close();
 
-    m_outputPort2gazeCtr.interrupt();
-    m_outputPort2gazeCtr.close();
+//     m_outputPort2gazeCtr.interrupt();
+//     m_outputPort2gazeCtr.close();
+
+    m_gazeCtrl.deinit();
 
     if(m_simmanager_ptr)
         m_simmanager_ptr->deinit();
@@ -244,7 +274,7 @@ bool Follower::close()
 bool Follower::start()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st = FollowerStateMachine::running;
+    m_stateMachine_st = FollowerStateMachine::runEnabled;
     return true;
 }
 
@@ -407,78 +437,78 @@ bool Follower::sendCommand2BaseControl(double linearDirection, double linearVelo
 
 }
 
-bool Follower::sendCommand2GazeControl(double x, double y, double z)
-{
-    if (m_outputPort2gazeCtr.getOutputCount() == 0)
-        return true;
-
-    Property &p = m_outputPort2gazeCtr.prepare();
-    p.clear();
-    p.put("control-frame","gaze");
-    p.put("target-type","cartesian");
-
-    Bottle location = yarp::os::Bottle();
-    Bottle &val = location.addList();
-    val.addDouble(x);
-    val.addDouble(y);
-    val.addDouble(z);
-    p.put("target-location",location.get(0));
-    m_outputPort2gazeCtr.write();
-
-    return true;
-
-}
-
-
-bool Follower::sendCommand2GazeControl_lookAtPixel(double u, double v)
-{
-    if (m_outputPort2gazeCtr.getOutputCount() == 0)
-        return true;
-
-    Property &p = m_outputPort2gazeCtr.prepare();
-    p.clear();
-    p.put("control-frame","left");
-    p.put("target-type","image");
-    p.put("image","left");
-
-    Bottle location = yarp::os::Bottle();
-    Bottle &val = location.addList();
-    val.addDouble(u);
-    val.addDouble(v);
-    p.put("target-location",location.get(0));
-    m_outputPort2gazeCtr.write();
-
-    return true;
-
-}
+// bool Follower::sendCommand2GazeControl(double x, double y, double z)
+// {
+//     if (m_outputPort2gazeCtr.getOutputCount() == 0)
+//         return true;
+//
+//     Property &p = m_outputPort2gazeCtr.prepare();
+//     p.clear();
+//     p.put("control-frame","gaze");
+//     p.put("target-type","cartesian");
+//
+//     Bottle location = yarp::os::Bottle();
+//     Bottle &val = location.addList();
+//     val.addDouble(x);
+//     val.addDouble(y);
+//     val.addDouble(z);
+//     p.put("target-location",location.get(0));
+//     m_outputPort2gazeCtr.write();
+//
+//     return true;
+//
+// }
 
 
-bool Follower::sendCommand2GazeControl_lookAtPoint(const  yarp::sig::Vector &x)
-{
-    if (m_outputPort2gazeCtr.getOutputCount() == 0)
-        return true;
+// bool Follower::sendCommand2GazeControl_lookAtPixel(double u, double v)
+// {
+//     if (m_outputPort2gazeCtr.getOutputCount() == 0)
+//         return true;
+//
+//     Property &p = m_outputPort2gazeCtr.prepare();
+//     p.clear();
+//     p.put("control-frame","left");
+//     p.put("target-type","image");
+//     p.put("image","left");
+//
+//     Bottle location = yarp::os::Bottle();
+//     Bottle &val = location.addList();
+//     val.addDouble(u);
+//     val.addDouble(v);
+//     p.put("target-location",location.get(0));
+//     m_outputPort2gazeCtr.write();
+//
+//     return true;
+//
+// }
 
-    Property &p = m_outputPort2gazeCtr.prepare();
-    p.clear();
-    if(m_targetType==FollowerTargetType::person)
-        p.put("control-frame","depth_center");
-    else
-        p.put("control-frame","left");
 
-    p.put("target-type","cartesian");
-
-    Bottle target;
-    target.addList().read(x);
-    p.put("target-location",target.get(0));
-
-    if(m_cfg.debug.enabled)
-        yDebug() << "Command to gazectrl: " << p.toString();
-
-    m_outputPort2gazeCtr.write();
-
-    return true;
-
-}
+// bool Follower::sendCommand2GazeControl_lookAtPoint(const  yarp::sig::Vector &x)
+// {
+//     if (m_outputPort2gazeCtr.getOutputCount() == 0)
+//         return true;
+//
+//     Property &p = m_outputPort2gazeCtr.prepare();
+//     p.clear();
+//     if(m_targetType==FollowerTargetType::person)
+//         p.put("control-frame","depth_center");
+//     else
+//         p.put("control-frame","left");
+//
+//     p.put("target-type","cartesian");
+//
+//     Bottle target;
+//     target.addList().read(x);
+//     p.put("target-location",target.get(0));
+//
+//     if(m_cfg.debug.enabled)
+//         yDebug() << "Command to gazectrl: " << p.toString();
+//
+//     m_outputPort2gazeCtr.write();
+//
+//     return true;
+//
+// }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////

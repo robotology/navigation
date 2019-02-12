@@ -41,6 +41,8 @@ add_executable(follower
                 ./src/SimFramePainter.h
                 ./src/SimFramePainter.cpp
                 ./src/main.cpp
+                ./src/GazeController.h
+                ./src/GazeController.cpp
                 ${ASSISTIVE_REHAB_SRC})
 # link with YARP libraries
 target_link_libraries(follower ${YARP_LIBRARIES} ${OpenCV_LIBS} YARPBTModules )
