@@ -1,0 +1,111 @@
+<application>
+<name>CER Red-Ball follower</name>
+
+        <dependencies>
+         <!--       <port>/icub/camcalib/left/out</port> -->
+         <!--	lanciamo il gaze controller dopo
+                <port>/cer_gaze-controller/head/rpc:o</port>
+           -->
+        </dependencies>
+
+        <module>
+                <name>joystickCtrl</name>
+                <parameters> --context joystickCtrl --from cer_linux.ini --force_configuration</parameters>
+                <node>vale</node>
+        </module>
+
+        <module>
+            <name>baseControl</name>
+            <parameters>--context baseControl_SIM --from baseCtrl_cer.ini --skip_robot_interface_check --joystick_connect</parameters>
+            <node>vale</node>
+        </module>
+
+        <module>
+                <name>imageSplitter</name>
+                <parameters></parameters>
+                <node>vale</node>
+        </module>
+
+        <module>
+                <name>cer_gaze-controller</name>
+                <parameters>--robot SIM_CER_ROBOT --cameras::file cerSimEyes_640x480.ini </parameters>
+                <node>vale</node>
+        </module>
+        
+        <module>
+                <name>pf3dTracker</name>
+                <node>vale</node>
+        </module>
+
+        <module>
+                <name>yarpview</name>
+                <parameters>--name /PF3DTracker_viewer --x 320 --y 0 --p 50 --compact</parameters>
+                <node>vale</node>
+        </module>
+  
+        <module>
+                <name>follower</name>
+                <parameters>--from /usr/local/src/robot/my_appls/follower/app/conf/follower_SIM.ini</parameters>
+                <node>vale</node>
+        </module>
+
+        <module>
+                <name>GenericObjJoystickControl</name>
+                <parameters>--objName pallina --create ball --gain_x_axis 0.0004 --gain_y_axis 0.0004 --gain_yaw 0.001 </parameters>
+                <node>vale</node>
+        </module>
+               
+        <connection>
+                <from>/SIM_CER_ROBOT/cam/cameras:o</from>
+                <to>/imageSplitter/input:i</to>
+                <protocol>udp</protocol>
+        </connection>
+        
+        <connection>
+                <from>/imageSplitter/left:o</from>
+                <to>/pf3dTracker/video:i</to>
+                <protocol>udp</protocol>
+        </connection>
+
+        <connection>
+                <from>/pf3dTracker/video:o</from>
+                <to>/PF3DTracker_viewer</to>
+                <protocol>udp</protocol>
+        </connection>
+
+        <connection>
+                <from>/pf3dTracker/data:o</from>
+                <to>/follower/targetPoints:i</to>
+                <protocol>udp</protocol>
+        </connection>
+
+        <connection>
+                <from>/follower/commands:o</from>
+                <to>/baseControl/control:i</to>
+                <protocol>udp</protocol>
+        </connection>
+
+		<connection>
+                <from>/follower/gazetargets:o</from>
+                <to>/cer_gaze-controller/target:i</to>
+                <protocol>udp</protocol>
+        </connection>
+        
+        <connection>
+                <from>/joystickCtrl:o</from>
+                <to>/genericObjJoystickControl/joiystick:i</to>
+                <protocol>udp</protocol>
+        </connection>
+        
+        <connection>
+                <from>/genericObjJoystickControl/rpc</from>
+                <to>/world_input_port</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+	<connection>
+                <from>/follower/worldInterface/rpc</from>
+                <to>/world_input_port</to>
+                <protocol>tcp</protocol>
+        </connection>
+</application>

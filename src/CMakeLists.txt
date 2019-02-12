@@ -27,6 +27,7 @@ yarp_end_plugin_library(navmod)
 
 #add_subdirectory(mapper2D)
 
+add_subdirectory(follower)
 
 add_subdirectory(tests)
 add_subdirectory(tutorials)
