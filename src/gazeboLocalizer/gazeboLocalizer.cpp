@@ -135,10 +135,10 @@ void gazeboLocalizerThread::run()
     }
 
     //@@@@COMPUTE LOCALIZATION DATA here
-    double angle = m_map_to_gazebo_transform.theta * DEG2RAD;
-    m_localization_data.x     = m_map_to_gazebo_transform.x + cos (angle) * m_gazebo_data.x - sin (angle) * m_gazebo_data.y;
-    m_localization_data.y     = m_map_to_gazebo_transform.y + sin (angle) * m_gazebo_data.x + cos (angle) * m_gazebo_data.y;
-    m_localization_data.theta = m_gazebo_data.theta + m_map_to_gazebo_transform.theta;
+    double angle_rad = m_map_to_gazebo_transform.theta;
+    m_localization_data.x     = m_map_to_gazebo_transform.x + cos (angle_rad) * m_gazebo_data.x - sin (angle_rad) * m_gazebo_data.y;
+    m_localization_data.y     = m_map_to_gazebo_transform.y + sin (angle_rad) * m_gazebo_data.x + cos (angle_rad) * m_gazebo_data.y;
+    m_localization_data.theta = m_gazebo_data.theta*RAD2DEG + m_map_to_gazebo_transform.theta;
     if      (m_localization_data.theta >= +360) m_localization_data.theta -= 360;
     else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
 }
@@ -204,7 +204,7 @@ bool gazeboLocalizerThread::threadInit()
     }
 
     //general group
-    m_local_name_prefix = "gazeboLocalizer";
+    m_local_name_prefix = "/gazeboLocalizer";
     if (general_group.check("local_name"))
     {
         m_local_name_prefix = general_group.find("local_name").asString();
