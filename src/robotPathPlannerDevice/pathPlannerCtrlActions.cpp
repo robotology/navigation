@@ -67,11 +67,19 @@ bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
 
 bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 {
-    if(target.size() != 3)
+    if(target.size() != 2 && target.size() != 3)
     {
         yError() << "PlannerThread::setNewRelTarget() invalid target vector size";
         return false;
     }
+
+    if (target.size() == 2)
+    {
+        target.push_back(std::nan(""));
+        //This is done intentionally, in order to have m_final_goal.theta = nan, too.
+        //m_final_goal.theta = nan is properly handled by function PlannerThread::sendWaypoint()
+    }
+
     //target and localization data are formatted as follows: x, y, angle (in degrees)
     if (m_planner_status != navigation_status_idle &&
         m_planner_status != navigation_status_goal_reached &&
