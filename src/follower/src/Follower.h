@@ -25,6 +25,7 @@
 #include "TargetRetriver.h"
 #include "SimFramePainter.h"
 #include "GazeController.h"
+#include "NavigationController.h"
 
 namespace FollowerTarget
 {
@@ -80,7 +81,7 @@ namespace FollowerTarget
 
     enum class FollowerStateMachine
     {
-        none=0, initted=1, configured=2, runEnabled=3, running=4
+        none=0, initted=1, configured=2, runEnabled=3, running=4, autoNavRunning= 5, helpNeeded=6
     };
 
     class Follower
@@ -96,6 +97,8 @@ namespace FollowerTarget
         bool close();
         FollowerTargetType getTargetType(void);
         FollowerStateMachine getState(void);
+
+        bool helpProvided(void); //for test purpose
 
     private:
 
@@ -127,6 +130,7 @@ namespace FollowerTarget
         std::mutex m_mutex;
 
         GazeController m_gazeCtrl;
+        NavigationController m_navCtrl;
 
 
         bool transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);

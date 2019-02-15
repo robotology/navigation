@@ -24,6 +24,7 @@
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev;
 using namespace FollowerTarget;
 
 void FollowerConfig::print(void)
@@ -58,39 +59,113 @@ void Follower::followTarget(Target_t &target)
     {
         //if I didn't received the start command than return
         std::lock_guard<std::mutex> lock(m_mutex);
-        if(m_stateMachine_st < FollowerStateMachine::runEnabled)
+        if(m_stateMachine_st == FollowerStateMachine::helpNeeded)
+            yDebug() << "HELP NEEDED!!!!!!!";
+
+        if ( (m_stateMachine_st < FollowerStateMachine::runEnabled) || (m_stateMachine_st == FollowerStateMachine::helpNeeded))
         {
             return;
         }
+    }
 
 
     //1. read target position
     if(!target.second)
     {
-        if(m_cfg.debug.enabled)
-            yDebug() << "I can't see the target!!!";
-        //TODO:in here start a timer with timeout T seconds (configurable).
-        //      if timer expires and I don't see the target than start autonomous navigation toward last valid position of target
-        GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookupTarget();
-        if(GazeCtrlLookupStates::finished == gaze_st)
+        if(FollowerStateMachine::autoNavRunning == m_stateMachine_st)
         {
-            m_gazeCtrl.resetLookupstateMachine();
-            //start the autonomous navigation
-            //currently I stop myself and wait the user brings me to the target
-            m_stateMachine_st = FollowerStateMachine::runEnabled;
+            yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
+
+            switch(navst)
+            {
+                case navigation_status_preparing_before_move:
+                case navigation_status_moving               :
+                case navigation_status_waiting_obstacle     :
+                case navigation_status_thinking             :
+                {
+                    //here I need to wait to read the last target with auto nav or to see the target.
+                    return;
+                };
+
+                case navigation_status_goal_reached         :
+                {
+                    //ok: Now at the next run, I have a valid target
+                    m_stateMachine_st = FollowerStateMachine::runEnabled;
+                }
+                //TODO: what does the folower do in these cases????
+                case navigation_status_aborted              :
+                case navigation_status_paused               :
+                case navigation_status_idle                 :
+
+                //navigation module is in error, than I need help
+                case navigation_status_error                :
+                case navigation_status_failing              :
+                {
+                    m_stateMachine_st = FollowerStateMachine::helpNeeded;
+                }break;
+            };
+        }
+        else
+        {
             if(m_cfg.debug.enabled)
-                yDebug() << "I looked around but I cannot find the target!Start navigation autonomous toward last target";
+                //yDebug() << "I can't see the target!!!";
+            //TODO:in here start a timer with timeout T seconds (configurable). Filter in order to avoid to switch between target and not target
+            GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookupTarget();
+            if(GazeCtrlLookupStates::finished == gaze_st)
+            {
+                m_gazeCtrl.resetLookupstateMachine();
+                //start the autonomous navigation
+                //currently I stop myself and wait the user brings me to the target
+                m_stateMachine_st = FollowerStateMachine::autoNavRunning;
+                if(m_cfg.debug.enabled)
+                    yDebug() << "I looked around but I cannot find the target!START NAVIGATION AUTONOMOUS toward the last target=";
+
+                if(m_lastValidTarget.second)
+                    m_navCtrl.startAutonomousNav(m_lastValidTarget.first[0], m_lastValidTarget.first[1], 0);
+                else
+                {
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "the last target is not valid. HELP NEEDED";
+                    m_stateMachine_st = FollowerStateMachine::helpNeeded;
+                }
+            }
         }
         return;
     }
     else
     {
+        if(m_cfg.debug.enabled)
+            yDebug() << "I received a valid target!!! (I see the target=" << target.first[0] << target.first[1] << target.first[2] <<")" ;
         m_lastValidTarget = target;
+        if(FollowerStateMachine::autoNavRunning == m_stateMachine_st)
+        {
+            yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
+
+            switch(navst)
+            {
+                case navigation_status_goal_reached         :
+                {
+                    //perfect I reached the target and now I see it
+                   ;//nothing to do
+                }
+                case navigation_status_preparing_before_move:
+                case navigation_status_moving               :
+                case navigation_status_waiting_obstacle     :
+                case navigation_status_thinking             :
+                case navigation_status_aborted              :
+                case navigation_status_paused               :
+                case navigation_status_idle                 :
+                case navigation_status_error                :
+                case navigation_status_failing              :
+                {
+                    m_navCtrl.AbortAutonomousNav();
+                }break;
+            };
+
+        }
         m_gazeCtrl.resetLookupstateMachine();
         //TODO: stop here the timer
         m_stateMachine_st = FollowerStateMachine::running;
-        if(m_cfg.debug.enabled)
-            yDebug() << "I received a valid target!!! (I see the target=" << target.first[0] << target.first[1] << target.first[2] <<")" ;
     }
 
     if( FollowerStateMachine::running != m_stateMachine_st)
@@ -99,7 +174,6 @@ void Follower::followTarget(Target_t &target)
     }
 
 
-    }
     //2. transform the ball-point from camera point of view to base point of view.
     yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
     targetOnCamFrame[0] = target.first[0];
@@ -242,6 +316,9 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
     if(!initTransformClient())
         return false;
 
+    if(!m_navCtrl.configure(rf))
+        return false;
+
     std::lock_guard<std::mutex> lock(m_mutex);
     m_stateMachine_st=FollowerStateMachine::configured;
     return true;
@@ -281,9 +358,17 @@ bool Follower::start()
 
 bool Follower::stop()
 {
+    m_gazeCtrl.lookInFront();
     std::lock_guard<std::mutex> lock(m_mutex);
     m_stateMachine_st = FollowerStateMachine::configured;
     return true;
+}
+
+
+bool Follower::helpProvided(void)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stateMachine_st = FollowerStateMachine::runEnabled;
 }
 
 

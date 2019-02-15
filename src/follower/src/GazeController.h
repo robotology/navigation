@@ -47,6 +47,7 @@ namespace FollowerTarget
         bool lookInFront(void);
         bool lookAtPixel(double u, double v);
         bool lookAtPoint(const  yarp::sig::Vector &x);
+        bool lookAtAngle(double a, double b);
     private:
         GazeCtrlLookupStates m_lookupState;
         yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller

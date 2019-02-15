@@ -43,6 +43,8 @@ add_executable(follower
                 ./src/main.cpp
                 ./src/GazeController.h
                 ./src/GazeController.cpp
+                ./src/NavigationController.h
+                ./src/NavigationController.cpp
                 ${ASSISTIVE_REHAB_SRC})
 # link with YARP libraries
 target_link_libraries(follower ${YARP_LIBRARIES} ${OpenCV_LIBS} YARPBTModules )

@@ -59,32 +59,35 @@ GazeCtrlLookupStates GazeController::lookupTarget(void)
         case GazeCtrlLookupStates::none:
         {
             //calculate the nearest side TODO currently left always
-            lookAtPixel(m_pLeft.u, m_pLeft.v);
+            //lookAtPixel(m_pLeft.u, m_pLeft.v);
+            lookAtAngle(41.8090248586633, 3.42524672670162);
             m_lookupState = GazeCtrlLookupStates::nearest;
-            yDebug() << "GazeCtrl in none state. look at " << m_pLeft.u << m_pLeft.v;
-            SystemClock::delaySystem(1.5);
+            yDebug() << "GazeCtrl in NONE state. ";
+            SystemClock::delaySystem(2.5);
         }break;
 
         case GazeCtrlLookupStates::nearest:
         {
-            lookAtPixel(m_pRight.u, m_pRight.v);
+            //lookAtPixel(m_pRight.u, m_pRight.v);
+            lookAtAngle(-41.796462338564, 3.42371127637749);
             m_lookupState = GazeCtrlLookupStates::otherside;
-            yDebug() << "GazeCtrl in nearest state. look at " << m_pRight.u << m_pRight.v;
-            SystemClock::delaySystem(1.5);
+            yDebug() << "GazeCtrl in NEAREST state. ";
+            SystemClock::delaySystem(2.5);
         }break;
 
         case GazeCtrlLookupStates::otherside:
         {
-            lookInFront();
+            //lookInFront();
+            lookAtAngle(0, 0);
             m_lookupState = GazeCtrlLookupStates::finished;
-            yDebug() << "GazeCtrl in otherside state. look in front ";
-            SystemClock::delaySystem(1.5);
+            yDebug() << "GazeCtrl in OTHERSIDE state. look in front ";
+            SystemClock::delaySystem(2.5);
         }break;
 
         case GazeCtrlLookupStates::finished:
         {
             //TODO Do I need to reset the state machine?
-            yDebug() << "GazeCtrl in finished state. ";
+            yDebug() << "GazeCtrl in FINISHED state. ";
 
         }break;
     };
@@ -136,6 +139,37 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
 
     Bottle target;
     target.addList().read(x);
+    p.put("target-location",target.get(0));
+
+    if(m_debugOn)
+        yDebug() << "Command to gazectrl: " << p.toString();
+
+    m_outputPort2gazeCtr.write();
+
+    return true;
+}
+
+
+bool GazeController::lookAtAngle(double a, double b)
+{
+    if (m_outputPort2gazeCtr.getOutputCount() == 0)
+        return true;
+
+    Property &p = m_outputPort2gazeCtr.prepare();
+    p.clear();
+
+    //     if(m_targetType==FollowerTargetType::person)
+    //         p.put("control-frame","depth_center");
+    //     else
+    //         p.put("control-frame","left");
+
+    //p.put("control-frame", m_camera_str_command);
+    p.put("target-type","angular");
+
+    Bottle target;
+    Bottle &val = target.addList();
+    val.addDouble(a);
+    val.addDouble(b);
     p.put("target-location",target.get(0));
 
     if(m_debugOn)

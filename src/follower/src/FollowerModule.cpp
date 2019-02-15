@@ -86,6 +86,12 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
         reply.addString("OK.stopped");
         m_follower.stop();
     }
+    else if(command.get(0).asString()=="help_provided")
+    {
+        yError() << "ho ricevuto help_provided";
+        reply.addString("OK.help_provided");
+        m_follower.helpProvided();
+    }
     else
     {
         reply.addString("you");
