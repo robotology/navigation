@@ -11,48 +11,48 @@
         <module>
                 <name>joystickCtrl</name>
                 <parameters> --context joystickCtrl --from cer_linux.ini --force_configuration</parameters>
-                <node>vale</node>
+                <node>console</node>
         </module>
 
         <module>
             <name>baseControl</name>
-            <parameters>--context baseControl_SIM --from baseCtrl_cer.ini --skip_robot_interface_check --joystick_connect</parameters>
-            <node>vale</node>
+            <parameters>--context baseControl_SIM --from robot_2wheels.ini --skip_robot_interface_check --joystick_connect</parameters>
+            <node>console</node>
         </module>
 
         <module>
                 <name>imageSplitter</name>
                 <parameters></parameters>
-                <node>vale</node>
+                <node>console</node>
         </module>
 
         <module>
                 <name>cer_gaze-controller</name>
                 <parameters>--robot SIM_CER_ROBOT --cameras::file cerSimEyes_640x480.ini </parameters>
-                <node>vale</node>
+                <node>console</node>
         </module>
         
         <module>
                 <name>pf3dTracker</name>
-                <node>vale</node>
+                <node>console</node>
         </module>
 
         <module>
                 <name>yarpview</name>
                 <parameters>--name /PF3DTracker_viewer --x 320 --y 0 --p 50 --compact</parameters>
-                <node>vale</node>
+                <node>console</node>
         </module>
   
         <module>
                 <name>follower</name>
                 <parameters>--from /usr/local/src/robot/my_appls/follower/app/conf/follower_SIM.ini</parameters>
-                <node>vale</node>
+                <node>console</node>
         </module>
 
         <module>
                 <name>GenericObjJoystickControl</name>
                 <parameters>--objName pallina --create ball --gain_x_axis 0.0004 --gain_y_axis 0.0004 --gain_yaw 0.001 </parameters>
-                <node>vale</node>
+                <node>console</node>
         </module>
                
         <connection>
@@ -81,7 +81,7 @@
 
         <connection>
                 <from>/follower/commands:o</from>
-                <to>/baseControl/control:i</to>
+                <to>/baseControl/aux_control:i</to>
                 <protocol>udp</protocol>
         </connection>
 
