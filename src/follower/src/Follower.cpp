@@ -42,10 +42,11 @@ void FollowerConfig::print(void)
     yInfo() << "angleMinBeforeMove=" << angleMinBeforeMove;
 }
 
-Follower::Follower(): m_targetType(FollowerTargetType::person),m_onSimulation(true), m_simmanager_ptr(nullptr), m_stateMachine_st(FollowerStateMachine::none)
+Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_autoNavAlreadyDone(false)
 {
     m_transformData.transformClient = nullptr;
     m_lastValidTarget.second = false;
+    m_lastValidPoint.clear();
 }
 
 Follower::~Follower()
@@ -53,128 +54,272 @@ Follower::~Follower()
     delete m_simmanager_ptr;
 }
 
-void Follower::followTarget(Target_t &target)
+
+Result_t Follower::followTarget(Target_t &target)
 {
+    if(!isInRunningState())
+        return Result_t::notRunning;
 
+
+    if(target.second)
     {
-        //if I didn't received the start command than return
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if(m_stateMachine_st == FollowerStateMachine::helpNeeded)
-            yDebug() << "HELP NEEDED!!!!!!!";
-
-        if ( (m_stateMachine_st < FollowerStateMachine::runEnabled) || (m_stateMachine_st == FollowerStateMachine::helpNeeded))
-        {
-            return;
-        }
+        goto_targetValid_state();
+        return(processTarget(target));
     }
 
-
-    //1. read target position
-    if(!target.second)
+    //if the target is not valid.....
+    switch(m_runStMachine_st)
     {
-        if(FollowerStateMachine::autoNavRunning == m_stateMachine_st)
+        case RunningSubStMachine::targetValid:
         {
-            yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
+            //for the first time I received a not valid target
+            m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
+            m_lostTargetcounter++;
+            return(processTarget(m_lastValidTarget));
+        }break;
 
-            switch(navst)
-            {
-                case navigation_status_preparing_before_move:
-                case navigation_status_moving               :
-                case navigation_status_waiting_obstacle     :
-                case navigation_status_thinking             :
-                {
-                    //here I need to wait to read the last target with auto nav or to see the target.
-                    return;
-                };
-
-                case navigation_status_goal_reached         :
-                {
-                    //ok: Now at the next run, I have a valid target
-                    m_stateMachine_st = FollowerStateMachine::runEnabled;
-                }
-                //TODO: what does the folower do in these cases????
-                case navigation_status_aborted              :
-                case navigation_status_paused               :
-                case navigation_status_idle                 :
-
-                //navigation module is in error, than I need help
-                case navigation_status_error                :
-                case navigation_status_failing              :
-                {
-                    m_stateMachine_st = FollowerStateMachine::helpNeeded;
-                }break;
-            };
-        }
-        else
+        case RunningSubStMachine::maybeLostTarget:
         {
-            if(m_cfg.debug.enabled)
-                //yDebug() << "I can't see the target!!!";
-            //TODO:in here start a timer with timeout T seconds (configurable). Filter in order to avoid to switch between target and not target
+            m_lostTargetcounter++;
+            if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
+                m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
+
+            return(processTarget(m_lastValidTarget));
+        }break;
+
+        case RunningSubStMachine::lostTarget_lookup :
+        {
+            Result_t res=Result_t::lostTarget;
+
             GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookupTarget();
             if(GazeCtrlLookupStates::finished == gaze_st)
             {
                 m_gazeCtrl.resetLookupstateMachine();
-                //start the autonomous navigation
-                //currently I stop myself and wait the user brings me to the target
-                m_stateMachine_st = FollowerStateMachine::autoNavRunning;
                 if(m_cfg.debug.enabled)
-                    yDebug() << "I looked around but I cannot find the target!START NAVIGATION AUTONOMOUS toward the last target=";
+                    yDebug() << "I looked around but I cannot find the target!";
 
-                if(m_lastValidTarget.second)
-                    m_navCtrl.startAutonomousNav(m_lastValidTarget.first[0], m_lastValidTarget.first[1], 0);
+
+                if(m_autoNavAlreadyDone)
+                {
+                    m_runStMachine_st=RunningSubStMachine::needHelp;
+                    res=Result_t::needHelp;
+                }
                 else
                 {
-                    if(m_cfg.debug.enabled)
-                        yDebug() << "the last target is not valid. HELP NEEDED";
-                    m_stateMachine_st = FollowerStateMachine::helpNeeded;
+                    m_runStMachine_st=RunningSubStMachine::startAutoNav;
+                    res=Result_t::lostTarget;
                 }
             }
-        }
-        return;
-    }
-    else
-    {
-        if(m_cfg.debug.enabled)
-            yDebug() << "I received a valid target!!! (I see the target=" << target.first[0] << target.first[1] << target.first[2] <<")" ;
-        m_lastValidTarget = target;
-        if(FollowerStateMachine::autoNavRunning == m_stateMachine_st)
+            return(res);
+        }break;
+
+        case RunningSubStMachine::startAutoNav:
+        {
+            if(m_cfg.debug.enabled)
+                yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidPoint[0] << m_lastValidPoint[1];
+            bool ret = m_navCtrl.startAutonomousNav(m_lastValidPoint[0], m_lastValidPoint[1], 0);
+            if(ret)
+            {
+                m_runStMachine_st= RunningSubStMachine::waitAutoNav;
+                return Result_t::autoNavigation;
+            }
+            else
+            {
+                m_runStMachine_st= RunningSubStMachine::needHelp;
+                yError() << "Error starting autonomous navigation. I need help";
+                return Result_t::error;
+            }
+
+        }break;
+
+
+        case RunningSubStMachine::waitAutoNav:
         {
             yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
 
+            yError()<< "WAIT_AUTONAV. Nav in state: "<< INavigation2DHelpers::statusToString(navst);
             switch(navst)
             {
-                case navigation_status_goal_reached         :
-                {
-                    //perfect I reached the target and now I see it
-                   ;//nothing to do
-                }
                 case navigation_status_preparing_before_move:
                 case navigation_status_moving               :
                 case navigation_status_waiting_obstacle     :
                 case navigation_status_thinking             :
+                {
+                    return Result_t::autoNavigation;
+                };
+
+                case navigation_status_goal_reached         :
+                case navigation_status_idle                 : //the navigator goes in idle state after x milliseconds in reached state
+                {
+                    //ok: Now at the next run, I may have a valid target
+                    m_runStMachine_st= RunningSubStMachine::targetValid;
+                    m_autoNavAlreadyDone=true;
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "I reached the last target with autonomous navigation";
+
+                    return Result_t::autoNavigation;
+                }
+                //TODO: what does the follower do in these cases????
                 case navigation_status_aborted              :
                 case navigation_status_paused               :
-                case navigation_status_idle                 :
+
+                    //navigation module is in error, than I need help
                 case navigation_status_error                :
                 case navigation_status_failing              :
                 {
-                    m_navCtrl.AbortAutonomousNav();
+                    m_runStMachine_st= RunningSubStMachine::needHelp;
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "Autonomous navigation ended with error. I need help";
+                    return Result_t::needHelp;
                 }break;
             };
+        }break;
+//         case autoNavOk               :break;
+//         case autoNavError            :break;
+        case RunningSubStMachine::needHelp:
+        {
+            /*Nothing to do*/
+            if(m_cfg.debug.enabled)
+                yDebug() << "I need help";
 
-        }
-        m_gazeCtrl.resetLookupstateMachine();
-        //TODO: stop here the timer
-        m_stateMachine_st = FollowerStateMachine::running;
-    }
+            return Result_t::needHelp;
+        }break;
+    };
 
-    if( FollowerStateMachine::running != m_stateMachine_st)
+    return Result_t::error;
+}
+
+bool Follower::configure(yarp::os::ResourceFinder &rf)
+{
+    m_outputPortJoystick.open("/follower/test-joystick:o");//test
+
+
+    if(!readConfig(rf, m_cfg))
     {
-        return;
+        yError() << "Error reading configuration file";
+        return false;
+    }
+
+    if(m_cfg.targetType == "redball")
+    {
+        m_transformData.targetFrameId = m_transformData.redBallFrameId;
+        m_targetType = TargetType_t::redball;
+    }
+    else //person or default
+    {
+        m_transformData.targetFrameId = m_transformData.personFrameId;
+        m_targetType = TargetType_t::person;
     }
 
 
-    //2. transform the ball-point from camera point of view to base point of view.
+    if(!m_outputPort2baseCtr.open("/follower/" + m_cfg.outputPortName + ":o"))
+    {
+        yError() << "Error opening output port for base control";
+        return false;
+    }
+
+    GazeCtrlUsedCamera cam = GazeCtrlUsedCamera::left;
+    if(m_targetType==TargetType_t::person)
+        cam = GazeCtrlUsedCamera::depth;
+
+    if(!m_gazeCtrl.init( cam, m_cfg.debug.enabled))
+        return false;
+
+    if(m_cfg.onSimulator)
+    {
+        m_simmanager_ptr = new SimManager();
+        m_simmanager_ptr->init("SIM_CER_ROBOT", "/follower/worldInterface/rpc", m_cfg.debug.enabled);
+    }
+
+    if(!initTransformClient())
+        return false;
+
+    if(!m_navCtrl.configure(rf))
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stateMachine_st=StateMachine::configured;
+    return true;
+}
+
+
+bool Follower::close()
+{
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stateMachine_st = StateMachine::none;
+    m_transformData.driver.close();
+    m_outputPort2baseCtr.interrupt();
+    m_outputPort2baseCtr.close();
+
+//     m_outputPort2gazeCtr.interrupt();
+//     m_outputPort2gazeCtr.close();
+
+    m_gazeCtrl.deinit();
+
+    if(m_simmanager_ptr)
+        m_simmanager_ptr->deinit();
+
+
+    return true;
+}
+
+
+bool Follower::start()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stateMachine_st = StateMachine::running;
+    return true;
+}
+
+
+bool Follower::stop()
+{
+    m_gazeCtrl.lookInFront();
+    goto_targetValid_state();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stateMachine_st = StateMachine::configured;
+    return true;
+}
+
+
+bool Follower::helpProvided(void)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(!isInRunningState())
+        return false;
+
+    goto_targetValid_state();
+    return true;
+}
+
+
+
+TargetType_t Follower::getTargetType(void)
+{
+    return m_targetType;
+}
+
+
+StateMachine Follower::getState(void)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_stateMachine_st;
+}
+
+//------------------------------------------------
+// private function
+//------------------------------------------------
+bool Follower::isInRunningState(void)
+{
+    return (m_stateMachine_st==StateMachine::running);
+}
+
+Result_t  Follower::processTarget(Target_t &target)
+{
+
+
+    //1. transform the ball-point from camera point of view to base point of view.
     yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
     targetOnCamFrame[0] = target.first[0];
     targetOnCamFrame[1] = target.first[1];
@@ -182,8 +327,12 @@ void Follower::followTarget(Target_t &target)
 
     if(!transformPointInBaseFrame(targetOnCamFrame, targetOnBaseFrame))
     {
-        return;
+        return Result_t::error;
     }
+
+    //2. save the current target
+    m_lastValidTarget=target;
+    m_lastValidPoint=targetOnBaseFrame;
 
     //3. Calculate linear velocity and angular velocity to send to  base control module
 
@@ -234,18 +383,11 @@ void Follower::followTarget(Target_t &target)
     sendCommand2BaseControl(0.0, lin_vel, ang_vel );
 
     //4. send commands to gaze control in order to follow the target with the gaze
-    //     double ballPointU, ballPointV;
-    //     (dynamic_cast<Ball3DPPointRetriver*>(m_pointRetriver_ptr))->getTargetPixelCoord(ballPointU, ballPointV);
-    //yDebug() << "Point of image: " << ballPointU << ballPointV;
-    //sendCommand2GazeControl_lookAtPixel(ballPointU, ballPointV);
-    //    yDebug() << "Look at point " << targetOnCamFrame.toString();
-
-    //sendCommand2GazeControl_lookAtPoint(targetOnBaseFrame);
     m_gazeCtrl.lookAtPoint(targetOnBaseFrame);
 
     //the following steps lose interest on real robot
-    if(!isRunningInsimulation())
-        return;
+    if(!isOnSimulator())
+        return Result_t::ok;
 
     //5. paint in gazebo the targets on final target and on cam(optional)
     yarp::sig::Vector target2Paint= targetOnBaseFrame;
@@ -260,134 +402,19 @@ void Follower::followTarget(Target_t &target)
             targetOnHeadFrame[2]+=0.20;
             m_simmanager_ptr->PaintGazeFrame(targetOnHeadFrame);
         }
-
-    }
-}
-
-
-bool Follower::configure(yarp::os::ResourceFinder &rf)
-{
-    m_outputPortJoystick.open("/follower/test-joystick:o");//test
-
-
-    if(!readConfig(rf, m_cfg))
-    {
-        yError() << "Error reading configuration file";
-        return false;
     }
 
-    if(m_cfg.targetType == "redball")
-    {
-        m_transformData.targetFrameId = m_transformData.redBallFrameId;
-        m_targetType = FollowerTargetType::redball;
-    }
-    else //person or default
-    {
-        m_transformData.targetFrameId = m_transformData.personFrameId;
-        m_targetType = FollowerTargetType::person;
-    }
-
-
-    if(!m_outputPort2baseCtr.open("/follower/" + m_cfg.outputPortName + ":o"))
-    {
-        yError() << "Error opening output port for base control";
-        return false;
-    }
-
-//      if(!m_outputPort2gazeCtr.open("/follower/gazetargets:o"))
-//     {
-//         yError() << "Error opening output port for gaze control";
-//         return false;
-//     }
-
-    GazeCtrlUsedCamera cam = GazeCtrlUsedCamera::left;
-    if(m_targetType==FollowerTargetType::person)
-        cam = GazeCtrlUsedCamera::depth;
-
-    if(!m_gazeCtrl.init( cam, m_cfg.debug.enabled))
-        return false;
-
-    if(m_onSimulation)
-    {
-        m_simmanager_ptr = new SimManager();
-        m_simmanager_ptr->init("SIM_CER_ROBOT", "/follower/worldInterface/rpc", m_cfg.debug.enabled);
-    }
-
-    if(!initTransformClient())
-        return false;
-
-    if(!m_navCtrl.configure(rf))
-        return false;
-
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st=FollowerStateMachine::configured;
-    return true;
+    return Result_t::ok;
 }
 
-
-// Close function, to perform cleanup.
-bool Follower::close()
+void  Follower::goto_targetValid_state()
 {
-
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st = FollowerStateMachine::none;
-    m_transformData.driver.close();
-    m_outputPort2baseCtr.interrupt();
-    m_outputPort2baseCtr.close();
-
-//     m_outputPort2gazeCtr.interrupt();
-//     m_outputPort2gazeCtr.close();
-
-    m_gazeCtrl.deinit();
-
-    if(m_simmanager_ptr)
-        m_simmanager_ptr->deinit();
-
-
-    return true;
+    m_lostTargetcounter=0;
+    m_navCtrl.AbortAutonomousNav();
+    m_runStMachine_st=RunningSubStMachine::targetValid;
+    m_autoNavAlreadyDone=false;
 }
 
-
-bool Follower::start()
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st = FollowerStateMachine::runEnabled;
-    return true;
-}
-
-
-bool Follower::stop()
-{
-    m_gazeCtrl.lookInFront();
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st = FollowerStateMachine::configured;
-    return true;
-}
-
-
-bool Follower::helpProvided(void)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st = FollowerStateMachine::runEnabled;
-}
-
-
-
-FollowerTargetType Follower::getTargetType(void)
-{
-    return m_targetType;
-}
-
-
-FollowerStateMachine Follower::getState(void)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    return m_stateMachine_st;
-}
-
-//------------------------------------------------
-// private function
-//------------------------------------------------
 
 bool Follower::transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput)
 {
@@ -575,7 +602,7 @@ bool Follower::sendCommand2BaseControl(double linearDirection, double linearVelo
 //
 //     Property &p = m_outputPort2gazeCtr.prepare();
 //     p.clear();
-//     if(m_targetType==FollowerTargetType::person)
+//     if(m_targetType==TargetType_t::person)
 //         p.put("control-frame","depth_center");
 //     else
 //         p.put("control-frame","left");

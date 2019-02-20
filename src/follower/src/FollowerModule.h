@@ -66,7 +66,7 @@ private:
     double m_period;
     double const m_defaultPeriod=0.01;
 
-    FollowerTarget::FollowerTargetType         m_targetType;
+    FollowerTarget::TargetType_t         m_targetType;
     std::unique_ptr<FollowerTarget::TargetRetriver> m_pointRetriver_ptr;
 
     yarp::os::Port m_rpcPort;

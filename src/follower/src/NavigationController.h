@@ -18,11 +18,11 @@ namespace FollowerTarget
     class NavigationController
     {
     public:
-        NavigationController():m_iNav(nullptr), m_debugOn(true){;}
+        NavigationController():m_iNav(nullptr), m_debugOn(true), m_navStarted(false){;}
 
         bool configure(yarp::os::ResourceFinder &rf);
-        void startAutonomousNav(double x, double y, double theta);
-        void AbortAutonomousNav(void);
+        bool startAutonomousNav(double x, double y, double theta);
+        bool AbortAutonomousNav(void); //if navigation is started abort it
         yarp::dev::NavigationStatusEnum getNavigationStatus(void);
     private:
         //device drivers and interfaces
@@ -31,6 +31,7 @@ namespace FollowerTarget
         yarp::dev::INavigation2D*  m_iNav;
 
         bool m_debugOn;
+        bool m_navStarted;
     };
 
 }

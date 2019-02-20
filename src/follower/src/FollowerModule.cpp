@@ -141,7 +141,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     }
 
     // 3) initialize the target retriever
-    if(m_targetType == FollowerTargetType::redball)
+    if(m_targetType == TargetType_t::redball)
     {
         m_pointRetriver_ptr = std::make_unique<Ball3DPointRetriver>();
     }
@@ -190,7 +190,7 @@ bool FollowerModule::close()
 }
 
 
-FollowerModule::FollowerModule():m_period(m_defaultPeriod), m_targetType(FollowerTargetType::person)
+FollowerModule::FollowerModule():m_period(m_defaultPeriod), m_targetType(TargetType_t::person)
 {}
 FollowerModule::~FollowerModule(){;}
 
@@ -204,7 +204,7 @@ ReturnStatus FollowerModule::request_tick(const std::string& params)
 
 ReturnStatus FollowerModule::request_status()
 {
-    if(FollowerStateMachine::running == m_follower.getState())
+    if(StateMachine::running == m_follower.getState())
         return ReturnStatus::BT_RUNNING;
     else
         return ReturnStatus::BT_HALTED;

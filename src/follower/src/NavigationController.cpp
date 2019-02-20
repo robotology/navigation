@@ -72,11 +72,13 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
     return true;
 }
 
-void NavigationController::startAutonomousNav(double x, double y, double theta)
+bool NavigationController::startAutonomousNav(double x, double y, double theta)
 {
     //TODO check is configured
-    yDebug() << "gotoTargetByRelativeLocation" << x << y <<theta;
-    m_iNav->gotoTargetByRelativeLocation(x,y, theta);
+    if(m_debugOn)
+        yDebug() << "NavCtrl: gotoTargetByRelativeLocation" << x << y <<theta;
+    m_navStarted=true;
+    return(m_iNav->gotoTargetByRelativeLocation(x,y, theta));
 }
 
 yarp::dev::NavigationStatusEnum NavigationController::getNavigationStatus(void)
@@ -87,7 +89,15 @@ yarp::dev::NavigationStatusEnum NavigationController::getNavigationStatus(void)
 }
 
 
-void NavigationController::AbortAutonomousNav(void)
+bool NavigationController::AbortAutonomousNav(void)
 {
-    ;
+    bool ret = true;
+    if(m_navStarted)
+    {
+       ret=m_iNav->stopNavigation();
+        if(m_debugOn)
+            yDebug() << "NavCtrl: abort autonomous navigation";
+    }
+    m_navStarted=false;
+    return ret;
 }

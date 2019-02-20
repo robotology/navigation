@@ -40,6 +40,7 @@ namespace FollowerTarget
         double distanceThreshold = 0.8;
         double angleThreshold = 3.0;
         std::string targetType;
+        int invalidTargetMax;
         struct
         {
             double angular;
@@ -52,6 +53,7 @@ namespace FollowerTarget
             bool paintGazeFrame;
             bool startWithoutCommand;
         }debug;
+        bool onSimulator;
 
         FollowerConfig()
         {
@@ -69,20 +71,47 @@ namespace FollowerTarget
             debug.enabled=false;
             debug.paintGazeFrame = false;
             debug.startWithoutCommand = false;
+            invalidTargetMax = 10;
+            onSimulator=true;
         }
 
         void print(void);
     };
 
-    enum class FollowerTargetType
+    enum class TargetType_t
     {
         redball, person
     };
 
-    enum class FollowerStateMachine
+    enum class StateMachine
     {
-        none=0, initted=1, configured=2, runEnabled=3, running=4, autoNavRunning= 5, helpNeeded=6
+        none       = 0, //at creation time or if configuration fails
+        configured = 1, //if configuration has success or stop received
+        running    = 2, //after start(tick) received
     };
+
+    enum class RunningSubStMachine //these are the states of sub state machine when it is in running
+    {
+        targetValid              = 0,
+        maybeLostTarget          = 1,
+        lostTarget_lookup        = 2,
+        startAutoNav             = 3,
+        waitAutoNav              = 4,
+        autoNavOk                = 5,
+        autoNavError             = 6,
+        needHelp                 = 7
+    };
+
+    enum class Result_t
+    {
+        ok,
+        notRunning,
+        lostTarget,
+        autoNavigation,
+        error,
+        needHelp
+    };
+
 
     class Follower
     {
@@ -91,12 +120,12 @@ namespace FollowerTarget
         Follower();
         ~Follower();
         bool configure(yarp::os::ResourceFinder &rf);
-        void followTarget(Target_t &target);
+        Result_t followTarget(Target_t &target);
         bool start(void);
         bool stop(void);
-        bool close();
-        FollowerTargetType getTargetType(void);
-        FollowerStateMachine getState(void);
+        bool close(); // Close function, to perform cleanup.
+        TargetType_t getTargetType(void);
+        StateMachine getState(void);
 
         bool helpProvided(void); //for test purpose
 
@@ -113,25 +142,25 @@ namespace FollowerTarget
             std::string targetFrameId;
         }m_transformData;
 
-        bool m_onSimulation;
-        SimManager * m_simmanager_ptr;
 
         yarp::os::Port m_rpcPort;
-
         yarp::os::BufferedPort<yarp::os::Bottle>  m_outputPort2baseCtr; //I send commands to baseControl interruptModule
-        //yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller
 
         FollowerConfig m_cfg;
-        FollowerTargetType m_targetType;
+        TargetType_t m_targetType;
 
-        FollowerStateMachine m_stateMachine_st;
+        StateMachine m_stateMachine_st;
+        RunningSubStMachine m_runStMachine_st;
+        yarp::sig::Vector m_lastValidPoint; //respect mobile_base_body_link frame here I save the point of m_lastValidTarget stransformed respect mobile_base_body_link
         Target_t m_lastValidTarget;
+        uint32_t m_lostTargetcounter;
+        bool m_autoNavAlreadyDone;
 
         std::mutex m_mutex;
 
         GazeController m_gazeCtrl;
         NavigationController m_navCtrl;
-
+        SimManager * m_simmanager_ptr;
 
         bool transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
         bool transformPointInHeadFrame(std::string frame_src, yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
@@ -141,13 +170,12 @@ namespace FollowerTarget
         bool readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg);
 
         bool sendCommand2BaseControl(double linearDirection, double linearVelocity, double angularVelocity);
-        bool sendCommand2GazeControl(double x, double y, double z);
-//         bool sendCommand2GazeControl_lookAtPixel(double u, double v);
-//         bool sendCommand2GazeControl_lookAtPoint(const  yarp::sig::Vector &x);
-        void paintTargetPoint(const  yarp::sig::Vector &target);
-        void paintTargetPoint2(yarp::sig::Vector &target);
-        bool isRunningInsimulation(void) {return((m_simmanager_ptr==nullptr) ? false :true);}
 
+        bool isOnSimulator(void) {return((m_simmanager_ptr==nullptr) ? false :true);}
+
+        bool isInRunningState(void);
+        Result_t processTarget(Target_t &target);
+        void goto_targetValid_state();
 
         // ---- TEST STUFF
         bool moveRobot(void);
