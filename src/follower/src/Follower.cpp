@@ -117,7 +117,12 @@ Result_t Follower::followTarget(Target_t &target)
         {
             if(m_cfg.debug.enabled)
                 yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidPoint[0] << m_lastValidPoint[1];
+
             bool ret = m_navCtrl.startAutonomousNav(m_lastValidPoint[0], m_lastValidPoint[1], 0);
+
+            //from now the last target is not more valid
+            m_lastValidTarget.second=false;
+
             if(ret)
             {
                 m_runStMachine_st= RunningSubStMachine::waitAutoNav;
@@ -317,6 +322,8 @@ bool Follower::isInRunningState(void)
 
 Result_t  Follower::processTarget(Target_t &target)
 {
+    if(!target.second)
+        return Result_t::lostTarget;
 
 
     //1. transform the ball-point from camera point of view to base point of view.

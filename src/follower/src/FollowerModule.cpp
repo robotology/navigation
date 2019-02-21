@@ -19,10 +19,14 @@
 #include "Person3DPointRetriver.h"
 #include "Ball3DPointRetriver.h"
 
+#include <yarp/os/SystemClock.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace FollowerTarget;
+
+
+
 
 
 //------------------------ buffer helper test ---------------------
@@ -37,6 +41,7 @@ double FollowerModule::getPeriod()
 // This is our main function. Will be called periodically every getPeriod() seconds
 bool FollowerModule::updateModule()
 {
+    double t=yarp::os::SystemClock::nowSystem();
     Target_t targetpoint({0,0,0}, false);
 
 
@@ -53,6 +58,19 @@ bool FollowerModule::updateModule()
 
     targetpoint = m_pointRetriver_ptr->getTarget();
     m_follower.followTarget(targetpoint);
+    double diff = yarp::os::SystemClock::nowSystem()-t;
+
+    if(diff!= 0)
+    {
+        m_statInfo.addVal(diff);
+        if(m_statInfo.finish())
+        {
+            yError() << "***** STAT: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax();
+            m_statInfo.reset();
+        }
+    }
+    else
+        yError() << "***** DIFF =0!! ****************";
 
     return true;
 }
@@ -190,7 +208,7 @@ bool FollowerModule::close()
 }
 
 
-FollowerModule::FollowerModule():m_period(m_defaultPeriod), m_targetType(TargetType_t::person)
+FollowerModule::FollowerModule():m_period(m_defaultPeriod), m_targetType(TargetType_t::person), m_statInfo(100, -1, 1000)
 {}
 FollowerModule::~FollowerModule(){;}
 
