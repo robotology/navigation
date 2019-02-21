@@ -30,18 +30,22 @@ using namespace FollowerTarget;
 void FollowerConfig::print(void)
 {
     yInfo() << "The follower module has been configure with following values";
-    yInfo() << "factorDist2Vel=" << factorDist2Vel;
-    yInfo() << "factorAng2Vel=" << factorAng2Vel;
-    yInfo() << "inputPortName=" << inputPortName;
-    yInfo() << "factorDist2Vel=" << outputPortName;
-    yInfo() << "distanceThreshold=" << distanceThreshold;
-    yInfo() << "angleThreshold=" << angleThreshold;
-    yInfo() << "targetType=" << targetType;
-    yInfo() << "angularVelLimit=" << velocityLimits.angular;
-    yInfo() << "linearVelLimit=" << velocityLimits.linear;
-    yInfo() << "angleMinBeforeMove=" << angleMinBeforeMove;
+    yInfo() << "inputPortName="       << inputPortName;
+    yInfo() << "factorDist2Vel="      << outputPortName;
+    yInfo() << "targetType="          << targetType;
+    yInfo() << "invalidTargetMax="    << invalidTargetMax;
+    yInfo() << "startWithoutCommand=" << startWithoutCommand;
+    yInfo() << "onSimulator="         << onSimulator;
+    yInfo() << "NAVIGATION.factorDist2Vel="    << navigation.factorDist2Vel;
+    yInfo() << "NAVIGATION.factorAng2Vel="     << navigation.factorAng2Vel;
+    yInfo() << "NAVIGATION.distanceThreshold=" << navigation.distanceThreshold;
+    yInfo() << "NAVIGATION.angleThreshold="    << navigation.angleThreshold;
+    yInfo() << "NAVIGATION.angularVelLimit="   << navigation.velocityLimits.angular;
+    yInfo() << "NAVIGATION.linearVelLimit="    << navigation.velocityLimits.linear;
+    yInfo() << "NAVIGATION.angleMinBeforeMove="<< navigation.angleMinBeforeMove;
+    yInfo() << "DEBUG.enabled="        << debug.enabled;
+    yInfo() << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
 }
-
 Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_autoNavAlreadyDone(false)
 {
     m_transformData.transformClient = nullptr;
@@ -243,7 +247,10 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
         return false;
 
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_stateMachine_st=StateMachine::configured;
+    if(m_cfg.startWithoutCommand)
+        m_stateMachine_st=StateMachine::running;
+    else
+        m_stateMachine_st=StateMachine::configured;
     return true;
 }
 
@@ -353,9 +360,9 @@ Result_t  Follower::processTarget(Target_t &target)
     double ang_vel = 0.0;
 
 
-    if(distance > m_cfg.distanceThreshold)
+    if(distance > m_cfg.navigation.distanceThreshold)
     {
-        lin_vel = m_cfg.factorDist2Vel *distance;
+        lin_vel = m_cfg.navigation.factorDist2Vel *distance;
     }
     else
     {
@@ -364,8 +371,8 @@ Result_t  Follower::processTarget(Target_t &target)
     }
 
 
-    if(fabs(angle) >m_cfg.angleThreshold)
-        ang_vel = m_cfg.factorAng2Vel * angle;
+    if(fabs(angle) >m_cfg.navigation.angleThreshold)
+        ang_vel = m_cfg.navigation.factorAng2Vel * angle;
     else
     {
         if(m_cfg.debug.enabled)
@@ -374,15 +381,15 @@ Result_t  Follower::processTarget(Target_t &target)
 
     //if the angle difference is minor of angleMinBeforeMove than set linear velocity to 0
     // in order to rotate and after moving.
-    if((abs(angle) < m_cfg.angleMinBeforeMove) && (fabs(angle) >m_cfg.angleThreshold))
+    if((abs(angle) < m_cfg.navigation.angleMinBeforeMove) && (fabs(angle) >m_cfg.navigation.angleThreshold))
         lin_vel = 0.0;
 
     //saturate velocities
-    if(ang_vel > m_cfg.velocityLimits.angular)
-        ang_vel= m_cfg.velocityLimits.angular;
+    if(ang_vel > m_cfg.navigation.velocityLimits.angular)
+        ang_vel= m_cfg.navigation.velocityLimits.angular;
 
-    if(lin_vel> m_cfg.velocityLimits.linear)
-        lin_vel = m_cfg.velocityLimits.linear;
+    if(lin_vel> m_cfg.navigation.velocityLimits.linear)
+        lin_vel = m_cfg.navigation.velocityLimits.linear;
 
     if(m_cfg.debug.enabled)
         yDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel ;
@@ -467,23 +474,26 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
         if (config_group.check("inputPort"))  {cfg.inputPortName = config_group.find("inputPort").asString(); }
         if (config_group.check("outputPort"))  { cfg.outputPortName = config_group.find("outputPort").asString(); }
         if (config_group.check("targetType"))  { cfg.targetType = config_group.find("targetType").asString(); }
+        if (config_group.check("startWithoutCommand"))  { cfg.startWithoutCommand= config_group.find("startWithoutCommand").asBool(); }
+        if (config_group.check("invalidTargetMax"))  { cfg.invalidTargetMax = config_group.find("invalidTargetMax").asInt(); }
+        if (config_group.check("onSimulator"))  { cfg.onSimulator = config_group.find("onSimulator").asBool(); }
     }
 
 
-    config_group = rf.findGroup("TRAJECTORY");
+    config_group = rf.findGroup("NAVIGATION");
     if (config_group.isNull())
     {
         yWarning() << "Missing TRAJECTORY group! the module uses default value!";
     }
     else
     {
-        if (config_group.check("factorDist2Vel")) { cfg.factorDist2Vel = config_group.find("factorDist2Vel").asDouble(); }
-        if (config_group.check("factorAng2Vel"))  { cfg.factorAng2Vel = config_group.find("factorAng2Vel").asDouble(); }
-        if (config_group.check("distanceThreshold"))  { cfg.distanceThreshold = config_group.find("distanceThreshold").asDouble(); }
-        if (config_group.check("angleThreshold"))  { cfg.angleThreshold = config_group.find("angleThreshold").asDouble(); }
-        if (config_group.check("angularVelLimit"))  { cfg.velocityLimits.angular = config_group.find("angularVelLimit").asDouble(); }
-        if (config_group.check("linearVelLimit"))  { cfg.velocityLimits.linear = config_group.find("linearVelLimit").asDouble(); }
-        if (config_group.check("angleMinBeforeMove"))  { cfg.angleMinBeforeMove = config_group.find("angleMinBeforeMove").asDouble(); }
+        if (config_group.check("factorDist2Vel")) { cfg.navigation.factorDist2Vel = config_group.find("factorDist2Vel").asDouble(); }
+        if (config_group.check("factorAng2Vel"))  { cfg.navigation.factorAng2Vel = config_group.find("factorAng2Vel").asDouble(); }
+        if (config_group.check("distanceThreshold"))  { cfg.navigation.distanceThreshold = config_group.find("distanceThreshold").asDouble(); }
+        if (config_group.check("angleThreshold"))  { cfg.navigation.angleThreshold = config_group.find("angleThreshold").asDouble(); }
+        if (config_group.check("angularVelLimit"))  { cfg.navigation.velocityLimits.angular = config_group.find("angularVelLimit").asDouble(); }
+        if (config_group.check("linearVelLimit"))  { cfg.navigation.velocityLimits.linear = config_group.find("linearVelLimit").asDouble(); }
+        if (config_group.check("angleMinBeforeMove"))  { cfg.navigation.angleMinBeforeMove = config_group.find("angleMinBeforeMove").asDouble(); }
     }
 
 
@@ -496,7 +506,6 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     {
         if (config_group.check("enable")) { cfg.debug.enabled = config_group.find("enable").asBool(); }
         if (config_group.check("paintGazeFrame"))  { cfg.debug.paintGazeFrame = config_group.find("paintGazeFrame").asBool(); }
-        if (config_group.check("startWithoutCommand"))  { cfg.debug.startWithoutCommand= config_group.find("startWithoutCommand").asBool(); }
     }
 
     cfg.print();
