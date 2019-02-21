@@ -5,17 +5,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # find YARP
-find_package(YARP REQUIRED)
+find_package(YARP REQUIRED cv)
 find_package( OpenCV REQUIRED )
 find_package(YARPBTModules)
+find_package(AssistiveRehab QUIET)
 
+if(AssistiveRehab_FOUND)
+	message("AssistiveRehab found, adding skeleton retriever module")
+else()
+ 	message("AssistiveRehab not found, follower will not have skeleton retiever module")
+endif()
 
 # set up our program
 set(ASSISTIVE_REHAB_INC         $ENV{ROBOT_CODE}/assistive-rehab/lib/include)
 set(YARP_CV                     $ENV{ROBOT_CODE}/yarp/src/libYARP_cv/include)
+
+if(AssistiveRehab_FOUND)
 set(ASSISTIVE_REHAB_SRC         $ENV{ROBOT_CODE}/assistive-rehab/lib/src/dtw.cpp
                                 $ENV{ROBOT_CODE}/assistive-rehab/lib/src/helpers.cpp
                                 $ENV{ROBOT_CODE}/assistive-rehab/lib/src/skeleton.cpp)
+endif()
 
 if(YARPBTModules_FOUND)
     message("YARPBTModules FOUND!")
@@ -45,6 +54,15 @@ add_executable(follower
                 ./src/GazeController.cpp
                 ./src/NavigationController.h
                 ./src/NavigationController.cpp
-                ${ASSISTIVE_REHAB_SRC})
+                )
+
+message("AssistiveRehab_LIBRARIES ${AssistiveRehab_LIBRARIES}")
+
 # link with YARP libraries
-target_link_libraries(follower ${YARP_LIBRARIES} ${OpenCV_LIBS} YARPBTModules )
+target_link_libraries(follower ${YARP_LIBRARIES} ${OpenCV_LIBS} YARPBTModules)
+
+if(AssistiveRehab_FOUND)
+	target_link_libraries(follower ${AssistiveRehab_LIBRARIES})
+endif()
+
+install(TARGETS follower DESTINATION bin)
