@@ -13,6 +13,7 @@
 
 #include "Ball3DPointRetriver.h"
 
+#include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
@@ -26,7 +27,13 @@ Target_t Ball3DPointRetriver::getTarget(void)
 {
     std::vector<double> point3d = {0,0,0};
 
-    Bottle *b = m_inputPort.read();
+    Bottle *b = m_inputPort.read(false);
+    if(nullptr == b)
+    {
+        //yError() <<" Ball3DPointRetriver::getTarget: I don't receive nothing!";
+        return std::make_pair(std::move (point3d), false);
+    }
+
     bool ballIsTracked = (b->get(6).asDouble() == 1.0) ? true : false;
 
     if(!ballIsTracked)
