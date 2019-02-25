@@ -119,26 +119,35 @@ Result_t Follower::followTarget(Target_t &target)
 
         case RunningSubStMachine::startAutoNav:
         {
-            if(m_cfg.debug.enabled)
-                yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidPoint[0] << m_lastValidPoint[1];
-
-            bool ret = m_navCtrl.startAutonomousNav(m_lastValidPoint[0], m_lastValidPoint[1], 0);
-
-            //from now the last target is not more valid
-            m_lastValidTarget.second=false;
-
-            if(ret)
+            if(false ==  m_lastValidTarget.second)
             {
-                m_runStMachine_st= RunningSubStMachine::waitAutoNav;
-                return Result_t::autoNavigation;
+                m_runStMachine_st= RunningSubStMachine::needHelp;
+                if(m_cfg.debug.enabled)
+                    yDebug() << "I can't start to auto nav because the last target is not valid";
+                return Result_t::needHelp;
             }
             else
             {
-                m_runStMachine_st= RunningSubStMachine::needHelp;
-                yError() << "Error starting autonomous navigation. I need help";
-                return Result_t::error;
-            }
+                if(m_cfg.debug.enabled)
+                    yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidPoint[0] << m_lastValidPoint[1];
 
+                bool ret = m_navCtrl.startAutonomousNav(m_lastValidPoint[0], m_lastValidPoint[1], 0);
+
+                //from now the last target is not more valid
+                m_lastValidTarget.second=false;
+
+                if(ret)
+                {
+                    m_runStMachine_st= RunningSubStMachine::waitAutoNav;
+                    return Result_t::autoNavigation;
+                }
+                else
+                {
+                    m_runStMachine_st= RunningSubStMachine::needHelp;
+                    yError() << "Error starting autonomous navigation. I need help";
+                    return Result_t::error;
+                }
+            }
         }break;
 
 
@@ -146,7 +155,6 @@ Result_t Follower::followTarget(Target_t &target)
         {
             yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
 
-            yError()<< "WAIT_AUTONAV. Nav in state: "<< INavigation2DHelpers::statusToString(navst);
             switch(navst)
             {
                 case navigation_status_preparing_before_move:
@@ -331,7 +339,6 @@ Result_t  Follower::processTarget(Target_t &target)
 {
     if(!target.second)
         return Result_t::lostTarget;
-
 
     //1. transform the ball-point from camera point of view to base point of view.
     yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
