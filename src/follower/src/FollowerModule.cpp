@@ -65,12 +65,11 @@ bool FollowerModule::updateModule()
         m_statInfo.addVal(diff);
         if(m_statInfo.finish())
         {
-            yError() << "***** STAT: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax();
+            //yError() << "***** STAT: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax();
             m_statInfo.reset();
         }
     }
-    else
-        yError() << "***** DIFF =0!! ****************";
+
 
     return true;
 }
@@ -82,7 +81,6 @@ bool FollowerModule::updateModule()
 bool FollowerModule::respond(const Bottle& command, Bottle& reply)
 {
     reply.clear();
-    yError() << "rpc command=" <<command.toString();
     if (command.get(0).asString()=="help")
     {
         reply.addVocab(Vocab::encode("many"));
@@ -94,19 +92,16 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
     }
     else if(command.get(0).asString()=="start")
     {
-        yError() << "he ricevuto start";
         m_follower.start();
         reply.addString("OK.started");
     }
     else if(command.get(0).asString()=="stop")
     {
-        yError() << "he ricevuto stop";
         reply.addString("OK.stopped");
         m_follower.stop();
     }
     else if(command.get(0).asString()=="help_provided")
     {
-        yError() << "ho ricevuto help_provided";
         reply.addString("OK.help_provided");
         m_follower.helpProvided();
     }
@@ -160,6 +155,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
         if (debug_group.check("enable"))  { debugOn = debug_group.find("enable").asBool(); }
     }
 
+
     // 3) initialize the target retriever
     if(m_targetType == TargetType_t::redball)
     {
@@ -182,6 +178,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     #ifdef TICK_SERVER
     TickServer::configure_tick_server("/follower");
     #endif
+
     return true;
 }
 // Interrupt function.
