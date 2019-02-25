@@ -28,6 +28,10 @@
 #include <ReturnStatus.h>
 #endif
 
+namespace FollowerTarget
+{
+
+double const DefaultPeriodOfMudule=0.05;
 
 class StatInfo
 {
@@ -95,7 +99,6 @@ private:
 
     FollowerTarget::Follower m_follower;
     double m_period;
-    double const m_defaultPeriod=0.05;
 
     FollowerTarget::TargetType_t         m_targetType;
     std::unique_ptr<FollowerTarget::TargetRetriver> m_pointRetriver_ptr;
@@ -104,5 +107,5 @@ private:
     StatInfo m_statInfo;
 
 };
-
+}//end namespace
 

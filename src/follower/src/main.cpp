@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
     /* initialize yarp network */
     Network yarp;
     /* create your module */
-    FollowerModule module;
+    FollowerTarget::FollowerModule module;
     /* prepare and configure the resource finder */
     ResourceFinder rf;
     rf.configure(argc, argv);

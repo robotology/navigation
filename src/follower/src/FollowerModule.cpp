@@ -148,9 +148,11 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     }
     else
     {
-        if (config_group.check("period"))  { m_period = config_group.find("period").asBool(); }
+        if (config_group.check("period")){ m_period = config_group.find("period").asFloat64();}
         if (config_group.check("inputPort"))  {inputPortName = config_group.find("inputPort").asString(); }
     }
+
+
     bool debugOn = false;
     Bottle debug_group = rf.findGroup("DEBUG");
     if (!debug_group.isNull())
@@ -208,7 +210,7 @@ bool FollowerModule::close()
 }
 
 
-FollowerModule::FollowerModule():m_period(m_defaultPeriod), m_targetType(TargetType_t::person), m_statInfo(100, -1, 1000)
+FollowerModule::FollowerModule():m_period(DefaultPeriodOfMudule), m_targetType(TargetType_t::person), m_statInfo(100, -1, 1000)
 {}
 FollowerModule::~FollowerModule(){;}
 
