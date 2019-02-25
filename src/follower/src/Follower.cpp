@@ -46,11 +46,12 @@ void FollowerConfig::print(void)
     yInfo() << "DEBUG.enabled="        << debug.enabled;
     yInfo() << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
 }
-Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_autoNavAlreadyDone(false)
+Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false)
 {
     m_transformData.transformClient = nullptr;
-    m_lastValidTarget.second = false;
-    m_lastValidPoint.clear();
+    m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
+    m_lastValidTargetOnBaseFrame.second = false;
+    //m_lastValidPoint.clear();
 }
 
 Follower::~Follower()
@@ -58,9 +59,58 @@ Follower::~Follower()
     delete m_simmanager_ptr;
 }
 
+string Follower::runStMachineState_2_string(RunningSubStMachine st)
+{
+switch(st)
+    {
+        case RunningSubStMachine::unknown           :return("UNKNOWK")      ;
+        case RunningSubStMachine::targetValid       :return("TARGETVALID")      ;
+        case RunningSubStMachine::maybeLostTarget   :return("MAYBELOSTTARGET")  ;
+        case RunningSubStMachine::lostTarget_lookup :return("LOSTTARGET_LOOKUP");
+        case RunningSubStMachine::startAutoNav      :return("STARTAUTONAV")     ;
+        case RunningSubStMachine::waitAutoNav       :return("WAITAUTONAV")      ;
+        case RunningSubStMachine::autoNavOk         :return("AUTONAVOK")        ;
+        case RunningSubStMachine::autoNavError      :return("AUTONAVERROR")     ;
+        case RunningSubStMachine::needHelp          :return("NEEDHELP")         ;
+        default: return "UNKNOWN RUN-STATE";
+    };
+}
+
+string Follower::stateMachineState_2_string(StateMachine st)
+{
+
+    switch(st)
+    {
+        case StateMachine::none      :return("NONE");
+        case StateMachine::configured:return("CONFIGURED");
+        case StateMachine::running   :return("RUNNING");
+        case StateMachine::error     :return("ERROR");
+        default: return "UNKNOWN STATE";
+    };
+
+}
+
+void Follower::printStMachineDebufInfo(Target_t &currenttarget)
+{
+    static double tstart = yarp::os::Time::now();
+    string str;
+    yDebug() << "****************************************************************";
+    if(currenttarget.second)
+        yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.first[0] << currenttarget.first[1] << currenttarget.first[2] << "at time" <<yarp::os::Time::now() - tstart;
+    else
+        yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - tstart;
+
+    yDebug()<< "**** state machine is in " << stateMachineState_2_string(m_stateMachine_st);
+    yDebug()<< "**** running st machine is in" << runStMachineState_2_string(m_runStMachine_st);
+    yDebug()<< "**** target is REACHED " << m_targetReached;
+    yDebug() << "****************************************************************end";
+}
 
 Result_t Follower::followTarget(Target_t &target)
 {
+    if(m_cfg.debug.enabled)
+        printStMachineDebufInfo(target);
+
     if(!isInRunningState())
         return Result_t::notRunning;
 
@@ -68,7 +118,7 @@ Result_t Follower::followTarget(Target_t &target)
     if(target.second)
     {
         goto_targetValid_state();
-        return(processTarget(target));
+        return(processValidTarget(target));
     }
 
     //if the target is not valid.....
@@ -79,7 +129,7 @@ Result_t Follower::followTarget(Target_t &target)
             //for the first time I received a not valid target
             m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
             m_lostTargetcounter++;
-            return(processTarget(m_lastValidTarget));
+            return(processTarget_core(m_lastValidTargetOnBaseFrame));
         }break;
 
         case RunningSubStMachine::maybeLostTarget:
@@ -88,7 +138,7 @@ Result_t Follower::followTarget(Target_t &target)
             if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
                 m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
 
-            return(processTarget(m_lastValidTarget));
+            return(processTarget_core(m_lastValidTargetOnBaseFrame));
         }break;
 
         case RunningSubStMachine::lostTarget_lookup :
@@ -119,7 +169,7 @@ Result_t Follower::followTarget(Target_t &target)
 
         case RunningSubStMachine::startAutoNav:
         {
-            if(false ==  m_lastValidTarget.second)
+            if(false ==  m_lastValidTargetOnBaseFrame.second)
             {
                 m_runStMachine_st= RunningSubStMachine::needHelp;
                 if(m_cfg.debug.enabled)
@@ -128,24 +178,37 @@ Result_t Follower::followTarget(Target_t &target)
             }
             else
             {
-                if(m_cfg.debug.enabled)
-                    yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidPoint[0] << m_lastValidPoint[1];
 
-                bool ret = m_navCtrl.startAutonomousNav(m_lastValidPoint[0], m_lastValidPoint[1], 0);
-
-                //from now the last target is not more valid
-                m_lastValidTarget.second=false;
-
-                if(ret)
+                if(!m_targetReached)
                 {
-                    m_runStMachine_st= RunningSubStMachine::waitAutoNav;
-                    return Result_t::autoNavigation;
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.first[0] << m_lastValidTargetOnBaseFrame.first[1];
+
+                    bool ret = m_navCtrl.startAutonomousNav(m_lastValidTargetOnBaseFrame.first[0], m_lastValidTargetOnBaseFrame.first[1], 0);
+
+                    //from now the last target is not more valid
+                    m_lastValidTargetOnBaseFrame.second=false;
+
+                    if(ret)
+                    {
+                        m_runStMachine_st= RunningSubStMachine::waitAutoNav;
+                        return Result_t::autoNavigation;
+                    }
+                    else
+                    {
+                        m_runStMachine_st= RunningSubStMachine::needHelp;
+                        yError() << "Error starting autonomous navigation. I need help";
+                        return Result_t::error;
+                    }
                 }
                 else
                 {
-                    m_runStMachine_st= RunningSubStMachine::needHelp;
-                    yError() << "Error starting autonomous navigation. I need help";
-                    return Result_t::error;
+                    //m_targetReached=true;
+                    //from now the last target is not more valid
+                    m_lastValidTargetOnBaseFrame.second=false;
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "Target REACHED!!!!!";
+                    return Result_t::ok;
                 }
             }
         }break;
@@ -330,15 +393,22 @@ StateMachine Follower::getState(void)
 //------------------------------------------------
 // private function
 //------------------------------------------------
+
+
+// bool Follower::checkTargetIsInThreshold(yarp::sig::Vector &target)
+// {
+//
+//
+// }
 bool Follower::isInRunningState(void)
 {
     return (m_stateMachine_st==StateMachine::running);
 }
 
-Result_t  Follower::processTarget(Target_t &target)
+Result_t Follower::processValidTarget(Target_t &target)
 {
-    if(!target.second)
-        return Result_t::lostTarget;
+
+
 
     //1. transform the ball-point from camera point of view to base point of view.
     yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
@@ -352,70 +422,19 @@ Result_t  Follower::processTarget(Target_t &target)
     }
 
     //2. save the current target
-    m_lastValidTarget=target;
-    m_lastValidPoint=targetOnBaseFrame;
+    //m_lastValidTarget=target;
+    //m_lastValidPoint=targetOnBaseFrame;
+    m_lastValidTargetOnBaseFrame.first[0] = targetOnBaseFrame[0];
+    m_lastValidTargetOnBaseFrame.first[1] = targetOnBaseFrame[1];
+    m_lastValidTargetOnBaseFrame.first[2] = targetOnBaseFrame[2];
+    m_lastValidTargetOnBaseFrame.second = true;
 
-    //3. Calculate linear velocity and angular velocity to send to  base control module
+    sendtargets4Debug(targetOnCamFrame, targetOnBaseFrame);
 
-    //x axis is the first element, y is on second. (In order to calculate the distance see mobile base frame)
-    double distance =  sqrt(pow(targetOnBaseFrame[0], 2) + pow(targetOnBaseFrame[1], 2));
-
-    const double RAD2DEG  = 180.0/M_PI;
-    double angle = atan2(targetOnBaseFrame[1], targetOnBaseFrame[0]) * RAD2DEG;
-
-    double lin_vel  = 0.0;
-    double ang_vel = 0.0;
+    processTarget_core(m_lastValidTargetOnBaseFrame);
 
 
-    if(distance > m_cfg.navigation.distanceThreshold)
-    {
-        lin_vel = m_cfg.navigation.factorDist2Vel *distance;
-    }
-    else
-    {
-        if(m_cfg.debug.enabled)
-            yDebug() <<  "the distance is under threshold!! ";
-    }
-
-
-    if(fabs(angle) >m_cfg.navigation.angleThreshold)
-        ang_vel = m_cfg.navigation.factorAng2Vel * angle;
-    else
-    {
-        if(m_cfg.debug.enabled)
-            yDebug() <<  "the angle is under threshold!! ";
-    }
-
-    //if the angle difference is minor of angleMinBeforeMove than set linear velocity to 0
-    // in order to rotate and after moving.
-    if((abs(angle) < m_cfg.navigation.angleMinBeforeMove) && (fabs(angle) >m_cfg.navigation.angleThreshold))
-        lin_vel = 0.0;
-
-    //saturate velocities
-    if(ang_vel > m_cfg.navigation.velocityLimits.angular)
-        ang_vel= m_cfg.navigation.velocityLimits.angular;
-
-    if(lin_vel> m_cfg.navigation.velocityLimits.linear)
-        lin_vel = m_cfg.navigation.velocityLimits.linear;
-
-    if(m_cfg.debug.enabled)
-        yDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel ;
-
-    sendCommand2BaseControl(0.0, lin_vel, ang_vel );
-
-    //4. send commands to gaze control in order to follow the target with the gaze
-    m_gazeCtrl.lookAtPoint(targetOnBaseFrame);
-
-    //the following steps lose interest on real robot
-    if(!isOnSimulator())
-        return Result_t::ok;
-
-    //5. paint in gazebo the targets on final target and on cam(optional)
-    yarp::sig::Vector target2Paint= targetOnBaseFrame;
-    target2Paint[2]=0.0; //I don't want z axis
-    m_simmanager_ptr->PaintTargetFrame(target2Paint);
-
-    if(m_cfg.debug.paintGazeFrame)
+    if(isOnSimulator() && m_cfg.debug.paintGazeFrame)
     {
         yarp::sig::Vector targetOnHeadFrame;
         if(transformPointInHeadFrame(m_transformData.targetFrameId, targetOnCamFrame, targetOnHeadFrame))
@@ -427,6 +446,107 @@ Result_t  Follower::processTarget(Target_t &target)
 
     return Result_t::ok;
 }
+
+
+
+Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
+{
+    //I need to check if the target is not valid in the case I have never seen the target and therefore the last target has never been valid
+    if(!targetOnBaseFrame.second)
+        return Result_t::lostTarget;
+
+
+
+    //3. Calculate linear velocity and angular velocity to send to  base control module
+
+    //x axis is the first element, y is on second. (In order to calculate the distance see mobile base frame)
+    double distance =  sqrt(pow(targetOnBaseFrame.first[0], 2) + pow(targetOnBaseFrame.first[1], 2));
+
+    const double RAD2DEG  = 180.0/M_PI;
+    double angle = atan2(targetOnBaseFrame.first[1], targetOnBaseFrame.first[0]) * RAD2DEG;
+
+    double lin_vel  = 0.0;
+    double ang_vel = 0.0;
+
+    m_targetReached=false;
+    bool d_in_thr=false;
+    bool a_in_thr=false;
+    if(distance > m_cfg.navigation.distanceThreshold)
+    {
+        lin_vel = m_cfg.navigation.factorDist2Vel *distance;
+    }
+    else
+    {
+        if(m_cfg.debug.enabled)
+            yDebug() <<  "the distance is under threshold!! ";
+        d_in_thr = true;
+    }
+
+
+    if(fabs(angle) >m_cfg.navigation.angleThreshold)
+    {
+        ang_vel = m_cfg.navigation.factorAng2Vel * angle;
+    }
+    else
+    {
+        if(m_cfg.debug.enabled)
+            yDebug() <<  "the angle is under threshold!! ";
+        a_in_thr=true;
+    }
+
+    if(d_in_thr && a_in_thr)
+    {
+        m_targetReached = true;
+        if(m_cfg.debug.enabled)
+            yDebug() << "_______________________________________________Target REACHED!!!";
+    }
+    else
+        m_targetReached = false;
+
+    //if the angle difference is minor of angleMinBeforeMove than set linear velocity to 0
+    // in order to rotate and after moving.
+    if((fabs(angle) < m_cfg.navigation.angleMinBeforeMove) && (fabs(angle) >m_cfg.navigation.angleThreshold))
+        lin_vel = 0.0;
+
+    //saturate velocities
+    if(ang_vel > m_cfg.navigation.velocityLimits.angular)
+        ang_vel= m_cfg.navigation.velocityLimits.angular;
+    else if(ang_vel < -m_cfg.navigation.velocityLimits.angular)
+        ang_vel= -m_cfg.navigation.velocityLimits.angular;
+
+    if(lin_vel> m_cfg.navigation.velocityLimits.linear)
+        lin_vel = m_cfg.navigation.velocityLimits.linear;
+    else if(lin_vel < -m_cfg.navigation.velocityLimits.linear)
+        lin_vel = -m_cfg.navigation.velocityLimits.linear;
+
+    if(m_cfg.debug.enabled)
+        yDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel << "max_lin="<< m_cfg.navigation.velocityLimits.linear << "max_ang=" << m_cfg.navigation.velocityLimits.angular;
+
+    sendCommand2BaseControl(0.0, lin_vel, ang_vel );
+
+    //4. send commands to gaze control in order to follow the target with the gaze
+    yarp::sig::Vector v_targetOnBaseFrame = {0.0, 0.0, 0.0};
+    v_targetOnBaseFrame[0]= targetOnBaseFrame.first[0];
+    v_targetOnBaseFrame[1]= targetOnBaseFrame.first[1];
+    v_targetOnBaseFrame[2]= targetOnBaseFrame.first[2];
+    m_gazeCtrl.lookAtPoint(v_targetOnBaseFrame);
+
+    //the following steps lose interest on real robot
+    if(!isOnSimulator())
+        return Result_t::ok;
+
+    //5. paint in gazebo the targets on final target and on cam(optional)
+    yarp::sig::Vector target2Paint= v_targetOnBaseFrame;
+    target2Paint[2]=0.0; //I don't want z axis
+    m_simmanager_ptr->PaintTargetFrame(target2Paint);
+
+    return Result_t::ok;
+}
+
+
+
+
+
 
 void  Follower::goto_targetValid_state()
 {
@@ -710,6 +830,33 @@ void Follower::sendOutputLikeJoystick()
     m_outputPortJoystick.write();
 }
 
+
+void Follower::sendtargets4Debug(yarp::sig::Vector &VonCamFrame, yarp::sig::Vector &VonBaseFrame)
+{
+    static yarp::os::Stamp stamp;
+
+    //send data to baseControl module
+    if (m_outputPortJoystick.getOutputCount() == 0)
+    {
+        //if I have not connection I don't send anything
+        return;
+    }
+    stamp.update();
+    Bottle &b = m_outputPortJoystick.prepare();
+    m_outputPortJoystick.setEnvelope(stamp);
+    b.clear();
+    //like joystick
+    b.addDouble(VonCamFrame[0]);
+    b.addDouble(VonCamFrame[1]);
+    b.addDouble(VonCamFrame[2]);
+
+    b.addDouble(VonBaseFrame[0]);
+    b.addDouble(VonBaseFrame[1]);
+    b.addDouble(VonBaseFrame[2]);
+
+
+    m_outputPortJoystick.write();
+}
 
 bool Follower::getMatrix(yarp::sig::Matrix &transform)
 {

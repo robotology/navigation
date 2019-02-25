@@ -9,6 +9,7 @@ public:
     bool configure(yarp::os::ResourceFinder &rf);
     //return true if it has been enabled
     bool isRunning();
+    bool checkObstaclesInPath(void);
 private:
     double m_maxDistanceThreshold;
     double const m_defaultMaxDistanceThreshold = 2.5; //meters
@@ -19,4 +20,5 @@ private:
 
     bool initLaserClient(yarp::os::ResourceFinder &rf);
     double calculateWeightLaserVectors(void);
+    bool checkObstaclesInPath_helper(std::vector<LaserMeasurementData>& laser_data);
 };

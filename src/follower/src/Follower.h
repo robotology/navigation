@@ -92,19 +92,21 @@ namespace FollowerTarget
     {
         none       = 0, //at creation time or if configuration fails
         configured = 1, //if configuration has success or stop received
-        running    = 2, //after start(tick) received
+        running    = 2, //after start(tick) received,
+        error      = 3
     };
 
     enum class RunningSubStMachine //these are the states of sub state machine when it is in running
     {
-        targetValid              = 0,
-        maybeLostTarget          = 1,
-        lostTarget_lookup        = 2,
-        startAutoNav             = 3,
-        waitAutoNav              = 4,
-        autoNavOk                = 5,
-        autoNavError             = 6,
-        needHelp                 = 7
+        unknown                  = 0,
+        targetValid              = 1,
+        maybeLostTarget          = 2,
+        lostTarget_lookup        = 3,
+        startAutoNav             = 4,
+        waitAutoNav              = 5,
+        autoNavOk                = 6,
+        autoNavError             = 7,
+        needHelp                 = 8
     };
 
     enum class Result_t
@@ -156,10 +158,12 @@ namespace FollowerTarget
 
         StateMachine m_stateMachine_st;
         RunningSubStMachine m_runStMachine_st;
-        yarp::sig::Vector m_lastValidPoint; //respect mobile_base_body_link frame here I save the point of m_lastValidTarget stransformed respect mobile_base_body_link
-        Target_t m_lastValidTarget;
+        //yarp::sig::Vector m_lastValidPoint; //respect mobile_base_body_link frame here I save the point of m_lastValidTarget stransformed respect mobile_base_body_link
+        //Target_t m_lastValidTarget;
+        Target_t m_lastValidTargetOnBaseFrame;
         uint32_t m_lostTargetcounter;
         bool m_autoNavAlreadyDone;
+        bool m_targetReached;
 
         std::mutex m_mutex;
 
@@ -179,15 +183,21 @@ namespace FollowerTarget
         bool isOnSimulator(void) {return((m_simmanager_ptr==nullptr) ? false :true);}
 
         bool isInRunningState(void);
-        Result_t processTarget(Target_t &target);
+        Result_t processValidTarget(Target_t &target);
+        Result_t processTarget_core(Target_t &targetOnBaseFrame);
         void goto_targetValid_state();
+       // bool checkTargetIsInThreshold(yarp::sig::Vector &target);//return true if the distance is smaller the thesholddistancePrame
 
         // ---- TEST STUFF
         bool moveRobot(void);
         yarp::os::BufferedPort<yarp::os::Bottle>  m_outputPortJoystick;//test only!!!used in sendOutput
         void sendOutputLikeJoystick(); //only for test. it simulates joystick
+        void sendtargets4Debug(yarp::sig::Vector &VonCamFrame, yarp::sig::Vector &VonBaseFrame);
         //get transform matrix from left camera to mobile base. Pf3dtraker use the left camera.
         bool getMatrix(yarp::sig::Matrix &transform);
+        void printStMachineDebufInfo(Target_t &currenttarget);
+        std::string runStMachineState_2_string(RunningSubStMachine st);
+        std::string stateMachineState_2_string(StateMachine st);
     };
 }
 #endif

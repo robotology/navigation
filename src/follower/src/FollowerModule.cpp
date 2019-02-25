@@ -88,6 +88,8 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
         reply.addString("start");
         reply.addString("stop");
         reply.addString("verbose 0/1");
+        reply.addString("help_provided");
+
         return true;
     }
     else if(command.get(0).asString()=="start")
