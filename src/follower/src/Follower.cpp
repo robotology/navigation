@@ -92,7 +92,11 @@ string Follower::stateMachineState_2_string(StateMachine st)
 
 void Follower::printStMachineDebufInfo(Target_t &currenttarget)
 {
-    static double tstart = yarp::os::Time::now();
+    if((yarp::os::Time::now()-time_prints) <0.5)
+        return;
+    time_prints=yarp::os::Time::now();
+
+    static double tstart = yarp::os::Time::now(); //TODO remove static
     string str;
     yDebug() << "****************************************************************";
     if(currenttarget.second)
@@ -118,7 +122,10 @@ Result_t Follower::followTarget(Target_t &target)
     if(target.second)
     {
         goto_targetValid_state();
-        return(processValidTarget(target));
+        Result_t res= processValidTarget(target);
+        if(res==Result_t::needHelp)
+            m_runStMachine_st=RunningSubStMachine::needHelp;
+        return(res);
     }
 
     //if the target is not valid.....
@@ -129,7 +136,10 @@ Result_t Follower::followTarget(Target_t &target)
             //for the first time I received a not valid target
             m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
             m_lostTargetcounter++;
-            return(processTarget_core(m_lastValidTargetOnBaseFrame));
+            Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
+            if(res==Result_t::needHelp)
+                m_runStMachine_st=RunningSubStMachine::needHelp;
+            return(res);
         }break;
 
         case RunningSubStMachine::maybeLostTarget:
@@ -138,7 +148,10 @@ Result_t Follower::followTarget(Target_t &target)
             if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
                 m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
 
-            return(processTarget_core(m_lastValidTargetOnBaseFrame));
+            Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
+            if(res==Result_t::needHelp)
+                m_runStMachine_st=RunningSubStMachine::needHelp;
+            return(res);
         }break;
 
         case RunningSubStMachine::lostTarget_lookup :
@@ -317,6 +330,9 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
     if(!m_navCtrl.configure(rf))
         return false;
 
+    if(!m_obsVer.configure(rf))
+        return false;
+
     std::lock_guard<std::mutex> lock(m_mutex);
     if(m_cfg.startWithoutCommand)
         m_stateMachine_st=StateMachine::running;
@@ -362,6 +378,7 @@ bool Follower::stop()
     goto_targetValid_state();
     std::lock_guard<std::mutex> lock(m_mutex);
     m_stateMachine_st = StateMachine::configured;
+    m_runStMachine_st = RunningSubStMachine::unknown;
     return true;
 }
 
@@ -408,8 +425,6 @@ bool Follower::isInRunningState(void)
 Result_t Follower::processValidTarget(Target_t &target)
 {
 
-
-
     //1. transform the ball-point from camera point of view to base point of view.
     yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
     targetOnCamFrame[0] = target.first[0];
@@ -431,7 +446,7 @@ Result_t Follower::processValidTarget(Target_t &target)
 
     sendtargets4Debug(targetOnCamFrame, targetOnBaseFrame);
 
-    processTarget_core(m_lastValidTargetOnBaseFrame);
+    Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
 
 
     if(isOnSimulator() && m_cfg.debug.paintGazeFrame)
@@ -444,83 +459,116 @@ Result_t Follower::processValidTarget(Target_t &target)
         }
     }
 
-    return Result_t::ok;
+    return res;
 }
 
-
-
+/*
+ Returns:
+ - needhelp if there is an obstacle
+ - ok
+ - nok in case of error in getting laser data
+ */
 Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 {
     //I need to check if the target is not valid in the case I have never seen the target and therefore the last target has never been valid
     if(!targetOnBaseFrame.second)
         return Result_t::lostTarget;
 
+    Result_t res=Result_t::ok;
+    //check if there is an obstacle on my path
+    Obstacle::Result obs_result;
+    if(m_obsVer.isRunning())
+    {
+        obs_result = m_obsVer.checkObstaclesInPath();
+        if(obs_result.resultIsValid)
+        {
+            if(obs_result.result)
+            {
+                //yInfo() << "+++++++++++++++++++++++++++++++ OBSTACLE"; //continue
+                 res=Result_t::needHelp;
+            }
+            else
+            {
+                //yInfo() << "No obstacle found"; //continue
+            }
 
+        }
+        else
+        {
+            yError() << "error reazding laser";
+            return Result_t::error;
+        }
 
-    //3. Calculate linear velocity and angular velocity to send to  base control module
-
-    //x axis is the first element, y is on second. (In order to calculate the distance see mobile base frame)
-    double distance =  sqrt(pow(targetOnBaseFrame.first[0], 2) + pow(targetOnBaseFrame.first[1], 2));
-
-    const double RAD2DEG  = 180.0/M_PI;
-    double angle = atan2(targetOnBaseFrame.first[1], targetOnBaseFrame.first[0]) * RAD2DEG;
+    }
 
     double lin_vel  = 0.0;
     double ang_vel = 0.0;
-
-    m_targetReached=false;
-    bool d_in_thr=false;
-    bool a_in_thr=false;
-    if(distance > m_cfg.navigation.distanceThreshold)
+    if(res==Result_t::ok)
     {
-        lin_vel = m_cfg.navigation.factorDist2Vel *distance;
+        //3. Calculate linear velocity and angular velocity to send to  base control module
+
+        //x axis is the first element, y is on second. (In order to calculate the distance see mobile base frame)
+        double distance =  sqrt(pow(targetOnBaseFrame.first[0], 2) + pow(targetOnBaseFrame.first[1], 2));
+
+        const double RAD2DEG  = 180.0/M_PI;
+        double angle = atan2(targetOnBaseFrame.first[1], targetOnBaseFrame.first[0]) * RAD2DEG;
+
+
+
+        m_targetReached=false;
+        bool d_in_thr=false;
+        bool a_in_thr=false;
+        if(distance > m_cfg.navigation.distanceThreshold)
+        {
+            lin_vel = m_cfg.navigation.factorDist2Vel *distance;
+        }
+        else
+        {
+//             if(m_cfg.debug.enabled)
+//                 yDebug() <<  "the distance is under threshold!! ";
+            d_in_thr = true;
+        }
+
+
+        if(fabs(angle) >m_cfg.navigation.angleThreshold)
+        {
+            ang_vel = m_cfg.navigation.factorAng2Vel * angle;
+        }
+        else
+        {
+//             if(m_cfg.debug.enabled)
+//                 yDebug() <<  "the angle is under threshold!! ";
+            a_in_thr=true;
+        }
+
+        if(d_in_thr && a_in_thr)
+        {
+            m_targetReached = true;
+            if(m_cfg.debug.enabled)
+                yDebug() << "_______________________________________________Target REACHED!!!";
+        }
+        else
+            m_targetReached = false;
+
+        //if the angle difference is minor of angleMinBeforeMove than set linear velocity to 0
+        // in order to rotate and after moving.
+        if((fabs(angle) < m_cfg.navigation.angleMinBeforeMove) && (fabs(angle) >m_cfg.navigation.angleThreshold))
+            lin_vel = 0.0;
+
+        //saturate velocities
+        if(ang_vel > m_cfg.navigation.velocityLimits.angular)
+            ang_vel= m_cfg.navigation.velocityLimits.angular;
+        else if(ang_vel < -m_cfg.navigation.velocityLimits.angular)
+            ang_vel= -m_cfg.navigation.velocityLimits.angular;
+
+        if(lin_vel> m_cfg.navigation.velocityLimits.linear)
+            lin_vel = m_cfg.navigation.velocityLimits.linear;
+        else if(lin_vel < -m_cfg.navigation.velocityLimits.linear)
+            lin_vel = -m_cfg.navigation.velocityLimits.linear;
+
+//         if(m_cfg.debug.enabled)
+//             yDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel << "max_lin="<< m_cfg.navigation.velocityLimits.linear << "max_ang=" << m_cfg.navigation.velocityLimits.angular;
     }
-    else
-    {
-        if(m_cfg.debug.enabled)
-            yDebug() <<  "the distance is under threshold!! ";
-        d_in_thr = true;
-    }
-
-
-    if(fabs(angle) >m_cfg.navigation.angleThreshold)
-    {
-        ang_vel = m_cfg.navigation.factorAng2Vel * angle;
-    }
-    else
-    {
-        if(m_cfg.debug.enabled)
-            yDebug() <<  "the angle is under threshold!! ";
-        a_in_thr=true;
-    }
-
-    if(d_in_thr && a_in_thr)
-    {
-        m_targetReached = true;
-        if(m_cfg.debug.enabled)
-            yDebug() << "_______________________________________________Target REACHED!!!";
-    }
-    else
-        m_targetReached = false;
-
-    //if the angle difference is minor of angleMinBeforeMove than set linear velocity to 0
-    // in order to rotate and after moving.
-    if((fabs(angle) < m_cfg.navigation.angleMinBeforeMove) && (fabs(angle) >m_cfg.navigation.angleThreshold))
-        lin_vel = 0.0;
-
-    //saturate velocities
-    if(ang_vel > m_cfg.navigation.velocityLimits.angular)
-        ang_vel= m_cfg.navigation.velocityLimits.angular;
-    else if(ang_vel < -m_cfg.navigation.velocityLimits.angular)
-        ang_vel= -m_cfg.navigation.velocityLimits.angular;
-
-    if(lin_vel> m_cfg.navigation.velocityLimits.linear)
-        lin_vel = m_cfg.navigation.velocityLimits.linear;
-    else if(lin_vel < -m_cfg.navigation.velocityLimits.linear)
-        lin_vel = -m_cfg.navigation.velocityLimits.linear;
-
-    if(m_cfg.debug.enabled)
-        yDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel << "max_lin="<< m_cfg.navigation.velocityLimits.linear << "max_ang=" << m_cfg.navigation.velocityLimits.angular;
 
     sendCommand2BaseControl(0.0, lin_vel, ang_vel );
 
@@ -533,14 +581,14 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 
     //the following steps lose interest on real robot
     if(!isOnSimulator())
-        return Result_t::ok;
+        return res;
 
     //5. paint in gazebo the targets on final target and on cam(optional)
     yarp::sig::Vector target2Paint= v_targetOnBaseFrame;
     target2Paint[2]=0.0; //I don't want z axis
     m_simmanager_ptr->PaintTargetFrame(target2Paint);
 
-    return Result_t::ok;
+    return res;
 }
 
 

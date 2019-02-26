@@ -26,6 +26,7 @@
 #include "SimFramePainter.h"
 #include "GazeController.h"
 #include "NavigationController.h"
+#include "ObstacleAvoidance.h"
 
 namespace FollowerTarget
 {
@@ -170,7 +171,9 @@ namespace FollowerTarget
         GazeController m_gazeCtrl;
         NavigationController m_navCtrl;
         SimManager * m_simmanager_ptr;
+        Obstacle::ObstacleVerifier m_obsVer;
 
+        double time_prints;
         bool transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
         bool transformPointInHeadFrame(std::string frame_src, yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
 

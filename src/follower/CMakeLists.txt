@@ -54,6 +54,8 @@ add_executable(follower
                 ./src/GazeController.cpp
                 ./src/NavigationController.h
                 ./src/NavigationController.cpp
+                ./src/ObstacleAvoidance.h
+                ./src/ObstacleAvoidance.cpp
                 )
 
 message("AssistiveRehab_LIBRARIES ${AssistiveRehab_LIBRARIES}")

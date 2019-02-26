@@ -46,7 +46,7 @@ Target_t Ball3DPointRetriver::getTarget(void)
 
     if(m_debugOn)
     {
-        yDebug() << "Ball3DPointRetriver: I see the redBall at"<< b->get(0).asDouble() << b->get(1).asDouble() << b->get(2).asDouble();
+        //yDebug() << "Ball3DPointRetriver: I see the redBall at"<< b->get(0).asDouble() << b->get(1).asDouble() << b->get(2).asDouble();
     }
 
     point3d[0] = b->get(0).asDouble();

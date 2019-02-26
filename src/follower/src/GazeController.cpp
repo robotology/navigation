@@ -141,8 +141,8 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     target.addList().read(x);
     p.put("target-location",target.get(0));
 
-    if(m_debugOn)
-        yDebug() << "Command to gazectrl: " << p.toString();
+//     if(m_debugOn)
+//         yDebug() << "Command to gazectrl: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
