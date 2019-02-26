@@ -20,7 +20,7 @@
 //#include <yarp/os/RpcClient.h>
 
 
-#include "TargetRetriver.h"
+#include "TargetRetriever.h"
 #include "Follower.h"
 
 #ifdef TICK_SERVER
@@ -69,7 +69,7 @@ public:
 #ifdef TICK_SERVER
 class FollowerModule:public yarp::os::RFModule, public TickServer
 #else
-class FollowerModule : public RFModule
+class FollowerModule : public yarp::os::RFModule
 #endif
 {
 public:
@@ -101,7 +101,7 @@ private:
     double m_period;
 
     FollowerTarget::TargetType_t         m_targetType;
-    std::unique_ptr<FollowerTarget::TargetRetriver> m_pointRetriver_ptr;
+    std::unique_ptr<FollowerTarget::TargetRetriever> m_pointRetriever_ptr;
 
     yarp::os::Port m_rpcPort;
     StatInfo m_statInfo;

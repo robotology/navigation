@@ -22,7 +22,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IFrameTransform.h>
 
-#include "TargetRetriver.h"
+#include "TargetRetriever.h"
 #include "SimFramePainter.h"
 #include "GazeController.h"
 #include "NavigationController.h"

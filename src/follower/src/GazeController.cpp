@@ -51,7 +51,9 @@ bool GazeController::deinit(void)
 {
     m_outputPort2gazeCtr.interrupt();
     m_outputPort2gazeCtr.close();
+    return true;
 }
+
 GazeCtrlLookupStates GazeController::lookupTarget(void)
 {
     switch(m_lookupState)

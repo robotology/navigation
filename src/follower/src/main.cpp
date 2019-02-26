@@ -24,7 +24,13 @@ using namespace yarp::os;
 int main(int argc, char * argv[])
 {
     /* initialize yarp network */
-    Network yarp;
+    yarp::os::Network yarp;
+    if (!yarp.checkNetwork())
+    {
+        yError("check Yarp network.\n");
+        return -1;
+    }
+
     /* create your module */
     FollowerTarget::FollowerModule module;
     /* prepare and configure the resource finder */

@@ -16,8 +16,12 @@
 #include <yarp/os/Bottle.h>
 
 #include "FollowerModule.h"
-#include "Person3DPointRetriver.h"
-#include "Ball3DPointRetriver.h"
+
+#ifdef ASSISTIVE_REHAB_AVAILABLE
+#include "Person3DPointRetriever.h"
+#endif
+
+#include "Ball3DPointRetriever.h"
 
 #include <yarp/os/SystemClock.h>
 
@@ -48,15 +52,15 @@ bool FollowerModule::updateModule()
 //     switch(m_targetType)
 //     {
 //         case FollowerTargetType::person:
-//         { targetpoint= (dynamic_cast<Person3DPointRetriver*>(m_pointRetriver_ptr))->getTarget(); break;}
+//         { targetpoint= (dynamic_cast<Person3DPointRetriever*>(m_pointRetriever_ptr))->getTarget(); break;}
 //
 //         case FollowerTargetType::redball:
-//         { targetpoint= (dynamic_cast<Ball3DPointRetriver*>(m_pointRetriver_ptr))->getTarget(); break;}
+//         { targetpoint= (dynamic_cast<Ball3DPointRetriever*>(m_pointRetriever_ptr))->getTarget(); break;}
 //
 //         default: break;
 //     };
 
-    targetpoint = m_pointRetriver_ptr->getTarget();
+    targetpoint = m_pointRetriever_ptr->getTarget();
     m_follower.followTarget(targetpoint);
     double diff = yarp::os::SystemClock::nowSystem()-t;
 
@@ -161,15 +165,22 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     // 3) initialize the target retriever
     if(m_targetType == TargetType_t::redball)
     {
-        m_pointRetriver_ptr = std::make_unique<Ball3DPointRetriver>();
+        m_pointRetriever_ptr = std::make_unique<Ball3DPointRetriever>();
     }
-    else //person or default
+#ifdef ASSISTIVE_REHAB_AVAILABLE
+    else (m_targetType == TargetType_t::person)
     {
-        m_pointRetriver_ptr = std::make_unique<Person3DPointRetriver>();
+        m_pointRetriever_ptr = std::make_unique<Person3DPointRetriever>();
+    }
+#endif 
+    else
+    {
+        yError() << "m_targetType not available!";
+        return false;
     }
 
 
-    if(! m_pointRetriver_ptr->init("/follower/" + inputPortName +":i", debugOn))
+    if(! m_pointRetriever_ptr->init("/follower/" + inputPortName +":i", debugOn))
     {
         yError() << "Error in initializing the Target Retriever";
         return false;
@@ -189,8 +200,8 @@ bool FollowerModule::interruptModule()
     m_rpcPort.interrupt();
     m_rpcPort.close();
 
-    if(m_pointRetriver_ptr!=nullptr)
-        m_pointRetriver_ptr->deinit();
+    if(m_pointRetriever_ptr!=nullptr)
+        m_pointRetriever_ptr->deinit();
 
     m_follower.close();
     return true;
@@ -198,10 +209,10 @@ bool FollowerModule::interruptModule()
 // Close function, to perform cleanup.
 bool FollowerModule::close()
 {
-    if(m_pointRetriver_ptr!=nullptr)
-        m_pointRetriver_ptr->deinit();
+    if(m_pointRetriever_ptr!=nullptr)
+        m_pointRetriever_ptr->deinit();
 
-    m_pointRetriver_ptr.reset();
+    m_pointRetriever_ptr.reset();
 
     m_follower.close();
 

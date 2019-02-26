@@ -1,41 +1,30 @@
-
 /******************************************************************************
  *                                                                            *
  * Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)        *
  * All Rights Reserved.                                                       *
  *                                                                            *
  ******************************************************************************/
-
 /**
- * @file Ball3DRetriver.cpp
+ * @file Person3DPointRetriver.h
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
+#ifndef PERSON3DPOINTRESTRIVER_H
+#define PERSON3DPOINTRESTRIVER_H
 
 #include "TargetRetriver.h"
 
-#include <yarp/os/Log.h>
-#include <yarp/os/LogStream.h>
+#include "AssistiveRehab/skeleton.h"
 
-using namespace yarp::os;
-using namespace FollowerTarget;
-
-TargetRetriver::TargetRetriver(): m_debugOn(false){;}
-
-bool TargetRetriver::init(std::string inputPortName, bool debugOn)
+namespace FollowerTarget
 {
-    if(! m_inputPort.open(inputPortName))
+    class Person3DPointRetriver : public TargetRetriver
     {
-        yError() << "TargetPointRetriver:Error opening input port";
-        return false;
-    }
-    m_debugOn=debugOn;
-    return true;
+    public:
+        Target_t getTarget(void);
+    private:
+        assistive_rehab::SkeletonWaist m_sk_target;
+    };
 }
 
-bool TargetRetriver::deinit(void)
-{
-    m_inputPort.interrupt();
-    m_inputPort.close();
-    return true;
-}
+#endif
 

@@ -10,14 +10,16 @@
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
 
-#include <math.h>
-
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Bottle.h>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <cmath>
 
 #include "Follower.h"
 

@@ -7,28 +7,35 @@
  ******************************************************************************/
 
 /**
- * @file Ball3DPointRetriver.h
+ * @file TargetRetriever.h
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
 
-#ifndef BALL3DPOINTRETRIVER_H
-#define BALL3DPOINTRETRIVER_H
+#ifndef TARGETRETRIEVER_H
+#define TARGETRETRIEVER_H
 
-
-#include "TargetRetriver.h"
+#include <yarp/os/BufferedPort.h>
+#include <yarp/os/Bottle.h>
+#include <vector>
+//#include <utility>
 
 namespace FollowerTarget
 {
-    class Ball3DPointRetriver : public TargetRetriver
+    using Target_t = std::pair<std::vector<double>, bool>;
+
+    class TargetRetriever
     {
     public:
-        Target_t getTarget(void);
-        Ball3DPointRetriver();
-        void getTargetPixelCoord(double &u, double &v);
-    private:
+        TargetRetriever();
+        virtual Target_t getTarget(void)=0;
+        bool init(std::string inputPortName, bool debugOn=false);
+        bool deinit(void);
+    protected:
+        std::vector<double> m_target;
+        yarp::os::BufferedPort<yarp::os::Bottle> m_inputPort;
 
-        double m_ballPointU;
-        double m_ballPointV;
+        bool m_debugOn;
     };
+
 }
 #endif

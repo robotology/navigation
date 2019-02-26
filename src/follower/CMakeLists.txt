@@ -11,9 +11,10 @@ find_package(YARPBTModules)
 find_package(AssistiveRehab QUIET)
 
 if(AssistiveRehab_FOUND)
-	message("AssistiveRehab found, adding skeleton retriever module")
+    add_definitions( -DASSISTIVE_REHAB_AVAILABLE)
+    message("AssistiveRehab found, adding skeleton retriever module")
 else()
- 	message("AssistiveRehab not found, follower will not have skeleton retiever module")
+    message("AssistiveRehab not found, follower will not have skeleton retiever module")
 endif()
 
 # set up our program
@@ -36,35 +37,50 @@ endif()
 
 include_directories (${ASSISTIVE_REHAB_INC} ${YARP_CV})
 
-add_executable(follower
-                ./src/Follower.h
-                ./src/Follower.cpp
-                ./src/FollowerModule.h
-                ./src/FollowerModule.cpp
-                ./src/TargetRetriver.h
-                ./src/Ball3DPointRetriver.h
-                ./src/Person3DPointRetriver.h
-                ./src/TargetRestriver.cpp
-                ./src/Ball3DPointRetriver.cpp
-                ./src/Person3DPointRetriver.cpp
-                ./src/SimFramePainter.h
-                ./src/SimFramePainter.cpp
-                ./src/main.cpp
-                ./src/GazeController.h
-                ./src/GazeController.cpp
-                ./src/NavigationController.h
-                ./src/NavigationController.cpp
-                ./src/ObstacleAvoidance.h
-                ./src/ObstacleAvoidance.cpp
-                )
+set(FOLLOWER_FILES ./src/Follower.h
+                   ./src/Follower.cpp
+                   ./src/FollowerModule.h
+                   ./src/FollowerModule.cpp
+                   ./src/TargetRetriever.h
+                   ./src/Ball3DPointRetriever.h
+                   ./src/TargetRetriever.cpp
+                   ./src/Ball3DPointRetriever.cpp
+                   ./src/SimFramePainter.h
+                   ./src/SimFramePainter.cpp
+                   ./src/main.cpp
+                   ./src/GazeController.h
+                   ./src/GazeController.cpp
+                   ./src/NavigationController.h
+                   ./src/NavigationController.cpp
+                   ./src/ObstacleAvoidance.h
+                   ./src/ObstacleAvoidance.cpp)
+                   
+set(ASSISTIVE_REHAB_FOR_MY_PROJ   ./src/Person3DPointRetriever.h
+                                  ./src/Person3DPointRetriever.cpp)
+                                  
+if(AssistiveRehab_FOUND)
+    add_executable(follower ${FOLLOWER_FILES}
+                            ${ASSISTIVE_REHAB_FOR_MY_PROJ})
+else()
+    add_executable(follower ${FOLLOWER_FILES})
+endif()
 
 message("AssistiveRehab_LIBRARIES ${AssistiveRehab_LIBRARIES}")
 
 # link with YARP libraries
-target_link_libraries(follower ${YARP_LIBRARIES} ${OpenCV_LIBS} YARPBTModules)
+target_link_libraries(follower YARP::YARP_OS 
+                               YARP::YARP_sig
+                               YARP::YARP_math 
+                               YARP::YARP_dev
+                               ${OpenCV_LIBS}
+                               ${YARP_LIBRARIES})
 
+if(YARPBTModules_FOUND)
+    target_link_libraries(follower YARPBTModules)
+endif()
+ 
 if(AssistiveRehab_FOUND)
-	target_link_libraries(follower ${AssistiveRehab_LIBRARIES})
+    target_link_libraries(follower ${AssistiveRehab_LIBRARIES})
 endif()
 
 install(TARGETS follower DESTINATION bin)
