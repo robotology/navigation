@@ -100,6 +100,8 @@ private:
     FollowerTarget::Follower m_follower;
     double m_period;
 
+    Result_t m_followerResult;
+
     FollowerTarget::TargetType_t         m_targetType;
     std::unique_ptr<FollowerTarget::TargetRetriever> m_pointRetriever_ptr;
 

@@ -53,7 +53,6 @@ Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullp
     m_transformData.transformClient = nullptr;
     m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
     m_lastValidTargetOnBaseFrame.second = false;
-    //m_lastValidPoint.clear();
 }
 
 Follower::~Follower()
@@ -171,7 +170,7 @@ Result_t Follower::followTarget(Target_t &target)
                 if(m_autoNavAlreadyDone)
                 {
                     m_runStMachine_st=RunningSubStMachine::needHelp;
-                    res=Result_t::needHelp;
+                    res=Result_t::failed;
                 }
                 else
                 {
@@ -189,7 +188,7 @@ Result_t Follower::followTarget(Target_t &target)
                 m_runStMachine_st= RunningSubStMachine::needHelp;
                 if(m_cfg.debug.enabled)
                     yDebug() << "I can't start to auto nav because the last target is not valid";
-                return Result_t::needHelp;
+                return Result_t::failed;
             }
             else
             {
@@ -257,6 +256,12 @@ Result_t Follower::followTarget(Target_t &target)
                 //TODO: what does the follower do in these cases????
                 case navigation_status_aborted              :
                 case navigation_status_paused               :
+                {
+                    m_runStMachine_st= RunningSubStMachine::needHelp;
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "Autonomous navigation has been aborted or paused. I need help";
+                    return Result_t::needHelp;
+                }break;
 
                     //navigation module is in error, than I need help
                 case navigation_status_error                :
@@ -265,7 +270,7 @@ Result_t Follower::followTarget(Target_t &target)
                     m_runStMachine_st= RunningSubStMachine::needHelp;
                     if(m_cfg.debug.enabled)
                         yDebug() << "Autonomous navigation ended with error. I need help";
-                    return Result_t::needHelp;
+                    return Result_t::error;
                 }break;
             };
         }break;
@@ -497,7 +502,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         }
         else
         {
-            yError() << "error reazding laser";
+            yError() << "error reading laser";
             return Result_t::error;
         }
 
@@ -505,7 +510,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 
     double lin_vel  = 0.0;
     double ang_vel = 0.0;
-    if(res==Result_t::ok)
+    if(res==Result_t::ok) //if no obstacle is found, than calculate linear and angular velocity to get the target
     {
         //3. Calculate linear velocity and angular velocity to send to  base control module
 

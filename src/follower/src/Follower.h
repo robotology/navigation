@@ -117,7 +117,8 @@ namespace FollowerTarget
         lostTarget,
         autoNavigation,
         error,
-        needHelp
+        needHelp,
+        failed
     };
 
 

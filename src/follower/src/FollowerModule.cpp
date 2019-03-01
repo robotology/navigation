@@ -61,7 +61,7 @@ bool FollowerModule::updateModule()
 //     };
 
     targetpoint = m_pointRetriever_ptr->getTarget();
-    m_follower.followTarget(targetpoint);
+    m_followerResult= m_follower.followTarget(targetpoint);
     double diff = yarp::os::SystemClock::nowSystem()-t;
 
     if(diff!= 0)
@@ -220,7 +220,7 @@ bool FollowerModule::close()
 }
 
 
-FollowerModule::FollowerModule():m_period(DefaultPeriodOfMudule), m_targetType(TargetType_t::person), m_statInfo(100, -1, 1000)
+FollowerModule::FollowerModule():m_period(DefaultPeriodOfMudule), m_targetType(TargetType_t::person), m_statInfo(100, -1, 1000), m_followerResult(Result_t::notRunning)
 {}
 FollowerModule::~FollowerModule(){;}
 
@@ -234,10 +234,18 @@ ReturnStatus FollowerModule::request_tick(const std::string& params)
 
 ReturnStatus FollowerModule::request_status()
 {
-    if(StateMachine::running == m_follower.getState())
-        return ReturnStatus::BT_RUNNING;
-    else
-        return ReturnStatus::BT_HALTED;
+    switch(m_followerResult)
+    {
+        case(Result_t::ok):
+        case(Result_t::lostTarget):
+        case(Result_t::autoNavigation):
+            {return ReturnStatus::BT_RUNNING;}
+
+        case(Result_t::notRunning): {return ReturnStatus::BT_HALTED;}
+        case(Result_t::failed): {return ReturnStatus::BT_FAILURE;}
+        case(Result_t::error): {return ReturnStatus::BT_ERROR;}
+        default:{return ReturnStatus::BT_ERROR;}
+    };
 }
 
 ReturnStatus FollowerModule::request_halt()
