@@ -168,7 +168,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
         m_pointRetriever_ptr = std::make_unique<Ball3DPointRetriever>();
     }
 #ifdef ASSISTIVE_REHAB_AVAILABLE
-    else (m_targetType == TargetType_t::person)
+    else if (m_targetType == TargetType_t::person)
     {
         m_pointRetriever_ptr = std::make_unique<Person3DPointRetriever>();
     }

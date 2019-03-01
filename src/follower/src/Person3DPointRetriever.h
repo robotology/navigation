@@ -11,13 +11,13 @@
 #ifndef PERSON3DPOINTRESTRIVER_H
 #define PERSON3DPOINTRESTRIVER_H
 
-#include "TargetRetriver.h"
+#include "TargetRetriever.h"
 
 #include "AssistiveRehab/skeleton.h"
 
 namespace FollowerTarget
 {
-    class Person3DPointRetriver : public TargetRetriver
+    class Person3DPointRetriever : public TargetRetriever
     {
     public:
         Target_t getTarget(void);

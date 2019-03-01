@@ -9,7 +9,7 @@
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
 
-#include "Person3DPointRetriver.h"
+#include "Person3DPointRetriever.h"
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
@@ -17,7 +17,7 @@ using namespace yarp::os;
 using namespace assistive_rehab;
 using namespace FollowerTarget;
 
-Target_t Person3DPointRetriver::getTarget(void)
+Target_t Person3DPointRetriever::getTarget(void)
 {
     std::vector<double> point3d = {0,0,0};
 
