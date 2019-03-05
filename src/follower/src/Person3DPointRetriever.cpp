@@ -20,11 +20,12 @@ using namespace FollowerTarget;
 Target_t Person3DPointRetriever::getTarget(void)
 {
     std::vector<double> point3d = {0,0,0};
+    std::vector<double> point3d_100 = {100,0,0};
 
     Bottle *b = m_inputPort.read(false); //use false in order to make the reading not blocking
     if(nullptr == b)
     {
-        return std::make_pair(std::move (point3d), false);
+        return std::make_pair(std::move (point3d_100), false);
     }
 
     Bottle *b1=b->get(0).asList();
@@ -37,8 +38,8 @@ Target_t Person3DPointRetriever::getTarget(void)
     {
         Property prop(b1->toString().c_str());
         m_sk_target.update(prop);
-        if(m_debugOn)
-            yDebug() << "Person3DPPointRetriver: skeleton is updated!";
+        //if(m_debugOn)
+            //yDebug() << "Person3DPPointRetriver: skeleton is updated!";
     }
     else
     {
@@ -65,8 +66,8 @@ Target_t Person3DPointRetriever::getTarget(void)
             point3d[0] = v[0];
             point3d[1] = v[1];
             point3d[2] = v[2];
-            if(m_debugOn)
-                yDebug() << "Person3DPPointRetriver: get the point!! OK!!";
+            //if(m_debugOn)
+            //    yDebug() << "Person3DPPointRetriver: get the point!! OK!!";
         }
         else
         {

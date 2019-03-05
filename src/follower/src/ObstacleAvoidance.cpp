@@ -63,7 +63,7 @@ bool ObstacleVerifier::initLaserClient(yarp::os::ResourceFinder &rf)
     yarp::os::Property prop;
     prop.put("device", "Rangefinder2DClient");
     prop.put("local", "/follower-rangeFinder");
-    prop.put("remote", "/SIM_CER_ROBOT/laser");
+    prop.put("remote", "/cer/laser:o");
 
     // Try to open the driver
     bool ok_open = m_driver.open(prop);

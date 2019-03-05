@@ -166,6 +166,7 @@ namespace FollowerTarget
         //Target_t m_lastValidTarget;
         Target_t m_lastValidTargetOnBaseFrame;
         uint32_t m_lostTargetcounter;
+        uint32_t m_NOTargetcounter;
         bool m_autoNavAlreadyDone;
         bool m_targetReached;
 

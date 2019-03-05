@@ -47,12 +47,14 @@ void FollowerConfig::print(void)
     yInfo() << "NAVIGATION.angleMinBeforeMove="<< navigation.angleMinBeforeMove;
     yInfo() << "DEBUG.enabled="        << debug.enabled;
     yInfo() << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
+    yInfo() << "DEBUG.printPeriod=" << debug.period;
 }
-Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false)
+Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false), m_debugTimePrints(0.0)
 {
     m_transformData.transformClient = nullptr;
     m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
     m_lastValidTargetOnBaseFrame.second = false;
+        m_NOTargetcounter=0;
 }
 
 Follower::~Follower()
@@ -93,10 +95,13 @@ string Follower::stateMachineState_2_string(StateMachine st)
 
 void Follower::printStMachineDebufInfo(Target_t &currenttarget)
 {
+    if(m_debugTimePrints==0.0)
+    {
+        m_debugTimePrints=yarp::os::Time::now();
+        return;
+    }
     if((yarp::os::Time::now()-m_debugTimePrints) <m_cfg.debug.period)
         return;
-
-    m_debugTimePrints=yarp::os::Time::now();
 
 
     string str;
@@ -104,12 +109,14 @@ void Follower::printStMachineDebufInfo(Target_t &currenttarget)
     if(currenttarget.second)
         yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.first[0] << currenttarget.first[1] << currenttarget.first[2] << "at time" <<yarp::os::Time::now() - m_debugTimePrints;
     else
-        yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - m_debugTimePrints;
+        yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - m_debugTimePrints <<"count="<<m_lostTargetcounter << "noTarget=" << m_NOTargetcounter;
 
     yDebug()<< "**** state machine is in " << stateMachineState_2_string(m_stateMachine_st);
     yDebug()<< "**** running st machine is in" << runStMachineState_2_string(m_runStMachine_st);
     yDebug()<< "**** target is REACHED " << m_targetReached;
     yDebug() << "****************************************************************end";
+
+    m_debugTimePrints=yarp::os::Time::now();
 }
 
 Result_t Follower::followTarget(Target_t &target)
@@ -138,6 +145,8 @@ Result_t Follower::followTarget(Target_t &target)
             //for the first time I received a not valid target
             m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
             m_lostTargetcounter++;
+            if(target.first[0] == 100)
+                m_NOTargetcounter++;
             Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
             if(res==Result_t::needHelp)
                 m_runStMachine_st=RunningSubStMachine::needHelp;
@@ -147,6 +156,9 @@ Result_t Follower::followTarget(Target_t &target)
         case RunningSubStMachine::maybeLostTarget:
         {
             m_lostTargetcounter++;
+            if(target.first[0] == 100)
+                m_NOTargetcounter++;
+
             if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
                 m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
 
@@ -280,8 +292,8 @@ Result_t Follower::followTarget(Target_t &target)
         case RunningSubStMachine::needHelp:
         {
             /*Nothing to do*/
-            if(m_cfg.debug.enabled)
-                yDebug() << "I need help";
+            //if(m_cfg.debug.enabled)
+            //    yDebug() << "I need help";
 
             return Result_t::needHelp;
         }break;
@@ -528,7 +540,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         bool a_in_thr=false;
         if(distance > m_cfg.navigation.distanceThreshold)
         {
-            lin_vel = m_cfg.navigation.factorDist2Vel *distance;
+            lin_vel = m_cfg.navigation.factorDist2Vel *(distance-m_cfg.navigation.distanceThreshold);
         }
         else
         {
@@ -558,9 +570,9 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         else
             m_targetReached = false;
 
-        //if the angle difference is minor of angleMinBeforeMove than set linear velocity to 0
-        // in order to rotate and after moving.
-        if((fabs(angle) < m_cfg.navigation.angleMinBeforeMove) && (fabs(angle) >m_cfg.navigation.angleThreshold))
+        //if the angle difference is bigger than angleMinBeforeMove than set linear velocity to 0
+        // in order to rotate in place only.
+        if(fabs(angle) > m_cfg.navigation.angleMinBeforeMove)
             lin_vel = 0.0;
 
         //saturate velocities
@@ -607,6 +619,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 void  Follower::goto_targetValid_state()
 {
     m_lostTargetcounter=0;
+        m_NOTargetcounter=0;
     m_navCtrl.AbortAutonomousNav();
     m_runStMachine_st=RunningSubStMachine::targetValid;
     m_autoNavAlreadyDone=false;
