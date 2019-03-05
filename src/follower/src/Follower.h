@@ -58,6 +58,7 @@ namespace FollowerTarget
         {
             bool enabled;
             bool paintGazeFrame;
+            double period;
         }debug;
 
 
@@ -76,6 +77,7 @@ namespace FollowerTarget
             targetType = "person";
             debug.enabled=false;
             debug.paintGazeFrame = false;
+            debug.period = 0.5;
             startWithoutCommand = false;
             invalidTargetMax = 10;
             onSimulator=true;
@@ -174,7 +176,7 @@ namespace FollowerTarget
         SimManager * m_simmanager_ptr;
         Obstacle::ObstacleVerifier m_obsVer;
 
-        double time_prints;
+        double m_debugTimePrints;
         bool transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
         bool transformPointInHeadFrame(std::string frame_src, yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
 

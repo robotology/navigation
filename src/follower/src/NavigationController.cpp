@@ -25,9 +25,27 @@ using namespace yarp::dev;
 
 bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 {
-    bool            okClient, okView;
+    bool            okClient, okView, enabled;
     Property        navClientCfg, pLocationServer_cfg;
     string          navServerRoot;
+
+    if(rf.check("autonomousNavEnabled"))
+    {
+        enabled=rf.find("autonomousNavEnabled").asBool();
+    }
+    else
+    {
+        enabled=true;
+    }
+
+
+    if(enabled==false)
+    {
+        yDebug() << "Autonomous Navigation is NOT enabled in config file!!!";
+        return true;
+    }
+
+    yDebug() << "Autonomous Navigation is ENABLED in config file!!!";
 
 
     if(rf.check("navServerRoot"))
@@ -72,18 +90,34 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
     return true;
 }
 
+bool NavigationController::isConfigured(void)
+{
+    if(m_iNav != nullptr)
+        return true; //if the navigation client is running
+    else
+        return false;
+}
+
+
 bool NavigationController::startAutonomousNav(double x, double y, double theta)
 {
-    //TODO check is configured
+    if(nullptr == m_iNav)
+        return false;
+
     if(m_debugOn)
         yDebug() << "NavCtrl: gotoTargetByRelativeLocation" << x << y <<theta;
+
     m_navStarted=true;
     return(m_iNav->gotoTargetByRelativeLocation(x,y, theta));
+
 }
 
 yarp::dev::NavigationStatusEnum NavigationController::getNavigationStatus(void)
 {
     NavigationStatusEnum status=navigation_status_error ;
+    if(nullptr == m_iNav)
+        return status;
+
     m_iNav->getNavigationStatus(status);
     return status;
 }
@@ -91,6 +125,9 @@ yarp::dev::NavigationStatusEnum NavigationController::getNavigationStatus(void)
 
 bool NavigationController::AbortAutonomousNav(void)
 {
+    if(nullptr == m_iNav)
+        return false;
+
     bool ret = true;
     if(m_navStarted)
     {

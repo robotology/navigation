@@ -93,17 +93,18 @@ string Follower::stateMachineState_2_string(StateMachine st)
 
 void Follower::printStMachineDebufInfo(Target_t &currenttarget)
 {
-    if((yarp::os::Time::now()-time_prints) <0.5)
+    if((yarp::os::Time::now()-m_debugTimePrints) <m_cfg.debug.period)
         return;
-    time_prints=yarp::os::Time::now();
 
-    static double tstart = yarp::os::Time::now(); //TODO remove static
+    m_debugTimePrints=yarp::os::Time::now();
+
+
     string str;
     yDebug() << "****************************************************************";
     if(currenttarget.second)
-        yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.first[0] << currenttarget.first[1] << currenttarget.first[2] << "at time" <<yarp::os::Time::now() - tstart;
+        yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.first[0] << currenttarget.first[1] << currenttarget.first[2] << "at time" <<yarp::os::Time::now() - m_debugTimePrints;
     else
-        yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - tstart;
+        yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - m_debugTimePrints;
 
     yDebug()<< "**** state machine is in " << stateMachineState_2_string(m_stateMachine_st);
     yDebug()<< "**** running st machine is in" << runStMachineState_2_string(m_runStMachine_st);
@@ -167,7 +168,7 @@ Result_t Follower::followTarget(Target_t &target)
                     yDebug() << "I looked around but I cannot find the target!";
 
 
-                if(m_autoNavAlreadyDone)
+                if((m_autoNavAlreadyDone) || (!m_navCtrl.isConfigured()))
                 {
                     m_runStMachine_st=RunningSubStMachine::needHelp;
                     res=Result_t::failed;
@@ -688,6 +689,7 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     {
         if (config_group.check("enable")) { cfg.debug.enabled = config_group.find("enable").asBool(); }
         if (config_group.check("paintGazeFrame"))  { cfg.debug.paintGazeFrame = config_group.find("paintGazeFrame").asBool(); }
+        if (config_group.check("printPeriod"))  { cfg.debug.period = config_group.find("printPeriod").asDouble(); }
     }
 
     cfg.print();

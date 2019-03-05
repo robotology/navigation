@@ -24,11 +24,12 @@ namespace FollowerTarget
         bool startAutonomousNav(double x, double y, double theta);
         bool AbortAutonomousNav(void); //if navigation is started abort it
         yarp::dev::NavigationStatusEnum getNavigationStatus(void);
+        bool isConfigured(void);
     private:
         //device drivers and interfaces
         yarp::dev::PolyDriver      m_navClient_driver;
         yarp::dev::PolyDriver      m_locServer_driver;
-        yarp::dev::INavigation2D*  m_iNav;
+        yarp::dev::INavigation2D*  m_iNav; //ATTENTION: this pointer can be null if AutoNav is not configured because .ini file disables  it
 
         bool m_debugOn;
         bool m_navStarted;
