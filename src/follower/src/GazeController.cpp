@@ -12,6 +12,8 @@
 
 #include "GazeController.h"
 
+#include <math.h>
+
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/SystemClock.h>
@@ -54,14 +56,14 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
         return false;
     }
     //TODO: read frpm cam the size of image
-    m_pLeft.u = 630;
-    m_pLeft.v = 240;
+    m_pLeft.u = 50;
+    m_pLeft.v = 110;
 
-    m_pCenter.u = 320;
-    m_pCenter.v = 240;
+    m_pCenter.u = 160;
+    m_pCenter.v = 110;
 
-    m_pRight.u = 10;
-    m_pRight.v =240;
+    m_pRight.u = 270;
+    m_pRight.v =110;
 
     if(GazeCtrlUsedCamera::left ==cam)
         m_camera_str_command = "left";
@@ -87,25 +89,25 @@ GazeCtrlLookupStates GazeController::lookupTarget(void)
         {
             //calculate the nearest side TODO currently left always
             //lookAtPixel(m_pLeft.u, m_pLeft.v);
-            lookAtAngle(41.8090248586633, 3.42524672670162);
+            lookAtAngle(35.0, 10.42524672670162);
             m_lookupState = GazeCtrlLookupStates::nearest;
             yDebug() << "GazeCtrl in NONE state. ";
-            SystemClock::delaySystem(2.5);
+            SystemClock::delaySystem(10);
         }break;
 
         case GazeCtrlLookupStates::nearest:
         {
             //lookAtPixel(m_pRight.u, m_pRight.v);
-            lookAtAngle(-41.796462338564, 3.42371127637749);
+            lookAtAngle(-35.0, 10.42371127637749);
             m_lookupState = GazeCtrlLookupStates::otherside;
             yDebug() << "GazeCtrl in NEAREST state. ";
-            SystemClock::delaySystem(2.5);
+            SystemClock::delaySystem(10);
         }break;
 
         case GazeCtrlLookupStates::otherside:
         {
-            //lookInFront();
-            lookAtAngle(0, 0);
+            lookInFront();
+            lookAtAngle(0, 10);
             m_lookupState = GazeCtrlLookupStates::finished;
             yDebug() << "GazeCtrl in OTHERSIDE state. look in front ";
             SystemClock::delaySystem(2.5);
@@ -133,14 +135,20 @@ bool GazeController::lookAtPixel(double u, double v)
     if (m_outputPort2gazeCtr.getOutputCount() == 0)
         return true;
 
-    bool isOutsideRange=false;
+    if(isnan(u) || isnan(v))
+    {
+         //yError() << "********* PIXEL NAN*****************";
+        return true;
+    }
+    bool movegaze=false;
     if( (u<xpixelRange.first) || (u>xpixelRange.second))
-        isOutsideRange=true;
+        movegaze=true;
     if( (v<ypixelRange.first) || (v>ypixelRange.second) )
-        isOutsideRange=true;
+        movegaze=true;
 
-    yError() << "PIXEL " <<u<<v << "outside=" <<isOutsideRange;
-    if(!isOutsideRange)
+    //yError() << "PIXEL " <<u<<v << "movegaze=" <<movegaze;
+
+    if(!movegaze)
         return true;
 
     Property &p = m_outputPort2gazeCtr.prepare();

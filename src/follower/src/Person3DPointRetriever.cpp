@@ -66,8 +66,8 @@ Target_t Person3DPointRetriever::getTarget(void)
             t.point3D=targetPoint_ptr->getPoint();
             t.pixel = targetPoint_ptr->getPixel();
             t.isValid=true;
-            if(m_debugOn)
-                yDebug() << "Person3DPPointRetriver: get the point!! OK!!";
+            //if(m_debugOn)
+              //  yDebug() << "Person3DPPointRetriver: get the point!! OK!! TAG=" << m_sk_target.getTag();
         }
         else
         {

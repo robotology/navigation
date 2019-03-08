@@ -55,6 +55,7 @@ Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullp
 //     m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
 //     m_lastValidTargetOnBaseFrame.second = false;
         m_NOTargetcounter=0;
+        m_lostTargetcounter=0;
 }
 
 Follower::~Follower()
@@ -593,7 +594,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 //     v_targetOnBaseFrame[1]= targetOnBaseFrame.first[1];
 //     v_targetOnBaseFrame[2]= targetOnBaseFrame.first[2];
     //m_gazeCtrl.lookAtPoint(targetOnBaseFrame.point3D);
-    m_gazeCtrl.lookAtPixel((int)targetOnBaseFrame.pixel[0], (int)targetOnBaseFrame.pixel[1]);
+    m_gazeCtrl.lookAtPixel(targetOnBaseFrame.pixel[0], targetOnBaseFrame.pixel[1]);
 
     //the following steps lose interest on real robot
     if(!isOnSimulator())
