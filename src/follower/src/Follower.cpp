@@ -52,8 +52,8 @@ void FollowerConfig::print(void)
 Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false), m_debugTimePrints(0.0)
 {
     m_transformData.transformClient = nullptr;
-    m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
-    m_lastValidTargetOnBaseFrame.second = false;
+//     m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
+//     m_lastValidTargetOnBaseFrame.second = false;
         m_NOTargetcounter=0;
 }
 
@@ -106,8 +106,8 @@ void Follower::printStMachineDebufInfo(Target_t &currenttarget)
 
     string str;
     yDebug() << "****************************************************************";
-    if(currenttarget.second)
-        yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.first[0] << currenttarget.first[1] << currenttarget.first[2] << "at time" <<yarp::os::Time::now() - m_debugTimePrints;
+    if(currenttarget.isValid)
+        yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.point3D[0] << currenttarget.point3D[1] << currenttarget.point3D[2] << "at time" <<yarp::os::Time::now() - m_debugTimePrints;
     else
         yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - m_debugTimePrints <<"count="<<m_lostTargetcounter << "noTarget=" << m_NOTargetcounter;
 
@@ -128,7 +128,7 @@ Result_t Follower::followTarget(Target_t &target)
         return Result_t::notRunning;
 
 
-    if(target.second)
+    if(target.isValid)
     {
         goto_targetValid_state();
         Result_t res= processValidTarget(target);
@@ -145,7 +145,7 @@ Result_t Follower::followTarget(Target_t &target)
             //for the first time I received a not valid target
             m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
             m_lostTargetcounter++;
-            if(target.first[0] == 100)
+            if(target.point3D[0] == 100)
                 m_NOTargetcounter++;
             Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
             if(res==Result_t::needHelp)
@@ -156,7 +156,7 @@ Result_t Follower::followTarget(Target_t &target)
         case RunningSubStMachine::maybeLostTarget:
         {
             m_lostTargetcounter++;
-            if(target.first[0] == 100)
+            if(target.point3D[0] == 100)
                 m_NOTargetcounter++;
 
             if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
@@ -196,7 +196,7 @@ Result_t Follower::followTarget(Target_t &target)
 
         case RunningSubStMachine::startAutoNav:
         {
-            if(false ==  m_lastValidTargetOnBaseFrame.second)
+            if(false ==  m_lastValidTargetOnBaseFrame.isValid)
             {
                 m_runStMachine_st= RunningSubStMachine::needHelp;
                 if(m_cfg.debug.enabled)
@@ -209,12 +209,12 @@ Result_t Follower::followTarget(Target_t &target)
                 if(!m_targetReached)
                 {
                     if(m_cfg.debug.enabled)
-                        yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.first[0] << m_lastValidTargetOnBaseFrame.first[1];
+                        yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.point3D[0] << m_lastValidTargetOnBaseFrame.point3D[1];
 
-                    bool ret = m_navCtrl.startAutonomousNav(m_lastValidTargetOnBaseFrame.first[0], m_lastValidTargetOnBaseFrame.first[1], 0);
+                    bool ret = m_navCtrl.startAutonomousNav(m_lastValidTargetOnBaseFrame.point3D[0], m_lastValidTargetOnBaseFrame.point3D[1], 0);
 
                     //from now the last target is not more valid
-                    m_lastValidTargetOnBaseFrame.second=false;
+                    m_lastValidTargetOnBaseFrame.isValid=false;
 
                     if(ret)
                     {
@@ -232,7 +232,7 @@ Result_t Follower::followTarget(Target_t &target)
                 {
                     //m_targetReached=true;
                     //from now the last target is not more valid
-                    m_lastValidTargetOnBaseFrame.second=false;
+                    m_lastValidTargetOnBaseFrame.isValid=false;
                     if(m_cfg.debug.enabled)
                         yDebug() << "Target REACHED!!!!!";
                     return Result_t::ok;
@@ -335,7 +335,7 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
     if(m_targetType==TargetType_t::person)
         cam = GazeCtrlUsedCamera::depth;
 
-    if(!m_gazeCtrl.init( cam, m_cfg.debug.enabled))
+    if(!m_gazeCtrl.init( cam, rf, m_cfg.debug.enabled))
         return false;
 
     if(m_cfg.onSimulator)
@@ -446,25 +446,20 @@ Result_t Follower::processValidTarget(Target_t &target)
 {
 
     //1. transform the ball-point from camera point of view to base point of view.
-    yarp::sig::Vector targetOnCamFrame(3), targetOnBaseFrame;
-    targetOnCamFrame[0] = target.first[0];
-    targetOnCamFrame[1] = target.first[1];
-    targetOnCamFrame[2] = target.first[2];
+    yarp::sig::Vector targetOnBaseFrame;
 
-    if(!transformPointInBaseFrame(targetOnCamFrame, targetOnBaseFrame))
+
+    if(!transformPointInBaseFrame(target.point3D, targetOnBaseFrame))
     {
         return Result_t::error;
     }
 
     //2. save the current target
-    //m_lastValidTarget=target;
-    //m_lastValidPoint=targetOnBaseFrame;
-    m_lastValidTargetOnBaseFrame.first[0] = targetOnBaseFrame[0];
-    m_lastValidTargetOnBaseFrame.first[1] = targetOnBaseFrame[1];
-    m_lastValidTargetOnBaseFrame.first[2] = targetOnBaseFrame[2];
-    m_lastValidTargetOnBaseFrame.second = true;
+    m_lastValidTargetOnBaseFrame.point3D=targetOnBaseFrame;
+    m_lastValidTargetOnBaseFrame.pixel=target.pixel;
+    m_lastValidTargetOnBaseFrame.isValid = true;
 
-    sendtargets4Debug(targetOnCamFrame, targetOnBaseFrame);
+    sendtargets4Debug(target.point3D, targetOnBaseFrame);
 
     Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
 
@@ -472,7 +467,7 @@ Result_t Follower::processValidTarget(Target_t &target)
     if(isOnSimulator() && m_cfg.debug.paintGazeFrame)
     {
         yarp::sig::Vector targetOnHeadFrame;
-        if(transformPointInHeadFrame(m_transformData.targetFrameId, targetOnCamFrame, targetOnHeadFrame))
+        if(transformPointInHeadFrame(m_transformData.targetFrameId, target.point3D, targetOnHeadFrame))
         {
             targetOnHeadFrame[2]+=0.20;
             m_simmanager_ptr->PaintGazeFrame(targetOnHeadFrame);
@@ -491,7 +486,7 @@ Result_t Follower::processValidTarget(Target_t &target)
 Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 {
     //I need to check if the target is not valid in the case I have never seen the target and therefore the last target has never been valid
-    if(!targetOnBaseFrame.second)
+    if(!targetOnBaseFrame.isValid)
         return Result_t::lostTarget;
 
     Result_t res=Result_t::ok;
@@ -528,10 +523,10 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         //3. Calculate linear velocity and angular velocity to send to  base control module
 
         //x axis is the first element, y is on second. (In order to calculate the distance see mobile base frame)
-        double distance =  sqrt(pow(targetOnBaseFrame.first[0], 2) + pow(targetOnBaseFrame.first[1], 2));
+        double distance =  sqrt(pow(targetOnBaseFrame.point3D[0], 2) + pow(targetOnBaseFrame.point3D[1], 2));
 
         const double RAD2DEG  = 180.0/M_PI;
-        double angle = atan2(targetOnBaseFrame.first[1], targetOnBaseFrame.first[0]) * RAD2DEG;
+        double angle = atan2(targetOnBaseFrame.point3D[1], targetOnBaseFrame.point3D[0]) * RAD2DEG;
 
 
 
@@ -593,18 +588,19 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
     sendCommand2BaseControl(0.0, lin_vel, ang_vel );
 
     //4. send commands to gaze control in order to follow the target with the gaze
-    yarp::sig::Vector v_targetOnBaseFrame = {0.0, 0.0, 0.0};
-    v_targetOnBaseFrame[0]= targetOnBaseFrame.first[0];
-    v_targetOnBaseFrame[1]= targetOnBaseFrame.first[1];
-    v_targetOnBaseFrame[2]= targetOnBaseFrame.first[2];
-    m_gazeCtrl.lookAtPoint(v_targetOnBaseFrame);
+//     yarp::sig::Vector v_targetOnBaseFrame = {0.0, 0.0, 0.0};
+//     v_targetOnBaseFrame[0]= targetOnBaseFrame.first[0];
+//     v_targetOnBaseFrame[1]= targetOnBaseFrame.first[1];
+//     v_targetOnBaseFrame[2]= targetOnBaseFrame.first[2];
+    //m_gazeCtrl.lookAtPoint(targetOnBaseFrame.point3D);
+    m_gazeCtrl.lookAtPixel((int)targetOnBaseFrame.pixel[0], (int)targetOnBaseFrame.pixel[1]);
 
     //the following steps lose interest on real robot
     if(!isOnSimulator())
         return res;
 
     //5. paint in gazebo the targets on final target and on cam(optional)
-    yarp::sig::Vector target2Paint= v_targetOnBaseFrame;
+    yarp::sig::Vector target2Paint=targetOnBaseFrame.point3D;
     target2Paint[2]=0.0; //I don't want z axis
     m_simmanager_ptr->PaintTargetFrame(target2Paint);
 

@@ -25,19 +25,18 @@ using namespace yarp::dev;
 
 bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 {
-    bool            okClient, okView, enabled;
+    bool            okClient, okView, enabled=true;;
     Property        navClientCfg, pLocationServer_cfg;
     string          navServerRoot;
 
-    if(rf.check("autonomousNavEnabled"))
+    Bottle config_group = rf.findGroup("GENERAL");
+    if(!config_group.isNull())
     {
-        enabled=rf.find("autonomousNavEnabled").asBool();
+        if(config_group.check("autonomousNavEnabled"))
+        {
+            enabled=config_group.find("autonomousNavEnabled").asBool();
+        }
     }
-    else
-    {
-        enabled=true;
-    }
-
 
     if(enabled==false)
     {

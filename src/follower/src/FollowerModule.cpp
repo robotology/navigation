@@ -46,7 +46,7 @@ double FollowerModule::getPeriod()
 bool FollowerModule::updateModule()
 {
     double t=yarp::os::SystemClock::nowSystem();
-    Target_t targetpoint({0,0,0}, false);
+    Target_t targetpoint;
 
 
 //     switch(m_targetType)

@@ -23,12 +23,6 @@ namespace FollowerTarget
     {
     public:
         Target_t getTarget(void);
-        Ball3DPointRetriever();
-        void getTargetPixelCoord(double &u, double &v);
-    private:
-
-        double m_ballPointU;
-        double m_ballPointV;
     };
 }
 #endif

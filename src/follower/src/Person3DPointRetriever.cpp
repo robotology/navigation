@@ -19,19 +19,20 @@ using namespace FollowerTarget;
 
 Target_t Person3DPointRetriever::getTarget(void)
 {
-    std::vector<double> point3d = {0,0,0};
-    std::vector<double> point3d_100 = {100,0,0};
+    Target_t t; //it is initialized to false
+
 
     Bottle *b = m_inputPort.read(false); //use false in order to make the reading not blocking
     if(nullptr == b)
     {
-        return std::make_pair(std::move (point3d_100), false);
+        t.point3D[0]=100;
+        return t;
     }
 
     Bottle *b1=b->get(0).asList();
     if(nullptr == b1)
     {
-        return std::make_pair(std::move (point3d), false);
+        return t;
     }
 
     if (b1->check("tag"))
@@ -45,7 +46,7 @@ Target_t Person3DPointRetriever::getTarget(void)
     {
         if(m_debugOn)
             yDebug() << "Person3DPPointRetriver: tag not exist!";
-        return std::make_pair(std::move (point3d), false);
+        return t;
     }
 
 //     string tag=prop.find("tag").asString();
@@ -62,12 +63,11 @@ Target_t Person3DPointRetriever::getTarget(void)
     {
         if(targetPoint_ptr->isUpdated())
         {
-            yarp::sig::Vector v = targetPoint_ptr->getPoint();
-            point3d[0] = v[0];
-            point3d[1] = v[1];
-            point3d[2] = v[2];
-            //if(m_debugOn)
-            //    yDebug() << "Person3DPPointRetriver: get the point!! OK!!";
+            t.point3D=targetPoint_ptr->getPoint();
+            t.pixel = targetPoint_ptr->getPixel();
+            t.isValid=true;
+            if(m_debugOn)
+                yDebug() << "Person3DPPointRetriver: get the point!! OK!!";
         }
         else
         {
@@ -81,5 +81,5 @@ Target_t Person3DPointRetriever::getTarget(void)
             yError() << "Person3DPPointRetriver: shoulder_center point is null!";
     }
 
-    return std::make_pair(std::move (point3d), true);
+    return t;
 }

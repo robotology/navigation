@@ -21,8 +21,33 @@ using namespace FollowerTarget;
 
 
 
-bool GazeController::init(GazeCtrlUsedCamera cam, bool debugOn)
+bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, bool debugOn)
 {
+    Bottle gaze_group = rf.findGroup("GAZE");
+    if (gaze_group.isNull())
+    {
+        yWarning() << "Missing GENERAL group! the module uses default value!";
+    }
+    else
+    {
+        if (gaze_group.check("pixel_x_range"))
+        {
+            xpixelRange.first=gaze_group.find("pixel_x_range").asList()->get(0).asInt();
+            xpixelRange.second=gaze_group.find("pixel_x_range").asList()->get(1).asInt();
+        }
+
+        if (gaze_group.check("pixel_y_range"))
+        {
+            ypixelRange.first=gaze_group.find("pixel_y_range").asList()->get(0).asInt();
+            ypixelRange.second=gaze_group.find("pixel_y_range").asList()->get(1).asInt();
+        }
+    }
+
+    yError() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
+
+
+
+
     if(!m_outputPort2gazeCtr.open("/follower/gazetargets:o"))
     {
         yError() << "Error opening output port for gaze control";
@@ -41,7 +66,7 @@ bool GazeController::init(GazeCtrlUsedCamera cam, bool debugOn)
     if(GazeCtrlUsedCamera::left ==cam)
         m_camera_str_command = "left";
     else
-        m_camera_str_command = "depth_center";
+        m_camera_str_command = "depth_rgb";
 
     m_debugOn=debugOn;
 
@@ -108,11 +133,21 @@ bool GazeController::lookAtPixel(double u, double v)
     if (m_outputPort2gazeCtr.getOutputCount() == 0)
         return true;
 
+    bool isOutsideRange=false;
+    if( (u<xpixelRange.first) || (u>xpixelRange.second))
+        isOutsideRange=true;
+    if( (v<ypixelRange.first) || (v>ypixelRange.second) )
+        isOutsideRange=true;
+
+    yError() << "PIXEL " <<u<<v << "outside=" <<isOutsideRange;
+    if(!isOutsideRange)
+        return true;
+
     Property &p = m_outputPort2gazeCtr.prepare();
     p.clear();
-    p.put("control-frame","left");
+    p.put("control-frame",m_camera_str_command);
     p.put("target-type","image");
-    p.put("image","left");
+    p.put("image",m_camera_str_command);
 
     Bottle location = yarp::os::Bottle();
     Bottle &val = location.addList();

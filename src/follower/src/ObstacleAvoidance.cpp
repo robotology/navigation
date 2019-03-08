@@ -43,6 +43,7 @@ bool ObstacleVerifier::configure(yarp::os::ResourceFinder &rf)
         if (config_group.check("enabled"))  {enabled = config_group.find("enabled").asBool(); }
         if (config_group.check("maxDistance"))  {m_maxDistanceThreshold  = config_group.find("maxDistance").asDouble(); }
         if (config_group.check("robotRadius"))  {m_robotRadius  = config_group.find("robotRadius").asDouble(); }
+        if (config_group.check("robotLaserPortName"))  {m_robotLaserPortName  = config_group.find("robotLaserPortName").asString(); }
     }
     if(!enabled)
         return true;
@@ -63,7 +64,7 @@ bool ObstacleVerifier::initLaserClient(yarp::os::ResourceFinder &rf)
     yarp::os::Property prop;
     prop.put("device", "Rangefinder2DClient");
     prop.put("local", "/follower-rangeFinder");
-    prop.put("remote", "/cer/laser:o");
+    prop.put("remote", m_robotLaserPortName);
 
     // Try to open the driver
     bool ok_open = m_driver.open(prop);

@@ -15,12 +15,13 @@
 
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Property.h>
+#include <yarp/os/ResourceFinder.h>
 #include <yarp/sig/Vector.h>
 
 namespace FollowerTarget
 {
     enum class GazeCtrlLookupStates{none=0, nearest=1, otherside=2, finished=3};
-
+    using PixelRange_t =std::pair<int, int>;
     struct pixelPoint_t
     {
         int u;
@@ -38,9 +39,11 @@ namespace FollowerTarget
                         m_lookupState(GazeCtrlLookupStates::none),
                         m_pLeft(0,0),
                         m_pCenter(0,0),
-                        m_pRight(0,0)
+                        m_pRight(0,0),
+                        xpixelRange(0,0),
+                        ypixelRange(0,0)
                         {;}
-        bool init(GazeCtrlUsedCamera cam, bool debugOn=false);
+        bool init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, bool debugOn=false );
         bool deinit(void);
         GazeCtrlLookupStates lookupTarget(void);
         void resetLookupstateMachine(void);
@@ -58,6 +61,8 @@ namespace FollowerTarget
         pixelPoint_t m_pRight;
         std::string m_camera_str_command;
 
+        PixelRange_t xpixelRange;
+        PixelRange_t ypixelRange;
         bool m_debugOn;
 
     };

@@ -49,6 +49,7 @@ namespace FollowerTarget
         private:
             double m_maxDistanceThreshold;;
             double m_robotRadius;
+            std::string m_robotLaserPortName;
 
             yarp::dev::IRangefinder2D * m_laser;
             yarp::dev::PolyDriver      m_driver;
