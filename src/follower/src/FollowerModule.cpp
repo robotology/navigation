@@ -59,6 +59,12 @@ bool FollowerModule::updateModule()
 //
 //         default: break;
 //     };
+//     double time=yarp::os::Time::now();
+//     yError() << "sto per fare delay...";
+//
+//     yarp::os::SystemClock::delaySystem(15);
+//
+//     yError() << "ho finito delay" << yarp::os::Time::now()-time;
 
     targetpoint = m_pointRetriever_ptr->getTarget();
     m_followerResult= m_follower.followTarget(targetpoint);

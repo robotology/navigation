@@ -173,7 +173,7 @@ Result_t Follower::followTarget(Target_t &target)
         {
             Result_t res=Result_t::lostTarget;
 
-            GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookupTarget();
+            GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookup4Target();
             if(GazeCtrlLookupStates::finished == gaze_st)
             {
                 m_gazeCtrl.resetLookupstateMachine();
@@ -560,8 +560,8 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         if(d_in_thr && a_in_thr)
         {
             m_targetReached = true;
-            if(m_cfg.debug.enabled)
-                yDebug() << "_______________________________________________Target REACHED!!!";
+//             if(m_cfg.debug.enabled)
+//                 yDebug() << "_______________________________________________Target REACHED!!!";
         }
         else
             m_targetReached = false;
@@ -616,10 +616,12 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 void  Follower::goto_targetValid_state()
 {
     m_lostTargetcounter=0;
-        m_NOTargetcounter=0;
+    m_NOTargetcounter=0;
     m_navCtrl.AbortAutonomousNav();
     m_runStMachine_st=RunningSubStMachine::targetValid;
     m_autoNavAlreadyDone=false;
+    m_gazeCtrl.resetLookupstateMachine();
+    m_gazeCtrl.stopLookup4Target();
 }
 
 

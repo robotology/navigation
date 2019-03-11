@@ -36,8 +36,8 @@ Target_t Ball3DPointRetriever::getTarget(void)
 
     if(!ballIsTracked)
     {
-        if(m_debugOn)
-            yDebug() << "Ball3DPointRetriever: I can't see the redBall";
+//         if(m_debugOn)
+//             yDebug() << "Ball3DPointRetriever: I can't see the redBall";
         return t;
     }
 

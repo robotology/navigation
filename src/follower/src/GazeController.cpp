@@ -28,25 +28,34 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
     Bottle gaze_group = rf.findGroup("GAZE");
     if (gaze_group.isNull())
     {
-        yWarning() << "Missing GENERAL group! the module uses default value!";
+        yWarning() << "Missing GAZE group! the module uses default value!";
     }
     else
     {
-        if (gaze_group.check("pixel_x_range"))
+        if(gaze_group.check("pixel_x_range"))
         {
             xpixelRange.first=gaze_group.find("pixel_x_range").asList()->get(0).asInt();
             xpixelRange.second=gaze_group.find("pixel_x_range").asList()->get(1).asInt();
         }
 
-        if (gaze_group.check("pixel_y_range"))
+        if(gaze_group.check("pixel_y_range"))
         {
             ypixelRange.first=gaze_group.find("pixel_y_range").asList()->get(0).asInt();
             ypixelRange.second=gaze_group.find("pixel_y_range").asList()->get(1).asInt();
         }
+
+        if(gaze_group.check("trajTimeInLookingup"))
+        {
+            m_trajectoryTime=gaze_group.find("trajTimeInLookingup").asDouble();
+        }
+        else
+            m_trajectoryTime = 10;//sec
+
+            //TODO leggi T default
     }
 
-    yError() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
-
+    yDebug() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
+    yDebug() << "GAZE::TRAJECTORYtIME=" << m_trajectoryTime << "default=" <<m_trajectoryTimeDefault;
 
 
 
@@ -72,52 +81,103 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
 
     m_debugOn=debugOn;
 
+    m_rpcPort2gazeCtr.open("/follower/GazeController/rpc");
+
     return true;
 }
+
 bool GazeController::deinit(void)
 {
     m_outputPort2gazeCtr.interrupt();
     m_outputPort2gazeCtr.close();
+
+    m_rpcPort2gazeCtr.interrupt();
+    m_rpcPort2gazeCtr.close();
     return true;
 }
 
-GazeCtrlLookupStates GazeController::lookupTarget(void)
+GazeCtrlLookupStates GazeController::lookup4Target(void)
 {
+    double delayTime= m_trajectoryTime + m_trajectoryTime/100*10;
     switch(m_lookupState)
     {
         case GazeCtrlLookupStates::none:
         {
             //calculate the nearest side TODO currently left always
             //lookAtPixel(m_pLeft.u, m_pLeft.v);
-            lookAtAngle(35.0, 10.42524672670162);
-            m_lookupState = GazeCtrlLookupStates::nearest;
-            yDebug() << "GazeCtrl in NONE state. ";
-            SystemClock::delaySystem(10);
+
+            if(m_debugOn)
+                yDebug() << "GazeCtrl in NONE state: move gaze to angle (35.0 10.0) ";
+
+            setTrajectoryTime(m_trajectoryTime);
+            lookAtAngle(35.0, 10.0);
+            SystemClock::delaySystem(delayTime);
+            if(checkMotionDone())
+            {
+                m_lookupState = GazeCtrlLookupStates::nearest;
+                if(m_debugOn)
+                    yDebug() << "GazeCtrl in NONE state: motion completed ";
+            }
+            else
+            {
+                yError() << "GazeCtrl in NONE state: motion NOT completed. I'll wait a bit time";
+                SystemClock::delaySystem( m_trajectoryTime/100*10);
+                m_lookupState = GazeCtrlLookupStates::nearest;
+            }
         }break;
 
         case GazeCtrlLookupStates::nearest:
         {
             //lookAtPixel(m_pRight.u, m_pRight.v);
-            lookAtAngle(-35.0, 10.42371127637749);
-            m_lookupState = GazeCtrlLookupStates::otherside;
-            yDebug() << "GazeCtrl in NEAREST state. ";
-            SystemClock::delaySystem(10);
+
+            if(m_debugOn)
+                yDebug() << "GazeCtrl in NEAREST state. Move gaze to angle (-35.0 10.0) ";
+
+            lookAtAngle(-35.0, 10.0);
+            SystemClock::delaySystem(delayTime);
+            if(checkMotionDone())
+            {
+                m_lookupState = GazeCtrlLookupStates::otherside;
+                if(m_debugOn)
+                    yDebug() << "GazeCtrl in NEAREST state: motion completed ";
+            }
+            else
+            {
+                yError() << "GazeCtrl in NEAREST state: motion NOT completed. I'll wait a bit time";
+                SystemClock::delaySystem( m_trajectoryTime/100*10);
+                m_lookupState = GazeCtrlLookupStates::otherside;
+            }
+
         }break;
 
         case GazeCtrlLookupStates::otherside:
         {
-            lookInFront();
+            //lookInFront();
+            if(m_debugOn)
+                yDebug() << "GazeCtrl in OTHERSIDE state. Move gaze to angle (-35.0 10.0) ";
+
             lookAtAngle(0, 10);
-            m_lookupState = GazeCtrlLookupStates::finished;
-            yDebug() << "GazeCtrl in OTHERSIDE state. look in front ";
-            SystemClock::delaySystem(2.5);
+            SystemClock::delaySystem(delayTime);
+            if(checkMotionDone())
+            {
+                m_lookupState = GazeCtrlLookupStates::finished;
+                if(m_debugOn)
+                    yDebug() << "GazeCtrl in OTHERSIDE state: motion completed ";
+            }
+            else
+            {
+                yError() << "GazeCtrl in OTHERSIDE state: motion NOT completed. I'll wait a bit time";
+                SystemClock::delaySystem( m_trajectoryTime/100*10);
+                m_lookupState = GazeCtrlLookupStates::finished;
+            }
         }break;
 
         case GazeCtrlLookupStates::finished:
         {
-            //TODO Do I need to reset the state machine?
-            yDebug() << "GazeCtrl in FINISHED state. ";
-
+            m_lookupState = GazeCtrlLookupStates::none;
+            setTrajectoryTime(m_trajectoryTimeDefault);
+            if(m_debugOn)
+                yDebug() << "GazeCtrl in FINISHED state. ";
         }break;
     };
     return m_lookupState;
@@ -125,28 +185,30 @@ GazeCtrlLookupStates GazeController::lookupTarget(void)
 void GazeController::resetLookupstateMachine(void)
 {
     m_lookupState = GazeCtrlLookupStates::none;
+    setTrajectoryTime(m_trajectoryTimeDefault);
 }
+
 bool GazeController::lookInFront(void)
 {
     return lookAtPixel(m_pCenter.u, m_pCenter.v);
 }
+
 bool GazeController::lookAtPixel(double u, double v)
 {
     if (m_outputPort2gazeCtr.getOutputCount() == 0)
         return true;
 
     if(isnan(u) || isnan(v))
-    {
-         //yError() << "********* PIXEL NAN*****************";
         return true;
-    }
+
     bool movegaze=false;
     if( (u<xpixelRange.first) || (u>xpixelRange.second))
         movegaze=true;
     if( (v<ypixelRange.first) || (v>ypixelRange.second) )
         movegaze=true;
 
-    //yError() << "PIXEL " <<u<<v << "movegaze=" <<movegaze;
+//     if(m_debugOn)
+//         yDebug() << "LookAtPixel(" <<u<<v << ") movegaze=" <<movegaze;
 
     if(!movegaze)
         return true;
@@ -166,6 +228,7 @@ bool GazeController::lookAtPixel(double u, double v)
 
     return true;
 }
+
 bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
 {
     if (m_outputPort2gazeCtr.getOutputCount() == 0)
@@ -174,11 +237,6 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     Property &p = m_outputPort2gazeCtr.prepare();
     p.clear();
 
-//     if(m_targetType==FollowerTargetType::person)
-//         p.put("control-frame","depth_center");
-//     else
-//         p.put("control-frame","left");
-
     p.put("control-frame", m_camera_str_command);
     p.put("target-type","cartesian");
 
@@ -186,8 +244,8 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     target.addList().read(x);
     p.put("target-location",target.get(0));
 
-//     if(m_debugOn)
-//         yDebug() << "Command to gazectrl: " << p.toString();
+     if(m_debugOn)
+         yDebug() << "Command to gazectrl: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -203,12 +261,6 @@ bool GazeController::lookAtAngle(double a, double b)
     Property &p = m_outputPort2gazeCtr.prepare();
     p.clear();
 
-    //     if(m_targetType==FollowerTargetType::person)
-    //         p.put("control-frame","depth_center");
-    //     else
-    //         p.put("control-frame","left");
-
-    //p.put("control-frame", m_camera_str_command);
     p.put("target-type","angular");
 
     Bottle target;
@@ -223,4 +275,82 @@ bool GazeController::lookAtAngle(double a, double b)
     m_outputPort2gazeCtr.write();
 
     return true;
+}
+
+
+bool GazeController::stopLookup4Target(void)
+{
+    if (m_rpcPort2gazeCtr.asPort().getOutputCount() == 0)
+        return true;
+
+    Bottle cmd, ans;
+    cmd.clear();
+    ans.clear();
+
+    cmd.addString("stop");
+
+    m_rpcPort2gazeCtr.write(cmd, ans);
+
+    if(m_debugOn)
+        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+
+    if(ans.toString() == "ack")
+        return true;
+    else
+        return false;
+}
+
+bool GazeController::setTrajectoryTime(double T)
+{
+    if (m_rpcPort2gazeCtr.asPort().getOutputCount() == 0)
+        return true;
+
+    Bottle cmd, ans;
+    cmd.clear();
+    ans.clear();
+
+    cmd.addString("set");
+    cmd.addString("T");
+    cmd.addDouble(T);
+
+    m_rpcPort2gazeCtr.write(cmd, ans);
+
+    if(m_debugOn)
+        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+
+    if(ans.toString() == "ack")
+        return true;
+    else
+        return false;
+
+}
+
+bool GazeController::checkMotionDone(void)
+{
+    if(m_rpcPort2gazeCtr.asPort().getOutputCount() == 0)
+        return true;
+
+    Bottle cmd, ans;
+    cmd.clear();
+    ans.clear();
+
+    cmd.addString("get");
+    cmd.addString("done");
+
+    m_rpcPort2gazeCtr.write(cmd, ans);
+
+    if(m_debugOn)
+        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+
+    if(ans.toString() == "[ack]")
+    {
+        if(ans.get(1).asInt() == 1)
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+
+
 }

@@ -17,6 +17,7 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/os/RpcClient.h>
 
 namespace FollowerTarget
 {
@@ -41,20 +42,24 @@ namespace FollowerTarget
                         m_pCenter(0,0),
                         m_pRight(0,0),
                         xpixelRange(0,0),
-                        ypixelRange(0,0)
+                        ypixelRange(0,0),
+                        m_trajectoryTime(10),
+                        m_trajectoryTimeDefault(1.0)
                         {;}
         bool init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, bool debugOn=false );
         bool deinit(void);
-        GazeCtrlLookupStates lookupTarget(void);
+        GazeCtrlLookupStates lookup4Target(void);
+        bool stopLookup4Target(void);
         void resetLookupstateMachine(void);
         bool lookInFront(void);
         bool lookAtPixel(double u, double v);
         bool lookAtPoint(const  yarp::sig::Vector &x);
         bool lookAtAngle(double a, double b);
+        bool checkMotionDone(void);
     private:
         GazeCtrlLookupStates m_lookupState;
         yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller
-        //std::Vector<int> m_pointsList;
+        yarp::os::RpcClient m_rpcPort2gazeCtr;
 
         pixelPoint_t m_pLeft;
         pixelPoint_t m_pCenter;
@@ -64,6 +69,10 @@ namespace FollowerTarget
         PixelRange_t xpixelRange;
         PixelRange_t ypixelRange;
         bool m_debugOn;
+        double m_trajectoryTime;
+        double m_trajectoryTimeDefault;
+
+        bool setTrajectoryTime(double T);
 
     };
 
