@@ -17,6 +17,7 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/SystemClock.h>
+#include <yarp/os/Vocab.h>
 
 using namespace yarp::os;
 using namespace FollowerTarget;
@@ -81,7 +82,7 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
 
     m_debugOn=debugOn;
 
-    m_rpcPort2gazeCtr.open("/follower/GazeController/rpc");
+    m_rpcPort2gazeCtr.open("/follower/gazeController/rpc");
 
     return true;
 }
@@ -107,7 +108,7 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
             //lookAtPixel(m_pLeft.u, m_pLeft.v);
 
             if(m_debugOn)
-                yDebug() << "GazeCtrl in NONE state: move gaze to angle (35.0 10.0) ";
+                yDebug() << "GazeCtrl in NONE state: move gaze to angle (35.0 10.0). TarjectoryTime=" <<m_trajectoryTime ;
 
             setTrajectoryTime(m_trajectoryTime);
             lookAtAngle(35.0, 10.0);
@@ -244,8 +245,8 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     target.addList().read(x);
     p.put("target-location",target.get(0));
 
-     if(m_debugOn)
-         yDebug() << "Command to gazectrl: " << p.toString();
+//     if(m_debugOn)
+//         yDebug() << "Command to gazectrl: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -269,8 +270,8 @@ bool GazeController::lookAtAngle(double a, double b)
     val.addDouble(b);
     p.put("target-location",target.get(0));
 
-    if(m_debugOn)
-        yDebug() << "Command to gazectrl: " << p.toString();
+//    if(m_debugOn)
+//        yDebug() << "Command to gazectrl: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -291,8 +292,8 @@ bool GazeController::stopLookup4Target(void)
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-    if(m_debugOn)
-        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+//    if(m_debugOn)
+//        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
     if(ans.toString() == "ack")
         return true;
@@ -315,8 +316,8 @@ bool GazeController::setTrajectoryTime(double T)
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-    if(m_debugOn)
-        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+//    if(m_debugOn)
+//        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
     if(ans.toString() == "ack")
         return true;
@@ -339,15 +340,19 @@ bool GazeController::checkMotionDone(void)
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-    if(m_debugOn)
-        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+//    if(m_debugOn)
+//        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
-    if(ans.toString() == "[ack]")
+    if(ans.get(0).asVocab() == yarp::os::Vocab::encode("ack"))
     {
         if(ans.get(1).asInt() == 1)
+        {
             return true;
+        }
         else
+        {
             return false;
+        }
     }
     else
         return false;
