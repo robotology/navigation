@@ -5,26 +5,27 @@
  *                                                                            *
  ******************************************************************************/
 /**
- * @file Person3DPointRetriver.h
+ * @file HumanModel3DPointRetriever.h
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
-#ifndef PERSON3DPOINTRESTRIVER_H
-#define PERSON3DPOINTRESTRIVER_H
+#ifndef HUMANMODEL3DPOINTRESTRIVER_H
+#define HUMANMODEL3DPOINTRESTRIVER_H
 
 #include "TargetRetriever.h"
 
-#include "AssistiveRehab/skeleton.h"
+#include <yarp/os/RpcClient.h>
 
 namespace FollowerTarget
 {
-    class Person3DPointRetriever : public TargetRetriever
+    class HumanModel3DPointRetriever : public TargetRetriever
     {
     public:
         Target_t getTarget(void);
         bool init(yarp::os::ResourceFinder &rf);
         bool deinit(void);
     private:
-        assistive_rehab::SkeletonWaist m_sk_target;
+        yarp::os::RpcClient m_worldInterfacePort;
+
     };
 }
 

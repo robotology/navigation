@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 /**
- * @file Ball3DRetriever.cpp
+ * @file TargetRetriever.cpp
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
 
@@ -21,18 +21,17 @@ using namespace FollowerTarget;
 
 TargetRetriever::TargetRetriever(): m_debugOn(false){;}
 
-bool TargetRetriever::init(std::string inputPortName, bool debugOn)
+bool TargetRetriever::initInputPort(std::string inputPortName)
 {
     if(! m_inputPort.open(inputPortName))
     {
         yError() << "TargetPointRetriever:Error opening input port";
         return false;
     }
-    m_debugOn=debugOn;
     return true;
 }
 
-bool TargetRetriever::deinit(void)
+bool TargetRetriever::deinitInputPort(void)
 {
     m_inputPort.interrupt();
     m_inputPort.close();

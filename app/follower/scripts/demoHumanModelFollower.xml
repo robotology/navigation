@@ -1,5 +1,5 @@
 <application>
-<name>CER Red-Ball follower</name>
+<name>CER Human Model follower</name>
 
         <dependencies>
          <!--       <port>/icub/camcalib/left/out</port> -->
@@ -20,20 +20,10 @@
             <node>console</node>
         </module>
 
-        <module>
-                <name>imageSplitter</name>
-                <parameters></parameters>
-                <node>console</node>
-        </module>
-
+        
         <module>
                 <name>cer_gaze-controller</name>
                 <parameters>--robot SIM_CER_ROBOT --cameras::file cerSimEyes_640x480.ini </parameters>
-                <node>console</node>
-        </module>
-        
-        <module>
-                <name>pf3dTracker</name>
                 <node>console</node>
         </module>
 
@@ -49,37 +39,13 @@
                 <node>console</node>
         </module>
 
-        <module>
+       <module>
                 <name>GenericObjJoystickControl</name>
-                <parameters>--objName pallina --create ball --gain_x_axis 0.0004 --gain_y_axis 0.0004 --gain_yaw 0.001 </parameters>
+                <parameters>--objName Luca --create none --gain_x_axis 0.00004 --gain_y_axis 0.00004 --gain_yaw 0.001 </parameters>
                 <node>console</node>
         </module>
-               
-        <connection>
-                <from>/SIM_CER_ROBOT/cam/cameras:o</from>
-                <to>/imageSplitter/input:i</to>
-                <protocol>udp</protocol>
-        </connection>
-        
-        <connection>
-                <from>/imageSplitter/left:o</from>
-                <to>/pf3dTracker/video:i</to>
-                <protocol>udp</protocol>
-        </connection>
-
-        <connection>
-                <from>/pf3dTracker/video:o</from>
-                <to>/PF3DTracker_viewer</to>
-                <protocol>udp</protocol>
-        </connection>
-
-        <connection>
-                <from>/pf3dTracker/data:o</from>
-                <to>/follower/targetPoints:i</to>
-                <protocol>udp</protocol>
-        </connection>
-
-        <connection>
+ 
+         <connection>
                 <from>/follower/commands:o</from>
                 <to>/baseControl/aux_control:i</to>
                 <protocol>udp</protocol>
@@ -103,16 +69,23 @@
                 <protocol>tcp</protocol>
         </connection>
 
-	<connection>
+	    <connection>
                 <from>/follower/worldInterface/rpc</from>
                 <to>/world_input_port</to>
                 <protocol>tcp</protocol>
         </connection>
         
-		<connection>
+        
+        <connection>
                 <from>/follower/gazeController/rpc</from>
                 <to>/cer_gaze-controller/rpc</to>
                 <protocol>tcp</protocol>
         </connection>
- 
+        
+        <connection>
+                <from>/follower/humanModelRetriver/rpc</from>
+                <to>/world_input_port</to>
+                <protocol>tcp</protocol>
+        </connection>
+
 </application>

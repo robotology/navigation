@@ -53,7 +53,10 @@ set(FOLLOWER_FILES ./src/Follower.h
                    ./src/NavigationController.h
                    ./src/NavigationController.cpp
                    ./src/ObstacleAvoidance.h
-                   ./src/ObstacleAvoidance.cpp)
+                   ./src/ObstacleAvoidance.cpp
+                   ./src/HumanModel3DPointRetriever.h
+                   ./src/HumanModel3DPointRetriever.cpp
+                    )
                    
 set(ASSISTIVE_REHAB_FOR_MY_PROJ   ./src/Person3DPointRetriever.h
                                   ./src/Person3DPointRetriever.cpp)

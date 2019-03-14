@@ -23,6 +23,8 @@
 
 #include "Ball3DPointRetriever.h"
 
+#include "HumanModel3DPointRetriever.h"
+
 #include <yarp/os/SystemClock.h>
 
 using namespace std;
@@ -46,7 +48,7 @@ double FollowerModule::getPeriod()
 bool FollowerModule::updateModule()
 {
     double t=yarp::os::SystemClock::nowSystem();
-    Target_t targetpoint;
+    Target_t targetpoint(ReferenceFrameOfTarget_t::mobile_base_body_link);
 
 
 //     switch(m_targetType)
@@ -179,6 +181,10 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
         m_pointRetriever_ptr = std::make_unique<Person3DPointRetriever>();
     }
 #endif 
+    else if (m_targetType == TargetType_t::fakeHumanModel)
+    {
+        m_pointRetriever_ptr = std::make_unique<HumanModel3DPointRetriever>();
+    }
     else
     {
         yError() << "m_targetType not available!";
@@ -186,7 +192,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     }
 
 
-    if(! m_pointRetriever_ptr->init("/follower/" + inputPortName +":i", debugOn))
+    if(! m_pointRetriever_ptr->init(rf))
     {
         yError() << "Error in initializing the Target Retriever";
         return false;

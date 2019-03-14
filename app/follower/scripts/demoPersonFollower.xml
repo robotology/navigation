@@ -130,4 +130,11 @@
                 <to>/world_input_port</to>
                 <protocol>tcp</protocol>
         </connection>
+        
+	<connection>
+                <from>/follower/gazeController/rpc</from>
+                <to>/cer_gaze-controller/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+ 
 </application>

@@ -23,6 +23,9 @@ namespace FollowerTarget
     {
     public:
         Target_t getTarget(void);
+        bool init(yarp::os::ResourceFinder &rf);
+        bool deinit(void);
+
     };
 }
 #endif

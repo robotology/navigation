@@ -49,7 +49,7 @@ void FollowerConfig::print(void)
     yInfo() << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
     yInfo() << "DEBUG.printPeriod=" << debug.period;
 }
-Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false), m_debugTimePrints(0.0)
+Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false), m_debugTimePrints(0.0), m_lastValidTargetOnBaseFrame(ReferenceFrameOfTarget_t::mobile_base_body_link)
 {
     m_transformData.transformClient = nullptr;
 //     m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
@@ -319,6 +319,11 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
         m_transformData.targetFrameId = m_transformData.redBallFrameId;
         m_targetType = TargetType_t::redball;
     }
+    else if(m_cfg.targetType == "fakehumanmodel")
+    {
+        m_targetType = TargetType_t::fakeHumanModel;
+        //m_transformData ???
+    }
     else //person or default
     {
         m_transformData.targetFrameId = m_transformData.personFrameId;
@@ -332,9 +337,9 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-    GazeCtrlUsedCamera cam = GazeCtrlUsedCamera::left;
-    if(m_targetType==TargetType_t::person)
-        cam = GazeCtrlUsedCamera::depth;
+    GazeCtrlUsedCamera cam = GazeCtrlUsedCamera::depth;
+    if(m_targetType==TargetType_t::redball)
+        cam = GazeCtrlUsedCamera::left;
 
     if(!m_gazeCtrl.init( cam, rf, m_cfg.debug.enabled))
         return false;
@@ -446,11 +451,11 @@ bool Follower::isInRunningState(void)
 Result_t Follower::processValidTarget(Target_t &target)
 {
 
-    //1. transform the ball-point from camera point of view to base point of view.
-    yarp::sig::Vector targetOnBaseFrame;
+    //1. transform the inputTarget in a frame on mobile_base_body_link and left or depth_rbg link
+    yarp::sig::Vector targetOnBaseFrame, targetOnCamFrame;
 
 
-    if(!transformPointInBaseFrame(target.point3D, targetOnBaseFrame))
+    if(!transformPointInBaseFrame(target, targetOnBaseFrame))
     {
         return Result_t::error;
     }
@@ -459,6 +464,8 @@ Result_t Follower::processValidTarget(Target_t &target)
     m_lastValidTargetOnBaseFrame.point3D=targetOnBaseFrame;
     m_lastValidTargetOnBaseFrame.pixel=target.pixel;
     m_lastValidTargetOnBaseFrame.isValid = true;
+    m_lastValidTargetOnBaseFrame.refFrame=ReferenceFrameOfTarget_t::mobile_base_body_link;
+
 
     sendtargets4Debug(target.point3D, targetOnBaseFrame);
 
@@ -594,7 +601,15 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 //     v_targetOnBaseFrame[1]= targetOnBaseFrame.first[1];
 //     v_targetOnBaseFrame[2]= targetOnBaseFrame.first[2];
     //m_gazeCtrl.lookAtPoint(targetOnBaseFrame.point3D);
-    m_gazeCtrl.lookAtPixel(targetOnBaseFrame.pixel[0], targetOnBaseFrame.pixel[1]);
+    if(targetOnBaseFrame.hasValidPixel())
+        m_gazeCtrl.lookAtPixel(targetOnBaseFrame.pixel[0], targetOnBaseFrame.pixel[1]);
+//TODO: check why "look at point" works well on bash and not here.
+//     else
+//     {
+//         yarp::sig::Vector p= targetOnBaseFrame.point3D;
+//         p[2]+=1.3;
+//         m_gazeCtrl.lookAtPoint(p);// this is less stable on real robot
+//     }
 
     //the following steps lose interest on real robot
     if(!isOnSimulator())
@@ -621,24 +636,55 @@ void  Follower::goto_targetValid_state()
     m_runStMachine_st=RunningSubStMachine::targetValid;
     m_autoNavAlreadyDone=false;
     m_gazeCtrl.resetLookupstateMachine();
-    m_gazeCtrl.stopLookup4Target();
 }
 
 
-bool Follower::transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput)
+bool Follower::transformPointInBaseFrame(Target_t &validTarget, yarp::sig::Vector &pointOutput)
 {
-    bool res = m_transformData.transformClient->transformPoint(m_transformData.targetFrameId, m_transformData.baseFrameId, pointInput, pointOutput);
-    if(res)
+    if(validTarget.refFrame == ReferenceFrameOfTarget_t::mobile_base_body_link)
     {
-        //        yDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
+        pointOutput=validTarget.point3D;
+        return true;
     }
     else
     {
-        yError() << "FOLLOWER: error in transformPointInBaseFrame()";
+        bool res = m_transformData.transformClient->transformPoint( ReferenceFrameOfTarget2String(validTarget.refFrame) , m_transformData.baseFrameId, validTarget.point3D, pointOutput);
+        if(res)
+        {
+            //        yDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
+        }
+        else
+        {
+            yError() << "FOLLOWER: error in transformPointInBaseFrame()";
+        }
+        return res;
     }
-
-    return res;
 }
+
+
+bool Follower::transformPointInCamFrame(Target_t &validTarget, yarp::sig::Vector &pointOutput)
+{
+    if(validTarget.refFrame == ReferenceFrameOfTarget_t::depth_rgb)
+    {
+        pointOutput=validTarget.point3D;
+        return true;
+    }
+    else
+    {
+        bool res = m_transformData.transformClient->transformPoint( ReferenceFrameOfTarget2String(validTarget.refFrame) , "depth_rgb", validTarget.point3D, pointOutput);
+        if(res)
+        {
+            //        yDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
+        }
+        else
+        {
+            yError() << "FOLLOWER: error in transformPointInCamFrame()";
+        }
+        return res;
+    }
+}
+
+
 
 bool Follower::transformPointInHeadFrame(std::string frame_src, yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput)
 {

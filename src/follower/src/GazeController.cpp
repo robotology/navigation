@@ -185,8 +185,13 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
 }
 void GazeController::resetLookupstateMachine(void)
 {
+
+    if(m_lookupState != GazeCtrlLookupStates::none)
+    {
+        setTrajectoryTime(m_trajectoryTimeDefault);
+        stopLookup4Target();
+    }
     m_lookupState = GazeCtrlLookupStates::none;
-    setTrajectoryTime(m_trajectoryTimeDefault);
 }
 
 bool GazeController::lookInFront(void)
@@ -232,13 +237,20 @@ bool GazeController::lookAtPixel(double u, double v)
 
 bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
 {
+    static int count=0;
     if (m_outputPort2gazeCtr.getOutputCount() == 0)
         return true;
+
+    count++;
+    if(count<20)
+        return true;
+
+    count=0;
 
     Property &p = m_outputPort2gazeCtr.prepare();
     p.clear();
 
-    p.put("control-frame", m_camera_str_command);
+    //p.put("control-frame", m_camera_str_command);
     p.put("target-type","cartesian");
 
     Bottle target;
@@ -246,7 +258,7 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     p.put("target-location",target.get(0));
 
 //     if(m_debugOn)
-//         yDebug() << "Command to gazectrl: " << p.toString();
+//         yDebug() << "Command to gazectrl lookAtPoint: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -271,7 +283,7 @@ bool GazeController::lookAtAngle(double a, double b)
     p.put("target-location",target.get(0));
 
 //    if(m_debugOn)
-//        yDebug() << "Command to gazectrl: " << p.toString();
+//        yDebug() << "Command to gazectrl lookAtAngle: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -292,8 +304,8 @@ bool GazeController::stopLookup4Target(void)
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-//    if(m_debugOn)
-//        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+   if(m_debugOn)
+       yError() << "GazeController::stopLookup4Target rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
     if(ans.toString() == "ack")
         return true;
@@ -359,3 +371,53 @@ bool GazeController::checkMotionDone(void)
 
 
 }
+
+
+
+
+bool GazeController::lookAtPointRPC(const  yarp::sig::Vector &x)
+{
+    if(m_rpcPort2gazeCtr.asPort().getOutputCount() == 0)
+        return true;
+
+static int count=0;
+
+count++;
+if(count <10)
+    return true;
+
+count =0;
+
+    Bottle cmd, ans;
+    cmd.clear();
+    ans.clear();
+
+    cmd.addString("look");
+    Property &p=cmd.addDict();
+
+
+
+    p.put("target-type","cartesian");
+
+    Bottle target;
+    target.addList().read(x);
+    p.put("target-location",target.get(0));
+
+
+//     if(m_debugOn)
+//         yDebug() << "Command to gazectrl lookAtPointRPC: " << cmd.toString();
+
+
+
+    m_rpcPort2gazeCtr.write(cmd, ans);
+
+    if(ans.get(0).asVocab() == yarp::os::Vocab::encode("ack"))
+    {
+        return true;
+    }
+    else
+        return false;
+
+}
+
+

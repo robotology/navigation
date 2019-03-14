@@ -88,7 +88,7 @@ namespace FollowerTarget
 
     enum class TargetType_t
     {
-        redball, person
+        redball, person, fakeHumanModel
     };
 
     enum class StateMachine
@@ -178,8 +178,9 @@ namespace FollowerTarget
         Obstacle::ObstacleVerifier m_obsVer;
 
         double m_debugTimePrints;
-        bool transformPointInBaseFrame(yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
+        bool transformPointInBaseFrame(Target_t &validTarget, yarp::sig::Vector &pointOutput);
         bool transformPointInHeadFrame(std::string frame_src, yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
+        bool transformPointInCamFrame(Target_t &validTarget, yarp::sig::Vector &pointOutput);
 
         bool initTransformClient(void);
 

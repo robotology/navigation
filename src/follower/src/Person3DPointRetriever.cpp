@@ -19,8 +19,8 @@ using namespace FollowerTarget;
 
 Target_t Person3DPointRetriever::getTarget(void)
 {
-    Target_t t; //it is initialized to false
-
+    Target_t t(m_refFrame); //it is initialized to false
+    //t.refFrame=m_refFrame;
 
     Bottle *b = m_inputPort.read(false); //use false in order to make the reading not blocking
     if(nullptr == b)
@@ -82,4 +82,32 @@ Target_t Person3DPointRetriever::getTarget(void)
     }
 
     return t;
+}
+
+bool Person3DPointRetriever::init(yarp::os::ResourceFinder &rf)
+{
+    // 1) set my reference frame
+    m_refFrame=ReferenceFrameOfTarget_t::depth_rgb;
+
+    // 2) read name of input port from config file and open it
+    std::string inputPortName="targets";
+    Bottle config_group = rf.findGroup("GENERAL");
+    if (config_group.isNull())
+    {
+        yError() << "Missing GENERAL group! the module uses default value!";
+    }
+    else
+    {
+        if (config_group.check("inputPort"))  {inputPortName = config_group.find("inputPort").asString(); }
+    }
+
+    bool ret = TargetRetriever::initInputPort("/follower/" + inputPortName +":i");
+
+    return ret;
+}
+
+
+bool Person3DPointRetriever::deinit(void)
+{
+    return(TargetRetriever::deinitInputPort());
 }

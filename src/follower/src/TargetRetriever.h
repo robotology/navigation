@@ -17,18 +17,38 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
-#include <vector>
+#include <yarp/os/ResourceFinder.h>
 //#include <utility>
 
 namespace FollowerTarget
 {
+    enum class ReferenceFrameOfTarget_t
+    {
+        head_leopard_left,
+        depth_rgb,
+        mobile_base_body_link
+    };
+
+    static std::string ReferenceFrameOfTarget2String(ReferenceFrameOfTarget_t refFrame)
+    {
+        switch(refFrame)
+        {
+            case ReferenceFrameOfTarget_t::head_leopard_left:return "head_leopard_left";
+            case ReferenceFrameOfTarget_t::depth_rgb: return "depth_rgb";
+            case ReferenceFrameOfTarget_t::mobile_base_body_link: return "mobile_base_body_link";
+            default: return "";
+        };
+    }
+
+
     class Target_tBIS
     {
     public:
             yarp::sig::Vector point3D;
             yarp::sig::Vector pixel;
             bool isValid;
-            Target_tBIS(): point3D(3, 0.0), pixel(2, 0.0), isValid(false)
+            ReferenceFrameOfTarget_t refFrame;
+            Target_tBIS(ReferenceFrameOfTarget_t frame): point3D(3, 0.0), pixel(2, -1.0), isValid(false), refFrame(frame)
             {;};
 
             ~Target_tBIS()=default;
@@ -50,7 +70,7 @@ namespace FollowerTarget
 //                 isValid=other.isValid;
 //                 return *this;
 //             };
-
+            bool hasValidPixel(){if((pixel[0]!=-1.0) && (pixel[1] != 1-.0)) return true; else return false;}
     };
 
 //    using Target_t = std::pair<std::vector<double>, bool>;
@@ -63,12 +83,14 @@ namespace FollowerTarget
     public:
         TargetRetriever();
         virtual Target_t getTarget(void)=0;
-        bool init(std::string inputPortName, bool debugOn=false);
-        bool deinit(void);
+        virtual bool init(yarp::os::ResourceFinder &rf)=0;
+        virtual bool deinit(void)=0;
     protected:
-        std::vector<double> m_target;
-        yarp::os::BufferedPort<yarp::os::Bottle> m_inputPort;
 
+        bool initInputPort(std::string inputPortName);
+        bool deinitInputPort(void);
+        yarp::os::BufferedPort<yarp::os::Bottle> m_inputPort;
+        ReferenceFrameOfTarget_t m_refFrame;
         bool m_debugOn;
     };
 
