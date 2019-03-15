@@ -21,7 +21,7 @@
 
 namespace FollowerTarget
 {
-    enum class GazeCtrlLookupStates{none=0, nearest=1, otherside=2, finished=3};
+    enum class GazeCtrlLookupStates{none=0, nearest=1, otherside=2, infront=3, finished=4, failed=5};
     using PixelRange_t =std::pair<int, int>;
     struct pixelPoint_t
     {
@@ -72,6 +72,12 @@ namespace FollowerTarget
         bool m_debugOn;
         double m_trajectoryTime;
         double m_trajectoryTimeDefault;
+        struct
+        {
+            double starttime;
+            bool isstarted;
+            double duration;
+        }m_stateMachineTimeOut;
 
         bool setTrajectoryTime(double T);
 

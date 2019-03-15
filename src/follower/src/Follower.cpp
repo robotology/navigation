@@ -192,6 +192,11 @@ Result_t Follower::followTarget(Target_t &target)
                     res=Result_t::lostTarget;
                 }
             }
+            else if(GazeCtrlLookupStates::failed == gaze_st)
+            {
+                m_runStMachine_st=RunningSubStMachine::needHelp;
+                res=Result_t::failed;
+            }
             return(res);
         }break;
 
@@ -633,9 +638,12 @@ void  Follower::goto_targetValid_state()
     m_lostTargetcounter=0;
     m_NOTargetcounter=0;
     m_navCtrl.AbortAutonomousNav();
+    if(m_runStMachine_st==RunningSubStMachine::lostTarget_lookup)
+    {
+        m_gazeCtrl.resetLookupstateMachine();
+    }
     m_runStMachine_st=RunningSubStMachine::targetValid;
     m_autoNavAlreadyDone=false;
-    m_gazeCtrl.resetLookupstateMachine();
 }
 
 

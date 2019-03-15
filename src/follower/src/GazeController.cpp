@@ -99,7 +99,6 @@ bool GazeController::deinit(void)
 
 GazeCtrlLookupStates GazeController::lookup4Target(void)
 {
-    double delayTime= m_trajectoryTime + m_trajectoryTime/100*10;
     switch(m_lookupState)
     {
         case GazeCtrlLookupStates::none:
@@ -112,77 +111,87 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
 
             setTrajectoryTime(m_trajectoryTime);
             lookAtAngle(35.0, 10.0);
-            SystemClock::delaySystem(delayTime);
-            if(checkMotionDone())
-            {
-                m_lookupState = GazeCtrlLookupStates::nearest;
-                if(m_debugOn)
-                    yDebug() << "GazeCtrl in NONE state: motion completed ";
-            }
-            else
-            {
-                yError() << "GazeCtrl in NONE state: motion NOT completed. I'll wait a bit time";
-                SystemClock::delaySystem( m_trajectoryTime/100*10);
-                m_lookupState = GazeCtrlLookupStates::nearest;
-            }
+            m_lookupState = GazeCtrlLookupStates::nearest;
+            m_stateMachineTimeOut.starttime = yarp::os::Time::now();
+            m_stateMachineTimeOut.isstarted=true;
+            m_stateMachineTimeOut.duration=m_trajectoryTime + m_trajectoryTime/100*20;;
         }break;
 
         case GazeCtrlLookupStates::nearest:
         {
-            //lookAtPixel(m_pRight.u, m_pRight.v);
-
-            if(m_debugOn)
-                yDebug() << "GazeCtrl in NEAREST state. Move gaze to angle (-35.0 10.0) ";
-
-            lookAtAngle(-35.0, 10.0);
-            SystemClock::delaySystem(delayTime);
             if(checkMotionDone())
             {
+                lookAtAngle(-35.0, 10.0);
                 m_lookupState = GazeCtrlLookupStates::otherside;
+                m_stateMachineTimeOut.starttime = yarp::os::Time::now();
                 if(m_debugOn)
-                    yDebug() << "GazeCtrl in NEAREST state: motion completed ";
+                    yDebug() << "GazeCtrl in NEAREST state: motion completed. Move gaze to angle (-35.0 10.0) ";
             }
             else
             {
-                yError() << "GazeCtrl in NEAREST state: motion NOT completed. I'll wait a bit time";
-                SystemClock::delaySystem( m_trajectoryTime/100*10);
-                m_lookupState = GazeCtrlLookupStates::otherside;
+                if(yarp::os::Time::now()-m_stateMachineTimeOut.starttime > m_stateMachineTimeOut.duration)
+                {
+                    m_lookupState=GazeCtrlLookupStates::failed;
+                    yError() << "GazeCtrl in NEAREST state: error reaching angle (35.0 10.0)";
+                }
+                //else do nothing...wait until gaze is in position or there is a timeout.
             }
 
         }break;
 
+
         case GazeCtrlLookupStates::otherside:
         {
-            //lookInFront();
-            if(m_debugOn)
-                yDebug() << "GazeCtrl in OTHERSIDE state. Move gaze to angle (-35.0 10.0) ";
 
-            lookAtAngle(0, 10);
-            SystemClock::delaySystem(delayTime);
+            if(checkMotionDone())
+            {
+                lookAtAngle(0, 10);
+                m_lookupState = GazeCtrlLookupStates::infront;
+                m_stateMachineTimeOut.starttime = yarp::os::Time::now();
+                if(m_debugOn)
+                    yDebug() << "GazeCtrl in OTHERSIDE state: motion completed. Move gaze to angle (0.0 10.0) ";
+            }
+            else
+            {
+                if(yarp::os::Time::now()-m_stateMachineTimeOut.starttime > m_stateMachineTimeOut.duration)
+                {
+                    m_lookupState=GazeCtrlLookupStates::failed;
+                    yError() << "GazeCtrl in OTHERSIDE state: error reaching angle (35.0 10.0)";
+                }
+                //else do nothing...wait until gaze is in position or there is a timeout.
+            }
+         }break;
+
+        case GazeCtrlLookupStates::infront:
+        {
+
             if(checkMotionDone())
             {
                 m_lookupState = GazeCtrlLookupStates::finished;
                 if(m_debugOn)
-                    yDebug() << "GazeCtrl in OTHERSIDE state: motion completed ";
+                    yDebug() << "GazeCtrl in INFRONT state: motion completed. SUCCESS!";
             }
             else
             {
-                yError() << "GazeCtrl in OTHERSIDE state: motion NOT completed. I'll wait a bit time";
-                SystemClock::delaySystem( m_trajectoryTime/100*10);
-                m_lookupState = GazeCtrlLookupStates::finished;
+                if(yarp::os::Time::now()-m_stateMachineTimeOut.starttime > m_stateMachineTimeOut.duration)
+                {
+                    m_lookupState=GazeCtrlLookupStates::failed;
+                    yError() << "GazeCtrl in INFRONT state: error reaching angle (35.0 10.0)";
+                }
+                //else do nothing...wait until gaze is in position or there is a timeout.
             }
         }break;
 
         case GazeCtrlLookupStates::finished:
         {
-            m_lookupState = GazeCtrlLookupStates::none;
-            setTrajectoryTime(m_trajectoryTimeDefault);
             if(m_debugOn)
                 yDebug() << "GazeCtrl in FINISHED state. ";
         }break;
     };
     return m_lookupState;
 }
+
+
 void GazeController::resetLookupstateMachine(void)
 {
 
