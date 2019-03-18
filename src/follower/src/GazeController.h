@@ -83,6 +83,7 @@ namespace FollowerTarget
         }m_stateMachineTimeOut;
 
         bool setTrajectoryTime(double T);
+        bool getTrajectoryTime(void);
 
     };
 

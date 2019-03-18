@@ -50,13 +50,13 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
         }
         else
             m_trajectoryTime = 10;//sec
-
-            //TODO leggi T default
     }
 
-    yDebug() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
-    yDebug() << "GAZE::TRAJECTORYtIME=" << m_trajectoryTime << "default=" <<m_trajectoryTimeDefault;
-
+    if(m_debugOn)
+    {
+        yInfo() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
+        yInfo() << "GAZE::TRAJECTORYtIME=" << m_trajectoryTime << "default=" <<m_trajectoryTimeDefault;
+    }
 
 
     if(!m_outputPort2gazeCtr.open("/follower/gazetargets:o"))
@@ -102,9 +102,7 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
     {
         case GazeCtrlLookupStates::none:
         {
-            //calculate the nearest side TODO currently left always
-            //lookAtPixel(m_pLeft.u, m_pLeft.v);
-
+            getTrajectoryTime(); //read the current trajectory time
             if(m_debugOn)
                 yDebug() << "GazeCtrl in NONE state: move gaze to angle (35.0 10.0). TarjectoryTime=" <<m_trajectoryTime ;
 
@@ -385,6 +383,33 @@ bool GazeController::setTrajectoryTime(double T)
 
     if(ans.toString() == "ack")
         return true;
+    else
+        return false;
+
+}
+
+bool GazeController::getTrajectoryTime(void)
+{
+    if (m_rpcPort2gazeCtr.asPort().getOutputCount() == 0)
+        return true;
+
+    Bottle cmd, ans;
+    cmd.clear();
+    ans.clear();
+
+    cmd.addString("get");
+    cmd.addString("T");
+
+    m_rpcPort2gazeCtr.write(cmd, ans);
+
+    if(m_debugOn)
+        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+
+    if(ans.get(0).toString() == "ack")
+    {
+        m_trajectoryTimeDefault=ans.get(1).asDouble();
+        return true;
+    }
     else
         return false;
 
