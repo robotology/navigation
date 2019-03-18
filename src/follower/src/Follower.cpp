@@ -54,8 +54,8 @@ Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullp
     m_transformData.transformClient = nullptr;
 //     m_lastValidTargetOnBaseFrame.first.resize(3, 0.0);
 //     m_lastValidTargetOnBaseFrame.second = false;
-        m_NOTargetcounter=0;
         m_lostTargetcounter=0;
+        m_targetReached=false;
 }
 
 Follower::~Follower()
@@ -67,7 +67,7 @@ string Follower::runStMachineState_2_string(RunningSubStMachine st)
 {
 switch(st)
     {
-        case RunningSubStMachine::unknown           :return("UNKNOWK")      ;
+        case RunningSubStMachine::unknown           :return("RECEIVED_NOTHING")      ;
         case RunningSubStMachine::targetValid       :return("TARGETVALID")      ;
         case RunningSubStMachine::maybeLostTarget   :return("MAYBELOSTTARGET")  ;
         case RunningSubStMachine::lostTarget_lookup :return("LOSTTARGET_LOOKUP");
@@ -94,7 +94,21 @@ string Follower::stateMachineState_2_string(StateMachine st)
 
 }
 
-void Follower::printStMachineDebufInfo(Target_t &currenttarget)
+
+void Follower::setDebug(DebugLevel_t level, bool on)
+{
+    switch(level)
+    {
+        case DebugLevel_t::general: m_cfg.debug.enabled=on; break;
+        //case DebugLevel_t::targetRetriever:  break; here I haven't the target pointer
+        case DebugLevel_t::gazeController: m_gazeCtrl.setDebug(on); break;
+        case DebugLevel_t::navigationController: m_navCtrl.setDebug(on); break;
+        case DebugLevel_t::ObstacleVerifier: m_obsVer.setDebug(on); break;
+        default: return;
+    };
+}
+
+void Follower::printDebugInfo(Target_t &currenttarget)
 {
     if(m_debugTimePrints==0.0)
     {
@@ -107,23 +121,49 @@ void Follower::printStMachineDebufInfo(Target_t &currenttarget)
 
     string str;
     yDebug() << "****************************************************************";
-    if(currenttarget.isValid)
-        yDebug() << "**** I received a VALID target (x,y,z)" <<currenttarget.point3D[0] << currenttarget.point3D[1] << currenttarget.point3D[2] << "at time" <<yarp::os::Time::now() - m_debugTimePrints;
-    else
-        yDebug() << "****I received a INVALID target" <<yarp::os::Time::now() - m_debugTimePrints <<"count="<<m_lostTargetcounter << "noTarget=" << m_NOTargetcounter;
+    yDebug() << "**** Target Type is "<< m_cfg.targetType;
+    yDebug() << "****"<< currenttarget.toString();
 
-    yDebug()<< "**** state machine is in " << stateMachineState_2_string(m_stateMachine_st);
-    yDebug()<< "**** running st machine is in" << runStMachineState_2_string(m_runStMachine_st);
-    yDebug()<< "**** target is REACHED " << m_targetReached;
-    yDebug() << "****************************************************************end";
+    yDebug()<< "**** Main State Machine is in " << stateMachineState_2_string(m_stateMachine_st);
+
+    if(m_stateMachine_st == StateMachine::configured)
+    {
+        yDebug()<< "****    I'm waiting the start command";
+    }
+    else
+    {
+        yDebug()<< "**** Running State Machine is in" << runStMachineState_2_string(m_runStMachine_st);
+        if(m_obsVer.isRunning())
+        {
+            if(m_obsVerResult.resultIsValid)
+            {
+                if(m_obsVerResult.result)
+                    yDebug() << "**** ObstacleCheck: I detected an OBSTACLE on my path";
+                else
+                    yDebug() << "**** ObstacleCheck: No obstacle on my path";
+            }
+            else
+                yError() << "**** ObstacleCheck: an error occured";
+        }
+        else
+            yDebug() << "**** ObstacleCheck: not configured! Attention!!!";
+
+        if(m_runStMachine_st == RunningSubStMachine::lostTarget_lookup)
+        {
+            yDebug() << "**** GazeController is in " << m_gazeCtrl.stausToStrig();
+        }
+        yDebug()<< "**** Target is REACHED " << m_targetReached;
+    }
+    yDebug() << "****************************************************************";
 
     m_debugTimePrints=yarp::os::Time::now();
 }
 
+
 Result_t Follower::followTarget(Target_t &target)
 {
     if(m_cfg.debug.enabled)
-        printStMachineDebufInfo(target);
+        printDebugInfo(target);
 
     if(!isInRunningState())
         return Result_t::notRunning;
@@ -146,8 +186,7 @@ Result_t Follower::followTarget(Target_t &target)
             //for the first time I received a not valid target
             m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
             m_lostTargetcounter++;
-            if(target.point3D[0] == 100)
-                m_NOTargetcounter++;
+
             Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
             if(res==Result_t::needHelp)
                 m_runStMachine_st=RunningSubStMachine::needHelp;
@@ -157,8 +196,7 @@ Result_t Follower::followTarget(Target_t &target)
         case RunningSubStMachine::maybeLostTarget:
         {
             m_lostTargetcounter++;
-            if(target.point3D[0] == 100)
-                m_NOTargetcounter++;
+
 
             if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
                 m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
@@ -504,13 +542,13 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 
     Result_t res=Result_t::ok;
     //check if there is an obstacle on my path
-    Obstacle::Result obs_result;
+
     if(m_obsVer.isRunning())
     {
-        obs_result = m_obsVer.checkObstaclesInPath();
-        if(obs_result.resultIsValid)
+        m_obsVerResult = m_obsVer.checkObstaclesInPath();
+        if(m_obsVerResult.resultIsValid)
         {
-            if(obs_result.result)
+            if(m_obsVerResult.result)
             {
                 //yInfo() << "+++++++++++++++++++++++++++++++ OBSTACLE"; //continue
                  res=Result_t::needHelp;
@@ -526,6 +564,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
             yError() << "error reading laser";
             return Result_t::error;
         }
+
 
     }
 
@@ -636,7 +675,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
 void  Follower::goto_targetValid_state()
 {
     m_lostTargetcounter=0;
-    m_NOTargetcounter=0;
+
     m_navCtrl.AbortAutonomousNav();
     if(m_runStMachine_st==RunningSubStMachine::lostTarget_lookup)
     {

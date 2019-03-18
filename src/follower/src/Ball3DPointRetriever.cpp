@@ -28,7 +28,8 @@ Target_t Ball3DPointRetriever::getTarget(void)
     Bottle *b = m_inputPort.read(false);
     if(nullptr == b)
     {
-//         yError() <<" Ball3DPointRetriever::getTarget: I don't receive nothing!";
+        if(m_debugOn)
+            yDebug() <<" Ball3DPointRetriever::getTarget: I received nothing!";
         return t;
     }
 
@@ -36,16 +37,11 @@ Target_t Ball3DPointRetriever::getTarget(void)
 
     if(!ballIsTracked)
     {
-//         if(m_debugOn)
-//             yDebug() << "Ball3DPointRetriever: I can't see the redBall";
+        if(m_debugOn)
+            yDebug() << "Ball3DPointRetriever: I can't see the redBall";
         return t;
     }
 
-
-//     if(m_debugOn)
-//     {
-//         yDebug() << "Ball3DPointRetriever: I see the redBall at"<< b->get(0).asDouble() << b->get(1).asDouble() << b->get(2).asDouble();
-//     }
 
     t.point3D[0] = b->get(0).asDouble();
     t.point3D[1] = b->get(1).asDouble();

@@ -25,6 +25,7 @@ namespace FollowerTarget
         bool AbortAutonomousNav(void); //if navigation is started abort it
         yarp::dev::NavigationStatusEnum getNavigationStatus(void);
         bool isConfigured(void);
+        void setDebug(bool on) {m_debugOn=on;}
     private:
         //device drivers and interfaces
         yarp::dev::PolyDriver      m_navClient_driver;

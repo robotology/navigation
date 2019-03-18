@@ -46,6 +46,7 @@ namespace FollowerTarget
             //return true if it has been enabled
             bool isRunning();
             Result checkObstaclesInPath();
+            void setDebug(bool on) {m_debugOn=on;}
         private:
             double m_maxDistanceThreshold;;
             double m_robotRadius;
@@ -58,6 +59,7 @@ namespace FollowerTarget
 
             double last_time_error_message;
             double m_last_print_time;
+            bool m_debugOn;
 
             bool initLaserClient(yarp::os::ResourceFinder &rf);
             bool checkObstaclesInPath_helper(std::vector<yarp::dev::LaserMeasurementData>& laser_data);

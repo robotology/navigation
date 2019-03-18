@@ -26,7 +26,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 
 ObstacleVerifier::ObstacleVerifier(): m_maxDistanceThreshold(MaxDistanceThreshold), m_laser(nullptr),
-m_isRunning(false), last_time_error_message(0), m_last_print_time(0)
+m_isRunning(false), last_time_error_message(0), m_last_print_time(0), m_debugOn(false)
 {;}
 
 bool ObstacleVerifier::configure(yarp::os::ResourceFinder &rf)
@@ -53,7 +53,8 @@ bool ObstacleVerifier::configure(yarp::os::ResourceFinder &rf)
 
     m_isRunning = true;
 
-    yError() << "OBSTACLE_AVOIDANCE has been configured!!!!!!!";
+    if(m_debugOn)
+        yInfo () << "OBSTACLE_AVOIDANCE has been configured!";
     return true;
 }
 
@@ -81,6 +82,9 @@ bool ObstacleVerifier::initLaserClient(yarp::os::ResourceFinder &rf)
         yError() << "Unable to retrieve the Rangefinder2DClient view.";
         return false;
     }
+
+    if(m_debugOn)
+        yInfo () << "OBSTACLE_AVOIDANCE: Rangefinder2DClient driver has been initialized correctly !";
 
     //from now I can use m_laser
     return true;
@@ -117,15 +121,6 @@ Result ObstacleVerifier::checkObstaclesInPath()
 
 
     result.resultIsValid=true;
-//     yError() << "m_laser_data=";
-//     double d, a;
-//     for(LaserMeasurementData n : m_laser_data)
-//     {
-//         n.get_polar(d, a);
-//         std::cout << d;
-//     }
-//     std::cout <<std::endl<< std::endl;
-
     result.result=checkObstaclesInPath_helper(m_laser_data);
     return result;
 }
@@ -193,12 +188,12 @@ bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementD
         if (d < m_robotRadius)
         {
             laser_obstacles++;// I removed Because for the follower its not important to check if there is an obstacle inside the m_robotRadius.
-            //We only want to notify the user.
-            if (yarp::os::Time::now() - last_time_error_message > 0.3)
-            {
-                yError("obstacles on the platform");
-                last_time_error_message = yarp::os::Time::now();
-            }
+            //We only want to notify the user. VALE: now removed TODO. add info in result
+//             if (yarp::os::Time::now() - last_time_error_message > 0.3)
+//             {
+//                 yError("obstacles on the platform");
+//                 last_time_error_message = yarp::os::Time::now();
+//             }
             continue;
         }
 
@@ -211,12 +206,12 @@ bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementD
             if (d < goal_distance)
             {
                 laser_obstacles++;
-                yError("+++++++++++++++++++++++++++++++++obstacles on the path");
                 continue;
             }
             else
             {
-                //yError("obstacles on the path, but goal is near");
+                if(m_debugOn)
+                    yInfo("OBSTACLE_AVOIDANCE: obstacles on the path, but goal is near");
                 continue;
             }
         }
@@ -225,11 +220,11 @@ bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementD
     //prevent noise to be detected as an obstacle;
     if (laser_obstacles>=2)
     {
-        if (yarp::os::Time::now() - m_last_print_time > 1.0)
-        {
-            yWarning("obstacles detected");
-            m_last_print_time = yarp::os::Time::now();
-        }
+//         if (yarp::os::Time::now() - m_last_print_time > 1.0)
+//         {
+//             yWarning("obstacles detected");
+//             m_last_print_time = yarp::os::Time::now();
+//         }
         return true;
     }
 

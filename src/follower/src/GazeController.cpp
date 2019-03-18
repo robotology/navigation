@@ -16,7 +16,6 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/SystemClock.h>
 #include <yarp/os/Vocab.h>
 
 using namespace yarp::os;
@@ -186,9 +185,53 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
         {
             if(m_debugOn)
                 yDebug() << "GazeCtrl in FINISHED state. ";
+            m_stateMachineTimeOut.isstarted=false;
         }break;
     };
     return m_lookupState;
+}
+
+std::string GazeController::stausToStrig()
+{
+    std::string str="";
+    switch(m_lookupState)
+    {
+        case GazeCtrlLookupStates::none:
+        {
+            str="NONE state.";
+            if(m_stateMachineTimeOut.isstarted=true)
+                str+= " Gaze is moving toward to angle (35.0 10.0)";
+        }break;
+
+        case GazeCtrlLookupStates::nearest:
+        {
+            str="NEAREST state. Gaze is moving toward to angle (35.0 10.0)";
+        }break;
+
+
+        case GazeCtrlLookupStates::otherside:
+        {
+            str="OTHERSIDE state. Gaze is moving toward to angle (-35.0 10.0)";
+        }break;
+
+        case GazeCtrlLookupStates::infront:
+        {
+
+            str="INFRONT state. Gaze is moving toward to angle (0.0 10.0)";
+        }break;
+
+        case GazeCtrlLookupStates::finished:
+        {
+            str="FINISHED state. Lookup for target is finished!!";
+        }break;
+        case GazeCtrlLookupStates::failed:
+        {
+            str="FAILED state. An error occurred in looking up for target";
+        }break;
+
+        return str;
+    };
+
 }
 
 
@@ -222,8 +265,8 @@ bool GazeController::lookAtPixel(double u, double v)
     if( (v<ypixelRange.first) || (v>ypixelRange.second) )
         movegaze=true;
 
-//     if(m_debugOn)
-//         yDebug() << "LookAtPixel(" <<u<<v << ") movegaze=" <<movegaze;
+    if(m_debugOn)
+        yDebug() << "LookAtPixel(" <<u<<v << ") movegaze=" <<movegaze;
 
     if(!movegaze)
         return true;
@@ -266,8 +309,8 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     target.addList().read(x);
     p.put("target-location",target.get(0));
 
-//     if(m_debugOn)
-//         yDebug() << "Command to gazectrl lookAtPoint: " << p.toString();
+    if(m_debugOn)
+        yDebug() << "Command to gazectrl lookAtPoint: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -291,8 +334,8 @@ bool GazeController::lookAtAngle(double a, double b)
     val.addDouble(b);
     p.put("target-location",target.get(0));
 
-//    if(m_debugOn)
-//        yDebug() << "Command to gazectrl lookAtAngle: " << p.toString();
+   if(m_debugOn)
+       yDebug() << "Command to gazectrl lookAtAngle: " << p.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -337,8 +380,8 @@ bool GazeController::setTrajectoryTime(double T)
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-//    if(m_debugOn)
-//        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+   if(m_debugOn)
+       yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
     if(ans.toString() == "ack")
         return true;
@@ -361,8 +404,8 @@ bool GazeController::checkMotionDone(void)
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-//    if(m_debugOn)
-//        yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+   if(m_debugOn)
+       yDebug() << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
     if(ans.get(0).asVocab() == yarp::os::Vocab::encode("ack"))
     {
@@ -413,8 +456,8 @@ count =0;
     p.put("target-location",target.get(0));
 
 
-//     if(m_debugOn)
-//         yDebug() << "Command to gazectrl lookAtPointRPC: " << cmd.toString();
+    if(m_debugOn)
+        yDebug() << "Command to gazectrl lookAtPointRPC: " << cmd.toString();
 
 
 

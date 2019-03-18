@@ -123,6 +123,15 @@ namespace FollowerTarget
         failed
     };
 
+    enum class DebugLevel_t
+    {
+        general=1,
+        targetRetriever=2,
+        gazeController=3,
+        navigationController=4,
+        ObstacleVerifier=5
+    };
+
 
     class Follower
     {
@@ -139,6 +148,8 @@ namespace FollowerTarget
         StateMachine getState(void);
 
         bool helpProvided(void); //for test purpose
+        void printDebugInfo(Target_t &currenttarget);
+        void setDebug(DebugLevel_t level, bool on);
 
     private:
 
@@ -166,7 +177,7 @@ namespace FollowerTarget
         //Target_t m_lastValidTarget;
         Target_t m_lastValidTargetOnBaseFrame;
         uint32_t m_lostTargetcounter;
-        uint32_t m_NOTargetcounter;
+
         bool m_autoNavAlreadyDone;
         bool m_targetReached;
 
@@ -176,6 +187,7 @@ namespace FollowerTarget
         NavigationController m_navCtrl;
         SimManager * m_simmanager_ptr;
         Obstacle::ObstacleVerifier m_obsVer;
+        Obstacle::Result m_obsVerResult;
 
         double m_debugTimePrints;
         bool transformPointInBaseFrame(Target_t &validTarget, yarp::sig::Vector &pointOutput);

@@ -38,3 +38,30 @@ bool TargetRetriever::deinitInputPort(void)
     return true;
 }
 
+std::string Target_tBIS::toString(void)
+{
+    std::string str="Target";
+
+    if(isValid)
+    {
+        str+= " VALID point3d=(" + std::to_string(point3D[0]) + " " + std::to_string(point3D[1]) + " " + std::to_string(point3D[2]) + ")";
+        if(hasValidPixel())
+        {
+            str+= " pixel=(" + std::to_string(pixel[0]) + ", " + std::to_string(pixel[1]) +")";
+        }
+        else
+        {
+            str+= " pixel NOT valid";
+        }
+        str+= " ref_frame=" + ReferenceFrameOfTarget2String(refFrame);
+    }
+    else
+    {
+        str+=" NOT VALID";
+    }
+    return str;
+}
+
+
+
+

@@ -71,6 +71,7 @@ namespace FollowerTarget
 //                 return *this;
 //             };
             bool hasValidPixel(){if((pixel[0]!=-1.0) && (pixel[1] != 1-.0)) return true; else return false;}
+            std::string toString(void);
     };
 
 //    using Target_t = std::pair<std::vector<double>, bool>;
@@ -85,6 +86,7 @@ namespace FollowerTarget
         virtual Target_t getTarget(void)=0;
         virtual bool init(yarp::os::ResourceFinder &rf)=0;
         virtual bool deinit(void)=0;
+        void setDebug(bool on) {m_debugOn=on;}
     protected:
 
         bool initInputPort(std::string inputPortName);

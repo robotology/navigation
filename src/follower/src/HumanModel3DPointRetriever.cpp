@@ -26,7 +26,6 @@ bool HumanModel3DPointRetriever::init(yarp::os::ResourceFinder &rf)
         yError() << "HumanModel3DPointRetriever: error in opening" << portname << "rpc port";
         return false;
     }
-    yError() << "HumanModel3DPointRetriever";
 
 
     return true;
@@ -36,7 +35,7 @@ Target_t HumanModel3DPointRetriever::getTarget(void)
 {
     Target_t t(m_refFrame); //it is initialized to false
 
-    // Prapare bottle containg command to send in order to get the current position
+    // Prepare bottle containing command to send in order to get the current position
     Bottle cmdGet, ansGet;
     cmdGet.clear();
     ansGet.clear();
@@ -46,11 +45,12 @@ Target_t HumanModel3DPointRetriever::getTarget(void)
     cmdGet.addString("SIM_CER_ROBOT::mobile_base_body_link");
     m_worldInterfacePort.write(cmdGet, ansGet);
 
-    //yError() << "HumanModel3DPointRetriever: cmd-GET= " << cmdGet.toString() << "  Ans=" << ansGet.toString();
-    //read the answer
+    if(m_debugOn)
+        yDebug() << "HumanModel3DPointRetriever: cmd-GET= " << cmdGet.toString() << "  Ans=" << ansGet.toString();
+
 
     //NOTE: if Luca doesn't exist in Gazebo than the answer is "0.0 0.0 0.0 0.0 0.0 0.0".
-    //So is difficult to discriminate  the real pose containing all zeros form the case in which Luca does't exist.
+    //So is difficult to discriminate  the real pose containing all zeros form the case in which Luca doesn't exist.
     //For this, the function return always a valid target
     if(ansGet.size() != 0)
     {

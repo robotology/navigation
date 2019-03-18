@@ -25,7 +25,7 @@
 
 #include "HumanModel3DPointRetriever.h"
 
-#include <yarp/os/SystemClock.h>
+#include <yarp/os/Time.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -47,26 +47,8 @@ double FollowerModule::getPeriod()
 // This is our main function. Will be called periodically every getPeriod() seconds
 bool FollowerModule::updateModule()
 {
-    double t=yarp::os::SystemClock::nowSystem();
+    double t=yarp::os::Time::now();
     Target_t targetpoint(ReferenceFrameOfTarget_t::mobile_base_body_link);
-
-
-//     switch(m_targetType)
-//     {
-//         case FollowerTargetType::person:
-//         { targetpoint= (dynamic_cast<Person3DPointRetriever*>(m_pointRetriever_ptr))->getTarget(); break;}
-//
-//         case FollowerTargetType::redball:
-//         { targetpoint= (dynamic_cast<Ball3DPointRetriever*>(m_pointRetriever_ptr))->getTarget(); break;}
-//
-//         default: break;
-//     };
-//     double time=yarp::os::Time::now();
-//     yError() << "sto per fare delay...";
-//
-//     yarp::os::SystemClock::delaySystem(15);
-//
-//     yError() << "ho finito delay" << yarp::os::Time::now()-time;
 
     targetpoint = m_pointRetriever_ptr->getTarget();
     m_followerResult= m_follower.followTarget(targetpoint);
@@ -87,20 +69,39 @@ bool FollowerModule::updateModule()
 }
 
 
-
-
 // Message handler. Just echo all received messages.
 bool FollowerModule::respond(const Bottle& command, Bottle& reply)
 {
     reply.clear();
     if (command.get(0).asString()=="help")
     {
+        if(command.size()>1)
+        {
+            if(command.get(1).asString() == "debug")
+            {
+                reply.addVocab(Vocab::encode("many"));
+                reply.addString("debug <level> <true/false>");
+                reply.addString("Debug levales are:");
+                reply.addString("general=1");
+                reply.addString("targetRetriever=2");
+                reply.addString("gazeController=3");
+                reply.addString("navigationController=4");
+                reply.addString("ObstacleVerifier=5");
+            }
+            else
+            {
+                reply.addString("Unknown command");
+            }
+        }
+        else
+        {
         reply.addVocab(Vocab::encode("many"));
         reply.addString("Available commands are:");
         reply.addString("start");
         reply.addString("stop");
-        reply.addString("verbose 0/1");
         reply.addString("help_provided");
+        reply.addString("debug <level> <true/false>");
+        }
 
         return true;
     }
@@ -118,6 +119,17 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
     {
         reply.addString("OK.help_provided");
         m_follower.helpProvided();
+    }
+    else if(command.get(0).asString() == "debug")
+    {
+        DebugLevel_t level=static_cast<DebugLevel_t>(command.get(1).asInt());
+        bool on=command.get(2).asBool();
+        if((level == DebugLevel_t::targetRetriever) && (m_pointRetriever_ptr != nullptr))
+            m_pointRetriever_ptr->setDebug(on);
+        else
+            m_follower.setDebug(level, on);
+
+        reply.addString("OK.debug");
     }
     else
     {

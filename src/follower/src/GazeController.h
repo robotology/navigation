@@ -44,7 +44,8 @@ namespace FollowerTarget
                         xpixelRange(0,0),
                         ypixelRange(0,0),
                         m_trajectoryTime(10),
-                        m_trajectoryTimeDefault(1.0)
+                        m_trajectoryTimeDefault(1.0),
+                        m_debugOn(false)
                         {;}
         bool init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, bool debugOn=false );
         bool deinit(void);
@@ -57,6 +58,8 @@ namespace FollowerTarget
         bool lookAtAngle(double a, double b);
         bool checkMotionDone(void);
         bool lookAtPointRPC(const  yarp::sig::Vector &x);
+        std::string stausToStrig();
+        void setDebug(bool on) {m_debugOn=on;}
     private:
         GazeCtrlLookupStates m_lookupState;
         yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller

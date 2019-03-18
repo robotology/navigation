@@ -16,7 +16,7 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Bottle.h>
-#include <yarp/os/SystemClock.h>
+
 using namespace yarp::os;
 using namespace FollowerTarget;
 
@@ -40,7 +40,7 @@ bool SimManager::deinit(void)
 {
     gazeFramePainter_ptr->erase();
     targetFramePainter_ptr->erase();
-   // SystemClock::delaySystem(0.1); //Do I need it? TODO
+
     m_worldInterfacePort_ptr->interrupt();
     m_worldInterfacePort_ptr->close();
 

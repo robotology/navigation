@@ -34,6 +34,7 @@ namespace FollowerTarget
             m_debugOn(debugOn){;}
             void paint(const yarp::sig::Vector &point);
             void erase(void);
+            void setDebug(bool on) {m_debugOn=on;}
         private:
             bool m_isCreated;
             std::string m_nameOfFrame;
