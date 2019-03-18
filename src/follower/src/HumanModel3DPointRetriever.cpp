@@ -50,16 +50,20 @@ Target_t HumanModel3DPointRetriever::getTarget(void)
 
 
     //NOTE: if Luca doesn't exist in Gazebo than the answer is "0.0 0.0 0.0 0.0 0.0 0.0".
-    //So is difficult to discriminate  the real pose containing all zeros form the case in which Luca doesn't exist.
-    //For this, the function return always a valid target
-    if(ansGet.size() != 0)
-    {
-        t.point3D[0] = ansGet.get(0).asDouble();
-        t.point3D[1] = ansGet.get(1).asDouble();
-        t.point3D[2] = ansGet.get(2).asDouble();
-        t.isValid=true;
-    }
+    //So is difficult to discriminate  the real pose containing all zeros form the case in which Luca doesn't exist,
+    //but this is the only way.
 
+    if(ansGet.size() == 0)
+        return t;
+
+    if((ansGet.get(0).asDouble()==0) && (ansGet.get(1).asDouble()==0) && (ansGet.get(2).asDouble()==0)  &&
+       (ansGet.get(3).asDouble()==0)  && (ansGet.get(4).asDouble()==0) && (ansGet.get(5).asDouble()==0))
+        return t;
+
+    t.point3D[0] = ansGet.get(0).asDouble();
+    t.point3D[1] = ansGet.get(1).asDouble();
+    t.point3D[2] = ansGet.get(2).asDouble();
+    t.isValid=true;
 
     return t;
 }
