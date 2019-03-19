@@ -46,7 +46,11 @@ namespace FollowerTarget
             double factorAng2Vel;
             double distanceThreshold;
             double angleThreshold;
-            double angleMinBeforeMove;
+            struct
+            {
+                double min;
+                double max;
+            }angleLimitsVelReduction;
             struct
             {
                 double angular;
@@ -71,7 +75,8 @@ namespace FollowerTarget
             navigation.angleThreshold = 3.0;
             navigation.velocityLimits.angular = 30; //degree/sec
             navigation.velocityLimits.linear = 3; //m/s
-            navigation.angleMinBeforeMove = 10.0; //degree
+            navigation.angleLimitsVelReduction.min = 20.0; //degree
+            navigation.angleLimitsVelReduction.max = 40.0; //degree
             inputPortName = "targetPoint";
             outputPortName = "commands";
             targetType = "person";

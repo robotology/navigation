@@ -44,7 +44,8 @@ void FollowerConfig::print(void)
     yInfo() << "NAVIGATION.angleThreshold="    << navigation.angleThreshold;
     yInfo() << "NAVIGATION.angularVelLimit="   << navigation.velocityLimits.angular;
     yInfo() << "NAVIGATION.linearVelLimit="    << navigation.velocityLimits.linear;
-    yInfo() << "NAVIGATION.angleMinBeforeMove="<< navigation.angleMinBeforeMove;
+    yInfo() << "NAVIGATION.angleLimitsVelReduction.min="<< navigation.angleLimitsVelReduction.min;
+    yInfo() << "NAVIGATION.angleLimitsVelReduction.max="<< navigation.angleLimitsVelReduction.max;
     yInfo() << "DEBUG.enabled="        << debug.enabled;
     yInfo() << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
     yInfo() << "DEBUG.printPeriod=" << debug.period;
@@ -617,10 +618,17 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         else
             m_targetReached = false;
 
-        //if the angle difference is bigger than angleMinBeforeMove than set linear velocity to 0
-        // in order to rotate in place only.
-        if(fabs(angle) > m_cfg.navigation.angleMinBeforeMove)
-            lin_vel = 0.0;
+        //if the angle is between in the range of given angleLimitsVelReduction parameter than linear velocity is decreased proportionally to the angle.
+        //In this way I give more emphasis to rotation movement on place respect to linear one and avoid  velocity goes to zero in one shot.
+        if((fabs(angle) > m_cfg.navigation.angleLimitsVelReduction.min) && (fabs(angle) < m_cfg.navigation.angleLimitsVelReduction.max))
+        {
+            double v=lin_vel;
+            auto a_min=m_cfg.navigation.angleLimitsVelReduction.min;
+            auto a_max=m_cfg.navigation.angleLimitsVelReduction.max;
+            lin_vel = lin_vel*((a_max-fabs(angle))/(a_max-a_min));
+            if(lin_vel<0)
+                lin_vel=0;
+        }
 
         //saturate velocities
         if(ang_vel > m_cfg.navigation.velocityLimits.angular)
@@ -781,7 +789,11 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
         if (config_group.check("angleThreshold"))  { cfg.navigation.angleThreshold = config_group.find("angleThreshold").asDouble(); }
         if (config_group.check("angularVelLimit"))  { cfg.navigation.velocityLimits.angular = config_group.find("angularVelLimit").asDouble(); }
         if (config_group.check("linearVelLimit"))  { cfg.navigation.velocityLimits.linear = config_group.find("linearVelLimit").asDouble(); }
-        if (config_group.check("angleMinBeforeMove"))  { cfg.navigation.angleMinBeforeMove = config_group.find("angleMinBeforeMove").asDouble(); }
+        if (config_group.check("angleLimitsVelReduction"))
+        {
+            cfg.navigation.angleLimitsVelReduction.min = config_group.find("angleLimitsVelReduction").asList()->get(0).asDouble();
+            cfg.navigation.angleLimitsVelReduction.max = config_group.find("angleLimitsVelReduction").asList()->get(1).asDouble();
+        }
     }
 
 
