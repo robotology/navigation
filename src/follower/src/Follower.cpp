@@ -384,7 +384,7 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
     if(m_targetType==TargetType_t::redball)
         cam = GazeCtrlUsedCamera::left;
 
-    if(!m_gazeCtrl.init( cam, rf, m_cfg.debug.enabled))
+    if(!m_gazeCtrl.init( cam, rf))
         return false;
 
     if(m_cfg.onSimulator)

@@ -47,9 +47,17 @@ private:
 public:
     StatInfo(uint32_t countMax, double minDef, double maxDef): avg(0), min(maxDef), max(minDef), sum(0), count(0), count_max(countMax), cfg_min(maxDef), cfg_max(minDef){;}
 
+    void init(uint32_t countMax, double minDef, double maxDef)
+    {
+        avg=sum=count=0;
+        min=cfg_min=maxDef;
+        max=cfg_max=minDef;
+        count_max=countMax;
+    }
+
     double getMin(){return min;}
     double getMax(){return max;}
-    bool finish()
+    bool countMaxReached()
     {
         if(count>=count_max)return true;
         else return false;
@@ -106,8 +114,9 @@ private:
     std::unique_ptr<FollowerTarget::TargetRetriever> m_pointRetriever_ptr;
 
     yarp::os::Port m_rpcPort;
-    StatInfo m_statInfo;
 
+    StatInfo m_statInfo;
+    bool m_useDurationStatInfo;
 };
 }//end namespace
 

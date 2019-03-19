@@ -27,13 +27,17 @@
 
 #include <yarp/os/Time.h>
 
+
+namespace FollowerTarget
+{
+static const double durationStatInfo_MinVal = -1.0;
+static const double durationStatInfo_MaxVal = 1000.0;
+static const double durationStatInfo_Count = 100;
+}
+
 using namespace std;
 using namespace yarp::os;
 using namespace FollowerTarget;
-
-
-
-
 
 //------------------------ buffer helper test ---------------------
 
@@ -52,18 +56,17 @@ bool FollowerModule::updateModule()
 
     targetpoint = m_pointRetriever_ptr->getTarget();
     m_followerResult= m_follower.followTarget(targetpoint);
-    double diff = yarp::os::SystemClock::nowSystem()-t;
+    double diff = yarp::os::Time::now()-t;
 
-    if(diff!= 0)
+    if((m_useDurationStatInfo)&&(diff!= 0))
     {
         m_statInfo.addVal(diff);
-        if(m_statInfo.finish())
+        if(m_statInfo.countMaxReached())
         {
-            //yError() << "***** STAT: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax();
+            yDebug() << "-----DURATION STAT INFO: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax() << "-----";
             m_statInfo.reset();
         }
     }
-
 
     return true;
 }
@@ -81,12 +84,15 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
             {
                 reply.addVocab(Vocab::encode("many"));
                 reply.addString("debug <level> <true/false>");
-                reply.addString("Debug levales are:");
-                reply.addString("general=1");
-                reply.addString("targetRetriever=2");
-                reply.addString("gazeController=3");
-                reply.addString("navigationController=4");
-                reply.addString("ObstacleVerifier=5");
+                reply.addString("   Debug levels are:");
+                reply.addString("   general=1");
+                reply.addString("   targetRetriever=2");
+                reply.addString("   gazeController=3");
+                reply.addString("   navigationController=4");
+                reply.addString("   ObstacleVerifier=5");
+                reply.addString("   DurationStatisticsInfo=6");
+                reply.addString("      debug 6 true <count>");
+
             }
             else
             {
@@ -126,6 +132,17 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
         bool on=command.get(2).asBool();
         if((level == DebugLevel_t::targetRetriever) && (m_pointRetriever_ptr != nullptr))
             m_pointRetriever_ptr->setDebug(on);
+        else if(level == DebugLevel_t::DurationStatisticsInfo)
+        {
+            int count=command.get(3).asInt32();
+            if((on)&&(count>0))
+            {
+                m_statInfo.init(count, durationStatInfo_MinVal, durationStatInfo_MaxVal);
+                m_useDurationStatInfo=true;
+            }
+            else
+                m_useDurationStatInfo=false;
+        }
         else
             m_follower.setDebug(level, on);
 
@@ -179,6 +196,15 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     if (!debug_group.isNull())
     {
         if (debug_group.check("enable"))  { debugOn = debug_group.find("enable").asBool(); }
+        if (debug_group.check("durationInfoStat_count"))
+        {
+            int count= debug_group.find("durationInfoStat_count").asInt32();
+            if(count>0)
+            {
+                m_useDurationStatInfo=true;
+                m_statInfo.init(count, durationStatInfo_MinVal, durationStatInfo_MaxVal);
+            }
+        }
     }
 
 
@@ -244,7 +270,7 @@ bool FollowerModule::close()
 }
 
 
-FollowerModule::FollowerModule():m_period(DefaultPeriodOfMudule), m_targetType(TargetType_t::person), m_statInfo(100, -1, 1000), m_followerResult(Result_t::notRunning)
+FollowerModule::FollowerModule():m_period(DefaultPeriodOfMudule), m_targetType(TargetType_t::person), m_statInfo(durationStatInfo_Count, durationStatInfo_MinVal, durationStatInfo_MaxVal), m_followerResult(Result_t::notRunning), m_useDurationStatInfo(false)
 {}
 FollowerModule::~FollowerModule(){;}
 

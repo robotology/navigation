@@ -129,7 +129,8 @@ namespace FollowerTarget
         targetRetriever=2,
         gazeController=3,
         navigationController=4,
-        ObstacleVerifier=5
+        ObstacleVerifier=5,
+        DurationStatisticsInfo=6
     };
 
 
