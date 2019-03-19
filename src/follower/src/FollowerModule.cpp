@@ -121,6 +121,10 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
         reply.addString("OK.stopped");
         m_follower.stop();
     }
+    else if(command.get(0).asString()=="setGazeTimeout")
+    {
+        reply.addString("OK.setGazeTimeout");
+    }
     else if(command.get(0).asString()=="help_provided")
     {
         reply.addString("OK.help_provided");

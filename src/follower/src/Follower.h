@@ -151,6 +151,7 @@ namespace FollowerTarget
         bool helpProvided(void); //for test purpose
         void printDebugInfo(Target_t &currenttarget);
         void setDebug(DebugLevel_t level, bool on);
+        void setGazeTimeout_debug(double t) {m_gazeCtrl.setGazeTimeout_debug(t);} //TODO: to remove after debug
 
     private:
 
