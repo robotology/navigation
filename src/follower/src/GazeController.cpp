@@ -57,11 +57,10 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
         }
     }
 
-    if(m_debugOn)
-    {
-        yInfo() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
-        yInfo() << "GAZE::TRAJECTORYtIME=" << m_trajectoryTime << "default=" <<m_trajectoryTimeDefault;
-    }
+
+    yInfo() << "GAZE=" << xpixelRange.first << xpixelRange.second << ypixelRange.first<< ypixelRange.second;
+    yInfo() << "GAZE::TRAJECTORYtIME=" << m_trajectoryTime << "default=" <<m_trajectoryTimeDefault;
+
 
 
     if(!m_outputPort2gazeCtr.open("/follower/gazetargets:o"))
@@ -93,6 +92,8 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
 
 bool GazeController::deinit(void)
 {
+    setTrajectoryTime(m_trajectoryTimeDefault);
+    yarp::os::Time::delay(0.5);
     m_outputPort2gazeCtr.interrupt();
     m_outputPort2gazeCtr.close();
 
@@ -245,8 +246,8 @@ void GazeController::resetLookupstateMachine(void)
 
     if(m_lookupState != GazeCtrlLookupStates::none)
     {
-        setTrajectoryTime(m_trajectoryTimeDefault);
         stopLookup4Target();
+        setTrajectoryTime(m_trajectoryTimeDefault);
     }
     m_lookupState = GazeCtrlLookupStates::none;
 }
@@ -362,7 +363,7 @@ bool GazeController::stopLookup4Target(void)
     m_rpcPort2gazeCtr.write(cmd, ans);
 
    if(m_debugOn)
-       yError() << "GazeController::stopLookup4Target rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
+       yDebug() << "GazeController::stopLookup4Target rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
     if(ans.toString() == "ack")
         return true;
