@@ -135,6 +135,8 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
             {
                 if(yarp::os::Time::now()-m_stateMachineTimeOut.starttime > m_stateMachineTimeOut.duration)
                 {
+                    stopLookup4Target();
+                    setTrajectoryTime(m_trajectoryTimeDefault);
                     m_lookupState=GazeCtrlLookupStates::failed;
                     yError() << "GazeCtrl in NEAREST state: error reaching angle (35.0 10.0)";
                 }
@@ -160,6 +162,9 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
             {
                 if(yarp::os::Time::now()-m_stateMachineTimeOut.starttime > m_stateMachineTimeOut.duration)
                 {
+                    stopLookup4Target();
+                    setTrajectoryTime(m_trajectoryTimeDefault);
+
                     m_lookupState=GazeCtrlLookupStates::failed;
                     yError() << "GazeCtrl in OTHERSIDE state: error reaching angle (35.0 10.0)";
                 }
@@ -180,6 +185,9 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
             {
                 if(yarp::os::Time::now()-m_stateMachineTimeOut.starttime > m_stateMachineTimeOut.duration)
                 {
+                    stopLookup4Target();
+                    setTrajectoryTime(m_trajectoryTimeDefault);
+
                     m_lookupState=GazeCtrlLookupStates::failed;
                     yError() << "GazeCtrl in INFRONT state: error reaching angle (35.0 10.0)";
                 }
@@ -191,6 +199,9 @@ GazeCtrlLookupStates GazeController::lookup4Target(void)
         {
             if(m_debugOn)
                 yDebug() << "GazeCtrl in FINISHED state. ";
+            stopLookup4Target();
+            setTrajectoryTime(m_trajectoryTimeDefault);
+
             m_stateMachineTimeOut.isstarted=false;
         }break;
     };
@@ -276,6 +287,24 @@ bool GazeController::lookAtPixel(double u, double v)
 
     if(!movegaze)
         return true;
+
+    static double last_u=0, last_v=0;
+
+    if((last_u==0) && (last_v==0))
+    {
+        last_u=u;
+        last_v=v;
+    }
+    else
+    {
+        if((fabs(last_u-u)<10) || (fabs(last_v-v)<10))
+        {
+            //yError() << "LookAtPixel(" <<u<<v << ") in threshold!!!";
+            return true;
+        }
+        last_u=u;
+        last_v=v;
+    }
 
     Property &p = m_outputPort2gazeCtr.prepare();
     p.clear();
