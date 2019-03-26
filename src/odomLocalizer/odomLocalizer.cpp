@@ -111,10 +111,10 @@ odomLocalizerThread::odomLocalizerThread(double _period, yarp::os::Searchable& _
     m_last_odometry_data_received = -1;
     m_last_statistics_printed = -1;
 
-    m_localization_data.map_id = "unknown";
-    m_localization_data.x = 0;
-    m_localization_data.y = 0;
-    m_localization_data.theta = 0;
+    m_current_loc.map_id = m_current_odom.map_id = m_initial_odom.map_id   = m_initial_loc.map_id = "unknown";
+    m_current_loc.x      = m_current_odom.x      = m_initial_odom.x        = m_initial_loc.x = 0;
+    m_current_loc.y      = m_current_odom.y      = m_initial_odom.y        = m_initial_loc.y = 0;
+    m_current_loc.theta  = m_current_odom.theta  = m_initial_odom.theta    = m_initial_loc.theta = 0;
 }
 
 void odomLocalizerThread::run()
@@ -132,14 +132,21 @@ void odomLocalizerThread::run()
     if (loc)
     {
         m_last_odometry_data_received = yarp::os::Time::now();
-        m_odom_data.x     = loc->data()[0];
-        m_odom_data.y     = loc->data()[1];
-        m_odom_data.theta = loc->data()[2];
-        m_localization_data.x     = m_odom_data.x     + m_initial_loc.x;
-        m_localization_data.y     = m_odom_data.y     + m_initial_loc.y;
-        m_localization_data.theta = m_odom_data.theta + m_initial_loc.theta;
-        if      (m_localization_data.theta >= +360) m_localization_data.theta -= 360;
-        else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
+        m_current_odom.x     = loc->data()[0];
+        m_current_odom.y     = loc->data()[1];
+        m_current_odom.theta = loc->data()[2];
+
+        double c = cos((-m_initial_odom.theta + m_initial_loc.theta)*DEG2RAD);
+        double s = sin((-m_initial_odom.theta + m_initial_loc.theta)*DEG2RAD);
+        double df_x = (m_current_odom.x - m_initial_odom.x);
+        double df_y = (m_current_odom.y - m_initial_odom.y);
+        m_current_loc.x = df_x * c + df_y * -s + m_initial_loc.x;
+        m_current_loc.y = df_x * s + df_y * +c + m_initial_loc.y;
+
+        m_current_loc.theta = m_current_odom.theta                   - m_initial_odom.theta + m_initial_loc.theta;
+
+        if      (m_current_loc.theta >= +360) m_current_loc.theta -= 360;
+        else if (m_current_loc.theta <= -360) m_current_loc.theta += 360;
     }
     if (current_time - m_last_odometry_data_received > 0.1)
     {
@@ -152,18 +159,21 @@ bool odomLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
     yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);
     m_initial_loc.map_id = loc.map_id;
-    m_initial_loc.x = -m_odom_data.x + loc.x;
-    m_initial_loc.y = -m_odom_data.y + loc.y;
-    m_initial_loc.theta = -m_odom_data.theta + loc.theta;
+    m_initial_loc.x = loc.x;
+    m_initial_loc.y = loc.y;
+    m_initial_loc.theta = loc.theta;
+    m_initial_odom.x = m_current_odom.x;
+    m_initial_odom.y = m_current_odom.y;
+    m_initial_odom.theta = m_current_odom.theta;
 
-    if (m_localization_data.map_id != m_initial_loc.map_id)
+    if (m_current_loc.map_id != m_initial_loc.map_id)
     {
-        yInfo() << "Map changed from: " <<m_localization_data.map_id << " to: " << m_initial_loc.map_id;
-        m_localization_data.map_id = m_initial_loc.map_id;
+        yInfo() << "Map changed from: " << m_current_loc.map_id << " to: " << m_initial_loc.map_id;
+        m_current_loc.map_id = m_initial_loc.map_id;
         //@@@TO BE COMPLETED
-        m_localization_data.x = 0+m_initial_loc.x;
-        m_localization_data.y = 0+m_initial_loc.y;
-        m_localization_data.theta = 0+m_initial_loc.theta;
+        m_current_loc.x = 0+m_initial_loc.x;
+        m_current_loc.y = 0+m_initial_loc.y;
+        m_current_loc.theta = 0+m_initial_loc.theta;
     }
     return true;
 }
@@ -171,7 +181,7 @@ bool odomLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
 bool odomLocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
 {
     LockGuard lock(m_mutex);
-    loc = m_localization_data;
+    loc = m_current_loc;
     return true;
 }
 
