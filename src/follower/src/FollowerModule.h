@@ -100,7 +100,7 @@ public:
     #ifdef TICK_SERVER
     ReturnStatus request_tick(const std::string& params = "") override;
     ReturnStatus request_status() override;
-    ReturnStatus request_halt() override;
+    ReturnStatus request_halt(const std::string& params = "") override;
     #endif
 
 private:

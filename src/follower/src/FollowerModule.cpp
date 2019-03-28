@@ -302,7 +302,7 @@ ReturnStatus FollowerModule::request_status()
     };
 }
 
-ReturnStatus FollowerModule::request_halt()
+ReturnStatus FollowerModule::request_halt(const std::string& params)
 {
     m_follower.stop();
     return ReturnStatus::BT_HALTED;
