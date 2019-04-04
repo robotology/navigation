@@ -22,7 +22,7 @@
 
 #include "TargetRetriever.h"
 #include "Follower.h"
-
+#include "BTMonitor.h"
 #ifdef TICK_SERVER
 #include <tick_server.h>
 #include <ReturnStatus.h>
@@ -121,6 +121,11 @@ private:
 
     StatInfo m_statInfo;
     bool m_useDurationStatInfo;
+
+    #ifdef TICK_SERVER
+    BTMonitor::Monitor m_monitor;
+    void processTransition(FollowerSMTransition t);
+    #endif
 };
 }//end namespace
 

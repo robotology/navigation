@@ -56,6 +56,8 @@ set(FOLLOWER_FILES ./src/Follower.h
                    ./src/ObstacleAvoidance.cpp
                    ./src/HumanModel3DPointRetriever.h
                    ./src/HumanModel3DPointRetriever.cpp
+                   ./src/BTMonitor.h
+                   ./src/BTMonitor.cpp
                     )
                    
 set(ASSISTIVE_REHAB_FOR_MY_PROJ   ./src/Person3DPointRetriever.h
