@@ -26,6 +26,7 @@
 #ifdef TICK_SERVER
 #include <tick_server.h>
 #include <ReturnStatus.h>
+#include <BTMonitorMsg.h>   // include message used for monitoring
 #endif
 
 namespace FollowerTarget
@@ -114,6 +115,9 @@ private:
     std::unique_ptr<FollowerTarget::TargetRetriever> m_pointRetriever_ptr;
 
     yarp::os::Port m_rpcPort;
+    #ifdef TICK_SERVER
+    yarp::os::Port m_toMonitorPort;
+    #endif
 
     StatInfo m_statInfo;
     bool m_useDurationStatInfo;

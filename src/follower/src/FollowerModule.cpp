@@ -244,6 +244,8 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     attach(m_rpcPort);
     #ifdef TICK_SERVER
     TickServer::configure_tick_server("/follower");
+    m_toMonitorPort.open("/follower/monitor:o");
+
     #endif
 
     return true;
@@ -283,6 +285,12 @@ FollowerModule::~FollowerModule(){;}
 ReturnStatus FollowerModule::request_tick(const std::string& params)
 {
     m_follower.start();
+#ifdef TICK_SERVER
+    BTMonitorMsg msg;
+    msg.skill = "follower";
+    msg.event = "e_req";
+    m_toMonitorPort.write(msg);
+#endif
     return ReturnStatus::BT_RUNNING;
 }
 
