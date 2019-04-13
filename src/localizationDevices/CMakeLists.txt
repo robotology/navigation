@@ -10,6 +10,8 @@ add_subdirectory(gazeboLocalizer)
 add_subdirectory(pozyxLocalizer)
 add_subdirectory(t265Localizer)
 add_subdirectory(amclLocalizer)
+add_subdirectory(isaacLocalizer)
+
 
 
 
