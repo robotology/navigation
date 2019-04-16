@@ -36,6 +36,7 @@
 #include "isaacLocalizer.h"
 
 using namespace yarp::os;
+using namespace isaac;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -114,6 +115,20 @@ void isaacLocalizerThread::publish_map()
 
 void isaacLocalizerThread::run()
 {
+/////////////////////////////////////////////////////////
+
+  
+    bool ok;
+    const Pose2d world_T_robot = get_world_T_robot(getTickTime(), ok);
+    if (ok)
+    {
+      double x = world_T_robot.translation(0);
+      double y = world_T_robot.translation(1);
+      double t = world_T_robot.rotation.angle();
+    }
+
+
+/////////////////////////////////////////////////////////
     double current_time = yarp::os::Time::now();
     
     //print some stats every 10 seconds
@@ -350,9 +365,10 @@ bool isaacLocalizer::open(yarp::os::Searchable& config)
 
     thread = new isaacLocalizerThread(0.010, p);
 
-    if (!thread->start())
+    if (!thread->yarp::os::PeriodicThread::start())
     {
         delete thread;
+        thread = NULL;
         return false;
     }
 

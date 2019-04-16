@@ -36,6 +36,17 @@
 
 #include <math.h>
 
+/////////////////////////////////
+
+#include "engine/core/assert.hpp"
+//#include "geometry_msgs/Pose2D.h"
+#include "messages/math.hpp"
+#include "engine/alice/alice.hpp"
+#include "messages/messages.hpp"
+
+#include "asio.hpp"
+///////////////////////////////////
+
 using namespace yarp::os;
 
 /**
@@ -121,7 +132,7 @@ public:
     bool   setInitialPose(yarp::dev::Map2DLocation& loc) override;
 };
 
-class isaacLocalizerThread : public yarp::os::PeriodicThread
+class isaacLocalizerThread : public yarp::os::PeriodicThread, public isaac::alice::Codelet
 {
 protected:
     //general
@@ -154,7 +165,8 @@ protected:
 
     //ISAAC
     //@@@
-
+    ISAAC_POSE2(world, robot); //reads from tf, two strings
+  
 public:
     isaacLocalizerThread(double _period, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
@@ -168,3 +180,4 @@ public:
 };
 
 #endif
+
