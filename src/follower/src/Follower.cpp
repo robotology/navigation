@@ -418,8 +418,12 @@ bool Follower::close()
     std::lock_guard<std::mutex> lock(m_mutex);
     m_stateMachine_st = StateMachine::none;
     m_transformData.driver.close();
+
     m_outputPort2baseCtr.interrupt();
     m_outputPort2baseCtr.close();
+
+    m_outputPortJoystick.interrupt();
+    m_outputPortJoystick.close();
 
 //     m_outputPort2gazeCtr.interrupt();
 //     m_outputPort2gazeCtr.close();
