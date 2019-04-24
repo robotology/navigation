@@ -104,10 +104,17 @@ void t265LocalizerThread::run()
 
     LockGuard lock(m_mutex);
 
-    //@@@@READ DATA FROM DEVICE here
-    m_device_data.x=0;
-    m_device_data.y=0;
-    m_device_data.theta=0;
+    //READ DATA FROM DEVICE here
+    // Wait for the next set of frames from the camera
+    auto frames = m_realsense_pipe.wait_for_frames();
+    // Get a frame from the pose stream
+    auto f = frames.first_or_default(RS2_STREAM_POSE);
+    // Cast the frame to pose_frame and get its data
+    rs2_pose pose_data = f.as<rs2::pose_frame>().get_pose_data();
+    m_device_data.x= pose_data.translation.x;
+    m_device_data.y= pose_data.translation.y;
+    m_device_data.theta=pose_data.rotation.z;
+    yDebug() << "device pose (x y t)" << m_device_data.x << m_device_data.y << m_device_data.theta;
 
     //@@@@COMPUTE LOCALIZATION DATA here
     double angle = m_map_to_device_transform.theta * DEG2RAD;
@@ -242,7 +249,18 @@ bool t265LocalizerThread::threadInit()
         }
     }
 
-   return true;
+    //initialize Realsense device
+    try
+    {
+        m_realsense_cfg.enable_stream(RS2_STREAM_POSE, RS2_FORMAT_6DOF);
+        m_realsense_pipe.start(m_realsense_cfg);
+    }
+    catch (const rs2::error & e)
+    {
+        yError() << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what();
+        return false;
+    }
+    return true;
 }
 
 void t265LocalizerThread::threadRelease()

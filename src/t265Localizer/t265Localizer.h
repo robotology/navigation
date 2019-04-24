@@ -23,6 +23,9 @@
 #include <math.h>
 #include <yarp/dev/IMap2D.h>
 
+//realsense
+#include <librealsense2/rs.hpp>
+
 #ifndef T265_LOCALIZER_H
 #define T265_LOCALIZER_H
 
@@ -103,6 +106,10 @@ protected:
     std::string                  m_remote_map;
     yarp::dev::PolyDriver        m_pMap;
     yarp::dev::IMap2D*           m_iMap;
+
+    //device
+    rs2::pipeline                m_realsense_pipe;
+    rs2::config                  m_realsense_cfg;
 
 private:
     bool open_device();
