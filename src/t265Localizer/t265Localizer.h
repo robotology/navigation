@@ -95,12 +95,15 @@ protected:
     //general
     double                       m_last_statistics_printed;
     yarp::dev::Map2DLocation     m_map_to_device_transform;
-    yarp::dev::Map2DLocation     m_localization_data;
-    yarp::dev::Map2DLocation     m_device_data;
     yarp::os::Mutex              m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
     std::string                  m_local_name_prefix;
+
+    yarp::dev::Map2DLocation     m_initial_loc;
+    yarp::dev::Map2DLocation     m_initial_device_data;
+    yarp::dev::Map2DLocation     m_current_loc;
+    yarp::dev::Map2DLocation     m_current_device_data;
 
     //map server
     std::string                  m_remote_map;

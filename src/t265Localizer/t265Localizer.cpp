@@ -16,6 +16,8 @@
 #include <yarp/os/Node.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/math/Math.h>
+#include <yarp/math/Quaternion.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <math.h>
@@ -32,7 +34,7 @@ using namespace std;
 #define RAD2DEG 180/M_PI
 #define DEG2RAD M_PI/180
 
-#define SIMULATE_T265
+//#define SIMULATE_T265
 
 void t265LocalizerRPCHandler::setInterface(t265Localizer* iface)
 {
@@ -82,14 +84,14 @@ t265LocalizerThread::t265LocalizerThread(double _period, yarp::os::Searchable& _
 {
     m_last_statistics_printed = -1;
 
-    m_localization_data.map_id = "unknown";
-    m_localization_data.x = 0;
-    m_localization_data.y = 0;
-    m_localization_data.theta = 0;
-
     m_iMap = 0;
     m_remote_map = "/mapServer";
     m_local_name = "/t265Localizer";
+
+    m_current_loc.map_id = m_current_device_data.map_id = m_initial_device_data.map_id = m_initial_loc.map_id = "unknown";
+    m_current_loc.x = m_current_device_data.x = m_initial_device_data.x = m_initial_loc.x = 0;
+    m_current_loc.y = m_current_device_data.y = m_initial_device_data.y = m_initial_loc.y = 0;
+    m_current_loc.theta = m_current_device_data.theta = m_initial_device_data.theta = m_initial_loc.theta = 0;
 }
 
 void t265LocalizerThread::run()
@@ -104,44 +106,75 @@ void t265LocalizerThread::run()
 
     LockGuard lock(m_mutex);
 
-    //READ DATA FROM DEVICE here
+    //read data from the device
     // Wait for the next set of frames from the camera
     auto frames = m_realsense_pipe.wait_for_frames();
     // Get a frame from the pose stream
     auto f = frames.first_or_default(RS2_STREAM_POSE);
     // Cast the frame to pose_frame and get its data
     rs2_pose pose_data = f.as<rs2::pose_frame>().get_pose_data();
-    m_device_data.x= pose_data.translation.x;
-    m_device_data.y= pose_data.translation.y;
-    m_device_data.theta=pose_data.rotation.z;
-    yDebug() << "device pose (x y t)" << m_device_data.x << m_device_data.y << m_device_data.theta;
+    if (0)
+    {
+        m_current_device_data.x = pose_data.translation.x;
+        m_current_device_data.y = pose_data.translation.y;
+        yarp::math::Quaternion q(pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
+        auto m = q.toRotationMatrix3x3();
+        auto v = yarp::math::dcm2euler(m);
+        m_current_device_data.theta = v[2] * RAD2DEG;
+    }
+    else
+    {
+        m_current_device_data.x = pose_data.translation.z;
+        m_current_device_data.y = pose_data.translation.x;
+        yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
+        auto m = q.toRotationMatrix3x3();
+        auto v = yarp::math::dcm2euler(m);
+        m_current_device_data.theta =  v[1]*RAD2DEG;
+    }
+    yDebug() << "device pose (x y t)" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
-    //@@@@COMPUTE LOCALIZATION DATA here
-    double angle = m_map_to_device_transform.theta * DEG2RAD;
-    m_localization_data.x     = m_map_to_device_transform.x + cos (angle) * m_device_data.x - sin (angle) * m_device_data.y;
-    m_localization_data.y     = m_map_to_device_transform.y + sin (angle) * m_device_data.x + cos (angle) * m_device_data.y;
-    m_localization_data.theta = m_device_data.theta + m_map_to_device_transform.theta;
-    if      (m_localization_data.theta >= +360) m_localization_data.theta -= 360;
-    else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
+    //compute data localization
+    double c = cos((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
+    double s = sin((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
+    double df_x = (m_current_device_data.x - m_initial_device_data.x);
+    double df_y = (m_current_device_data.y - m_initial_device_data.y);
+    m_current_loc.x = df_x * c + df_y * -s + m_initial_loc.x;
+    m_current_loc.y = df_x * s + df_y * +c + m_initial_loc.y;
+
+    m_current_loc.theta = m_current_device_data.theta - m_initial_device_data.theta + m_initial_loc.theta;
+
+    if (m_current_loc.theta >= +360) m_current_loc.theta -= 360;
+    else if (m_current_loc.theta <= -360) m_current_loc.theta += 360;
 }
 
 bool t265LocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
 {
     yInfo() << "t265LocalizerThread: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);
-    //@@@@ put some check here on validity of loc
-    m_localization_data.map_id = loc.map_id;
-    m_map_to_device_transform.map_id = loc.map_id;
-    m_map_to_device_transform.x = loc.x;
-    m_map_to_device_transform.y = loc.y;
-    m_map_to_device_transform.theta = loc.theta;
+    m_initial_loc.map_id = loc.map_id;
+    m_initial_loc.x = loc.x;
+    m_initial_loc.y = loc.y;
+    m_initial_loc.theta = loc.theta;
+    m_initial_device_data.x = m_current_device_data.x;
+    m_initial_device_data.y = m_current_device_data.y;
+    m_initial_device_data.theta = m_current_device_data.theta;
+
+    if (m_current_loc.map_id != m_initial_loc.map_id)
+    {
+        yInfo() << "Map changed from: " << m_current_loc.map_id << " to: " << m_initial_loc.map_id;
+        m_current_loc.map_id = m_initial_loc.map_id;
+        //@@@TO BE COMPLETED
+        m_current_loc.x = 0 + m_initial_loc.x;
+        m_current_loc.y = 0 + m_initial_loc.y;
+        m_current_loc.theta = 0 + m_initial_loc.theta;
+    }
     return true;
 }
 
 bool t265LocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
 {
     LockGuard lock(m_mutex);
-    loc = m_localization_data;
+    loc = m_current_loc;
     return true;
 }
 
@@ -150,7 +183,17 @@ bool t265LocalizerThread::open_device()
 #ifdef SIMULATE_T265
     return true;
 #else
-    //@@@@OPEN DEVICE here
+    //initialize Realsense device
+    try
+    {
+        m_realsense_cfg.enable_stream(RS2_STREAM_POSE, RS2_FORMAT_6DOF);
+        m_realsense_pipe.start(m_realsense_cfg);
+    }
+    catch (const rs2::error & e)
+    {
+        yError() << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what();
+        return false;
+    }
     return true;
 #endif
 }
@@ -191,7 +234,6 @@ bool t265LocalizerThread::threadInit()
     if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString();}
 
     //opens the device communication
-    //@@@@ TO BE IMPLEMENTED
     if (!open_device())
     {
         yError() << "Unable to open t265 device";
@@ -247,18 +289,6 @@ bool t265LocalizerThread::threadInit()
             yError() << "Unable to open map interface";
             return false;
         }
-    }
-
-    //initialize Realsense device
-    try
-    {
-        m_realsense_cfg.enable_stream(RS2_STREAM_POSE, RS2_FORMAT_6DOF);
-        m_realsense_pipe.start(m_realsense_cfg);
-    }
-    catch (const rs2::error & e)
-    {
-        yError() << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what();
-        return false;
     }
     return true;
 }
