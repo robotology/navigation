@@ -163,6 +163,9 @@ void Follower::printDebugInfo(Target_t &currenttarget)
 
 Result_t Follower::followTarget(Target_t &target)
 {
+    RunningSubStMachine currSt, newSt;
+    SMEvents evt;
+
     if(m_cfg.debug.enabled)
         printDebugInfo(target);
 
@@ -170,181 +173,188 @@ Result_t Follower::followTarget(Target_t &target)
         return Result_t::notRunning;
 
 
+    Result_t res=Result_t::error;
+    currSt=m_runStMachine_st;
     if(target.isValid)
     {
+        evt=SMEvents::validTargetRec;
+
         goto_targetValid_state();
-        Result_t res= processValidTarget(target);
+        res= processValidTarget(target);
         if(res==Result_t::needHelp)
             m_runStMachine_st=RunningSubStMachine::needHelp;
-        return(res);
     }
-
-    //if the target is not valid.....
-    switch(m_runStMachine_st)
+    else
     {
-        case RunningSubStMachine::targetValid:
+        evt=SMEvents::invalidTargetRec;
+        //if the target is not valid.....
+        switch(m_runStMachine_st)
         {
-            //for the first time I received a not valid target
-            m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
-            m_lostTargetcounter++;
-
-            Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
-            if(res==Result_t::needHelp)
-                m_runStMachine_st=RunningSubStMachine::needHelp;
-            return(res);
-        }break;
-
-        case RunningSubStMachine::maybeLostTarget:
-        {
-            m_lostTargetcounter++;
-
-
-            if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
-                m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
-
-            Result_t res=processTarget_core(m_lastValidTargetOnBaseFrame);
-            if(res==Result_t::needHelp)
-                m_runStMachine_st=RunningSubStMachine::needHelp;
-            return(res);
-        }break;
-
-        case RunningSubStMachine::lostTarget_lookup :
-        {
-            Result_t res=Result_t::lostTarget;
-
-            GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookup4Target();
-            if(GazeCtrlLookupStates::finished == gaze_st)
+            case RunningSubStMachine::targetValid:
             {
-                m_gazeCtrl.resetLookupstateMachine();
-                if(m_cfg.debug.enabled)
-                    yDebug() << "I looked around but I cannot find the target!";
+                //for the first time I received a not valid target
+                m_runStMachine_st=RunningSubStMachine::maybeLostTarget;
+                m_lostTargetcounter++;
 
+                res=processTarget_core(m_lastValidTargetOnBaseFrame);
+                if(res==Result_t::needHelp)
+                    m_runStMachine_st=RunningSubStMachine::needHelp;
+            }break;
 
-                if((m_autoNavAlreadyDone) || (!m_navCtrl.isConfigured()))
+            case RunningSubStMachine::maybeLostTarget:
+            {
+                m_lostTargetcounter++;
+
+                if(m_lostTargetcounter>=m_cfg.invalidTargetMax)
+                    m_runStMachine_st=RunningSubStMachine::lostTarget_lookup;
+
+                res=processTarget_core(m_lastValidTargetOnBaseFrame);
+                if(res==Result_t::needHelp)
+                    m_runStMachine_st=RunningSubStMachine::needHelp;
+            }break;
+
+            case RunningSubStMachine::lostTarget_lookup :
+            {
+                res=Result_t::lostTarget;
+
+                GazeCtrlLookupStates gaze_st = m_gazeCtrl.lookup4Target();
+                if(GazeCtrlLookupStates::finished == gaze_st)
+                {
+                    evt=SMEvents::lookupFinished;
+                    m_gazeCtrl.resetLookupstateMachine();
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "I looked around but I cannot find the target!";
+
+                    if((m_autoNavAlreadyDone) || (!m_navCtrl.isConfigured()))
+                    {
+                        m_runStMachine_st=RunningSubStMachine::needHelp;
+                        res=Result_t::failed;
+                    }
+                    else
+                    {
+                        m_runStMachine_st=RunningSubStMachine::startAutoNav;
+                        res=Result_t::lostTarget;
+                    }
+                }
+                else if(GazeCtrlLookupStates::failed == gaze_st)
                 {
                     m_runStMachine_st=RunningSubStMachine::needHelp;
                     res=Result_t::failed;
                 }
+            }break;
+
+            case RunningSubStMachine::startAutoNav:
+            {
+                if(false ==  m_lastValidTargetOnBaseFrame.isValid)
+                {
+                    m_runStMachine_st= RunningSubStMachine::needHelp;
+                    if(m_cfg.debug.enabled)
+                        yDebug() << "I can't start to auto nav because the last target is not valid";
+                    res = Result_t::failed;
+                }
                 else
                 {
-                    m_runStMachine_st=RunningSubStMachine::startAutoNav;
-                    res=Result_t::lostTarget;
-                }
-            }
-            else if(GazeCtrlLookupStates::failed == gaze_st)
-            {
-                m_runStMachine_st=RunningSubStMachine::needHelp;
-                res=Result_t::failed;
-            }
-            return(res);
-        }break;
-
-        case RunningSubStMachine::startAutoNav:
-        {
-            if(false ==  m_lastValidTargetOnBaseFrame.isValid)
-            {
-                m_runStMachine_st= RunningSubStMachine::needHelp;
-                if(m_cfg.debug.enabled)
-                    yDebug() << "I can't start to auto nav because the last target is not valid";
-                return Result_t::failed;
-            }
-            else
-            {
-
-                if(!m_targetReached)
-                {
-                    if(m_cfg.debug.enabled)
-                        yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.point3D[0] << m_lastValidTargetOnBaseFrame.point3D[1];
-
-                    bool ret = m_navCtrl.startAutonomousNav(m_lastValidTargetOnBaseFrame.point3D[0], m_lastValidTargetOnBaseFrame.point3D[1], 0);
-
-                    //from now the last target is not more valid
-                    m_lastValidTargetOnBaseFrame.isValid=false;
-
-                    if(ret)
+                    if(!m_targetReached)
                     {
-                        m_runStMachine_st= RunningSubStMachine::waitAutoNav;
-                        return Result_t::autoNavigation;
+                        if(m_cfg.debug.enabled)
+                            yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.point3D[0] << m_lastValidTargetOnBaseFrame.point3D[1];
+
+                        bool resNav = m_navCtrl.startAutonomousNav(m_lastValidTargetOnBaseFrame.point3D[0], m_lastValidTargetOnBaseFrame.point3D[1], 0);
+
+                        //from now the last target is not more valid
+                        m_lastValidTargetOnBaseFrame.isValid=false;
+
+                        if(resNav)
+                        {
+                            m_runStMachine_st= RunningSubStMachine::waitAutoNav;
+                            res = Result_t::autoNavigation;
+                        }
+                        else
+                        {
+                            m_runStMachine_st= RunningSubStMachine::needHelp;
+                            yError() << "Error starting autonomous navigation. I need help";
+                            res = Result_t::error;
+                        }
                     }
                     else
                     {
-                        m_runStMachine_st= RunningSubStMachine::needHelp;
-                        yError() << "Error starting autonomous navigation. I need help";
-                        return Result_t::error;
+                        //m_targetReached=true;
+                        //from now the last target is not more valid
+                        m_lastValidTargetOnBaseFrame.isValid=false;
+                        if(m_cfg.debug.enabled)
+                            yDebug() << "Target REACHED!!!!!";
+                        res = Result_t::ok;
                     }
                 }
-                else
-                {
-                    //m_targetReached=true;
-                    //from now the last target is not more valid
-                    m_lastValidTargetOnBaseFrame.isValid=false;
-                    if(m_cfg.debug.enabled)
-                        yDebug() << "Target REACHED!!!!!";
-                    return Result_t::ok;
-                }
-            }
-        }break;
+            }break;
 
 
-        case RunningSubStMachine::waitAutoNav:
-        {
-            yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
-
-            switch(navst)
+            case RunningSubStMachine::waitAutoNav:
             {
-                case navigation_status_preparing_before_move:
-                case navigation_status_moving               :
-                case navigation_status_waiting_obstacle     :
-                case navigation_status_thinking             :
+                yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
+
+                switch(navst)
                 {
-                    return Result_t::autoNavigation;
+                    case navigation_status_preparing_before_move:
+                    case navigation_status_moving               :
+                    case navigation_status_waiting_obstacle     :
+                    case navigation_status_thinking             :
+                    {
+                        res = Result_t::autoNavigation;
+                    }break;
+
+                    case navigation_status_goal_reached         :
+                    case navigation_status_idle                 : //the navigator goes in idle state after x milliseconds it had reached the goal
+                    {
+                        //ok: Now I reached the position where I saw the last valid target, but now I still have a not valid target.
+                        //maybe next round I'll be lucky
+                        m_runStMachine_st= RunningSubStMachine::needHelp;
+                        m_autoNavAlreadyDone=true;
+                        if(m_cfg.debug.enabled)
+                            yDebug() << "I reached the last valid target with autonomous navigation";
+                        evt=SMEvents::invalidTargetRec;
+                        res = Result_t::autoNavigation;
+                    }break;
+                    //TODO: what does the follower do in these cases????
+                    case navigation_status_aborted              :
+                    case navigation_status_paused               :
+                    {
+                        m_runStMachine_st= RunningSubStMachine::needHelp;
+                        if(m_cfg.debug.enabled)
+                            yDebug() << "Autonomous navigation has been aborted or paused. I need help";
+                        res = Result_t::needHelp;
+                        evt=SMEvents::invalidTargetRec;
+                    }break;
+
+                        //navigation module is in error, than I need help
+                    case navigation_status_error                :
+                    case navigation_status_failing              :
+                    {
+                        m_runStMachine_st= RunningSubStMachine::needHelp;
+                        if(m_cfg.debug.enabled)
+                            yDebug() << "Autonomous navigation ended with error. I need help";
+                        res = Result_t::error;
+                    }break;
                 };
+            }break;
 
-                case navigation_status_goal_reached         :
-                case navigation_status_idle                 : //the navigator goes in idle state after x milliseconds in reached state
-                {
-                    //ok: Now at the next run, I may have a valid target
-                    m_runStMachine_st= RunningSubStMachine::targetValid;
-                    m_autoNavAlreadyDone=true;
-                    if(m_cfg.debug.enabled)
-                        yDebug() << "I reached the last target with autonomous navigation";
+            case RunningSubStMachine::needHelp:
+            {
+                /*Nothing to do*/
+                //if(m_cfg.debug.enabled)
+                //    yDebug() << "I need help";
 
-                    return Result_t::autoNavigation;
-                }
-                //TODO: what does the follower do in these cases????
-                case navigation_status_aborted              :
-                case navigation_status_paused               :
-                {
-                    m_runStMachine_st= RunningSubStMachine::needHelp;
-                    if(m_cfg.debug.enabled)
-                        yDebug() << "Autonomous navigation has been aborted or paused. I need help";
-                    return Result_t::needHelp;
-                }break;
+                res = Result_t::needHelp;
+            }break;
+        };//end switch
+    } //end else
+    newSt=m_runStMachine_st;
+    //commented because the error event is not managed by monitor
+//    if((res==Result_t::failed) || (res==Result_t::error))
+//        evt=SMEvents::error;
 
-                    //navigation module is in error, than I need help
-                case navigation_status_error                :
-                case navigation_status_failing              :
-                {
-                    m_runStMachine_st= RunningSubStMachine::needHelp;
-                    if(m_cfg.debug.enabled)
-                        yDebug() << "Autonomous navigation ended with error. I need help";
-                    return Result_t::error;
-                }break;
-            };
-        }break;
-//         case autoNavOk               :break;
-//         case autoNavError            :break;
-        case RunningSubStMachine::needHelp:
-        {
-            /*Nothing to do*/
-            //if(m_cfg.debug.enabled)
-            //    yDebug() << "I need help";
-
-            return Result_t::needHelp;
-        }break;
-    };
-
-    return Result_t::error;
+    m_transition = std::make_tuple(currSt, newSt, evt);
+    return res;
 }
 
 bool Follower::configure(yarp::os::ResourceFinder &rf)
@@ -480,6 +490,12 @@ StateMachine Follower::getState(void)
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_stateMachine_st;
 }
+
+FollowerTarget::FollowerSMTransition FollowerTarget::Follower::getSmTransion()
+{
+    return m_transition;
+}
+
 
 //------------------------------------------------
 // private function

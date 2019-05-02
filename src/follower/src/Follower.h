@@ -15,6 +15,7 @@
 
 #include <string>
 #include <mutex>
+#include <tuple>
 
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/BufferedPort.h>
@@ -117,6 +118,15 @@ namespace FollowerTarget
         needHelp                 = 8
     };
 
+    enum class SMEvents
+    {
+        validTargetRec=1,
+        invalidTargetRec=2,
+        lookupFinished=3,
+        autoNavFinished=4,
+        error=5
+    };
+
     enum class Result_t
     {
         ok,
@@ -138,7 +148,7 @@ namespace FollowerTarget
         DurationStatisticsInfo=6
     };
 
-
+    using FollowerSMTransition=std::tuple<RunningSubStMachine, RunningSubStMachine, SMEvents>;
     class Follower
     {
     public:
@@ -152,11 +162,13 @@ namespace FollowerTarget
         bool close(); // Close function, to perform cleanup.
         TargetType_t getTargetType(void);
         StateMachine getState(void);
+        FollowerSMTransition getSmTransion(void);
 
         bool helpProvided(void); //for test purpose
         void printDebugInfo(Target_t &currenttarget);
         void setDebug(DebugLevel_t level, bool on);
         void setGazeTimeout_debug(double t) {m_gazeCtrl.setGazeTimeout_debug(t);} //TODO: to remove after debug
+        std::string runStMachineState_2_string(RunningSubStMachine st);
 
     private:
 
@@ -196,6 +208,8 @@ namespace FollowerTarget
         Obstacle::ObstacleVerifier m_obsVer;
         Obstacle::Result m_obsVerResult;
 
+        FollowerSMTransition m_transition;
+
         double m_debugTimePrints;
         bool transformPointInBaseFrame(Target_t &validTarget, yarp::sig::Vector &pointOutput);
         bool transformPointInHeadFrame(std::string frame_src, yarp::sig::Vector &pointInput, yarp::sig::Vector &pointOutput);
@@ -223,7 +237,6 @@ namespace FollowerTarget
         //get transform matrix from left camera to mobile base. Pf3dtraker use the left camera.
         bool getMatrix(yarp::sig::Matrix &transform);
         void printStMachineDebufInfo(Target_t &currenttarget);
-        std::string runStMachineState_2_string(RunningSubStMachine st);
         std::string stateMachineState_2_string(StateMachine st);
     };
 }

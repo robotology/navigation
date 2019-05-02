@@ -68,6 +68,10 @@ bool FollowerModule::updateModule()
         }
     }
 
+    #ifdef TICK_SERVER
+    processTransition(m_follower.getSmTransion());
+    #endif
+
     return true;
 }
 
@@ -244,8 +248,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     attach(m_rpcPort);
     #ifdef TICK_SERVER
     TickServer::configure_tick_server("/follower");
-    m_toMonitorPort.open("/follower/monitor:o");
-
+    m_monitor.init();
     #endif
 
     return true;
@@ -284,12 +287,17 @@ FollowerModule::~FollowerModule(){;}
 #ifdef TICK_SERVER
 ReturnStatus FollowerModule::request_tick(const std::string& params)
 {
+    auto oldState = m_follower.getState();
     m_follower.start();
+
 #ifdef TICK_SERVER
-    BTMonitorMsg msg;
-    msg.skill = "follower";
-    msg.event = "e_req";
-    m_toMonitorPort.write(msg);
+    // send "e_req_first_target" only when the first tick is received
+    if( (StateMachine::running != oldState) && (StateMachine::running == m_follower.getState()) )
+    {
+        // for compatibility with 'simple version of monitor'
+        m_monitor.sendEvent(BTMonitor::Event::e_req);
+        m_monitor.sendEvent(BTMonitor::Event::e_req_first_target);
+    }
 #endif
     return ReturnStatus::BT_RUNNING;
 }
@@ -322,3 +330,61 @@ ReturnStatus FollowerModule::request_halt(const std::string& params)
 //------------------------------------------------
 // private function
 //------------------------------------------------
+
+#ifdef TICK_SERVER
+void FollowerModule::processTransition(FollowerSMTransition t)
+{
+    RunningSubStMachine oldst, newst;
+    SMEvents evt;
+    std::tie(oldst, newst, evt)=t; //m_follower.getSmTransion();
+
+    if(oldst==newst)
+    {return;} //no transition happened
+//    yError() << "PROCESS-TRANS oldst=" << m_follower.runStMachineState_2_string(oldst) << "newst=" << m_follower.runStMachineState_2_string(newst) << "evt=" << static_cast<int>(evt);
+    //since in some case is sufficient the event to identify the transition, so I start to check it
+    if(SMEvents::lookupFinished == evt) // transition 5
+    {
+        m_monitor.sendEvent(BTMonitor::Event::e_reply_lookup_failed);
+        m_monitor.sendEvent(BTMonitor::Event::e_req_navig);
+    }
+    else if(SMEvents::validTargetRec == evt)
+    {
+        if(RunningSubStMachine::targetValid ==newst) // transition 1,7,8,9
+        {
+            m_monitor.sendEvent(BTMonitor::Event::e_reply_target_found);
+            m_monitor.sendEvent(BTMonitor::Event::e_req_update_target);
+        }
+        else{;/*nothing to do */}
+
+    }
+    else if(SMEvents::invalidTargetRec == evt)
+    {
+        if((RunningSubStMachine::targetValid==oldst) && (RunningSubStMachine::maybeLostTarget ==newst)) // transition 2
+        {
+            m_monitor.sendEvent(BTMonitor::Event::e_reply_update_failed);
+            m_monitor.sendEvent(BTMonitor::Event::e_req_target);
+        }
+        else if((RunningSubStMachine::unknown==oldst) && (RunningSubStMachine::maybeLostTarget ==newst)) // transition 3
+        {
+            m_monitor.sendEvent(BTMonitor::Event::e_reply_first_target_invalid);
+            m_monitor.sendEvent(BTMonitor::Event::e_req_target);
+        }
+        else if((RunningSubStMachine::maybeLostTarget==oldst) && (RunningSubStMachine::lostTarget_lookup ==newst)) // transition 4
+        {
+            m_monitor.sendEvent(BTMonitor::Event::e_reply_N_target_invalid);
+            m_monitor.sendEvent(BTMonitor::Event::e_req_lookUp);
+        }
+        else if(((RunningSubStMachine::startAutoNav==oldst) || (RunningSubStMachine::waitAutoNav==oldst)) && (RunningSubStMachine::needHelp ==newst)) // transition 6
+        {
+            m_monitor.sendEvent(BTMonitor::Event::e_reply_human_lost);
+            m_monitor.sendEvent(BTMonitor::Event::e_req_help);
+        }
+        else{;/*nothing to do */}
+    }
+    else{;/*nothing to do */}
+
+}
+#endif
+
+
+
