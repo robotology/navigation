@@ -18,6 +18,7 @@
 
 #define _USE_MATH_DEFINES
 
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
