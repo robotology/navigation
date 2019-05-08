@@ -24,7 +24,7 @@ namespace FollowerTarget
         bool init(yarp::os::ResourceFinder &rf);
         bool deinit(void);
     private:
-        assistive_rehab::SkeletonWaist m_sk_target;
+        assistive_rehab::SkeletonStd m_sk_target;
     };
 }
 

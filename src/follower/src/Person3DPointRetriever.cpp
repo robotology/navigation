@@ -42,7 +42,7 @@ Target_t Person3DPointRetriever::getTarget(void)
     if (b1->check("tag"))
     {
         Property prop(b1->toString().c_str());
-        m_sk_target.update(prop);
+        m_sk_target.fromProperty(prop);
         if(m_debugOn)
             yDebug() << "Person3DPPointRetriver: skeleton is updated!";
     }
