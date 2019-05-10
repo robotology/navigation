@@ -4,6 +4,8 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
+add_subdirectory(common)
+
 # add_subdirectory(deprecated)
 
 add_subdirectory(baseControl)
@@ -33,3 +35,4 @@ add_subdirectory(follower)
 add_subdirectory(tests)
 add_subdirectory(tutorials)
 add_subdirectory(templates)
+
