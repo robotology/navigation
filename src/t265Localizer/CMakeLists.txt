@@ -26,6 +26,7 @@ if(ENABLE_t265Localizer)
                                        YARP::YARP_sig
                                        YARP::YARP_dev
                                        YARP::YARP_math
+                                       navigation_lib
                                        ${realsense2_LIBRARY})
 
     yarp_install(TARGETS t265Localizer

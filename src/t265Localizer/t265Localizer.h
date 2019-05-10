@@ -22,6 +22,7 @@
 #include <yarp/os/PeriodicThread.h>
 #include <math.h>
 #include <yarp/dev/IMap2D.h>
+#include <movable_localization_device.h>
 
 //realsense
 #include <librealsense2/rs.hpp>
@@ -89,7 +90,8 @@ public:
     bool   setInitialPose(yarp::dev::Map2DLocation& loc) override;
 };
 
-class t265LocalizerThread : public yarp::os::PeriodicThread
+class t265LocalizerThread : public yarp::os::PeriodicThread,
+                                   movable_localization_device
 {
 protected:
     //general

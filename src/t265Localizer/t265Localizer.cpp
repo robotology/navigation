@@ -133,6 +133,9 @@ void t265LocalizerThread::run()
     }
     yDebug() << "device pose (x y t)" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
+    //relocate data in robot frame
+    relocate_data(m_current_device_data);
+
     //compute data localization
     double c = cos((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
     double s = sin((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
@@ -221,6 +224,9 @@ bool t265LocalizerThread::threadInit()
         yError() << "Missing LOCALIZATION group!";
         return false;
     }
+
+    //initialize the device relocation system on the robot
+    movable_localization_device::init(m_cfg);
 
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
