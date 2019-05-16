@@ -7,12 +7,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # find YARP
 find_package(YARP REQUIRED cv)
 find_package( OpenCV REQUIRED )
-find_package(YARPBTModules)
+find_package(YARPBTModules QUIET)
 find_package(AssistiveRehab QUIET)
 
 if(AssistiveRehab_FOUND)
     add_definitions( -DASSISTIVE_REHAB_AVAILABLE)
-    message("AssistiveRehab found, adding skeleton retriever module")
+    message("AssistiveRehab found, enabling skeleton retriever module")
 else()
     message("AssistiveRehab not found, follower will not have skeleton retiever module")
 endif()
@@ -28,10 +28,9 @@ set(ASSISTIVE_REHAB_SRC         $ENV{ROBOT_CODE}/assistive-rehab/lib/src/dtw.cpp
 endif()
 
 if(YARPBTModules_FOUND)
-    message("YARPBTModules FOUND!")
     add_definitions( -DTICK_SERVER)
 else()
-    message("YARPBTModules NOT found!")
+    message("YARPBTModules NOT found, follower will not have Tick interface")
 endif()
 
 
@@ -56,10 +55,14 @@ set(FOLLOWER_FILES ./src/Follower.h
                    ./src/ObstacleAvoidance.cpp
                    ./src/HumanModel3DPointRetriever.h
                    ./src/HumanModel3DPointRetriever.cpp
-                   ./src/BTMonitor.h
-                   ./src/BTMonitor.cpp
                     )
-                   
+
+if(YARPBTModules_FOUND)
+    set(FOLLOWER_FILES ${FOLLOWER_FILES}
+                        ./src/BTMonitor.h
+                        ./src/BTMonitor.cpp)
+endif()
+
 set(ASSISTIVE_REHAB_FOR_MY_PROJ   ./src/Person3DPointRetriever.h
                                   ./src/Person3DPointRetriever.cpp)
                                   
@@ -69,8 +72,6 @@ if(AssistiveRehab_FOUND)
 else()
     add_executable(follower ${FOLLOWER_FILES})
 endif()
-
-message("AssistiveRehab_LIBRARIES ${AssistiveRehab_LIBRARIES}")
 
 # link with YARP libraries
 target_link_libraries(follower YARP::YARP_OS 

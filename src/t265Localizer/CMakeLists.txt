@@ -5,16 +5,16 @@
 #    This software may be modified and distributed under the terms of the
 #    GPL-2+ license. See the accompanying LICENSE file for details.
 #
-find_package(realsense2 QUIET )
+find_package(realsense2 QUIET)
 
 yarp_prepare_plugin(t265Localizer
                     CATEGORY device
                     TYPE t265Localizer
                     INCLUDE t265Localizer.h
                     DEPENDS "realsense2_FOUND"
-                    INTERNAL)
+                    DEFAULT ON)
 
-if(ENABLE_t265Localizer)
+if(ENABLE_navmod_t265Localizer)
 
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
