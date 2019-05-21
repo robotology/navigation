@@ -154,16 +154,16 @@ int main( int argc, char** argv)
     }
 
     namedWindow( "out", 1 );
-    imshow( "out", out_cv );
+    imshow( "out", out_cv ); //color output image
 
     Mat im_gray;
     cvtColor(out_cv, im_gray, COLOR_RGB2GRAY);
 
     namedWindow( "img_gray", 1 );
-    imshow( "img_gray", im_gray );
+    imshow( "img_gray", im_gray );//grayscale output image
 
     erode(im_gray, im_gray, kernel1);
-    namedWindow( "erode", CV_WINDOW_AUTOSIZE );
+    namedWindow( "erode", CV_WINDOW_AUTOSIZE );//erode on grayscale 
     imshow( "erode", im_gray );
 
 
@@ -173,36 +173,30 @@ int main( int argc, char** argv)
     findContours( im_gray, contours0, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
     Mat drawing0= Mat::zeros( im_gray.size(), CV_8UC1 );
-    Mat drawing1= Mat::zeros( im_gray.size(), CV_8UC1 );
-    Mat drawing2= Mat::zeros( im_gray.size(), CV_8UC1 );
 
-    vector<Mat> drawingList(contours0.size());
+    vector<Mat> drawingList(contours0.size()); //vector of rooms 
     vector<double> minArea (contours0.size());
     vector<double> maxArea (contours0.size());
 
-    //std::cout<< "contours0.size()= "<<contours0.size()<< " hierarchy.size()="<<hierarchy.size() <<std::endl;
     std::cout << "Number of found rooms is " << contours0.size() << std::endl;
-    for(int i=0; i<contours0.size(); i++)
+    for(int i=0; i<contours0.size(); i++)//for each room
     {
-//         std::cout << "hierarchy["<<i<<"][0]=" << hierarchy[i][0] << "  ";
-//         std::cout << "hierarchy["<<i<<"][1]=" << hierarchy[i][1] << "  ";
-//         std::cout << "hierarchy["<<i<<"][2]=" << hierarchy[i][2] << "  ";
-//         std::cout << "hierarchy["<<i<<"][3]=" << hierarchy[i][3] << "  ";
-//         std::cout << std::endl;
         //calculate area after erode
         minArea[i]=contourArea(contours0[i]);
 
-        //init th i-th room and drow the i-th room
+        //init th i-th room and draw the i-th room
         drawingList[i]=drawing0.clone();
-        drawContours(drawingList[i], contours0, i, cv::Scalar(255), 1);
+        drawContours(drawingList[i], contours0, i, cv::Scalar(255), 1); //i-th room equivalent to contours0[0]
 
         //dilate in order to restore the initial size or little bigger
         dilate(drawingList[i], drawingList[i], kernel1);
         vector<vector<Point> > contours;
+
+        //find countours, only external pixels?
         findContours( drawingList[i], contours, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
         //calculate the max area
-        maxArea[i]=contourArea(contours[0]);
+        maxArea[i]=contourArea(contours[0]); //one only contour for i-th room
 //         std::cout << "drawing num" << i <<"  has area " << contourArea(contours[0]) << "  contours.size=" << contours.size() << std::endl;
 //         std::cout << "Disconnected region num=" << i << " has area= " << contourArea(contours0[i]) << std::endl;
 
@@ -212,7 +206,40 @@ int main( int argc, char** argv)
         namedWindow(namewin+to_string(i), CV_WINDOW_AUTOSIZE);
         imshow( namewin+to_string(i), drawingList[i] );
 
+        //Extract the contours so that
+        vector<vector<Point> > contours11;
 
+        //contours11.resize(contours[0].size());
+        contours11.resize(1);
+
+        yarp::dev::Map2DArea area;
+        double accuracy = 3;
+        approxPolyDP(Mat(contours0[0]), contours11[0], accuracy, true);
+#if SIMULATION_ONLY
+        area.map_id = "test";
+#else
+        area.map_id = "testMap";
+        double resolution = 0.05; //the_map.getResolution(resolution);
+#endif
+        for (size_t kk = 0; kk < contours11[0].size(); kk++)
+        {
+#if SIMULATION_ONLY
+            area.points.push_back(yarp::math::Vec2D<double>(contours[k][kk].x, contours[k][kk].y));
+            cout << k << " " << kk << " x:" << contours[k][kk].x << " y:" << contours[k][kk].y << endl;
+#else
+            double xx = contours11[0][kk].x*resolution;
+            double yy = contours11[0][kk].y*resolution;
+            area.points.push_back(yarp::math::Vec2D<double>(xx, yy));
+            cout << i << " " << kk << " x:" << contours11[0][kk].x << "(" << xx << ") y:" << contours11[0][kk].y << " (" << yy << ")" << endl;
+#endif
+        }
+
+        cout << "***";
+        drawingList[i] = drawing0.clone();
+        drawContours(drawingList[i], contours11, 0, cv::Scalar(255), 1);
+
+        namedWindow(namewin + "_c"+ to_string(i), CV_WINDOW_AUTOSIZE);
+        imshow(namewin + "_c" + to_string(i), drawingList[i]);
     }
 
 //     drawContours( drawing0, contours0, 0, cv::Scalar(255), 1 );
