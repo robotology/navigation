@@ -15,24 +15,32 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+#define FROM_MAPS 1
+//#define DRAW_WINDOWS 1
 
-//https://docs.opencv.org/3.1.0/d2/dbd/tutorial_distance_transform.html
+IMap2D*              m_iMap = nullptr;
+PolyDriver           m_pMap;
+std::string          mapname = "";
+MapGrid2D            the_map;
+
+///https://docs.opencv.org/3.1.0/d2/dbd/tutorial_distance_transform.html
 
 static bool getImage(cv::Mat &img, std::string mapname);
+
 
 int main( int argc, char** argv)
 {
 
     cv::Mat img;
-    std::string mapname="";
+
 
     if(argc>=2)
         mapname=argv[1];
     else
-        mapname="testMap";
+        mapname="testMap2";
     if(!getImage(img, mapname))
     {
-        std::cout << "Error in get image" << std::endl;
+        yDebug() << "Error in get image";
         return 0;
     }
 
@@ -42,11 +50,12 @@ int main( int argc, char** argv)
 //     }
 
 
-    std::cout << "Num of white pixel is " << countNonZero(img) <<std::endl;
-
+    yDebug() << "Num of white pixel is " << countNonZero(img);
     //show the faces
+#ifdef DRAW_WINDOWS
     namedWindow( "imageReal", 1 );
     imshow( "imageReal", img );
+#endif
 
     // Perform the distance transform algorithm
     cv::Mat dist;
@@ -54,24 +63,28 @@ int main( int argc, char** argv)
     // Normalize the distance image for range = {0.0, 1.0)
     normalize(dist, dist, 0, 1., cv::NORM_MINMAX);
 
+#ifdef DRAW_WINDOWS
     namedWindow( "distNorm", 1 );
     imshow( "distNorm", dist );
-
+#endif
     // Threshold to obtain the peaks
     threshold(dist, dist, .4, 1., CV_THRESH_BINARY);
 
-
+#ifdef DRAW_WINDOWS
     namedWindow( "distThresh", 1 );
     imshow( "distThresh", dist );
+#endif
 
     // Dilate a bit the dist image
     cv::Mat kernel1 = cv::Mat::ones(3, 3, CV_8UC1);
     dilate(dist, dist, kernel1);
 
+#ifdef DRAW_WINDOWS
     namedWindow( "distDilate", 1 );
     imshow( "distDilate", dist );
+#endif
 
-    waitKey();
+    //waitKey();
 
     // Create the CV_8U version to run the contour finder
     cv::Mat dist_8u;
@@ -106,27 +119,19 @@ int main( int argc, char** argv)
     // Draw the background marker because watershed algorithm needs it
     circle(markers, cv::Point(5,5), 3, cv::Scalar(255), -1);
 
+#ifdef DRAW_WINDOWS
     namedWindow( "Marker1000", 1 );
     imshow( "Marker1000", markers*10000 );
-
+#endif
 
     cv::cvtColor(img, img, CV_GRAY2RGB);
 
     watershed(img, markers);
 
+#ifdef DRAW_WINDOWS
     namedWindow( "watershed", 1 );
     imshow( "watershed", markers*10000 );
-
-//     Mat im_gray;
-//
-//     markers.convertTo(im_gray, CV_8U);
-//     bitwise_not(im_gray, im_gray);
-//    // Mat img_bw = im_gray > 128;
-//
-//     namedWindow( "img_bw", 1 );
-//     imshow( "img_bw", im_gray );
-
-
+#endif
 
     // Generate random colors
     std::vector<cv::Vec3b> colors;
@@ -153,19 +158,25 @@ int main( int argc, char** argv)
         }
     }
 
+#ifdef DRAW_WINDOWS
     namedWindow( "out", 1 );
     imshow( "out", out_cv ); //color output image
+#endif
 
     Mat im_gray;
     cvtColor(out_cv, im_gray, COLOR_RGB2GRAY);
 
+#ifdef DRAW_WINDOWS
     namedWindow( "img_gray", 1 );
     imshow( "img_gray", im_gray );//grayscale output image
+#endif
 
     erode(im_gray, im_gray, kernel1);
+
+#ifdef DRAW_WINDOWS
     namedWindow( "erode", CV_WINDOW_AUTOSIZE );//erode on grayscale 
     imshow( "erode", im_gray );
-
+#endif
 
     vector<vector<Point> > contours0;
     vector<Vec4i> hierarchy;
@@ -178,7 +189,7 @@ int main( int argc, char** argv)
     vector<double> minArea (contours0.size());
     vector<double> maxArea (contours0.size());
 
-    std::cout << "Number of found rooms is " << contours0.size() << std::endl;
+    yDebug() << "Number of found rooms is " << contours0.size();
     for(int i=0; i<contours0.size(); i++)//for each room
     {
         //calculate area after erode
@@ -192,19 +203,21 @@ int main( int argc, char** argv)
         dilate(drawingList[i], drawingList[i], kernel1);
         vector<vector<Point> > contours;
 
-        //find countours, only external pixels?
+        //find contours, only external pixels?
         findContours( drawingList[i], contours, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
         //calculate the max area
         maxArea[i]=contourArea(contours[0]); //one only contour for i-th room
-//         std::cout << "drawing num" << i <<"  has area " << contourArea(contours[0]) << "  contours.size=" << contours.size() << std::endl;
-//         std::cout << "Disconnected region num=" << i << " has area= " << contourArea(contours0[i]) << std::endl;
+//         yDebug() << "drawing num" << i <<"  has area " << contourArea(contours[0]) << "  contours.size=" << contours.size();
+//         yDebug() << "Disconnected region num=" << i << " has area= " << contourArea(contours0[i]);
 
-        std::cout << "the room number " << i << " has min-area=" << minArea[i] << " and max-area=" << maxArea[i] << std::endl;
+        yDebug() << "the room number " << i << " has min-area=" << minArea[i] << " and max-area=" << maxArea[i];
 
+#ifdef DRAW_WINDOWS
         std::string namewin="cont";
         namedWindow(namewin+to_string(i), CV_WINDOW_AUTOSIZE);
         imshow( namewin+to_string(i), drawingList[i] );
+#endif
 
         //Extract the contours so that
         vector<vector<Point> > contours11;
@@ -214,179 +227,57 @@ int main( int argc, char** argv)
 
         yarp::dev::Map2DArea area;
         double accuracy = 3;
-        approxPolyDP(Mat(contours0[0]), contours11[0], accuracy, true);
+        approxPolyDP(Mat(contours0[i]), contours11[0], accuracy, true);
 #if SIMULATION_ONLY
         area.map_id = "test";
 #else
-        area.map_id = "testMap";
+        area.map_id = mapname;
         double resolution = 0.05; //the_map.getResolution(resolution);
 #endif
         for (size_t kk = 0; kk < contours11[0].size(); kk++)
         {
 #if SIMULATION_ONLY
             area.points.push_back(yarp::math::Vec2D<double>(contours[k][kk].x, contours[k][kk].y));
-            cout << k << " " << kk << " x:" << contours[k][kk].x << " y:" << contours[k][kk].y << endl;
+            yDebug() << k << " " << kk << " x:" << contours[k][kk].x << " y:" << contours[k][kk].y;
 #else
-            double xx = contours11[0][kk].x*resolution;
-            double yy = contours11[0][kk].y*resolution;
-            area.points.push_back(yarp::math::Vec2D<double>(xx, yy));
-            cout << i << " " << kk << " x:" << contours11[0][kk].x << "(" << xx << ") y:" << contours11[0][kk].y << " (" << yy << ")" << endl;
+            MapGrid2D::XYWorld worldc = the_map.cell2World(MapGrid2D::XYCell(contours11[0][kk].x, contours11[0][kk].y));
+            area.points.push_back(yarp::math::Vec2D<double>(worldc.x, worldc.y));
+            yDebug() << i << " " << kk << " x:" << contours11[0][kk].x << "(" << worldc.x << ") y:" << contours11[0][kk].y << " (" << worldc.y << ")";
 #endif
         }
 
-        cout << "***";
+        yDebug() << "***";
         drawingList[i] = drawing0.clone();
         drawContours(drawingList[i], contours11, 0, cv::Scalar(255), 1);
 
-        namedWindow(namewin + "_c"+ to_string(i), CV_WINDOW_AUTOSIZE);
-        imshow(namewin + "_c" + to_string(i), drawingList[i]);
+#ifdef FROM_MAPS
+        std::string area_name = "auto_area" + to_string(i);
+        if (m_iMap->storeArea(area_name, area))
+        {
+            yInfo() << "Area " << area_name << "succesfully stored into map server";
+        }
+        else
+        {
+            yError() << "Area " << area_name << "failed to store into map server";
+        }
+#endif
+
+#ifdef DRAW_WINDOWS
+        namedWindow("final"+ to_string(i), CV_WINDOW_AUTOSIZE);
+        imshow("final" + to_string(i), drawingList[i]);
+#endif
     }
 
-//     drawContours( drawing0, contours0, 0, cv::Scalar(255), 1 );
-//     namedWindow( "cont0", CV_WINDOW_AUTOSIZE );
-//     imshow( "cont0", drawingList[0] );
-//
-//     drawContours( drawing1, contours0, 1, cv::Scalar(255), 1 );
-//     namedWindow( "cont1", CV_WINDOW_AUTOSIZE );
-//     imshow( "cont1", drawingList[1] );
-//
-//
-//     drawContours( drawing2, contours0, 2, cv::Scalar(255), 1 );
-//     namedWindow( "con2", CV_WINDOW_AUTOSIZE );
-//     imshow( "cont2", drawingList[2] );
-//
-//
-//     dilate(drawing0, drawing0, kernel1);
-//     findContours( drawing0, contours0, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-//     std::cout << "drawing0  has area " << contourArea(contours0[0]) << "  contours.size=" << contours0.size() << std::endl;
-//
-//     dilate(drawing1, drawing1, kernel1);
-//     findContours( drawing1, contours0, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-//     std::cout << "drawing1  has area " << contourArea(contours0[0]) << "  contours.size=" << contours0.size() << std::endl;
-//
-//     dilate(drawing2, drawing2, kernel1);
-//     findContours( drawing2, contours0, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-//     std::cout << "drawing1  has area " << contourArea(contours0[0]) << "  contours.size=" << contours0.size() << std::endl;
-
-
-//     // Threshold to obtain the peaks
-//     threshold(im_gray, im_gray, 1, 255, CV_THRESH_BINARY);
-//     namedWindow( "img_th", 1 );
-//     imshow( "img_th", im_gray );
-//
-//     bitwise_not(im_gray, im_gray);
-//
-//     namedWindow( "img_bw", 1 );
-//     imshow( "img_bw", im_gray );
-
-
-
-
-
-
-
-//     Mat canny_output, im_gray;
-//     vector<vector<Point> > contours;
-//     vector<Vec4i> hierarchy;
-//     int thresh=100;
-//     RNG rng(155);
-//     cvtColor(out_cv, im_gray, COLOR_RGB2GRAY);
-//     Canny( out_cv, canny_output, thresh, thresh*2, 3 );
-//     namedWindow( "canny", CV_WINDOW_AUTOSIZE );
-//     imshow( "canny", canny_output );
-//
-//  //   cv::Mat kernel1 = cv::Mat::ones(3, 3, CV_8UC1);
-//
-//     erode(canny_output, canny_output, kernel1);
-//     namedWindow( "canny+erode", CV_WINDOW_AUTOSIZE );
-//     imshow( "canny+erode", canny_output );
-//
-//     dilate(canny_output, canny_output, kernel1);
-//     namedWindow( "canny+erode+dilate", CV_WINDOW_AUTOSIZE );
-//     imshow( "canny+erode+dilate", canny_output );
-//
-//     /// Find contours
-//     findContours( canny_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE );
-//
-//     /// Draw contours
-//     Mat drawing = Mat::zeros( canny_output.size(), CV_8UC1 );
-//     for( int i = 0; i< contours.size(); i++ )
-//     {
-//         std::cout << "hierarchy["<<i<<"][0]=" << hierarchy[i][0] << "  ";
-//         std::cout << "hierarchy["<<i<<"][1]=" << hierarchy[i][1] << "  ";
-//         std::cout << "hierarchy["<<i<<"][2]=" << hierarchy[i][2] << "  ";
-//         std::cout << "hierarchy["<<i<<"][3]=" << hierarchy[i][3] << "  ";
-//         std::cout << std::endl;
-//         std::cout << "Disconnected region num=" << i << " has area= " << contourArea(contours[i]) << std::endl;
-//         drawContours( drawing, contours, i, cv::Scalar::all(static_cast<int>(i)+1), 2 );
-//     }
-//
-//     namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-//     imshow( "Contours", drawing*10000 );
-
-//     vector<vector<Point> > contours0;
-//     findContours( drawing, contours0, hierarchy, CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
-//
-//     std::cout<< "contours0.size()= "<<contours0.size()<< " hierarchy.size()="<<hierarchy.size() <<std::endl;
-//     for(int i=0; i<contours0.size(); i++)
-//     {
-//         std::cout << "hierarchy["<<i<<"][0]=" << hierarchy[i][0] << "  ";
-//         std::cout << "hierarchy["<<i<<"][1]=" << hierarchy[i][1] << "  ";
-//         std::cout << "hierarchy["<<i<<"][2]=" << hierarchy[i][2] << "  ";
-//         std::cout << "hierarchy["<<i<<"][3]=" << hierarchy[i][3] << "  ";
-//         std::cout << std::endl;
-//
-//         std::cout << "Disconnected region num=" << i << " has area= " << contourArea(contours0[i]) << std::endl;
-//
-//     }
-
-
-//         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-//     cvtColor(out_cv, im_gray, COLOR_BGR2GRAY);
-//     // Threshold to obtain the peaks
-//     threshold(im_gray, im_gray, 1, 255, CV_THRESH_BINARY);
-//     namedWindow( "img_th", 1 );
-//     imshow( "img_th", im_gray );
-//
-//    bitwise_not(im_gray, im_gray);
-//
-//     namedWindow( "img_bw", 1 );
-//    imshow( "img_bw", im_gray );
-//
-//
-//     vector<vector<Point> > contours0;
-//     vector<Vec4i> hierarchy;
-//     findContours( im_gray, contours0, hierarchy, CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
-//
-//     std::cout<< "contours0.size()= "<<contours0.size()<< " hierarchy.size()="<<hierarchy.size() <<std::endl;
-//     for(int i=0; i<contours0.size(); i++)
-//     {
-//         std::cout << "hierarchy["<<i<<"][0]=" << hierarchy[i][0] << "  ";
-//         std::cout << "hierarchy["<<i<<"][1]=" << hierarchy[i][1] << "  ";
-//         std::cout << "hierarchy["<<i<<"][2]=" << hierarchy[i][2] << "  ";
-//         std::cout << "hierarchy["<<i<<"][3]=" << hierarchy[i][3] << "  ";
-//         std::cout << std::endl;
-//
-//         std::cout << "Disconnected region num=" << i << " has area= " << contourArea(contours0[i]) << std::endl;
-//
-//     }
-
-
-
-
+    //wait key
     waitKey();
 
     return 0;
 }
 
 
-#define FROM_MAPS 1
 static bool getImage(cv::Mat &img, std::string mapname)
 {
 #ifdef FROM_MAPS
-    IMap2D*              m_iMap = nullptr;
-    PolyDriver           m_pMap;
-
     //open the map interface
     yarp::os::Property map_options;
     map_options.put("device", "map2DClient");
@@ -405,7 +296,6 @@ static bool getImage(cv::Mat &img, std::string mapname)
     }
 
     //get the map
-    MapGrid2D the_map;
     std::string map_name = mapname;
     bool b = m_iMap->get_map(map_name, the_map);
     if (b == false)
@@ -420,7 +310,7 @@ static bool getImage(cv::Mat &img, std::string mapname)
     size_t w = the_map.width();
     size_t h = the_map.height();
     yInfo() << "get image of size " << w << h;
-    img = Mat::zeros(w,h, CV_8UC1);
+    img = Mat::zeros(h,w, CV_8UC1);
     for (auto x=0; x<w; x++)
         for (auto y = 0; y <h; y++)
         {
@@ -433,7 +323,7 @@ static bool getImage(cv::Mat &img, std::string mapname)
             else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_KEEP_OUT) { c = 255; }
             else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE) { c = 255;   }
             else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE) { c = 255;  }
-            img.at<unsigned char>(x, y) = c;
+            img.at<unsigned char>(y, x) = c;
         }
 
     return true;
