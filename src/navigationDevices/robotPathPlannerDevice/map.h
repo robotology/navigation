@@ -49,10 +49,10 @@ namespace map_utilites
     bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path);
 
     //compute a path, given a start cell, a goal cell and a map grid.
-    bool findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path);
+    bool findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path, double timeout_s);
 
     // register new obstacles into a map
-    void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map);
+    void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& enlarged_walls_map, const yarp::dev::MapGrid2D& enlarged_obstacles_map);
 };
 
 #endif

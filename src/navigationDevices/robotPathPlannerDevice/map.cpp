@@ -84,11 +84,13 @@ bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D:
     return true;
 };
 
-void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
+void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& enlarged_walls_map, const yarp::dev::MapGrid2D& enlarged_obstacles_map)
 {
     //copies obstacles (and only them) from a source map to a destination map
-    if (map_to_be_updated.width() != obstacles_map.width() ||
-        map_to_be_updated.height() != map_to_be_updated.height())
+    if (map_to_be_updated.width() != enlarged_walls_map.width() ||
+        map_to_be_updated.height() != enlarged_walls_map.height() ||
+        map_to_be_updated.width() != enlarged_obstacles_map.width() ||
+        map_to_be_updated.height() != enlarged_obstacles_map.height())
     {
         yError() << "update_obstacles_map: the two maps must have the same size!";
         return;
@@ -96,16 +98,20 @@ void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated,
     for (size_t y=0; y<map_to_be_updated.height(); y++)
         for (size_t x=0; x<map_to_be_updated.width(); x++)
         {
-            MapGrid2D::map_flags flag_src;
+            MapGrid2D::map_flags flag_src1;
+            MapGrid2D::map_flags flag_src2;
             MapGrid2D::map_flags flag_dst;
-            map_to_be_updated.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_dst);
-            obstacles_map.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_src);
+            yarp::dev::MapGrid2D::XYCell cell(x, y);
+            map_to_be_updated.getMapFlag(cell, flag_dst);
+            enlarged_walls_map.getMapFlag(cell, flag_src1);
+            enlarged_obstacles_map.getMapFlag(cell, flag_src2);
             if (flag_dst==MapGrid2D::MAP_CELL_FREE)
             {
-                if      (flag_src==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
+                if      (flag_src2==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
                 { flag_dst=MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE; }
-                else if (flag_src==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE)
+                else if (flag_src2==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE)
                 { flag_dst=MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE; }
+                map_to_be_updated.setMapFlag(cell, flag_dst);
             }
         }
 }
@@ -142,8 +148,8 @@ bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCel
     return true;
 }
 
-bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
+bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path, double timeout_s)
 {
     //computes path from start to goal using A* algorithm
-    return aStar_algorithm::find_astar_path(map, start, goal, path);
+    return aStar_algorithm::find_astar_path(map, start, goal, path, timeout_s);
 }

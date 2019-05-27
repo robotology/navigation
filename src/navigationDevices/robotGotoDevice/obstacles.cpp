@@ -187,23 +187,22 @@ bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementDat
     return true;
 }
 
-bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data)
+bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data, double robot_heading)
 {
     static double last_time_error_message = 0;
     int laser_obstacles  = 0;
     double goal_distance = 1000; //TO BE COMPLETED
 
-    //compute the polygon
-    double vertx[4];
-    double verty[4];
-    double theta              = 0.0;
     //the following 90 degrees rotation is needed to perform the following reference frame rotation.
     //the reference frame of the robot is the one shown on the right.
+    //robot heading is the desired goal direction expressed in the robot reference system,
+    //i.e. the frontal x, CCW.
     //      Y                 X
     //      |       -->       |
     //      O--X           Y--O
-    double ctheta             = cos(theta-1.5707);
-    double stheta             = sin(theta-1.5707);
+    double theta              = robot_heading*DEG2RAD - 1.5707;
+    double ctheta             = cos(theta);
+    double stheta             = sin(theta);
     double detection_distance = m_min_detection_distance;
 
     if (m_enable_dynamic_max_distance)
@@ -220,6 +219,9 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     if (detection_distance<m_min_detection_distance)
         detection_distance = m_min_detection_distance;
 
+    //compute the polygon
+    double vertx[4];
+    double verty[4];
     vertx[0] = (-m_robot_radius) * ctheta + detection_distance * (-stheta);
     verty[0] = (-m_robot_radius) * stheta + detection_distance * ctheta;
     vertx[1] = (+m_robot_radius) * ctheta + detection_distance * (-stheta);

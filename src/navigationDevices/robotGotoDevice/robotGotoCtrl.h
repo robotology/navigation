@@ -166,7 +166,8 @@ protected:
     double               m_max_laser_angle;
     double               m_laser_angle_of_view;
     double               m_time_of_obstacle_detection;
-    double               m_time_ob_obstacle_removal;
+    double               m_time_of_obstacle_removal;
+    double               m_obstacles_detected;
 
     //obstacle handler
     obstacles_class*     m_obstacle_handler;

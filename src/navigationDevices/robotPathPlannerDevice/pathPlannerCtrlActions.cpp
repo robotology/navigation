@@ -40,6 +40,9 @@ bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
         std::queue<yarp::dev::Map2DLocation> empty;
         std::swap(m_sequence_of_goals, empty);
         m_sequence_of_goals.push(m_final_goal);
+        m_number_of_recomputed_paths = 0;
+        cleanupObstaclesMap();
+
         if (startPath())
         {
             return true;
@@ -101,6 +104,8 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     std::queue<yarp::dev::Map2DLocation> empty;
     std::swap(m_sequence_of_goals, empty);
     m_sequence_of_goals.push(m_final_goal);
+    m_number_of_recomputed_paths = 0;
+    cleanupObstaclesMap();
     if (startPath())
     {
         return true;
@@ -129,6 +134,8 @@ bool PlannerThread::stopMovement()
         yWarning ("Already not moving");
         ret = false;
     }
+
+    cleanupObstaclesMap();
     return ret;
 }
 

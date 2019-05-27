@@ -135,12 +135,41 @@ public:
                 return false;
             }
 
+            else if (command.get(0).asString() == "draw_locations")
+            {
+                guiThread->m_enable_draw_all_locations = command.get(1).asBool();
+                reply.addString("ack");
+            }
+            else if (command.get(0).asString() == "draw_laser_scans")
+            {
+                guiThread->m_enable_draw_laser_scans = command.get(1).asBool();
+                reply.addString("ack");
+            }
+            else if (command.get(0).asString() == "draw_enlarged_scans")
+            {
+                guiThread->m_enable_draw_enlarged_scans = command.get(1).asBool();
+                reply.addString("ack");
+            }
+            else if (command.get(0).asString() == "draw_infos")
+            {
+                guiThread->m_enable_draw_infos = command.get(1).asBool();
+                reply.addString("ack");
+            }
+            else if (command.get(0).asString() == "draw_estimated_particles")
+            {
+                guiThread->m_enable_estimated_particles = command.get(1).asInt32();
+                reply.addString("ack");
+            }
             else if (command.get(0).asString()=="help")
             {
                 reply.addVocab(Vocab::encode("many"));
                 reply.addString("Available commands are:");
                 reply.addString("quit");
                 reply.addString("draw_locations <0/1>");
+                reply.addString("draw_laser_scans <0/1>");
+                reply.addString("draw_enlarged_scans <0/1>");
+                reply.addString("draw_estimated_particles <n>");
+                reply.addString("draw_infos <0/1>");
             }
             else if (command.get(0).isString())
             {

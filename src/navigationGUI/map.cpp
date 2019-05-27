@@ -163,7 +163,7 @@ bool map_utilites::drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>&
     return true;
 }
 
-bool map_utilites::drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color)
+bool map_utilites::drawObstaclesMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color1, const CvScalar& color2)
 {
     if (map==0) return false;
     for (size_t y=0; y<laserMap.height(); y++)
@@ -171,10 +171,13 @@ bool map_utilites::drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laser
         {
             MapGrid2D::map_flags flag;
             laserMap.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag);
-            if (flag==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE ||
-                flag==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
+            if (flag==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE)
             {
-                cvCircle(map, cvPoint(x,y), 0, color);
+                cvCircle(map, cvPoint(x, y), 0, color1);
+            }
+            if (flag==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
+            {
+                cvCircle(map, cvPoint(x, y), 0, color2);
             }
         }
     return true;

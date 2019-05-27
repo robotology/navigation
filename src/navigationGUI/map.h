@@ -50,7 +50,7 @@ namespace map_utilites
     bool drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
     bool drawArea(IplImage *map, std::vector<MapGrid2D::XYCell> area, const CvScalar& color);
     bool drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color);
-    bool drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color);
+    bool drawObstaclesMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color1, const CvScalar& color2);
     bool drawPose(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color);
 
     //sends and image through the given port

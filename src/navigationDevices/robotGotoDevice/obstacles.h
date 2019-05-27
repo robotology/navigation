@@ -84,7 +84,7 @@ public:
 
 public:
     obstacles_class(Searchable  &rf);
-    bool check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data);
+    bool check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data, double robot_heading);
     bool compute_obstacle_avoidance(std::vector<LaserMeasurementData>& laser_data);
     double get_max_time_waiting_for_obstacle_removal();
     void set_safety_coeff(double val);

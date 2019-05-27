@@ -133,11 +133,14 @@ class PlannerThread: public yarp::os::PeriodicThread
     std::vector<Map2DLocation>             m_locations_list;
     std::string                            m_last_target;
     std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
+    size_t                                 m_number_of_recomputed_paths;
+    size_t                                 m_max_number_of_recomputed_paths;
 
     //the path computed by the planner, stored a sequence of waypoints to be reached
     std::queue<MapGrid2D::XYCell>                 m_computed_path;
     std::queue<MapGrid2D::XYCell>                 m_computed_simplified_path;
     std::queue<MapGrid2D::XYCell>*                m_current_path;
+    double                                        m_pathplanner_timeout;
     
     //statuses of the internal finite-state machine
     NavigationStatusEnum   m_planner_status;
@@ -272,6 +275,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     void          sendWaypoint();
     bool          readLocalizationData();
     void          readLaserData();
+    void          cleanupObstaclesMap();
     bool          readInnerNavigationStatus();
     bool          getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const;
     bool          updateLocations();

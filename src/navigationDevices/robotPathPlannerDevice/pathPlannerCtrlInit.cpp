@@ -59,6 +59,9 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_iInnerNav_ctrl = 0;
     m_iInnerNav_target = 0;
     m_force_map_reload = false;
+    m_number_of_recomputed_paths = 0;
+    m_max_number_of_recomputed_paths = 5;
+    m_pathplanner_timeout = 30;
 }
 
 bool PlannerThread::threadInit()
@@ -71,6 +74,8 @@ bool PlannerThread::threadInit()
         yError() << "Missing NAVIGATION group!";
         return false;
     }
+    if (navigation_group.check("pathplanner_thinking_timeout")) { m_pathplanner_timeout = navigation_group.find("pathplanner_thinking_timeout").asDouble(); }
+    else { yError() << "Missing pathplanner_thinking_timeout parameter"; return false; }
     if (navigation_group.check("waypoint_tolerance_lin")) { m_waypoint_tolerance_lin = navigation_group.find("waypoint_tolerance_lin").asDouble(); }
     else { yError() << "Missing waypoint_tolerance_lin parameter"; return false; }
     if (navigation_group.check("waypoint_tolerance_ang")) { m_waypoint_tolerance_ang = navigation_group.find("waypoint_tolerance_ang").asDouble(); }

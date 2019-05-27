@@ -35,7 +35,7 @@ namespace aStar_algorithm
     * @param path the computed sequence of cells required to go from  start cell to goal cell
     * @return true if the path exists, false if no valid path has been found
     */
-    bool find_astar_path(yarp::dev::MapGrid2D& map, yarp::dev::MapGrid2D::XYCell start, yarp::dev::MapGrid2D::XYCell goal, std::queue<yarp::dev::MapGrid2D::XYCell>& path);
+    bool find_astar_path(yarp::dev::MapGrid2D& map, yarp::dev::MapGrid2D::XYCell start, yarp::dev::MapGrid2D::XYCell goal, std::queue<yarp::dev::MapGrid2D::XYCell>& path, double timeout_s);
 };
 
 #endif

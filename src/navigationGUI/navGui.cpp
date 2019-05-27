@@ -437,7 +437,7 @@ void NavGuiThread::draw_map()
     {
         if (m_enable_draw_enlarged_scans)
         {
-            map_utilites::drawLaserMap(i3_map_menu_scan, m_temporary_obstacles_map, azure_color);
+            map_utilites::drawObstaclesMap(i3_map_menu_scan, m_temporary_obstacles_map, azure_color, azure_color2);
         }
         if (m_enable_draw_laser_scans)
         {

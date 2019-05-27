@@ -72,6 +72,7 @@ GotoThread::GotoThread(double _period, Searchable &_cfg) :
     m_retreat_duration_time = 0;
     m_enable_obstacles_emergency_stop = false;
     m_enable_obstacles_avoidance = false;
+    m_obstacles_detected = false;
     m_enable_retreat = false;
     m_retreat_duration_default = 0.3;
     m_control_out.zero();
@@ -691,12 +692,25 @@ void GotoThread::run()
     bool obstacles_in_path = false;
     if (m_las_timeout_counter < 300)
     {
-        obstacles_in_path = m_obstacle_handler->check_obstacles_in_path(m_laser_data);
+        obstacles_in_path = m_obstacle_handler->check_obstacles_in_path(m_laser_data, beta_robot);
+        if (m_obstacles_detected == true && obstacles_in_path == false)
+        {
+            m_time_of_obstacle_detection = yarp::os::Time::now();
+            yDebug("Detected new obstacle at time: %.3f",m_time_of_obstacle_detection);
+        }
+        else
+        if (m_obstacles_detected == false && obstacles_in_path == true)
+        {
+            m_time_of_obstacle_removal = yarp::os::Time::now();
+            yDebug("Previously detected obstacle disappeared at time: %.3f",m_time_of_obstacle_removal);
+        }
+        m_obstacles_detected = obstacles_in_path;
+
         if (m_enable_obstacles_avoidance)  m_obstacle_handler->compute_obstacle_avoidance(m_laser_data);
     }
 
     double current_time = yarp::os::Time::now();
-    double speed_ramp = (current_time - m_time_ob_obstacle_removal) / 2.0;
+    double speed_ramp = (current_time - m_time_of_obstacle_removal) / 2.0;
 
     //the finite state machine
     switch (m_status)
@@ -806,10 +820,10 @@ void GotoThread::run()
         case navigation_status_waiting_obstacle:
             if (!obstacles_in_path)
             {
-                if (fabs(current_time - m_time_of_obstacle_detection) > 1.0)
+                if (fabs(current_time - m_time_of_obstacle_detection) > 1.0 && 
+                    fabs(current_time - m_time_of_obstacle_removal) > 1.0) //this check is required for flickering obstacles
                 {
-
-                    yInfo ("Obstacles removed, thank you");
+                    yInfo ("Obstacles removal confirmed, thank you");
                     Bottle b, tmp;
                     m_status = navigation_status_moving;
 
@@ -818,7 +832,6 @@ void GotoThread::run()
                     tmp.clear();
                     tmp = b;
                     m_port_speak_output.write();
-                    m_time_ob_obstacle_removal = yarp::os::Time::now();
                 }
             }
             else

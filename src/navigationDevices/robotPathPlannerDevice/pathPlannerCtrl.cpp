@@ -97,6 +97,7 @@ bool  PlannerThread::readLocalizationData()
             m_augmented_map = m_current_map;
             yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
             updateLocations();
+            cleanupObstaclesMap();
         }
         else
         {
@@ -151,6 +152,16 @@ bool  PlannerThread::readInnerNavigationStatus()
     return true;
 }
 
+void  PlannerThread::cleanupObstaclesMap()
+{
+    yDebug() << "Obstacles map cleared";
+    m_temporary_obstacles_map_mutex.lock();
+    for (size_t y = 0; y < m_temporary_obstacles_map.height(); y++)
+        for (size_t x = 0; x < m_temporary_obstacles_map.width(); x++)
+            m_temporary_obstacles_map.setMapFlag(MapGrid2D::XYCell(x, y), MapGrid2D::MAP_CELL_FREE);
+    m_temporary_obstacles_map_mutex.unlock();
+}
+
 void  PlannerThread::readLaserData()
 {
     std::vector<LaserMeasurementData> scan;
@@ -182,23 +193,21 @@ void  PlannerThread::readLaserData()
         m_laser_timeout_counter++;
     }
 
-    //transform the laser measurement in a temporary map
-    //the purpose of the following copy of m_temporary_obstacles_map in temp_map is to minimize the duration of the critical section
-    //protected by the mutex. Indeed enlargeObstacles() can take some time and should be outside the mutex.
+    //transform the laser measurement in a temporary map, ADDING new obstacles, without removing old ones.
     m_temporary_obstacles_map_mutex.lock();
-    yarp::dev::MapGrid2D temp_map = m_temporary_obstacles_map;
-    m_temporary_obstacles_map_mutex.unlock();
-    for (size_t y=0; y< temp_map.height(); y++)
-        for (size_t x=0; x< temp_map.width(); x++)
-            temp_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
+    double res = 0; m_temporary_obstacles_map.getResolution(res);
+    auto repeat_num = (size_t)(std::ceil(m_robot_radius / res));
+
+ //   m_temporary_obstacles_map_mutex.unlock();
     for (size_t i=0; i< m_laser_map_cells.size(); i++)
     {
-        temp_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
+        for (size_t yi= m_laser_map_cells[i].y- repeat_num; yi< m_laser_map_cells[i].y + repeat_num; yi++)
+            for (size_t xi = m_laser_map_cells[i].x - repeat_num; xi < m_laser_map_cells[i].x + repeat_num; xi++)
+            {
+                m_temporary_obstacles_map.setMapFlag(yarp::dev::MapGrid2D::XYCell(xi,yi), MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE);
+            }
+        m_temporary_obstacles_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
     }
-    //enlarge the laser scanner data
-    temp_map.enlargeObstacles(m_robot_radius);
-    m_temporary_obstacles_map_mutex.lock();
-    m_temporary_obstacles_map = temp_map;
     m_temporary_obstacles_map_mutex.unlock();
 }
 
@@ -413,23 +422,31 @@ void PlannerThread::run()
             }
             else if (m_inner_status == navigation_status_failing)
             {
-                if (m_enable_try_recovery)
+                if (m_enable_try_recovery && m_number_of_recomputed_paths < m_max_number_of_recomputed_paths)
                 {
                     //try to avoid obstacles
-                    yError("unable to reach next waypoint, trying new solution");
-
-                    Bottle cmd, ans;
-                    cmd.addString("stop");
-                    m_port_commands_output.write(cmd, ans);
-                    map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
-                    sendWaypoint();
+                    yError() << "unable to reach next waypoint, trying new solution. Attempt: " << m_number_of_recomputed_paths+1 << " / " << m_max_number_of_recomputed_paths;
+                    m_iInnerNav_ctrl->stopNavigation();
+                    map_utilites::update_obstacles_map(m_current_map, m_augmented_map, m_temporary_obstacles_map);
+                    {
+                        //try to find a different path
+                        std::queue<yarp::dev::Map2DLocation> empty;
+                        std::swap(m_sequence_of_goals, empty);
+                        m_sequence_of_goals.push(m_final_goal);
+                        if (startPath() == false)
+                        {
+                            //if no paths are found, abort.
+                            //TODO: maybe it is preferable to wait some time and try again?
+                            m_planner_status = navigation_status_aborted;
+                            yError("I tried to recompute the path, but I didn't find a valid solution, aborting navigation");
+                        }
+                    }
+                    m_number_of_recomputed_paths++;
                 }
                 else
                 {
                     //terminate navigation
-                    Bottle cmd, ans;
-                    cmd.addString("stop");
-                    m_port_commands_output.write(cmd, ans);
+                    m_iInnerNav_ctrl->stopNavigation();
                     m_planner_status = navigation_status_aborted;
                     yError("unable to reach next waypoint, aborting navigation");
                 }
@@ -725,11 +742,24 @@ bool PlannerThread::startPath()
     std::swap(m_computed_simplified_path, empty2);
     m_planner_status = navigation_status_thinking;
 
-    //search for a path
-    bool b = map_utilites::findPath(m_current_map, start, goal, m_computed_path);
+#if 0
+    //@@@DEBUG NEEDED
+    //broadcast the planner status before entering in blocking section
+    if (m_port_status_output.getOutputCount() > 0)
+    {
+        string s = yarp::dev::INavigation2DHelpers::statusToString(m_planner_status);
+        Bottle &b = m_port_status_output.prepare();
+        b.clear();
+        b.addString(s.c_str());
+        m_port_status_output.write();
+    }
+#endif
+
+    //search for a path (blocking section!)
+    bool b = map_utilites::findPath(m_current_map, start, goal, m_computed_path, m_pathplanner_timeout);
     if (!b)
     {
-        yError ("path not found");
+        yError ("Navigation aborted because path was not found");
         m_planner_status = navigation_status_aborted;
         return false;
     }

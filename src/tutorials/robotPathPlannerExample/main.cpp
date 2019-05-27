@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     Property        navTestCfg;
     navTestCfg.put("device", "navigation2DClient");
     navTestCfg.put("local", "/robotPathPlannerExample");
-    navTestCfg.put("navigation_server", navigation_server_name);
+    navTestCfg.put("navigation_server", "/navigationServer");
     navTestCfg.put("map_locations_server", "/mapServer");
     navTestCfg.put("localization_server", "/localizationServer");
     PolyDriver ddNavClient;

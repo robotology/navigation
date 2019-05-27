@@ -17,6 +17,7 @@
 */
 
 #include <yarp/os/Os.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
 #include <string>
@@ -125,11 +126,18 @@ aStar_algorithm::node_map_type::node_map_type(yarp::dev::MapGrid2D& map)
     for (int y=0; y<h; y++)
         for (int x=0; x<w; x++)
             {
-                if (map.isFree(MapGrid2D::XYCell(x, y)))
-                    nodes [x][y].empty = true;
+                yarp::dev::MapGrid2D::map_flags flag;
+                map.getMapFlag(MapGrid2D::XYCell(x, y), flag);
+                if (map.isFree(MapGrid2D::XYCell(x, y)) ||
+                    flag == yarp::dev::MapGrid2D::MAP_CELL_VIRTUAL_SIMULATED_OBSTACLE)
+                {
+                    nodes[x][y].empty = true;
+                }
                 else
-                    nodes [x][y].empty = false;
-                nodes [x][y].x = x;
+                {
+                    nodes[x][y].empty = false;
+                }
+                nodes[x][y].x = x;
                 nodes [x][y].y = y;
                 //--- ---
                 //s_score is disabled by default.
@@ -204,7 +212,7 @@ bool aStar_algorithm::unordered_set_type::find(node_type t)
 }
 
 /////////// various
-bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
+bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path, double timeout_s)
 {
     //implementation of A* algorithm
     std::vector<MapGrid2D::XYCell> inverse_path;
@@ -229,7 +237,8 @@ bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCe
     node_map.nodes[sx][sy].f_score = node_map.nodes[sx][sy].g_score + heuristic_cost_estimate(node_map.nodes[sx][sy], node_map.nodes[gx][gy]);
 
     int iterations=0;
-    while (open_set.size()>0)
+    double start_time = yarp::os::Time::now();
+    while (open_set.size()>0 && yarp::os::Time::now()- start_time< timeout_s)
     {
         iterations++;
         //yDebug ("%d\n", iterations++);
@@ -315,6 +324,15 @@ bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCe
             neighbors.pop_front();
         }
     };
+
+    if (yarp::os::Time::now() - start_time < timeout_s)
+    {
+        yError() << "No path found, maximum search time expired!";
+    }
+    else
+    {
+        yError() << "No path found (exhaustive search completed)";
+    }
 
     //no path found
     return false;
