@@ -5,7 +5,7 @@
 #    This software may be modified and distributed under the terms of the
 #    GPL-2+ license. See the accompanying LICENSE file for details.
 #
-find_package(realsense2 REQUIRED )
+find_package(realsense2 QUIET )
 
 yarp_prepare_plugin(t265Localizer
                     CATEGORY device
