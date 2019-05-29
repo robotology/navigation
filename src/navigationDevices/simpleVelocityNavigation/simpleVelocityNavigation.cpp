@@ -45,18 +45,24 @@ simpleVelocityNavigation::simpleVelocityNavigation() : PeriodicThread(DEFAULT_TH
 bool simpleVelocityNavigation::open(yarp::os::Searchable& config)
 {
     bool ret = true;
-    ret &= m_port_commands_output.open((m_localName + "/control:o").c_str());
+    ret &= m_port_commands_output.open((std::string("/")+m_localName + "/control:o").c_str());
 
     if (ret == false)
     {
         yError() << "Unable to open module ports";
         return false;
     }
+    this->start();
     return ret;
 }
 
 bool simpleVelocityNavigation::close()
 {
+    this->askToStop();
+    while(this->isRunning())
+    {
+        yarp::os::Time::delay(1.0); //wait until thread is stopped
+    }
     m_port_commands_output.interrupt();
     m_port_commands_output.close();
     return true;
@@ -83,12 +89,14 @@ void simpleVelocityNavigation::run()
         if (m_control_out.timeout == std::numeric_limits<double>::infinity())
         {
             send_command(m_control_out);
+            m_navigation_status = yarp::dev::navigation_status_moving;
         }
         else
         {
             if ((current_time - m_control_out.reception_time) < m_control_out.timeout)
             {
                 send_command(m_control_out);
+                m_navigation_status = yarp::dev::navigation_status_moving;
             }
             else
             {
@@ -102,6 +110,7 @@ void simpleVelocityNavigation::run()
                 {
                     //do not send anything
                 }
+                m_navigation_status = yarp::dev::navigation_status_idle;
             }
         }
     }
@@ -153,7 +162,7 @@ bool simpleVelocityNavigation::applyVelocityCommand(double x_vel, double y_vel, 
 bool simpleVelocityNavigation::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
 {
     status = m_navigation_status;
-    return NOT_IMPLEMENTED;
+    return true;
 }
 
 bool simpleVelocityNavigation::stopNavigation()
