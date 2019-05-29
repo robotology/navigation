@@ -202,6 +202,12 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
     return b;
 }
 
+bool robotPathPlannerDev::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
+{
+    yWarning() << "applyVelocityCommand() currently not implemented";
+    return true;
+}
+
 bool robotPathPlannerDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
 {
     m_plannerThread->getCurrentAbsTarget(target);

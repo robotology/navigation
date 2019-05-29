@@ -142,4 +142,14 @@ public:
     * @return true/false
     */
     bool recomputeCurrentNavigationPath() override;
+
+    /**
+    * Apply a velocity command. velocities are expressed in the robot reference frame
+    * @param x [m/s]
+    * @param y [m/s]
+    * @param theta [deg/s]
+    * @param timeout The velocity command expires after the specified amount of time (by default 0.1 seconds)
+    * @return true/false
+    */
+    bool applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout = 0.1) override;
 };

@@ -404,6 +404,12 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y)
     return false;
 }
 
+bool rosNavigator::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
+{
+    yError() << "applyVelocityCommand() not implemented in rosNavigator";
+    return true;
+}
+
 bool rosNavigator::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
 {
     status = m_navigation_status;
