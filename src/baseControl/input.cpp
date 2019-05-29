@@ -20,6 +20,7 @@
 #include "filters.h"
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+#include <navigation_defines.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -447,7 +448,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
         if (port_joystick_control[id])
         if (Bottle* b = port_joystick_control[id]->read(false))
         {                
-            if (b->get(0).asInt()==1)
+            if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
             {
                 //received a joystick command.
                 read_percent_polar(b, joy_desired_direction[id],joy_linear_speed[id],joy_angular_speed[id],joy_pwm_gain[id]);
@@ -464,7 +465,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
                 //this make the joystick to take control for 100*20 ms
                 if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
             }
-            else if (b->get(0).asInt() == 2)
+            else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_POLAR)
             {
                 //received a joystick command.
                 read_speed_polar(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
@@ -481,7 +482,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
                 //this make the joystick to take control for 100*20 ms
                 if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
             }
-            else if (b->get(0).asInt() == 3)
+            else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
             {
                 //received a joystick command.
                 read_speed_cart(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
@@ -526,21 +527,21 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     //- - - read command port - - -
     if (Bottle *b = port_movement_control.read(false))
     {
-        if (b->get(0).asInt()==1)
+        if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
         {
             read_percent_polar(b, cmd_desired_direction,cmd_linear_speed,cmd_angular_speed,cmd_pwm_gain);
             wdt_old_mov_cmd = wdt_mov_cmd;
             wdt_mov_cmd = Time::now();
             command_received = 100;
         }
-        else if (b->get(0).asInt()==2)
+        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_POLAR)
         {
             read_speed_polar(b, cmd_desired_direction,cmd_linear_speed,cmd_angular_speed,cmd_pwm_gain);
             wdt_old_mov_cmd = wdt_mov_cmd;
             wdt_mov_cmd = Time::now();
             command_received = 100;
         }
-        else if (b->get(0).asInt()==3)
+        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
         {
             read_speed_cart(b, cmd_desired_direction,cmd_linear_speed,cmd_angular_speed,cmd_pwm_gain);
             wdt_old_mov_cmd = wdt_mov_cmd;
@@ -556,21 +557,21 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     //- - -read aux port - - -
     if (Bottle *b = port_auxiliary_control.read(false))
     {
-        if (b->get(0).asInt()==1)
+        if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
         {
             read_percent_polar(b, aux_desired_direction,aux_linear_speed,aux_angular_speed,aux_pwm_gain);
             wdt_old_aux_cmd = wdt_aux_cmd;
             wdt_aux_cmd = Time::now();
             auxiliary_received = 100;
         }
-        else if (b->get(0).asInt()==2)
+        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_POLAR)
         {
             read_speed_polar(b, aux_desired_direction,aux_linear_speed,aux_angular_speed,aux_pwm_gain);
             wdt_old_aux_cmd = wdt_aux_cmd;
             wdt_aux_cmd = Time::now();
             auxiliary_received = 100;
         }
-        else if (b->get(0).asInt()==3)
+        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
         {
             read_speed_cart(b, aux_desired_direction,aux_linear_speed,aux_angular_speed,aux_pwm_gain);
             wdt_old_aux_cmd = wdt_aux_cmd;

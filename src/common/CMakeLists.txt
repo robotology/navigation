@@ -12,7 +12,8 @@ set(${LIBRARY_TARGET_NAME}_SRC
 
 
 set(${LIBRARY_TARGET_NAME}_HDR
-        movable_localization_device/movable_localization_device.h)
+        movable_localization_device/movable_localization_device.h
+        include/navigation_defines.h)
 
 add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC} ${${LIBRARY_TARGET_NAME}_HDR})
 add_library(${PROJECT_NAME}::${LIBRARY_TARGET_NAME} ALIAS ${LIBRARY_TARGET_NAME})
