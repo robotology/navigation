@@ -84,7 +84,7 @@ bool   rosLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
     return false;
 }
 
-bool   rosLocalizer::setInitialPose(yarp::dev::Map2DLocation& loc)
+bool   rosLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
 {
 	if (thread)
 	{
@@ -189,7 +189,7 @@ void rosLocalizerThread::run()
 	}
 }
 
-bool rosLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
+bool rosLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
 {
     m_localization_data.map_id = loc.map_id;
     

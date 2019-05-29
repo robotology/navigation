@@ -119,7 +119,7 @@ public:
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   setInitialPose(yarp::dev::Map2DLocation& loc) override;
+    bool   setInitialPose(const yarp::dev::Map2DLocation& loc) override;
 };
 
 class rosLocalizerThread : public yarp::os::PeriodicThread
@@ -168,6 +168,6 @@ public:
     void publish_map();
 
 public:
-    bool initializeLocalization(yarp::dev::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Map2DLocation& loc);
     bool getCurrentLoc(yarp::dev::Map2DLocation& loc);
 };

@@ -78,7 +78,7 @@ bool   gazeboLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
     return true;
 }
 
-bool   gazeboLocalizer::setInitialPose(yarp::dev::Map2DLocation& loc)
+bool   gazeboLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -143,7 +143,7 @@ void gazeboLocalizerThread::run()
     else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
 }
 
-bool gazeboLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
+bool gazeboLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
 {
     yInfo() << "gazeboLocalizerThread: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);

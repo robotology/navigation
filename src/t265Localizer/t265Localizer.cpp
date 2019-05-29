@@ -72,7 +72,7 @@ bool   t265Localizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
     return true;
 }
 
-bool   t265Localizer::setInitialPose(yarp::dev::Map2DLocation& loc)
+bool   t265Localizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -131,10 +131,11 @@ void t265LocalizerThread::run()
         auto v = yarp::math::dcm2euler(m);
         m_current_device_data.theta =  v[1]*RAD2DEG;
     }
-    yDebug() << "device pose (x y t)" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
+    yDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //relocate data in robot frame
     relocate_data(m_current_device_data);
+    yDebug() << "device pose (x y t) after relocation: " << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //compute data localization
     double c = cos((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
@@ -150,7 +151,7 @@ void t265LocalizerThread::run()
     else if (m_current_loc.theta <= -360) m_current_loc.theta += 360;
 }
 
-bool t265LocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
+bool t265LocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
 {
     yInfo() << "t265LocalizerThread: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);
@@ -225,9 +226,6 @@ bool t265LocalizerThread::threadInit()
         return false;
     }
 
-    //initialize the device relocation system on the robot
-    movable_localization_device::init(m_cfg);
-
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
     {
@@ -236,8 +234,10 @@ bool t265LocalizerThread::threadInit()
     }
 
     //general group
-    m_local_name = "t265Localizer";
-    if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString();}
+    if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString(); }
+
+    //initialize the device relocation system on the robot
+    movable_localization_device::init(m_cfg);
 
     //opens the device communication
     if (!open_device())

@@ -98,7 +98,7 @@ bool   odomLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
     return true;
 }
 
-bool   odomLocalizer::setInitialPose(yarp::dev::Map2DLocation& loc)
+bool   odomLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -154,7 +154,7 @@ void odomLocalizerThread::run()
     }
 }
 
-bool odomLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
+bool odomLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
 {
     yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);

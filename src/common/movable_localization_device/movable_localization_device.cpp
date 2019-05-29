@@ -47,7 +47,7 @@ void movable_localization_device::relocate_data(yarp::dev::Map2DLocation& device
     else if (m_device_position == DEVICE_FROM_TF_VARIABLE)
     {
         yarp::sig::Matrix transform;
-        bool b = m_iTf->getTransform("robot", "device", transform);
+        bool b = m_iTf->getTransform(m_frame_robot_id, m_frame_device_id, transform);
         m_device_to_robot_transform.x = transform[3][0];
         m_device_to_robot_transform.y = transform[3][1];
         auto v = yarp::math::dcm2euler(transform);
@@ -58,6 +58,12 @@ void movable_localization_device::relocate_data(yarp::dev::Map2DLocation& device
 
 movable_localization_device::movable_localization_device()
 {
+    //default values
+    m_iTf = nullptr;
+    m_frame_robot_id = "robot_frame";
+    m_frame_device_id = "device_frame";
+    m_tf_data_received = 0;
+    m_device_position = DEVICE_POS_IS_NONE;
 }
 
 bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::dev::IFrameTransform*  iTf)
@@ -98,12 +104,12 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
     }
     else if (m_device_position == DEVICE_FROM_TF_FIXED)
     {
-        if (m_iTf == 0)
+        if (m_iTf == nullptr)
         {
             if (!init_tf())  { yError() << "general error"; return false; }
         }
         yarp::sig::Matrix transform;
-        bool b = m_iTf->getTransform("robot","device",transform);
+        bool b = m_iTf->getTransform(m_frame_robot_id,m_frame_device_id,transform);
         m_device_to_robot_transform.x = transform[3][0];
         m_device_to_robot_transform.y = transform[3][1];
         auto v = yarp::math::dcm2euler(transform);
@@ -111,14 +117,14 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
     }
     else if (m_device_position == DEVICE_FROM_TF_VARIABLE)
     {
-        if (m_iTf == 0)
+        if (m_iTf == nullptr)
         {
-            if (!init_tf()) { yError() << "general error"; return false; }
+            if (!init_tf()) { yError() << "m_iTf is nullptr"; return false; }
         }
     }
     else
     {
-        yError() << "general error";
+        yError() << "m_device_position type unset";
         return false;
     }
 }
@@ -136,7 +142,7 @@ bool movable_localization_device::init_tf()
         return false;
     }
     m_ptf.view(m_iTf);
-    if (m_ptf.isValid() == false || m_iTf == 0)
+    if (m_ptf.isValid() == false || m_iTf == nullptr)
     {
         yError() << "Unable to view iTransform interface";
         return false;

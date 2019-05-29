@@ -93,7 +93,7 @@ public:
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   setInitialPose(yarp::dev::Map2DLocation& loc) override;
+    bool   setInitialPose(const yarp::dev::Map2DLocation& loc) override;
 };
 
 class pozyxLocalizerThread : public yarp::os::PeriodicThread
@@ -128,7 +128,7 @@ public:
     virtual void run() override;
 
 public:
-    bool initializeLocalization(yarp::dev::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Map2DLocation& loc);
     bool getCurrentLoc(yarp::dev::Map2DLocation& loc);
 };
 

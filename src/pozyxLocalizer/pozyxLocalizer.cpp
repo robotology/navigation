@@ -80,7 +80,7 @@ bool   pozyxLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
     return true;
 }
 
-bool   pozyxLocalizer::setInitialPose(yarp::dev::Map2DLocation& loc)
+bool   pozyxLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -129,7 +129,7 @@ void pozyxLocalizerThread::run()
     else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
 }
 
-bool pozyxLocalizerThread::initializeLocalization(yarp::dev::Map2DLocation& loc)
+bool pozyxLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
 {
     yInfo() << "pozyxLocalizerThread: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);

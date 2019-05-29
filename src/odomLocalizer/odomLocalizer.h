@@ -104,7 +104,7 @@ public:
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   setInitialPose(yarp::dev::Map2DLocation& loc) override;
+    bool   setInitialPose(const yarp::dev::Map2DLocation& loc) override;
 };
 
 class odomLocalizerThread : public yarp::os::PeriodicThread
@@ -126,12 +126,12 @@ protected:
     double                       m_last_odometry_data_received;
 
 public:
-    odomLocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    odomLocalizerThread(const double _period, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;
 
 public:
-    bool initializeLocalization(yarp::dev::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Map2DLocation& loc);
     bool getCurrentLoc(yarp::dev::Map2DLocation& loc);
 };
