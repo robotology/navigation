@@ -15,24 +15,16 @@ add_subdirectory(navigationGUI)
 yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
                                  DEFAULT ON
                                  DOC "devices plugins")
-add_subdirectory(rosNavigator)
-add_subdirectory(rosLocalizer)
-add_subdirectory(odomLocalizer)
-add_subdirectory(gazeboLocalizer)
-add_subdirectory(pozyxLocalizer)
-add_subdirectory(t265Localizer)
-#add_subdirectory(amclLocalizer)
-add_subdirectory(robotGotoDevice)
-add_subdirectory(robotPathPlannerDevice)
-add_subdirectory(map2Gazebo)
+add_subdirectory(localizationDevices)
+add_subdirectory(navigationDevices)
 
 yarp_end_plugin_library(navmod)
 
+add_subdirectory(map2Gazebo)
 #add_subdirectory(mapper2D)
 
 add_subdirectory(follower)
 
 add_subdirectory(tests)
 add_subdirectory(tutorials)
-add_subdirectory(templates)
 
