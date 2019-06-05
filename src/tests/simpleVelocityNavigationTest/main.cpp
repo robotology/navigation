@@ -10,7 +10,7 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/dev/Polydriver.h>
+#include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/INavigation2D.h>
 #include <iostream>
 #include <iomanip>
