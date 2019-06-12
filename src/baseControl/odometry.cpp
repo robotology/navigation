@@ -23,12 +23,12 @@
 #define RAD2DEG 180.0/M_PI
 #define DEG2RAD M_PI/180.0
 
-inline TickTime normalizeSecNSec(double yarpTimeStamp)
+inline yarp::rosmsg::TickTime normalizeSecNSec(double yarpTimeStamp)
 {
     uint64_t time = (uint64_t)(yarpTimeStamp * 1000000000UL);
     uint64_t nsec_part = (time % 1000000000UL);
     uint64_t sec_part = (time / 1000000000UL);
-    TickTime ret;
+    yarp::rosmsg::TickTime ret;
 
     if (sec_part > std::numeric_limits<unsigned int>::max())
     {
@@ -211,7 +211,7 @@ void Odometry::broadcast()
 
     if (enable_ROS)
     {
-        nav_msgs_Odometry &rosData = rosPublisherPort_odometry.prepare();
+        yarp::rosmsg::nav_msgs::Odometry &rosData = rosPublisherPort_odometry.prepare();
         rosData.header.seq = rosMsgCounter;
         rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
         rosData.header.frame_id = odometry_frame_id;
@@ -220,7 +220,7 @@ void Odometry::broadcast()
         rosData.pose.pose.position.x = odom_x;
         rosData.pose.pose.position.y = odom_y;
         rosData.pose.pose.position.z = 0.0;
-        geometry_msgs_Quaternion odom_quat;
+        yarp::rosmsg::geometry_msgs::Quaternion odom_quat;
         double halfYaw = odom_theta / 180.0*M_PI * 0.5;
         double cosYaw = cos(halfYaw);
         double sinYaw = sin(halfYaw);
@@ -241,7 +241,7 @@ void Odometry::broadcast()
 
     if (enable_ROS)
     {
-        geometry_msgs_PolygonStamped &rosData = rosPublisherPort_footprint.prepare();
+        yarp::rosmsg::geometry_msgs::PolygonStamped &rosData = rosPublisherPort_footprint.prepare();
         rosData = footprint;
         rosData.header.seq = rosMsgCounter;
         rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
@@ -251,8 +251,8 @@ void Odometry::broadcast()
 
     if (enable_ROS)
     {
-        tf2_msgs_TFMessage &rosData = rosPublisherPort_tf.prepare();
-        geometry_msgs_TransformStamped transform;
+        yarp::rosmsg::tf2_msgs::TFMessage &rosData = rosPublisherPort_tf.prepare();
+        yarp::rosmsg::geometry_msgs::TransformStamped transform;
         transform.child_frame_id = child_frame_id;
         transform.header.frame_id = odometry_frame_id;
         transform.header.seq = rosMsgCounter;

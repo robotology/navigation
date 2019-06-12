@@ -5,8 +5,8 @@
 </dependencies>
 
 <module>
-   <name>robotGoto</name>
-   <parameters>--context robotGoto --from robotGoto_ikart.ini --no_stop_on_obstacles</parameters>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotGotoDev --context robotGoto --from robotGoto_ikart.ini --no_stop_on_obstacles</parameters>
    <node>console</node>
 </module>
 

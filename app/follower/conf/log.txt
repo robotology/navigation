@@ -1,0 +1,1562 @@
+[[01;32mDEBUG[00m]Configuring and starting module. 
+ 
+[[01;34mINFO[00m]The follower module has been configure with following values 
+[[01;34mINFO[00m]factorDist2Vel= 0.8 
+[[01;34mINFO[00m]factorAng2Vel= 0.8 
+[[01;34mINFO[00m]inputPortName= targetPoints 
+[[01;34mINFO[00m]factorDist2Vel= commands 
+[[01;34mINFO[00m]distanceThreshold= 0.8 
+[[01;34mINFO[00m]angleThreshold= 5 
+[[01;34mINFO[00m]targetType= redball 
+[[01;34mINFO[00m]angularVelLimit= 100 
+[[01;34mINFO[00m]linearVelLimit= 100 
+[[01;34mINFO[00m]angleMinBeforeMove= 30 
+[[01;34mINFO[00m]created device <transformClient>. See C++ class yarp::dev::FrameTransformClient for documentation.
+[[01;34mINFO[00m]created device <navigation2DClient>. See C++ class yarp::dev::Navigation2DClient for documentation.
+[[01;32mDEBUG[00m]Navigation controller is configured! 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0459673 -0.0175044 0.506112 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 6.11884 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0461144 -0.0181649 0.507013 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 6.11916 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530361037505255 0.0712265337470625 0.914670037423071)) (target-type cartesian) 
+[[01;32mDEBUG[00m]I'm about to create the target frame called  targetFrame 
+[[01;32mDEBUG[00m]follower: makeFrame=  makeFrame 0.2 0.530361037505255 0.0712265337470625 0.0 0.0 0.0 0.0 0 0 0 "SIM_CER_ROBOT::mobile_base_body_link" targetFrame   Ans= targetFrame 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0465731 -0.0153627 0.492199 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 6.31873 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515424131646977 0.0715063960690867 0.913383733489171)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0442501 -0.0170813 0.500082 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 6.1303 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523209814996796 0.0703955167381212 0.914763562599475)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.042006 -0.0196802 0.517883 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 5.8617 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.540937492568758 0.0695559416674144 0.915846397766409)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0376264 -0.0183495 0.520511 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 5.96423 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.542508312916079 0.0709919048974192 0.916540501163293)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0309026 -0.0170389 0.507766 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 5.67658 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529458801315353 0.0659074797907629 0.917272020201987)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0232976 -0.0134981 0.488455 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 5.50155 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.509453798518415 0.0614426293049537 0.917097394304155)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0149355 -0.0150395 0.501779 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 5.09807 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522267426268209 0.0583286575046416 0.919390608982622)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00745618 -0.0126249 0.504209 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 4.7119 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524172566055579 0.0540744011237249 0.91827389075913)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00278129 -0.0127008 0.517906 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538038406668991 0.0441722245295362 0.916800705564376)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00714575 -0.0127208 0.514729 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534988180635063 0.039612924360425 0.917101970904767)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0120181 -0.0117709 0.504023 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.52434809185826 0.0351980515946569 0.916971447251241)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0144787 -0.0124741 0.495288 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515832910421054 0.0319703876331968 0.918444706509335)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.013535 -0.0117795 0.497064 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517509336949835 0.03276293984761 0.91733165632093)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0133736 -0.0121214 0.498958 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519448972123516 0.032821768694992 0.917429855912782)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0141188 -0.0122482 0.503405 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.52392026305271 0.032158043528961 0.917020082802047)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0139642 -0.0120188 0.498231 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518749515588482 0.0321028290540016 0.917084512022235)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0141438 -0.0144202 0.509408 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530136370494271 0.032129940654025 0.918239393393297)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0155794 -0.0140015 0.517408 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538108046681679 0.0308312312664641 0.916855750216543)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0142773 -0.0142667 0.514152 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534890302761428 0.0319068080943623 0.917565931444633)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0154632 -0.0143441 0.528015 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.548677806660908 0.0307587671855797 0.916577064142968)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0144619 -0.0150756 0.522049 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.542769399239892 0.031234280225023 0.918129837672324)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0127574 -0.0123209 0.50381 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524340458180827 0.032659645746486 0.917078379383724)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0128655 -0.0129498 0.494392 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515021121596675 0.0319361920168638 0.919034846847748)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0129376 -0.0121074 0.501275 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521811458827834 0.0319436898076218 0.917373544206696)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0126969 -0.0112704 0.504411 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524843640874181 0.0322128457237887 0.916092853248185)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0134962 -0.0109636 0.487485 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.5080038699178 0.0309145730385677 0.917334453415053)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.014065 -0.0117587 0.494455 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515060617349346 0.0304446647303035 0.917333506453897)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0144612 -0.012806 0.509335 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529962145673936 0.0304326895995827 0.916890289938006)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0149481 -0.0139443 0.514197 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.53495704827374 0.0298478298365844 0.917340497772703)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0128136 -0.0123049 0.487471 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.508174427349659 0.0314892835805078 0.918149241717153)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0123787 -0.0134101 0.493878 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514620242220426 0.0315316702220136 0.919080415943815)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0130806 -0.0127874 0.49675 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517440764554402 0.0309392619736006 0.918025591384751)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0112134 -0.0122142 0.492262 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512908362407197 0.0327088844991721 0.917896510742533)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0117324 -0.0118994 0.480931 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.501629068021963 0.0319026173354177 0.918409205473764)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0129308 -0.0122397 0.483369 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.504121889097276 0.030718121234631 0.91842846838985)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0123589 -0.0141115 0.504837 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525659562125791 0.0316220268960562 0.918040004460973)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0122346 -0.0129727 0.508562 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529293176096388 0.0316654446766334 0.916343583172839)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0125507 -0.0131041 0.508907 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529624155880839 0.0314210858615061 0.916336392362576)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0121672 -0.0130029 0.50325 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524014376981988 0.0315289372132235 0.916674397814944)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0128002 -0.0130402 0.505904 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526692418065853 0.031005520905901 0.916240898991584)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0124437 -0.0135637 0.503507 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524366359366292 0.031300685554951 0.916930388166331)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0110028 -0.0130667 0.488346 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.509205559870779 0.0324255480992081 0.917825004382791)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0115268 -0.0115156 0.482871 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.503654650284696 0.0317138021811204 0.916520926485276)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0123348 -0.0135291 0.497993 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518915147203514 0.0311176285359282 0.916875081473674)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0113049 -0.0126643 0.494528 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515374741917398 0.0320857483325408 0.916342701267559)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.011952 -0.0134906 0.498742 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519679828313458 0.0314603231217436 0.916556257279052)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0128986 -0.0132402 0.501149 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522105587495321 0.0303536262516172 0.915800571311983)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0106346 -0.0135351 0.492514 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513523186814152 0.0324106616248137 0.91688874045736)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0112161 -0.0141431 0.506073 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.527080010153974 0.0321258982253855 0.915949964709139)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0121728 -0.0139256 0.504317 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525341314285184 0.0310936726718291 0.915812956949157)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.012257 -0.0144962 0.50966 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530727756968422 0.0309389911220798 0.915719865729049)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0112777 -0.0144431 0.50085 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521961506464558 0.0317304257201472 0.916492366621418)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0121712 -0.01453 0.500126 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521255370541777 0.0308716407797383 0.91649772470384)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I can't see the redBall 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521282333205213 0.0307207080808704 0.916432067352425)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0103779 -0.013946 0.491845 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512959237629256 0.0323242492385792 0.916529167568589)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0109151 -0.0139541 0.495033 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516149274277449 0.0317877313148264 0.916092041925616)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.011533 -0.0156026 0.505358 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526625534720939 0.031394196391757 0.916479134277164)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0106862 -0.016431 0.514765 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.53608870237321 0.0322472012984793 0.916205304673637)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0115405 -0.0138947 0.502433 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523561531902535 0.0312672862245017 0.91499559960862)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.011832 -0.0149651 0.504114 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525393942375194 0.030818353393307 0.915489156908596)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0106421 -0.0149506 0.499082 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520354841633166 0.0319058206877381 0.915988501452793)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00974972 -0.0146056 0.491784 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513080049442565 0.032612512908482 0.916152277652086)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0105701 -0.0130415 0.484723 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.505900515930016 0.0317410769146898 0.915195414643825)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0108971 -0.0145143 0.482801 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.504194075074776 0.0312286653855414 0.916725613980747)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0112543 -0.0137329 0.491109 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512351347556152 0.0311100952054986 0.915088404866141)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0108658 -0.0171503 0.50455 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526101501489955 0.0314949027025444 0.916778101519299)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0103413 -0.0160941 0.502695 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524149227823319 0.0320124099739337 0.915903480418399)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0112425 -0.0171366 0.509782 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531289206296855 0.0308250440336369 0.916651983485869)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0105077 -0.0155802 0.495238 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516675497237017 0.0314080475703662 0.916475367298755)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0109093 -0.0151457 0.497979 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51936066373226 0.0309145188504901 0.91581420356112)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00918227 -0.0145306 0.491997 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513326722688963 0.0326159911888821 0.915880688950112)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00839344 -0.0151419 0.489498 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.510935589661981 0.0331721115565323 0.916390995387209)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00795143 -0.0159149 0.4958 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517277720873139 0.033769469615076 0.91635375892452)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0107303 -0.0142715 0.487132 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.508529984514062 0.0307544480883914 0.915653999278932)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0101669 -0.0157815 0.494177 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.5156994223743 0.0314383778164375 0.916162309176867)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00980324 -0.0170335 0.504988 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526605365292997 0.0318228168456983 0.91620266490012)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0097241 -0.0177255 0.517867 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.539486152137638 0.0320414202197942 0.915338594804159)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.010236 -0.015022 0.495594 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517081917364818 0.0311130912900007 0.915003398002021)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.010924 -0.0163049 0.499859 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521437106089633 0.0304498944004754 0.91592276881881)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00958996 -0.0162796 0.500829 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522410174897789 0.031794852233609 0.915705571089352)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00985972 -0.0181954 0.506553 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.528310507418856 0.0314091252515075 0.916898545449389)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0107832 -0.0171252 0.513776 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.535406385209749 0.0306493620816039 0.914916872975317)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0101205 -0.0175915 0.510224 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.53192567068778 0.0311286867850077 0.91571974435967)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00992442 -0.0164829 0.503696 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525314070360921 0.0309563309045585 0.915899079662563)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0104009 -0.0163586 0.504508 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526068392952603 0.0303095873491385 0.915772807962702)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0108554 -0.0156026 0.500153 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521664006424967 0.0298815460269926 0.915407086656021)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0081855 -0.0155216 0.492546 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514088693918059 0.0323084031137272 0.916073737122129)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00872559 -0.0154398 0.493398 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514947411353772 0.0317301868678616 0.915751010912082)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00921281 -0.015884 0.492421 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514050307921256 0.0312690303465846 0.915954459452997)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00919927 -0.0160518 0.498834 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520474210468373 0.0312004911577463 0.915291516022208)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00845085 -0.0171512 0.509552 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531242916777868 0.0321658188595441 0.915189730179668)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00862705 -0.0157025 0.497373 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51897753601307 0.0317611485120703 0.914897154970141)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0102663 -0.0169868 0.500571 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522361967641372 0.0301037695570804 0.915658629609838)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00913098 -0.0162296 0.492739 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514467374042771 0.0309834350978562 0.915783689919816)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00848555 -0.0167254 0.503117 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524817236345327 0.0315687986452672 0.915460931277988)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00977045 -0.0175273 0.51641 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538159551065794 0.030286277849115 0.914704402799738)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00898393 -0.0170688 0.516347 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538035591939112 0.0311301153039815 0.914011614168197)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00918823 -0.0162536 0.50017 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521860091695592 0.0306810308611268 0.915031184422996)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00921016 -0.0174537 0.501432 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523270180509767 0.0306317408764621 0.915928483295839)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00807561 -0.0166201 0.48789 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.509716721015194 0.0315609265715895 0.916489839423931)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00792359 -0.0168773 0.494668 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516487375578668 0.0316606190284105 0.916003654945083)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0090233 -0.0179153 0.496193 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518141978104864 0.0305987781689012 0.9167448179892)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00891722 -0.0178272 0.51628 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538107777110142 0.0307957366013309 0.914431359188011)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00923597 -0.0182535 0.510943 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.532852885817528 0.0303577589750002 0.91538691095792)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I can't see the redBall 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.532886248316874 0.0302803696341138 0.915251733735302)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00721068 -0.016735 0.497629 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519446086596258 0.0322394065456511 0.915310382936308)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00882587 -0.0186245 0.495341 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517334220770312 0.0303815042853689 0.91793315545164)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00876316 -0.0177861 0.513831 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.535665496780162 0.0304639520074112 0.914922872667716)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00947929 -0.0174028 0.517048 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538815264258409 0.0297410340315976 0.914315796212427)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00832899 -0.0154057 0.492242 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513930109487167 0.0306262182312239 0.915010302252504)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00705682 -0.0156899 0.487179 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.508956248389647 0.0318098942035844 0.915679748645983)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00737155 -0.0159003 0.487552 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.509364405350674 0.0314224024723557 0.915600537345721)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00847441 -0.0174507 0.499037 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520979877822619 0.0303763343316302 0.915736342744)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00894242 -0.0179667 0.512777 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534674795074493 0.0301449508648658 0.914748992190804)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00675825 -0.0175031 0.497727 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519681737572888 0.0319782148188714 0.915616918061373)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00713513 -0.0167327 0.492092 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513986442512995 0.0316080673319829 0.915573566156381)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00741503 -0.0165945 0.492576 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514496714602971 0.031273320518393 0.915279853297546)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00755622 -0.0170126 0.489643 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.511621491435418 0.0310744526598441 0.915847147975875)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.006956 -0.0170107 0.498936 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520877692068227 0.0316403486584498 0.914753491909998)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00772426 -0.0181623 0.499869 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521942288395962 0.0309432609881337 0.915661913409978)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00756866 -0.0175063 0.500002 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522023025824355 0.0310097167091903 0.914618083762316)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00620421 -0.0175224 0.494756 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516786255486846 0.0321628525053034 0.915370738398512)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00708057 -0.016844 0.485746 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.507784225942856 0.0312220932819304 0.915789712373119)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00720291 -0.0178614 0.497864 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519948716452684 0.0310944140220778 0.915107807103761)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00677939 -0.018402 0.503417 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525546519301177 0.0315107933930901 0.914871019580677)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00813228 -0.0191808 0.500022 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.52227405635515 0.0302457091292041 0.915951570445001)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00783197 -0.019258 0.514 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.536189163918725 0.0304829620415365 0.914331898438632)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I can't see the redBall 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.536142273721052 0.030262504137631 0.91522866902546)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00739375 -0.0199209 0.510376 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.532604188326641 0.030584713541517 0.916212009506681)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00661434 -0.0172004 0.502875 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524854967622695 0.031269014847547 0.914429377510456)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00746211 -0.0209828 0.53122 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.553407603155782 0.0305173632370108 0.915356930411724)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00860164 -0.0204966 0.534693 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.55685570679742 0.0291514757516877 0.914517770702096)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00740495 -0.0204525 0.545076 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.567124321942302 0.0304691300975986 0.91355625495794)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00548537 -0.0184451 0.51279 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534753121847385 0.0319582878306428 0.915700037359378)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00799949 -0.017096 0.494714 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51663494355701 0.0291744549516988 0.916763389332994)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0071658 -0.0167911 0.493706 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515632300150535 0.02999166349747 0.916273588024811)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00584435 -0.0184419 0.499352 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521434612539962 0.031156811314231 0.917070128201039)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00518578 -0.0169203 0.49821 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520136710198829 0.0317637712153683 0.91554325897493)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00517792 -0.0165142 0.494793 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516736305649297 0.0316837525663594 0.915265317236016)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00612764 -0.0165934 0.499144 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521071133621707 0.0307318158193463 0.914833076971248)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00700884 -0.0175231 0.507749 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529759642117947 0.0299309104338403 0.914596674208651)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00798613 -0.0187473 0.509075 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531210249055682 0.0288545288028085 0.915697260243686)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00715624 -0.0184115 0.51485 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.536914294692611 0.0295152256160117 0.914643255731791)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00552759 -0.0179335 0.507305 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529344569707627 0.0309937398014753 0.915272805276404)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00619425 -0.0172976 0.50827 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530224366266755 0.0302617124634451 0.914742792366465)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00506927 -0.0181079 0.518757 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.540757834286716 0.0314509624420742 0.914066746910864)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00510403 -0.0182195 0.515016 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.537059275652477 0.031368637724554 0.91451875800192)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00446467 -0.0193342 0.519419 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.541562671486694 0.0319826881074312 0.914987344181998)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0056063 -0.0178738 0.510447 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.532512741838976 0.0306656279485584 0.914443504190221)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00344295 -0.0172085 0.491188 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51331688386884 0.0326726544247777 0.915728809854358)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00490435 -0.0165885 0.498516 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520547918114688 0.0312906691157225 0.913991939680308)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00684069 -0.0175852 0.501378 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523519899940825 0.0293175759597659 0.914462619978219)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00476989 -0.017712 0.497602 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519787595344185 0.0312495520240665 0.915009259697259)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00460831 -0.01661 0.482476 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.50467446832972 0.031287557175916 0.915381414332348)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00333857 -0.0174009 0.493779 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515992442939341 0.0325587201479028 0.914764593112982)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0053054 -0.0195896 0.519378 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.541703514566915 0.0307285314359838 0.913726077370624)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00617092 -0.0208852 0.524022 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.546495621926223 0.0297116461277047 0.91435587248961)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00470941 -0.0205629 0.527929 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.550314189445147 0.0311040510916753 0.913911353080659)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I can't see the redBall 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.550335078649197 0.0310735198308322 0.913680680302124)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00524131 -0.0162357 0.479448 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.501631762280855 0.030189201841138 0.91552205752215)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00248762 -0.0168372 0.477424 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.499635341771994 0.0328795095817017 0.91659079813156)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0056698 -0.018404 0.498117 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520401036971652 0.0298291896239762 0.915664135221)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00444298 -0.0190875 0.516403 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538693208316298 0.0309090341163854 0.913928127514109)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00426677 -0.0185471 0.505307 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.527646259832845 0.0310206398617693 0.914536230847929)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0044827 -0.0177948 0.490992 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513305760602163 0.0307450874601245 0.915397236886196)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00380529 -0.0163337 0.480796 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.503024427821844 0.0313400001852874 0.914892358701628)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00406662 -0.0175796 0.488562 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.510902065480016 0.0311261347654173 0.914979902120996)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00462444 -0.0181062 0.492861 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515249154967596 0.0305320365478732 0.914910719606922)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00400739 -0.018745 0.495584 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51804432531539 0.0310438520963436 0.915109192523848)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0041004 -0.0183466 0.492979 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515422872309019 0.030980951585588 0.914727325704559)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00336228 -0.0169356 0.491711 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513998936123201 0.0317004067662321 0.91336799969528)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00496814 -0.0200526 0.495593 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51824862188956 0.0300521838859663 0.915839239725507)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0039616 -0.0195448 0.506804 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529365218462592 0.0309879333936143 0.91367784595739)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00448512 -0.0210907 0.520115 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.542745232487879 0.0303404695242919 0.913883363912747)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0039774 -0.019626 0.499355 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521953901567439 0.0307888813412696 0.914979880780742)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0053429 -0.0189834 0.50437 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526881112276822 0.0293878596739204 0.913616055461665)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00329672 -0.0175926 0.484879 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.507289530924474 0.0313693913337735 0.915103215848265)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0045161 -0.0199083 0.500358 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.52295142734209 0.0301678519704463 0.915594719595957)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00458798 -0.0204297 0.515155 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.537751587563684 0.0299896717284456 0.914277369742812)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00479652 -0.0213945 0.527511 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.550105255063501 0.0298204322200221 0.913844580731002)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00411365 -0.0213147 0.516445 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.53906905987623 0.0301629288763872 0.915955973575973)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00317912 -0.0172754 0.498645 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520888809752459 0.0309709533416922 0.914469465550199)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00354436 -0.0166395 0.485163 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.507373614120154 0.0305756584973569 0.915578972876279)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00446609 -0.0179739 0.495926 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518236236158911 0.0295592688331473 0.915651218544475)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00394729 -0.0187094 0.51138 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.533692191043937 0.0301589733557708 0.914514351451926)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00243095 -0.0166819 0.490344 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512596352911602 0.0314557631132453 0.914502202968196)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00291087 -0.0173617 0.489572 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.511924874330263 0.0309527681075614 0.915230037257654)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I can't see the redBall 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.511918912071157 0.0308995749761046 0.915090917266483)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00297386 -0.0184063 0.512191 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534535961523871 0.0307780875043885 0.913287071966584)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00373908 -0.0192114 0.513681 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.536109794037948 0.0300771604830104 0.913792125025353)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00317885 -0.0189083 0.509552 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.53197773852935 0.0306350002089184 0.913904606624675)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.003187 -0.0184 0.500357 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522849805202465 0.0304368395898901 0.914157615198685)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00296452 -0.0193053 0.505566 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.528123783147354 0.0306189019334573 0.914311459213701)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00337321 -0.0185421 0.495466 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517987647062271 0.0301771845532345 0.91462050540698)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00367427 -0.0190258 0.504485 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.527044584343751 0.0298120671598011 0.913865985103191)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00150907 -0.0177089 0.487829 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.510358442744886 0.0319116736124148 0.914196649476641)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00222431 -0.0191309 0.494485 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517153508033922 0.0311625392614805 0.914710461449306)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00258314 -0.0201426 0.507982 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530679059484231 0.0308342568744864 0.91395318482953)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0030773 -0.022133 0.524011 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.546843902578343 0.0301531858195645 0.914107992074357)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00244345 -0.0198823 0.508675 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531364873349273 0.0308891417471636 0.913627359476804)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00295308 -0.0191857 0.498346 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520988771487759 0.0302044447858085 0.91471289068899)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00198937 -0.018395 0.496978 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519521753264256 0.0311321469752167 0.914017734053683)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00195687 -0.019586 0.498595 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521275855665629 0.031225342175707 0.914915069912485)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00194248 -0.0181343 0.493948 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516512404572389 0.0312104804908515 0.913792066903675)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00344466 -0.0190013 0.50004 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522664924770771 0.02967999062728 0.913882165367999)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00309336 -0.0201159 0.507032 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529762679170173 0.0298714931519241 0.914073546036936)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00278274 -0.0211834 0.512668 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.535491348673937 0.0302399224857506 0.914299030161112)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00169776 -0.0192726 0.513745 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.536346355933688 0.0311979817228455 0.912259368339781)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00155726 -0.0202182 0.507711 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530423070249165 0.031266420625908 0.914527878969306)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00248304 -0.0186517 0.498151 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520754561282036 0.030404746725376 0.913966225618056)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00253044 -0.0179853 0.491919 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514480850322131 0.0303598491188346 0.914095252734266)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00217684 -0.0183912 0.493058 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51566235643446 0.0306738788345719 0.914326617861605)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00189945 -0.0183492 0.497737 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520336597482248 0.0307809378808488 0.913645257190835)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00316212 -0.0191053 0.504192 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526823122824298 0.0296111933354675 0.913545425325095)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000521173 -0.0195928 0.501678 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524415922425785 0.0321721679871768 0.914024307093109)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00235067 -0.0196819 0.500677 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523410847630071 0.0303406443409483 0.914284999705693)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00100842 -0.0190338 0.496919 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519634337766611 0.0315307109355565 0.913904656731996)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00341053 -0.0223827 0.50843 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531448844355296 0.0291638452315393 0.91592376852252)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00221364 -0.0203282 0.502973 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525837519654959 0.0302072611926101 0.914287507503408)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0019195 -0.0212303 0.511235 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534142491966169 0.0305711415440252 0.914337172192811)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00295915 -0.0193476 0.498218 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520919028851947 0.0293537645344369 0.914753522547114)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00200131 -0.0205363 0.507282 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529990768802022 0.0301953588010259 0.915720190146686)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00177145 -0.0189077 0.508189 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530731060748733 0.0303744397324251 0.913833255644685)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000996252 -0.0177528 0.487876 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.510407831076328 0.0311930212931098 0.91502491433276)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00233874 -0.0182148 0.490122 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512705139123468 0.0299004687594531 0.915139169526671)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -9.39637e-06 -0.019967 0.50043 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523169947785184 0.0322079708875228 0.915707934212109)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00281711 -0.0196785 0.514674 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.537280173908833 0.0292024536512908 0.913612705994472)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.0014755 -0.0187348 0.501117 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523714322860236 0.0305344401244777 0.914244840148268)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00156388 -0.0187565 0.500641 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523256279406597 0.0305221853916603 0.914193029630932)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000184797 -0.0179439 0.500528 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.523064933845527 0.0317434606059386 0.9132565823737)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000995863 -0.0211201 0.513056 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.535895447155508 0.0308974718126309 0.914852786616844)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000869513 -0.0185858 0.489618 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512337208435148 0.0310058886481068 0.914765248013141)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000993949 -0.0186111 0.49672 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519381614853142 0.0309467708877922 0.913994344204973)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00145729 -0.0184166 0.498259 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520922344588622 0.0303221024905408 0.91343859685744)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.001037 -0.019498 0.499015 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521816078769241 0.0307791562619897 0.914295476736219)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000746934 -0.0184541 0.494441 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517143844248909 0.0309964161447459 0.913777091169199)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000607297 -0.0208376 0.51157 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534442310256542 0.0311332049723385 0.914118512626627)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00120855 -0.0207571 0.51282 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.535660020259778 0.0304936187809035 0.913849013835144)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00065038 -0.018805 0.502064 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524747619055673 0.0310827969881542 0.913167143830681)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 4.02867e-05 -0.0178657 0.48408 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.506766446610315 0.0317285630553866 0.914598598948517)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00173535 -0.0177938 0.490644 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.513280832342375 0.0298660515267113 0.913977007687093)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000712044 -0.0201042 0.50529 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.528081666762789 0.0309368467814082 0.914548187972271)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00037456 -0.0186298 0.49619 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518905121828027 0.0319636700075138 0.913797431517728)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000878366 -0.0195106 0.506318 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529052687541208 0.0306760291074587 0.913598186960391)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000763819 -0.0201455 0.503942 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526771020548366 0.0307965533535744 0.914484482568171)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000506656 -0.0196567 0.506689 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529466624874769 0.0319501848843943 0.913654930230028)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00017473 -0.0193872 0.50022 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522974224433542 0.0311779102673806 0.914401351861581)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000965494 -0.0194714 0.502485 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525199830136773 0.030492050547971 0.914393339000725)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000727889 -0.0205543 0.514452 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.537263988858888 0.03048225879547 0.913794153018567)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.00107467 -0.0213351 0.527567 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.550384090464457 0.0300644370920147 0.913043607828617)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000919325 -0.0212468 0.520986 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.543804303908701 0.0303369312987594 0.914276674624201)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000459384 -0.0196242 0.507397 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.530065545499603 0.0306749074873907 0.914715493548068)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000293815 -0.0196292 0.50726 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529950760921324 0.0314241053127496 0.914733277257899)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000129286 -0.0192859 0.50382 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526474943188451 0.0313889392945044 0.914799637587641)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000809499 -0.0208594 0.516526 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.539299184070121 0.03035064588896 0.914713330608384)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000164197 -0.0184165 0.501648 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524291158997809 0.03086263932528 0.913727994511955)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 3.36532e-05 -0.0193029 0.504351 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.527057123536508 0.0310887082804997 0.914312457749727)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000668725 -0.0186316 0.504418 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.52707084724814 0.0316181679372741 0.913534960061429)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000151854 -0.0179786 0.49432 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.516967857488931 0.0311053120511191 0.913914833618568)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 8.29807e-05 -0.0181141 0.485521 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.508229394396446 0.0308737497613785 0.914992732902383)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -3.94771e-05 -0.0186168 0.494903 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517637970998805 0.0310423967497442 0.914323439458736)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000972335 -0.0193824 0.508698 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531432767650915 0.0298811759669272 0.913261855987631)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000717999 -0.0198961 0.518734 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.541480718587233 0.0300407632241522 0.912366259418826)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000479346 -0.0189635 0.504023 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526791601487874 0.0302859678330968 0.912992854887846)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00115851 -0.0188059 0.491678 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514521141752915 0.0318623684896669 0.914261144860204)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000247688 -0.0188279 0.481015 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.50396554984723 0.0309514212390508 0.915155695724781)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -5.26669e-06 -0.0193532 0.491317 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514238869120209 0.0307146774194183 0.914388565342123)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00114546 -0.0217743 0.512116 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.535217048267083 0.0316378751075784 0.914316747192734)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000719519 -0.0230313 0.519767 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.542956845519775 0.0311203082855249 0.914551739992627)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00130775 -0.0196225 0.499642 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522521470851145 0.0318298264110429 0.914209624214239)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000710934 -0.0199685 0.499212 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522043053308135 0.0313793335543271 0.91554514360751)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000421182 -0.0189196 0.500056 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522778150512942 0.0309794708701133 0.914460978082101)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000568028 -0.0202123 0.516002 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.538770962638683 0.031069294028274 0.91380422713781)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000560711 -0.0207349 0.525833 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.548586737145079 0.0309811417689381 0.913097835778203)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00110788 -0.0203217 0.511866 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534673933898883 0.0314774072993977 0.914322231727804)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -9.50201e-05 -0.0184981 0.484901 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.507605892750043 0.0307665312325801 0.91632963623124)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000703809 -0.0172316 0.487673 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.510228726865969 0.0313286910603253 0.914717238204967)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00100554 -0.0181788 0.49615 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518798682497592 0.031512709473295 0.914599757323636)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000342425 -0.0186376 0.49195 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.514660583039074 0.0302036580422689 0.915425127001055)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at 0.000647676 -0.0184313 0.504032 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.526658203409853 0.0296279358496723 0.91352952875787)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000419393 -0.0179313 0.497288 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.519931867009626 0.0306928869060121 0.91367924456885)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0012708 -0.0194598 0.495113 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517969884108095 0.031646807577551 0.915446442267701)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000406653 -0.018772 0.494957 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517747772109119 0.0305928363684169 0.914427374270338)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -8.06734e-05 -0.0189968 0.509678 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.532407018190507 0.0301846511005179 0.912962752553192)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000834673 -0.0197438 0.502823 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525649750999025 0.0310927244453256 0.914615042530154)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -2.34231e-05 -0.0207665 0.521882 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.544737965099012 0.0299654712279182 0.91307345336764)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00166131 -0.0195657 0.514519 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.537289226278681 0.0316464103583832 0.912758616380562)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000580937 -0.0205912 0.511347 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534214868101971 0.0307218113588556 0.914537928136117)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000637729 -0.019566 0.499506 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522339373260237 0.030804310249964 0.914921759824729)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000276782 -0.0191749 0.49568 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.518474942547705 0.0304653351756378 0.915082549358404)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.0005299 -0.018405 0.492764 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.51550410772324 0.0306927968336357 0.914513478744966)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000242115 -0.0181585 0.498199 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520915067689998 0.030274249902752 0.91364713087166)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00116031 -0.0181493 0.484724 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.507525745900653 0.0312870182049082 0.914937697206928)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00159665 -0.0185504 0.490136 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.512970527792399 0.0316591233892917 0.91452126277912)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000402123 -0.0195046 0.498506 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.521414485030239 0.0302590026794957 0.914291850443731)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000971936 -0.0207935 0.514375 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.537360451144778 0.0306880195581492 0.913592737637439)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00158797 -0.0190798 0.501259 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.524112974482283 0.0314647453020239 0.913401551619307)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00145933 -0.0190046 0.497939 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520773057528864 0.0312640653727913 0.914119041943224)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00280304 -0.0192691 0.49264 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.515566411272 0.0326275658527926 0.915022698522334)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00182495 -0.018796 0.502603 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.525392732275593 0.0316290265033205 0.91324725912755)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000133061 -0.0196437 0.504396 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.527282370756845 0.0298112180198901 0.913805599018559)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00275113 -0.0199098 0.499804 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.522755095057314 0.0325225397432699 0.914544954676826)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00184888 -0.0189001 0.494463 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.517337674200757 0.031552450323535 0.914138316618657)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00101684 -0.0193891 0.497504 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.520405663146029 0.0306665673070756 0.914231395334668)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00186393 -0.0205931 0.511722 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.534711049810176 0.0313648034345091 0.913631958315306)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00181577 -0.0203725 0.506871 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529855163657829 0.031434033794046 0.913867975927887)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00293941 -0.0203226 0.508976 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.53193783927976 0.0324462222708358 0.913718690551605)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.00256732 -0.0206165 0.506129 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.529077172519043 0.0321852953389829 0.915334608115682)) (target-type cartesian) 
+[[01;32mDEBUG[00m]Ball3DPointRetriver: I see the redBall at -0.000688405 -0.0199833 0.508508 
+[[01;32mDEBUG[00m]the distance is under threshold!!  
+[[01;32mDEBUG[00m]the angle is under threshold!!  
+[[01;32mDEBUG[00m]sendCommand2BaseControl linvel= 0 ang_vel 0 
+[[01;32mDEBUG[00m]Command to gazectrl:  (control-frame left) (target-location (0.531358356313162 0.0302084866931761 0.914234282781778)) (target-type cartesian) 

@@ -1,0 +1,19 @@
+<application>
+<name>robotGoto_no_laser</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>robotGoto</name>
+   <parameters>--context robotGoto --from robotGoto_ikart.ini --no_stop_on_obstacles</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/baseControl/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+</application>

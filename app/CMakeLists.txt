@@ -4,6 +4,8 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
+# add_subdirectory(deprecated)
+
 add_subdirectory(robotGoto)
 add_subdirectory(robotPathPlanner)
 add_subdirectory(robotGotoExamples)
@@ -13,6 +15,7 @@ add_subdirectory(baseControl)
 add_subdirectory(localizationServer)
 add_subdirectory(mapper2D)
 add_subdirectory(mapsExample)
-add_subdirectory(fakeMobileBaseTest)
 add_subdirectory(baseControl_SIM)
+add_subdirectory(navigationGUI)
+add_subdirectory(simpleVelocityNavigationExamples)
 

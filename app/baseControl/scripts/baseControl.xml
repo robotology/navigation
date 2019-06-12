@@ -2,7 +2,7 @@
 <name>mobile_base_test_application</name>
 
 <dependencies>	
-cerSrv
+r1-base
 </dependencies>
 
 <module>
@@ -30,7 +30,7 @@ cerSrv
 </module>
 
 <module>
-   <name>yarpMotorGui</name>
+   <name>yarpmotorgui</name>
    <parameters>--context /cer/conf</parameters>
    <node>r1-console-linux</node>
 </module>

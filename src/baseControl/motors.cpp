@@ -42,7 +42,7 @@ void MotorControl::execute_speed(double appl_linear_speed, double appl_desired_d
 {
     if (enable_ROS_OUTPUT_GROUP)
     {
-        geometry_msgs_Twist &twist = rosPublisherPort_cmd_twist.prepare();
+        yarp::rosmsg::geometry_msgs::Twist &twist = rosPublisherPort_cmd_twist.prepare();
 
         twist.linear.x = appl_linear_speed * cos(appl_desired_direction*0.0174532925);
         twist.linear.y = appl_linear_speed * sin(appl_desired_direction*0.0174532925);

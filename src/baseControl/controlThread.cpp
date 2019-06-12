@@ -61,7 +61,7 @@ void ControlThread::threadRelease()
 double ControlThread::get_max_linear_vel()  { return max_linear_vel; }
 double ControlThread::get_max_angular_vel() { return max_angular_vel; }
 
-ControlThread::ControlThread (unsigned int _period, ResourceFinder &_rf, Property options) : RateThread(_period), rf(_rf), ctrl_options(options)
+ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property options) : PeriodicThread(_period), rf(_rf), ctrl_options(options)
 {
     rosNode                  = NULL;
     control_board_driver     = 0;
@@ -129,7 +129,7 @@ void ControlThread::apply_ratio_limiter (double max, double& linear_speed, doubl
 
 void ControlThread::apply_acceleration_limiter(double& linear_speed, double& angular_speed, double& desired_direction)
 {
-    double period = this->getRate()/1000;
+    double period = this->getPeriod();
     angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc*period);
 #if 0
     linear_speed = control_filters::ratelim_filter_0(linear_speed, 8, max_linear_acc*period);

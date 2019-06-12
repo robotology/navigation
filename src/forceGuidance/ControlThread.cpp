@@ -91,7 +91,7 @@ using namespace yarp::dev;
 
 #include "ControlThread.h"
 
-CtrlThread::CtrlThread(unsigned int _period, ResourceFinder &_rf) :  RateThread(_period), rf(_rf)
+CtrlThread::CtrlThread(unsigned int _period, ResourceFinder &_rf) :  PeriodicThread(_period), rf(_rf)
 {
     control_board_driver=0;
     iVel=0;

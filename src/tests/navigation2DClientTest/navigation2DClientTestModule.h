@@ -28,7 +28,7 @@ typedef struct navigationTestStep
     }
 
     std::vector<navFrame>    frames;
-    yarp::os::ConstString    label;
+    std::string              label;
     navFrame                 absPos;
 
 }navStep;

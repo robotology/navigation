@@ -1,0 +1,19 @@
+<application>
+<name>robotGoto</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>robotGoto</name>
+   <parameters>--context robotGoto --from robotGoto_ikart.ini</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/baseControl/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+</application>

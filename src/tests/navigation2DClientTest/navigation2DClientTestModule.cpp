@@ -144,8 +144,8 @@ bool NavTestModule::executeStep(navStep s)
 
 void NavTestModule::printRegisteredLocations()
 {
-    std::vector<yarp::os::ConstString>    locations;
-    std::vector<yarp::os::ConstString>    emptyLocationList;
+    std::vector<std::string>    locations;
+    std::vector<std::string>    emptyLocationList;
     std::vector<yarp::dev::Map2DLocation> coords;
     if(!iNav->getLocationsList(locations))
     {

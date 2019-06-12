@@ -1,0 +1,66 @@
+<application>
+<name>Navigation setup for follower</name>
+
+<dependencies>
+</dependencies>
+
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice gazeboLocalizer --context robotPathPlannerExamples --from localizationServer_useEmptyMap.ini</parameters>
+   <node>console</node>
+</module>
+
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context robotPathPlannerExamples --from robotPathPlanner_sim_cer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>navigationGUI</name>
+   <parameters>--context navigationGUI --from navigationGUI_sim_cer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /navView:i --out /mapClick:o</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/baseControl/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/navigationGui/map:o</from>
+  <to>/navView:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/commands:o</from>
+  <to>/robotGoto/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
+
+
+
+<connection>
+  <from>/mapClick:o</from>
+  <to>/navigationGui/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+
+</application>

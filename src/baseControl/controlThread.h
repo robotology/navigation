@@ -65,7 +65,7 @@ enum control_type_enum
 
 typedef iCub::ctrl::parallelPID parlPID;
 
-class ControlThread : public yarp::os::RateThread
+class ControlThread : public yarp::os::PeriodicThread
 {
 private:
     Property             ctrl_options;
@@ -125,13 +125,13 @@ public:
 public:
     /**
     * Constructor
-    * @param _period the rateThread period, expressed in milliseconds.
+    * @param _period the thread period, expressed in seconds.
     * @param _rf the resource finder containing the configuration options (from .ini file)
     * @param options additional configuration options
     */
-    ControlThread   (unsigned int _period, ResourceFinder &_rf, Property options);
+    ControlThread   (double _period, ResourceFinder &_rf, Property options);
 
-    //yarp::os::RateThread methods
+    //yarp::os::PeriodicThread methods
     virtual bool threadInit();
     virtual void afterStart(bool s);
     virtual void run();
