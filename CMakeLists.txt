@@ -30,7 +30,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED 11)
 
 #### Find YARP, require that YARP version is at least ICUB_REQYARP_VERSION
-find_package(YARP 3.1.101 COMPONENTS OS sig dev math gsl rosmsg idl_tools REQUIRED)
+find_package(YARP 3.2 COMPONENTS OS sig dev math gsl rosmsg idl_tools REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
 
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
