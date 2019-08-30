@@ -10,7 +10,7 @@
  * @file BTMonitor.cpp
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
-#include <BTMonitorMsg.h>
+//#include <BTMonitorMsg.h>
 #include "BTMonitor.h"
 
 
@@ -44,15 +44,16 @@ bool BTMonitor::Monitor::init(void)
     return m_isRunning;
 }
 
-
+// To be updated
 void BTMonitor::Monitor::sendEvent(BTMonitor::Event e)
 {
+/*
     if(!m_isRunning)
         return;
-
     BTMonitorMsg msg;
     msg.skill = "follower";
     msg.event = mapEvt2Str[e];
 //    yError() << "SEND EVT= " <<msg.event;
     m_toMonitorPort.write(msg);
+*/
 }

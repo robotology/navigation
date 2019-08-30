@@ -37,6 +37,7 @@ static const double durationStatInfo_Count = 100;
 
 using namespace std;
 using namespace yarp::os;
+using namespace bt_modules;
 using namespace FollowerTarget;
 
 //------------------------ buffer helper test ---------------------
@@ -247,7 +248,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     m_rpcPort.open("/follower/rpc");
     attach(m_rpcPort);
     #ifdef TICK_SERVER
-    TickServer::configure_tick_server("/follower");
+    TickServer::configure_TickServer("", "follower");
     m_monitor.init();
     #endif
 
@@ -285,7 +286,18 @@ FollowerModule::~FollowerModule(){;}
 
 
 #ifdef TICK_SERVER
-ReturnStatus FollowerModule::request_tick(const std::string& params)
+
+ReturnStatus FollowerModule::request_initialize()
+{
+    return BT_SUCCESS;
+}
+
+ReturnStatus FollowerModule::request_terminate()
+{
+    return BT_SUCCESS;
+}
+
+ReturnStatus FollowerModule::request_tick(const bt_modules::ActionID &target, const Property &params)
 {
     auto oldState = m_follower.getState();
     m_follower.start();
@@ -302,7 +314,7 @@ ReturnStatus FollowerModule::request_tick(const std::string& params)
     return ReturnStatus::BT_RUNNING;
 }
 
-ReturnStatus FollowerModule::request_status()
+ReturnStatus FollowerModule::request_status(const bt_modules::ActionID &target)
 {
     switch(m_followerResult)
     {
@@ -318,7 +330,7 @@ ReturnStatus FollowerModule::request_status()
     };
 }
 
-ReturnStatus FollowerModule::request_halt(const std::string& params)
+ReturnStatus FollowerModule::request_halt(const bt_modules::ActionID &target, const yarp::os::Property &params)
 {
     m_follower.stop();
     return ReturnStatus::BT_HALTED;

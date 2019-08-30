@@ -60,7 +60,8 @@ set(FOLLOWER_FILES ./src/Follower.h
 if(YARPBTModules_FOUND)
     set(FOLLOWER_FILES ${FOLLOWER_FILES}
                         ./src/BTMonitor.h
-                        ./src/BTMonitor.cpp)
+                        ./src/BTMonitor.cpp
+                        )
 endif()
 
 set(ASSISTIVE_REHAB_FOR_MY_PROJ   ./src/Person3DPointRetriever.h
@@ -82,7 +83,7 @@ target_link_libraries(follower YARP::YARP_os
                                ${YARP_LIBRARIES})
 
 if(YARPBTModules_FOUND)
-    target_link_libraries(follower YARPBTModules)
+    target_link_libraries(follower bt_modules)
 endif()
  
 if(AssistiveRehab_FOUND)

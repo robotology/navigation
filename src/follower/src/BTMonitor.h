@@ -10,6 +10,7 @@
  * @file BTMonitor.h
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
+#include <map>
 #include <yarp/os/Port.h>
 
 namespace FollowerTarget
