@@ -151,7 +151,7 @@ public:
     * @param _options the configuration option for the module
     * @return true if the motor module opened successfully. False if a mandatory parameter is missing or invalid.
     */
-    virtual bool open(Property &_options);
+    virtual bool open(const Property &_options);
 
     /**
     * Closes the motors module.

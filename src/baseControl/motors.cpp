@@ -80,7 +80,7 @@ void  MotorControl::apply_motor_filter(int joint)
     }
 }
 
-bool MotorControl::open(Property &_options)
+bool MotorControl::open(const Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();

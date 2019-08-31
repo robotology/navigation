@@ -139,7 +139,7 @@ public:
     * @param options the options to be passed to odometry module.
     * @return true/false if the odometry module is opened successfully.
     */
-    virtual bool   open(Property &options) = 0;
+    virtual bool   open(const Property &options) = 0;
 
     /**
     * Performs the odometry computation.

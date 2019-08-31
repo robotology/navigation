@@ -89,7 +89,7 @@ public:
 
     //The following methods are documented in base class odometry.h
     bool   reset_odometry();
-    bool   open(Property &_options);
+    bool   open(const Property &_options);
     void   compute();
     void   printStats();
     double get_vlin_coeff();

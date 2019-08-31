@@ -30,7 +30,7 @@ iKart_MotorControl::~iKart_MotorControl()
     close();
 }
 
-bool iKart_MotorControl::open(Property &_options)
+bool iKart_MotorControl::open(const Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();

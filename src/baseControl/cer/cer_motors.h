@@ -60,7 +60,7 @@ public:
     virtual ~CER_MotorControl();
 
     //The following methods are documented in base class odometry.h
-    bool open(Property &_options);
+    bool open(const Property &_options);
     void execute_none();
     void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
     void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed);
