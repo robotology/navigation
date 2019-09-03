@@ -54,11 +54,13 @@ class CtrlModule: public RFModule
 protected:
     ControlThread  *control_thr;
     Port            rpcPort;
+    bool            verbose_print;
 
 public:
     CtrlModule() 
     {
         control_thr=0;
+        verbose_print=true;
     }
 
     //Module initialization and configuration
@@ -171,6 +173,14 @@ public:
         //set the thread rate
         double period = rf.check("period",Value(0.020)).asDouble();
         yInfo("baseCtrl thread period: %f s.",period);
+
+        //verbosity
+        if (rf.check("silent") ||
+            rf.check("no_verbose"))
+        {
+            yInfo("Verbosity off");
+            verbose_print=false;
+        }
 
         // the motor control thread
         bool motors_enabled=true;
@@ -380,12 +390,12 @@ public:
         if (control_thr)
         {
             Odometry* pOdometry=0;
-            control_thr->printStats();
+            if (verbose_print) control_thr->printStats();
             control_thr->get_motor_handler()->updateControlMode();
             pOdometry = control_thr->get_odometry_handler();
-            if (pOdometry) pOdometry->printStats();
-            control_thr->get_motor_handler()->printStats();
-            control_thr->get_input_handler()->printStats();
+            if (pOdometry) { if (verbose_print) pOdometry->printStats(); }
+            if (verbose_print) control_thr->get_motor_handler()->printStats();
+            if (verbose_print) control_thr->get_input_handler()->printStats();
         }
         else
         {
@@ -393,7 +403,7 @@ public:
         }
 
         static int life_counter=0;
-        yInfo( "* Life: %d\n\n", life_counter);
+        if (verbose_print) yInfo( "* Life: %d\n\n", life_counter);
         life_counter++;
 
         return true;
