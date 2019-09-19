@@ -28,6 +28,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace aStar_algorithm;
 
 namespace aStar_algorithm
@@ -53,7 +54,7 @@ namespace aStar_algorithm
         double g_score;
         double f_score;
         double s_score;
-        yarp::dev::MapGrid2D::XYCell came_from;
+        XYCell came_from;
         node_type();
         friend bool operator<  (const node_type &a, const node_type &b);
     };
@@ -65,7 +66,7 @@ namespace aStar_algorithm
     {
         public:
         node_map_type();
-        node_map_type(yarp::dev::MapGrid2D& map);
+        node_map_type(yarp::dev::Nav2D::MapGrid2D& map);
         ~node_map_type();
 
         public:
@@ -115,7 +116,7 @@ bool aStar_algorithm::operator < (const node_type &a, const node_type &b)
 }
 
 /////////// node_map_type
-aStar_algorithm::node_map_type::node_map_type(yarp::dev::MapGrid2D& map)
+aStar_algorithm::node_map_type::node_map_type(MapGrid2D& map)
 {
     w = map.width();
     h = map.height();
@@ -125,7 +126,7 @@ aStar_algorithm::node_map_type::node_map_type(yarp::dev::MapGrid2D& map)
     for (int y=0; y<h; y++)
         for (int x=0; x<w; x++)
             {
-                if (map.isFree(MapGrid2D::XYCell(x, y)))
+                if (map.isFree(XYCell(x, y)))
                     nodes [x][y].empty = true;
                 else
                     nodes [x][y].empty = false;
@@ -204,10 +205,10 @@ bool aStar_algorithm::unordered_set_type::find(node_type t)
 }
 
 /////////// various
-bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
+bool aStar_algorithm::find_astar_path(MapGrid2D& map, XYCell start, XYCell goal, std::deque<XYCell>& path)
 {
     //implementation of A* algorithm
-    std::vector<MapGrid2D::XYCell> inverse_path;
+    std::vector<XYCell> inverse_path;
     node_map_type node_map(map);
     int sx=start.x;
     int sy=start.y;
@@ -239,7 +240,7 @@ bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCe
         if (curr.x==goal.x &&
             curr.y==goal.y) 
             {
-                MapGrid2D::XYCell c;
+                XYCell c;
                 c.x=goal.x;
                 c.y=goal.y;
                 while (!(c.x==start.x && c.y==start.y))
@@ -254,7 +255,7 @@ bool aStar_algorithm::find_astar_path(yarp::dev::MapGrid2D& map, MapGrid2D::XYCe
                 //reverse the path
                 for (auto it= inverse_path.rbegin(); it!=inverse_path.rend(); it++)
                 {
-                    path.push(*it);
+                    path.push_back(*it);
                 }
                 return true;
             }

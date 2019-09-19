@@ -24,6 +24,7 @@
 #include <math.h>
 #include <cv.h>
 #include <highgui.h> 
+#include <plannerPath.h>
 
 #include "map.h"
 #include "aStar.h"
@@ -33,7 +34,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace map_utilites;
 
-bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path)
+bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, PlannerPath input_path, PlannerPath& output_path)
 {
     unsigned int path_size = input_path.size();
     if (path_size==0) return false;
@@ -44,9 +45,9 @@ bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D:
     std::vector <MapGrid2D::XYCell> path;
     for (unsigned int i=0; i<path_size; i++)
     {
-        MapGrid2D::XYCell tmp = input_path.front();
+        PlannerPath::waypoint_t tmp = input_path.front();
         input_path.pop();
-        path.push_back(tmp);
+        path.push_back(tmp.waypoint_cell);
     }
 
     for (unsigned int i=0; i<path_size; i++)
@@ -142,8 +143,18 @@ bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCel
     return true;
 }
 
-bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path)
+bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, PlannerPath& path)
 {
     //computes path from start to goal using A* algorithm
-    return aStar_algorithm::find_astar_path(map, start, goal, path);
+    std::deque<MapGrid2D::XYCell> cell_path;
+    bool b = aStar_algorithm::find_astar_path(map, start, goal, cell_path);
+    if (b)
+    {
+        for (auto it = cell_path.begin(); it != cell_path.end(); it++)
+        {
+            path.push(*it);
+        }
+        return true;
+    }
+    return false;
 }

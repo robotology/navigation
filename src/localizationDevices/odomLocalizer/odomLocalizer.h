@@ -90,21 +90,21 @@ public:
     * Gets a set of pose estimates computed by the localization algorithm.
     * @return true/false
     */
-    bool   getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses) override;
+    bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
 
     /**
     * Gets the current position of the robot w.r.t world reference frame
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   getCurrentPosition(yarp::dev::Map2DLocation& loc) override;
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
 
     /**
     * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   setInitialPose(const yarp::dev::Map2DLocation& loc) override;
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
 };
 
 class odomLocalizerThread : public yarp::os::PeriodicThread
@@ -112,10 +112,10 @@ class odomLocalizerThread : public yarp::os::PeriodicThread
 protected:
     //general
     double                       m_last_statistics_printed;
-    yarp::dev::Map2DLocation     m_initial_loc;
-    yarp::dev::Map2DLocation     m_initial_odom;
-    yarp::dev::Map2DLocation     m_current_loc;
-    yarp::dev::Map2DLocation     m_current_odom;
+    yarp::dev::Nav2D::Map2DLocation     m_initial_loc;
+    yarp::dev::Nav2D::Map2DLocation     m_initial_odom;
+    yarp::dev::Nav2D::Map2DLocation     m_current_loc;
+    yarp::dev::Nav2D::Map2DLocation     m_current_odom;
     yarp::os::Mutex              m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
@@ -132,6 +132,6 @@ public:
     virtual void run() override;
 
 public:
-    bool initializeLocalization(const yarp::dev::Map2DLocation& loc);
-    bool getCurrentLoc(yarp::dev::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
+    bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
 };

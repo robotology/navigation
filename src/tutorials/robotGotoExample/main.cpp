@@ -32,6 +32,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace std;
 
 void gotoLoc(Map2DLocation goal, INavigation2D* iNav)

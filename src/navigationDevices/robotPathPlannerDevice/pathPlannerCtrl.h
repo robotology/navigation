@@ -44,7 +44,8 @@
 #include <yarp/dev/INavigation2D.h>
 #include <string>
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
-
+#include <yarp/dev/Map2DPath.h>
+#include <yarp/dev/Map2DLocation.h>
 #include "map.h"
 
 using namespace std;
@@ -101,10 +102,10 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool      m_enable_try_recovery;
 
     //storage for the environment map
-    yarp::dev::MapGrid2D m_current_map;
-    yarp::dev::MapGrid2D m_temporary_obstacles_map;
+    yarp::dev::Nav2D::MapGrid2D m_current_map;
+    yarp::dev::Nav2D::MapGrid2D m_temporary_obstacles_map;
     yarp::os::Mutex m_temporary_obstacles_map_mutex;
-    yarp::dev::MapGrid2D m_augmented_map;
+    yarp::dev::Nav2D::MapGrid2D m_augmented_map;
     bool      m_force_map_reload;
 
     //yarp device drivers and interfaces
@@ -127,17 +128,19 @@ class PlannerThread: public yarp::os::PeriodicThread
 
     //internal data
     Searchable                             &m_cfg;
-    yarp::dev::Map2DLocation               m_localization_data;
-    yarp::dev::Map2DLocation               m_final_goal;
-    std::queue<yarp::dev::Map2DLocation>   m_sequence_of_goals;
-    std::vector<Map2DLocation>             m_locations_list;
+    yarp::dev::Nav2D::Map2DLocation        m_localization_data;
+    yarp::dev::Nav2D::Map2DLocation        m_final_goal;
+    double                                 m_navigation_started_at_timeX;
+    double                                 m_final_goal_reached_at_timeX;
+    std::queue<yarp::dev::Nav2D::Map2DLocation>   m_sequence_of_goals;
+    std::vector<yarp::dev::Nav2D::Map2DLocation>  m_locations_list;
     std::string                            m_last_target;
-    std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
+    std::vector<yarp::dev::Nav2D::XYCell>   m_laser_map_cells;
 
     //the path computed by the planner, stored a sequence of waypoints to be reached
-    std::queue<MapGrid2D::XYCell>                 m_computed_path;
-    std::queue<MapGrid2D::XYCell>                 m_computed_simplified_path;
-    std::queue<MapGrid2D::XYCell>*                m_current_path;
+    yarp::dev::Nav2D::PlannerPath                 m_computed_path;
+    yarp::dev::Nav2D::PlannerPath                 m_computed_simplified_path;
+    yarp::dev::Nav2D::PlannerPath*                m_current_path;
     
     //statuses of the internal finite-state machine
     NavigationStatusEnum   m_planner_status;
@@ -156,7 +159,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * Sets a new target, expressed in the map reference frame.
     * @param target a three-elements vector containing the robot pose (x,y,theta)
     */
-    bool          setNewAbsTarget(yarp::dev::Map2DLocation target);
+    bool          setNewAbsTarget(yarp::dev::Nav2D::Map2DLocation target);
 
     /**
     * Sets a new target, expressed in the robot reference frame.
@@ -188,7 +191,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param loc the current absolute position of the robot
     * @return true if the command is executed successfully, false otherwise
     */
-    bool          getCurrentPos(Map2DLocation& v);
+    bool          getCurrentPos(Nav2D::Map2DLocation& v);
     
     /**
     * Sets as navigation target a location previously stored into the map server
@@ -202,14 +205,14 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param the current goal (computed by the pathplanner algorithm)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getCurrentAbsTarget(Map2DLocation& target);
+    bool          getCurrentAbsTarget(Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the current waypoint in the target queue, expressed in local (robot) reference frame.
     * @param the current goal (computed by the pathplanner algorithm)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getCurrentRelTarget(Map2DLocation& target);
+    bool          getCurrentRelTarget(Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the name of the map to which the current waypoint belongs to.
@@ -223,7 +226,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param the current target (set by a setNewAbsTarget)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getFinalAbsTarget(Map2DLocation& target);
+    bool          getFinalAbsTarget(Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the final target, expressed in relative (local) reference frame.
@@ -231,7 +234,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param the current target (set by a setNewAbsTarget/setNewRelTarget)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getFinalRelTarget(Map2DLocation& target);
+    bool          getFinalRelTarget(Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the name of the map to which the final target, requested by the user, belongs to.
@@ -260,20 +263,21 @@ class PlannerThread: public yarp::os::PeriodicThread
     */
     void          getTimeouts(int& localiz, int& laser, int& inner_status);
 
-    bool          getCurrentWaypoint(yarp::dev::Map2DLocation &loc) const;
-    bool          getCurrentPath(std::vector<yarp::dev::Map2DLocation>& path) const;
-    bool          getCurrentMap(yarp::dev::MapGrid2D& current_map) const;
-    bool          getOstaclesMap(yarp::dev::MapGrid2D& obstacles_map);
+    bool          getCurrentWaypoint(yarp::dev::Nav2D::Map2DLocation &loc) const;
+    bool          getCurrentPath(std::vector<yarp::dev::Nav2D::Map2DLocation>& path) const;
+    bool          getCurrentMap(yarp::dev::Nav2D::MapGrid2D& current_map) const;
+    bool          getOstaclesMap(yarp::dev::Nav2D::MapGrid2D& obstacles_map);
     bool          setRobotRadius(double size);
     bool          getRobotRadius(double& size);
 
     private:
     bool          startPath();
     void          sendWaypoint();
+    void          sendFinalGoal();
     bool          readLocalizationData();
     void          readLaserData();
     bool          readInnerNavigationStatus();
-    bool          getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const;
+    bool          getCurrentWaypoint(yarp::dev::Nav2D::XYCell &c) const;
     bool          updateLocations();
 
     public:

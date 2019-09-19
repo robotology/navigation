@@ -69,12 +69,12 @@ bool   rosLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& st
     return true;
 }
 
-bool   rosLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses)
+bool   rosLocalizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
 {
     return true;
 }
 
-bool   rosLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
+bool   rosLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
 {
 	if (thread)
 	{
@@ -84,7 +84,7 @@ bool   rosLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
     return false;
 }
 
-bool   rosLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
+bool   rosLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
 {
 	if (thread)
 	{
@@ -138,7 +138,7 @@ void rosLocalizerThread::publish_map()
 	ogrid.info.origin.orientation.w = q.w();
 	ogrid.data.resize(m_current_map.width()*m_current_map.height());
 	int index=0;
-	yarp::dev::MapGrid2D::XYCell cell;
+	yarp::dev::Nav2D::XYCell cell;
 	for (cell.y=m_current_map.height()-1; cell.y>-1; cell.y--)
 	  for (cell.x=0; cell.x<m_current_map.width(); cell.x++)
 	  {
@@ -189,7 +189,7 @@ void rosLocalizerThread::run()
 	}
 }
 
-bool rosLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
+bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc)
 {
     m_localization_data.map_id = loc.map_id;
     
@@ -235,7 +235,7 @@ bool rosLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& 
     return true;
 }
 
-bool rosLocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
+bool rosLocalizerThread::getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc)
 {
     loc = m_localization_data;
     return true;

@@ -26,6 +26,8 @@
 #include <math.h>
 #include "navigationDeviceTemplate.h"
 
+using namespace yarp::dev::Nav2D;
+
 navigationDeviceTemplate::navigationDeviceTemplate() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
     m_navigation_status = yarp::dev::navigation_status_idle;
@@ -60,7 +62,7 @@ void navigationDeviceTemplate::run()
     //### TO BE IMPLEMENTED BY USER
 }
 
-bool navigationDeviceTemplate::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
+bool navigationDeviceTemplate::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
@@ -112,10 +114,10 @@ bool navigationDeviceTemplate::stopNavigation()
     return true;
 }
 
-bool navigationDeviceTemplate::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
+bool navigationDeviceTemplate::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
     //### TO BE IMPLEMENTED BY USER
-    yarp::dev::Map2DLocation curr;
+    Map2DLocation curr;
     target = curr;
     return true;
 }
@@ -123,20 +125,20 @@ bool navigationDeviceTemplate::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map
 bool navigationDeviceTemplate::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
     //### TO BE IMPLEMENTED BY USER
-    yarp::dev::Map2DLocation curr;
+    Map2DLocation curr;
     x = curr.x;
     y = curr.y;
     theta = curr.theta;
     return true;
 }
 
-bool navigationDeviceTemplate::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+bool navigationDeviceTemplate::getAllNavigationWaypoints(std::vector<Map2DLocation>& waypoints)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;
 }
 
-bool navigationDeviceTemplate::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+bool navigationDeviceTemplate::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;
@@ -176,7 +178,7 @@ bool navigationDeviceTemplate::recomputeCurrentNavigationPath()
     return false;
 }
 
-bool navigationDeviceTemplate::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+bool navigationDeviceTemplate::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;

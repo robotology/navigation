@@ -65,8 +65,8 @@ const double DEG2RAD  = M_PI/180.0;
 
 struct target_type
 {
-    yarp::dev::Map2DLocation target;
-    bool                     weak_angle;
+    yarp::dev::Nav2D::Map2DLocation target;
+    bool                            weak_angle;
 
     target_type() {weak_angle = false;}
 };
@@ -150,7 +150,7 @@ protected:
     
     Property                           m_robotCtrl_options;
     Searchable                         &m_cfg;
-    yarp::dev::Map2DLocation           m_localization_data;
+    yarp::dev::Nav2D::Map2DLocation    m_localization_data;
     target_type                        m_target_data;
     std::vector<LaserMeasurementData>  m_laser_data;
     
@@ -203,7 +203,7 @@ public:
     * @param loc the current absolute position of the robot
     * @return true if the command is executed successfully, false otherwise
     */
-    bool          getCurrentPos(yarp::dev::Map2DLocation& loc);
+    bool          getCurrentPos(yarp::dev::Nav2D::Map2DLocation& loc);
     
     /**
     * Sets a new target, expressed in the map reference frame.
@@ -268,14 +268,14 @@ public:
     * @param the current target (set by a setNewAbsTarget)
     * @return true if the returned target is valid, false otherwise
     */
-    bool getCurrentAbsTarget(Map2DLocation& target);
+    bool getCurrentAbsTarget(Nav2D::Map2DLocation& target);
     
     /**
     * Retrieves the current target, expressed in robot reference frame
     * @param the current target (set by a setNewRelTarget)
     * @return true if the returned target is valid, false otherwise
     */
-    bool getCurrentRelTarget(Map2DLocation& target);
+    bool getCurrentRelTarget(Nav2D::Map2DLocation& target);
     
     /**
     * Prints stats about the internal status of the module

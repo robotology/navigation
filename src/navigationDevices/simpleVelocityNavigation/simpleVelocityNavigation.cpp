@@ -34,6 +34,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 simpleVelocityNavigation::simpleVelocityNavigation() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
@@ -131,7 +132,7 @@ void simpleVelocityNavigation::send_command(control_type control_data)
     m_port_commands_output.write();
 }
 
-bool simpleVelocityNavigation::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
+bool simpleVelocityNavigation::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
     yError() << "gotoTargetByAbsoluteLocation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
@@ -171,7 +172,7 @@ bool simpleVelocityNavigation::stopNavigation()
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
+bool simpleVelocityNavigation::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
     yError() << "getAbsoluteLocationOfCurrentTarget() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
@@ -183,13 +184,13 @@ bool simpleVelocityNavigation::getRelativeLocationOfCurrentTarget(double& x, dou
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+bool simpleVelocityNavigation::getAllNavigationWaypoints(std::vector<Map2DLocation>& waypoints)
 {
     yError() << "getAllNavigationWaypoints() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+bool simpleVelocityNavigation::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
     yError() << "getCurrentNavigationWaypoint() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
@@ -213,7 +214,7 @@ bool simpleVelocityNavigation::recomputeCurrentNavigationPath()
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+bool simpleVelocityNavigation::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     yError() << "getCurrentNavigationMap() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;

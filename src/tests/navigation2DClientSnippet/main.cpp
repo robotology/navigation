@@ -6,6 +6,7 @@
 //#include <yarp/dev/IFrameTransform.h>
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace std;
 
 int main(int argc, char *argv[])

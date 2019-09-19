@@ -24,6 +24,7 @@ target_link_libraries(robotPathPlannerDev YARP::YARP_OS
                                    YARP::YARP_dev
                                    YARP::YARP_math
                                    YARP::YARP_rosmsg
+                                   navigation_lib
                                    ${OpenCV_LIBRARIES})
 
 

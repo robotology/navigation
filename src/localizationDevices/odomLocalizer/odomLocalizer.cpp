@@ -35,6 +35,7 @@
 #include "odomLocalizer.h"
 
 using namespace yarp::os;
+using namespace yarp::dev::Nav2D;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -64,10 +65,10 @@ bool   odomLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& s
     return true;
 }
 
-bool   odomLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses)
+bool   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
-    yarp::dev::Map2DLocation loc;
+    Map2DLocation loc;
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
 #if 0
@@ -92,13 +93,13 @@ bool   odomLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& p
     return true;
 }
 
-bool   odomLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
+bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
     return true;
 }
 
-bool   odomLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
+bool   odomLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -154,7 +155,7 @@ void odomLocalizerThread::run()
     }
 }
 
-bool odomLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
+bool odomLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);
@@ -178,7 +179,7 @@ bool odomLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation&
     return true;
 }
 
-bool odomLocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
+bool odomLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
     LockGuard lock(m_mutex);
     loc = m_current_loc;
@@ -247,7 +248,7 @@ bool odomLocalizerThread::threadInit()
     }
 
     //initial location initialization
-    yarp::dev::Map2DLocation tmp_loc;
+    Map2DLocation tmp_loc;
     if (initial_group.check("initial_x")) { tmp_loc.x = initial_group.find("initial_x").asDouble(); }
     else { yError() << "missing initial_x param"; return false; }
     if (initial_group.check("initial_y")) { tmp_loc.y = initial_group.find("initial_y").asDouble(); }

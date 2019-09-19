@@ -33,6 +33,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace std;
 
 #ifndef M_PI
@@ -63,22 +64,22 @@ bool   gazeboLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum&
     return true;
 }
 
-bool   gazeboLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses)
+bool   gazeboLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
-    yarp::dev::Map2DLocation loc;
+    Map2DLocation loc;
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
     return true;
 }
 
-bool   gazeboLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
+bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
     return true;
 }
 
-bool   gazeboLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
+bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -143,7 +144,7 @@ void gazeboLocalizerThread::run()
     else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
 }
 
-bool gazeboLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
+bool gazeboLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "gazeboLocalizerThread: Localization init request: (" << loc.map_id << ")";
     LockGuard lock(m_mutex);
@@ -157,7 +158,7 @@ bool gazeboLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocatio
     return true;
 }
 
-bool gazeboLocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
+bool gazeboLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
     LockGuard lock(m_mutex);
     loc = m_localization_data;
@@ -229,7 +230,7 @@ bool gazeboLocalizerThread::threadInit()
     }
 
     //initial location initialization
-    yarp::dev::Map2DLocation tmp_loc;
+    Map2DLocation tmp_loc;
     if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asDouble(); }
     else { yError() << "missing map_transform_x param"; return false; }
     if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asDouble(); }

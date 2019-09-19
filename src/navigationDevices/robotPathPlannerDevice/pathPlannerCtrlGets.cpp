@@ -21,6 +21,7 @@
 
 using namespace std;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 bool PlannerThread::getFinalAbsTarget(Map2DLocation& target)
 {

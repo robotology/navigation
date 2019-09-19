@@ -33,7 +33,6 @@
 
 using namespace std;
 using namespace yarp::os;
-using namespace yarp::dev;
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -43,16 +42,16 @@ using namespace yarp::dev;
 namespace map_utilites
 {
     //return true if the straight line that connects src with dst does not contain any obstacles
-    bool checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst);
+    bool checkStraightLine(yarp::dev::Nav2D::MapGrid2D& map, yarp::dev::Nav2D::XYCell src, yarp::dev::Nav2D::XYCell dst);
 
     //simplify the path
-    bool simplifyPath(yarp::dev::MapGrid2D& map, std::queue<MapGrid2D::XYCell> input_path, std::queue<MapGrid2D::XYCell>& output_path);
+    bool simplifyPath(yarp::dev::Nav2D::MapGrid2D& map, PlannerPath input_path, PlannerPath& output_path);
 
     //compute a path, given a start cell, a goal cell and a map grid.
-    bool findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, std::queue<MapGrid2D::XYCell>& path);
+    bool findPath(yarp::dev::Nav2D::MapGrid2D& map, yarp::dev::Nav2D::XYCell start, yarp::dev::Nav2D::XYCell goal, PlannerPath& path);
 
     // register new obstacles into a map
-    void update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map);
+    void update_obstacles_map(yarp::dev::Nav2D::MapGrid2D& map_to_be_updated, const yarp::dev::Nav2D::MapGrid2D& obstacles_map);
 };
 
 #endif

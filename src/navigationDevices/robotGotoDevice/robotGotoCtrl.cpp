@@ -42,6 +42,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace yarp::math;
 
 std::string getStatusAsString(NavigationStatusEnum status)
@@ -571,7 +572,7 @@ void GotoThread::publishLocalPlan()
 
 }
 
-bool GotoThread::getCurrentPos(yarp::dev::Map2DLocation& loc)
+bool GotoThread::getCurrentPos(Map2DLocation& loc)
 {
     loc = m_localization_data;
     return true;

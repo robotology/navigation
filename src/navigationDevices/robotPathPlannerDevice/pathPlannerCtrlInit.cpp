@@ -59,6 +59,8 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_iInnerNav_ctrl = 0;
     m_iInnerNav_target = 0;
     m_force_map_reload = false;
+    m_navigation_started_at_timeX = 0;
+    m_final_goal_reached_at_timeX = 0;
 }
 
 bool PlannerThread::threadInit()
