@@ -38,6 +38,7 @@ static const double durationStatInfo_Count = 100;
 using namespace std;
 using namespace yarp::os;
 using namespace FollowerTarget;
+using namespace yarp::BT_wrappers;
 
 //------------------------ buffer helper test ---------------------
 
@@ -247,7 +248,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     m_rpcPort.open("/follower/rpc");
     attach(m_rpcPort);
     #ifdef TICK_SERVER
-    TickServer::configure_tick_server("/follower");
+    configure_TickServer("","follower");
     m_monitor.init();
     #endif
 
@@ -285,12 +286,11 @@ FollowerModule::~FollowerModule(){;}
 
 
 #ifdef TICK_SERVER
-ReturnStatus FollowerModule::request_tick(const std::string& params)
+ReturnStatus FollowerModule::request_tick(const yarp::BT_wrappers::ActionID &target, const yarp::os::Property &params)
 {
     auto oldState = m_follower.getState();
     m_follower.start();
 
-#ifdef TICK_SERVER
     // send "e_req_first_target" only when the first tick is received
     if( (StateMachine::running != oldState) && (StateMachine::running == m_follower.getState()) )
     {
@@ -298,32 +298,16 @@ ReturnStatus FollowerModule::request_tick(const std::string& params)
         m_monitor.sendEvent(BTMonitor::Event::e_req);
         m_monitor.sendEvent(BTMonitor::Event::e_req_first_target);
     }
-#endif
     return ReturnStatus::BT_RUNNING;
 }
+#endif
 
-ReturnStatus FollowerModule::request_status()
-{
-    switch(m_followerResult)
-    {
-        case(Result_t::ok):
-        case(Result_t::lostTarget):
-        case(Result_t::autoNavigation):
-            {return ReturnStatus::BT_RUNNING;}
-
-        case(Result_t::notRunning): {return ReturnStatus::BT_HALTED;}
-        case(Result_t::failed): {return ReturnStatus::BT_FAILURE;}
-        case(Result_t::error): {return ReturnStatus::BT_ERROR;}
-        default:{return ReturnStatus::BT_ERROR;}
-    };
-}
-
-ReturnStatus FollowerModule::request_halt(const std::string& params)
+#ifdef TICK_SERVER
+ReturnStatus FollowerModule::request_halt(const yarp::BT_wrappers::ActionID &target, const yarp::os::Property &params)
 {
     m_follower.stop();
     return ReturnStatus::BT_HALTED;
 }
-
 #endif
 
 

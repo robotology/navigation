@@ -10,7 +10,11 @@
  * @file BTMonitor.cpp
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>
  */
-#include <BTMonitorMsg.h>
+
+#ifdef TICK_SERVER
+#include <yarp/BT_wrappers/MonitorMsg.h>
+#endif
+
 #include "BTMonitor.h"
 
 
@@ -50,7 +54,7 @@ void BTMonitor::Monitor::sendEvent(BTMonitor::Event e)
     if(!m_isRunning)
         return;
 
-    BTMonitorMsg msg;
+    yarp::BT_wrappers::MonitorMsg msg;
     msg.skill = "follower";
     msg.event = mapEvt2Str[e];
 //    yError() << "SEND EVT= " <<msg.event;

@@ -6,8 +6,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # find YARP
 find_package(YARP REQUIRED cv)
-find_package( OpenCV REQUIRED )
-find_package(YARPBTModules 1.0.0 EXACT)
+find_package(OpenCV REQUIRED )
+find_package(YARPBTModules 2.0 QUIET)
 find_package(AssistiveRehab QUIET)
 
 if(AssistiveRehab_FOUND)
@@ -82,7 +82,7 @@ target_link_libraries(follower YARP::YARP_os
                                ${YARP_LIBRARIES})
 
 if(YARPBTModules_FOUND)
-    target_link_libraries(follower YARPBTModules)
+    target_link_libraries(follower YARPBTModules::YARP_BT_wrappers)
 endif()
  
 if(AssistiveRehab_FOUND)

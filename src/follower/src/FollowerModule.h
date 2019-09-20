@@ -24,9 +24,9 @@
 #include "Follower.h"
 #include "BTMonitor.h"
 #ifdef TICK_SERVER
-#include <tick_server.h>
-#include <ReturnStatus.h>
-#include <BTMonitorMsg.h>   // include message used for monitoring
+//behavior trees imports
+#include <yarp/BT_wrappers/tick_server.h>
+#include <yarp/BT_wrappers/blackboard_client.h>
 #endif
 
 namespace FollowerTarget
@@ -76,7 +76,7 @@ public:
 };
 
 #ifdef TICK_SERVER
-class FollowerModule:public yarp::os::RFModule, public TickServer
+class FollowerModule:public yarp::os::RFModule, public yarp::BT_wrappers::TickServer
 #else
 class FollowerModule : public yarp::os::RFModule
 #endif
@@ -99,9 +99,8 @@ public:
     bool close();
 
     #ifdef TICK_SERVER
-    ReturnStatus request_tick(const std::string& params = "") override;
-    ReturnStatus request_status() override;
-    ReturnStatus request_halt(const std::string& params = "") override;
+    yarp::BT_wrappers::ReturnStatus request_tick(const yarp::BT_wrappers::ActionID &target, const yarp::os::Property &params = {}) override;
+    yarp::BT_wrappers::ReturnStatus request_halt(const yarp::BT_wrappers::ActionID &target, const yarp::os::Property &params = {}) override;
     #endif
 
 private:
