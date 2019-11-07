@@ -24,23 +24,25 @@
 
 #include <cmath>
 #include <sstream>
+#include <iostream>
+#include <string>
+#include <algorithm>
 
 using namespace yarp::sig;
 using namespace yarp::dev;
 using namespace yarp::os;
 using namespace std;
 
-
 /**
   * It reads the data from a rangefinder sensor and sends them on one port.
   * It also creates one rpc port.
   */
 
-extendedRangefinder2DWrapper::extendedRangefinder2DWrapper() : PeriodicThread(DEFAULT_THREAD_PERIOD),
+extendedRangefinder2DWrapper::extendedRangefinder2DWrapper() : PeriodicThread(DEFAULT_THREAD_PERIOD_2D),
     partName("extendedRangefinder2DWrapper"),
     sens_p(nullptr),
     iTimed(nullptr),
-    _period(DEFAULT_THREAD_PERIOD),
+    _period(DEFAULT_THREAD_PERIOD_2D),
     minAngle(0),
     maxAngle(0),
     minDistance(0),
@@ -467,8 +469,40 @@ std::string extendedRangefinder2DWrapper::getId()
 
 bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
 {
+    // NECESSARY config PARAMETERS:
+    // name             -> full name of the port by extendedRangefinder2DWrapper
+    // remoteTC         -> remote port required by FrameTransformClient::open(), if not specified extended functionality is not enabled
+    // period           -> period parameter shared by extendedRangefinder2DWrapper and FrameTransformClient
+
+    // NOT NECESSARY config PARAMETERS:
+    // localTC          -> local port required by FrameTransformClient::open()
+    // refFrame         -> set the target frame to which bodies coordinates detected are referred
+    // remRadius   -> set the radius around the torso to be removed from laser scan [m]
+
+
     Property params;
     params.fromString(config.toString());
+
+
+    if (config.check("refFrame"))
+        targetFrame = config.find("refFrame").asString();
+    else
+        targetFrame = "CER_base";
+
+    if (config.check("remRadius"))
+        remRadius = config.find("remRadius").asDouble();
+    else
+        remRadius = 0.25;   // removing radius in m
+
+    if (!config.check("remoteTC"))
+    {
+        yWarning() << "extendedRangefinder2DWrapper: missing 'remoteTC' parameter. Estended functionality not enabled\n";
+        extendedFuncEnabled = 0;
+    }
+    else
+    {
+
+    }
 
     if (!config.check("period"))
     {
@@ -487,6 +521,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
     else
     {
         streamingPortName  = config.find("name").asString();
+        streamingPortNameMod = streamingPortName + "/nolegs";
         rpcPortName = streamingPortName + "/rpc:i";
         setId("extendedRangefinder2DWrapper");
     }
@@ -504,7 +539,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
     if (!initialize_ROS())
     {
         return false;
-    }
+    }DEFAULT_THREAD_PERIOD_2D;
 
     if(config.check("subdevice"))
     {
@@ -513,13 +548,13 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         p.fromString(config.toString(), false);
         p.put("device", config.find("subdevice").asString());
 
-        if(!driver.open(p) || !driver.isValid())
+        if(!laserDriver.open(p) || !laserDriver.isValid())
         {
             yError() << "extendedRangefinder2DWrapper: failed to open subdevice.. check params";
             return false;
         }
 
-        driverlist.push(&driver, "1");
+        driverlist.push(&laserDriver, "1");
         if(!attachAll(driverlist))
         {
             yError() << "extendedRangefinder2DWrapper: failed to open subdevice.. check params";
@@ -527,6 +562,34 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         }
         isDeviceOwned = true;
     }
+
+    // connect to transform client and load interface
+    if (extendedFuncEnabled)
+    {
+        Property    pTC;
+        pTC.put("device","FrameTransformClient");
+        if (config.check("localTC"))
+            pTC.put("local",config.find("localTC").asString());
+        else
+            pTC.put("local",config.find("remotelTC").asString()+ "/local:i");
+
+        pTC.put("remote",config.find("remotelTC").asString());
+        pTC.put("period",config.find("period").asString());
+
+        if (transformClientDriver.open(pTC) == false)
+        {
+            yError() << "Unable to connect to transform client";
+            return false;
+        }
+
+        transformClientDriver.view(transformClientInt);
+        if (transformClientInt == nullptr)
+        {
+            yError() << "Unable to open Transform Client interface";
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -537,6 +600,11 @@ bool extendedRangefinder2DWrapper::initialize_YARP(yarp::os::Searchable &params)
         if (!streamingPort.open(streamingPortName))
             {
                 yError("extendedRangefinder2DWrapper: failed to open port %s", streamingPortName.c_str());
+                return false;
+            }
+        if (!streamingPortMod.open(streamingPortNameMod))
+            {
+                yError("extendedRangefinder2DWrapper: failed to open port %s", streamingPortNameMod.c_str());
                 return false;
             }
         if (!rpcPort.open(rpcPortName))
@@ -553,6 +621,8 @@ void extendedRangefinder2DWrapper::threadRelease()
 {
     streamingPort.interrupt();
     streamingPort.close();
+    streamingPortMod.interrupt();
+    streamingPortMod.close();
     rpcPort.interrupt();
     rpcPort.close();
 }
@@ -564,8 +634,23 @@ void extendedRangefinder2DWrapper::run()
         bool ret = true;
         IRangefinder2D::Device_status status;
         yarp::sig::Vector ranges;
+        yarp::sig::Vector rangesMod;
+        std::vector< std::string > allFrameIds;
+        std::vector< std::string > filteredFrameIds;
+        yarp::sig::Matrix transformMat;
+        std::string test;
+        std::vector< double > x_coord(5);
+        std::vector< double > y_coord(5);
+        std::vector< double > theta_coord(5);
+        //std::vector< double > rho_coord(5);
+        double theta_max;
+        double theta_min;
+        std::int64_t index_max;
+        std::int64_t index_min;
+
         ret &= sens_p->getRawData(ranges);
         ret &= sens_p->getDeviceStatus(status);
+        rangesMod = ranges;
 
         if (ret)
         {
@@ -576,6 +661,60 @@ void extendedRangefinder2DWrapper::run()
 
             int ranges_size = ranges.size();
 
+            if (extendedFuncEnabled)
+            {
+                // READ HUMAN PRESENCE AD ERASE LEGS
+                //scan only for /human /torso reference systems
+                transformClientInt->getAllFrameIds(allFrameIds);
+                //for (auto it2=allFrameIds.begin(); it2!=allFrameIds.end(); it2++)
+                for (int i=0; i<allFrameIds.size(); i++)
+                {
+                    //if (it2->compare(0, 6, "/human") == 0)
+                    if ((allFrameIds[i].compare(0, 6, "/human") == 0) && (allFrameIds[i].find("/torso")!=string::npos))
+                    {
+                        filteredFrameIds.push_back(allFrameIds[i]);
+                    }
+                }
+
+                //creating laser signal with removed legs (corresponding to torso position)
+                if (allFrameIds.size()>0)
+                {
+                    for (auto it=filteredFrameIds.begin(); it!=filteredFrameIds.end(); it++)
+                    {
+                        transformClientInt->getTransform(targetFrame, *it, transformMat);
+
+                        x_coord[0] = transformMat(1,4);
+                        y_coord[0] = transformMat(2,4);
+                        x_coord[1] = x_coord[0] + remRadius;
+                        y_coord[1] = y_coord[0];
+                        x_coord[2] = x_coord[0];
+                        y_coord[2] = y_coord[0] + remRadius;
+                        x_coord[3] = x_coord[0] - remRadius;
+                        y_coord[3] = y_coord[0];
+                        x_coord[4] = x_coord[0];
+                        y_coord[4] = x_coord[0] - remRadius;
+                        for (int i=0; i<5; i++)
+                        {
+                            theta_coord[i] = atan2 (y_coord[i], x_coord[i]);     //in radiants
+                            //rho_coord(i) = sqrt(std::pow(x_coord(i), 2) + std::pow(y_coord(i), 2));
+                        }
+                        theta_min = *(std::min_element(theta_coord.begin(), theta_coord.end()));
+                        theta_max = *(std::max_element(theta_coord.begin(), theta_coord.end()));
+
+                        index_min = (int) (theta_min / resolution);
+                        index_max = (int) (theta_max / resolution);
+
+                        if (index_max>ranges_size)
+                            index_max = ranges_size;
+
+                        for (int i=index_min; i<index_max; i++ )
+                            rangesMod[i] = std::numeric_limits<double>::infinity();; // infinite
+
+                    }
+                }
+            }
+
+            // publish standard laser port
             yarp::os::Bottle& b = streamingPort.prepare();
             b.clear();
             Bottle& bl = b.addList();
@@ -584,6 +723,17 @@ void extendedRangefinder2DWrapper::run()
             b.addInt32(status);
             streamingPort.setEnvelope(lastStateStamp);
             streamingPort.write();
+
+            // publish modified laser port
+            yarp::os::Bottle& bMod = streamingPortMod.prepare();
+            bMod.clear();
+            Bottle& blMod = bMod.addList();
+
+            blMod.read(rangesMod);
+            bMod.addInt32(status);
+            streamingPortMod.setEnvelope(lastStateStamp);
+            streamingPortMod.write();
+
 
             // publish ROS topic if required
             if (useROS != ROS_disabled)

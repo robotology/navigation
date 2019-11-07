@@ -45,6 +45,8 @@
 #include <yarp/dev/api.h>
 #include <yarp/dev/PreciselyTimed.h>
 
+#include <yarp/dev/IFrameTransform.h>
+
 // ROS state publisher
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
@@ -52,7 +54,8 @@
 #include <yarp/rosmsg/impl/yarpRosHelper.h>
 
 
-#define DEFAULT_THREAD_PERIOD 0.02 //s
+
+#define DEFAULT_THREAD_PERIOD_2D 0.02 //s
 
 class extendedRangefinder2DWrapper:
         public yarp::os::PeriodicThread,
@@ -85,12 +88,17 @@ public:
     void run() override;
 
 private:
-    yarp::dev::PolyDriver driver;
+    yarp::dev::PolyDriver laserDriver;
+    yarp::dev::PolyDriver transformClientDriver;
+    yarp::dev::IFrameTransform *transformClientInt;
     std::string partName;
     std::string streamingPortName;
+    std::string streamingPortNameMod;
     std::string rpcPortName;
+    std::string targetFrame;
     yarp::os::Port rpcPort;
     yarp::os::BufferedPort<yarp::os::Bottle> streamingPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> streamingPortMod;
     yarp::dev::IRangefinder2D *sens_p;
     yarp::dev::IPreciselyTimed *iTimed;
     yarp::os::Stamp lastStateStamp;
@@ -99,7 +107,9 @@ private:
     double minAngle, maxAngle;
     double minDistance, maxDistance;
     double resolution;
+    double remRadius;
     bool   isDeviceOwned;
+    bool   extendedFuncEnabled;
 
     bool checkROSParams(yarp::os::Searchable &config);
     bool initialize_ROS();
