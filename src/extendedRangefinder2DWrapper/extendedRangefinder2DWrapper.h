@@ -95,8 +95,10 @@ private:
     std::string streamingPortName;
     std::string streamingPortNameMod;
     std::string rpcPortName;
+    std::string rpcPortNameMod;
     std::string targetFrame;
     yarp::os::Port rpcPort;
+    yarp::os::Port rpcPortMod;
     yarp::os::BufferedPort<yarp::os::Bottle> streamingPort;
     yarp::os::BufferedPort<yarp::os::Bottle> streamingPortMod;
     yarp::dev::IRangefinder2D *sens_p;
