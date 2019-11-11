@@ -661,8 +661,14 @@ void extendedRangefinder2DWrapper::run()
         std::vector< double > y_coord(5);
         std::vector< double > theta_coord(5);
         //std::vector< double > rho_coord(5);
-        double theta_max;
+        double xTorso;
+        double yTorso;
+        double rhoTorso;
+        double thetaTorso;
         double theta_min;
+        double theta_max;
+        double circ_sect;
+
         std::size_t index_max;
         std::size_t index_min;
 
@@ -695,50 +701,74 @@ void extendedRangefinder2DWrapper::run()
                 }
 
                 //creating laser signal with removed legs (corresponding to torso position)
-                if (allFrameIds.size()>0)
+                if (filteredFrameIds.size()>0)
                 {
                     for (auto it=filteredFrameIds.begin(); it!=filteredFrameIds.end(); it++)
                     {
-                        std::cout << "FRAME: " << *it << ": " << std::endl;
+                        yDebug() << "FRAME: " << *it << ": " ;
 
                         transformClientInt->getTransform(targetFrame, *it, transformMat);
 
                         //std::cout << "TransformMatrix:" << std::endl;
-                        std::cout << transformMat.toString() << std::endl;
+                        yDebug() << transformMat.toString() ;
 
-                        x_coord[0] = transformMat(0,3);
-                        y_coord[0] = transformMat(0,3);
-                        x_coord[1] = x_coord[0] + remRadius;
-                        y_coord[1] = y_coord[0];
-                        x_coord[2] = x_coord[0];
-                        y_coord[2] = y_coord[0] + remRadius;
-                        x_coord[3] = x_coord[0] - remRadius;
-                        y_coord[3] = y_coord[0];
-                        x_coord[4] = x_coord[0];
-                        y_coord[4] = y_coord[0] - remRadius;
-                        for (int i=0; i<5; i++)
-                        {
-                            theta_coord[i] = atan2 (y_coord[i], x_coord[i])*180/3.14159;     //degrees  -180 to +180
-                            if (theta_coord[i]<0)
-                                theta_coord[i] = theta_coord[i] + 360;                       //degrees  0 to +360
-                            theta_coord[i] = theta_coord[i] + 90 ;                           // +90 deg offset
-                            //rho_coord(i) = sqrt(std::pow(x_coord(i), 2) + std::pow(y_coord(i), 2));
-                            std::cout << "X_" << i << ": \t" << x_coord[i] << "\t Y_" << i << ": \t" << y_coord[i]<< "\t Theta:" << theta_coord[i] << std::endl;
+                        xTorso = transformMat(0,3);
+                        yTorso = transformMat(1,3);
+                        rhoTorso = sqrt(std::pow(xTorso, 2) + std::pow(yTorso, 2));
+                        thetaTorso = atan2 (yTorso, xTorso)*180/3.14159;        //degrees  -180 to +180
+                        thetaTorso = thetaTorso + 90;                           // +90 degree to be consistent woth the fake laser
+                        if (thetaTorso<0)
+                            thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
+                        if (remRadius > rhoTorso)
+                            remRadius = rhoTorso;
+                        circ_sect = asin(remRadius/rhoTorso)*180/3.14159;
 
-                        }
-                        theta_min = *(std::min_element(theta_coord.begin(), theta_coord.end()));
-                        theta_max = *(std::max_element(theta_coord.begin(), theta_coord.end()));
+                        theta_min = thetaTorso - circ_sect ;
+                        theta_max = thetaTorso + circ_sect ;
+
+                        yDebug() << "X: \t" << xTorso << "\t Y: \t" << yTorso<< "\t Theta:" << thetaTorso << "\t Rho:" << rhoTorso << "\t circ_sect:" << circ_sect << "\t theta_min:" << theta_min << "\t theta_max:" << theta_max;
 
                         index_min = (int) (theta_min / resolution);
                         index_max = (int) (theta_max / resolution);
 
 
-                        if (index_max>ranges_size)
-                            index_max = ranges_size;
-                        std::cout << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution << std::endl;
+                        if (theta_min <0 )
+                        {
+                            theta_min = theta_min + 360;
+                            index_min = (int) (theta_min / resolution);
+                            index_max = (int) (theta_max / resolution);
+                            if (index_max>ranges_size)
+                                index_max = ranges_size;
+                            for (int i=index_min; i<ranges_size; i++ )
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
+                            for (int i=0; i<index_max; i++ )
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
 
-                        for (int i=index_min; i<index_max; i++ )
-                            rangesMod[i] = std::numeric_limits<double>::infinity(); //se metto -1 gira tutto
+                        }
+                        else if (theta_max > 360 )
+                        {
+                            theta_max = theta_max - 360;
+                            index_min = (int) (theta_min / resolution);
+                            index_max = (int) (theta_max / resolution);
+                            if (index_min>ranges_size)
+                                index_min = ranges_size;
+                            for (int i=0; i<index_max; i++ )
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
+                            for (int i=index_min; i<ranges_size; i++ )
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
+                        }
+                        else
+                        {
+                            index_min = (int) (theta_min / resolution);
+                            index_max = (int) (theta_max / resolution);
+                            if (index_max>ranges_size)
+                                index_max = ranges_size;
+                            for (int i=index_min; i<index_max; i++ )
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
+                        }
+
+                        yDebug() << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution ;
+
                     }
                 }
             }
