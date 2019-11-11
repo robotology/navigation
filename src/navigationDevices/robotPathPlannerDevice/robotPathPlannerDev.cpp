@@ -251,7 +251,7 @@ bool robotPathPlannerDev::resumeNavigation()
      return b;
 }
 
-bool robotPathPlannerDev::getAllNavigationWaypoints(std::vector<Map2DLocation>& waypoints)
+bool robotPathPlannerDev::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     bool b = m_plannerThread->getCurrentPath(waypoints);
     return b;

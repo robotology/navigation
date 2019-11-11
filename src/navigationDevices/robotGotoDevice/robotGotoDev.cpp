@@ -276,7 +276,7 @@ bool robotGotoDev::resumeNavigation()
     return b;
 }
 
-bool robotGotoDev::getAllNavigationWaypoints(std::vector<yarp::dev::Nav2D::Map2DLocation>& waypoints)
+bool robotGotoDev::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     yError() << "Not yet implemented";
     return false;

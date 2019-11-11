@@ -19,12 +19,12 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/Map2DPath.h>
 #include <yarp/dev/Map2DLocation.h>
 #include <string>
 #include <math.h>
 #include <cv.h>
 #include <highgui.h> 
-#include <plannerPath.h>
 
 #include "map.h"
 #include "aStar.h"
@@ -32,31 +32,31 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace map_utilites;
 
-bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, PlannerPath input_path, PlannerPath& output_path)
+bool map_utilites::simplifyPath(MapGrid2D& map, Map2DPath input_path, Map2DPath& output_path)
 {
-    unsigned int path_size = input_path.size();
+    size_t path_size = input_path.size();
     if (path_size==0) return false;
 
-    output_path.push(input_path.front());
+    output_path.push_back(*input_path.begin());
     
     //make a copy of the path in a vector
-    std::vector <MapGrid2D::XYCell> path;
-    for (unsigned int i=0; i<path_size; i++)
+    std::vector <XYCell> path;
+    for (auto it = input_path.begin(); it!= input_path.end(); it++)
     {
-        PlannerPath::waypoint_t tmp = input_path.front();
-        input_path.pop();
-        path.push_back(tmp.waypoint_cell);
+        XYCell tmpcell = map.toXYCell(*it);
+        path.push_back(tmpcell);
     }
 
     for (unsigned int i=0; i<path_size; i++)
     {
-        MapGrid2D::XYCell start_cell = path.at(i);
-        MapGrid2D::XYCell old_stop_cell = start_cell;
-        MapGrid2D::XYCell best_old_stop_cell = start_cell;
-        MapGrid2D::XYCell stop_cell = start_cell;
-        MapGrid2D::XYCell best_stop_cell = start_cell;
+        XYCell start_cell = path.at(i);
+        XYCell old_stop_cell = start_cell;
+        XYCell best_old_stop_cell = start_cell;
+        XYCell stop_cell = start_cell;
+        XYCell best_stop_cell = start_cell;
         unsigned int j=i+1;
         unsigned int best_j=j;
         for (; j<path_size; j++)
@@ -73,19 +73,21 @@ bool map_utilites::simplifyPath(yarp::dev::MapGrid2D& map, PlannerPath input_pat
         };
         if (best_j==path_size)
         {
-            output_path.push(best_stop_cell);
+            Map2DLocation tmploc = map.toLocation(best_stop_cell);
+            output_path.push_back(tmploc);
             return true;
         }
         else
         {
-            output_path.push(best_old_stop_cell);
+            Map2DLocation tmploc = map.toLocation(best_old_stop_cell);
+            output_path.push_back(tmploc);
             i=best_j-1;
         }
     };
     return true;
 };
 
-void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
+void map_utilites::update_obstacles_map(MapGrid2D& map_to_be_updated, const MapGrid2D& obstacles_map)
 {
     //copies obstacles (and only them) from a source map to a destination map
     if (map_to_be_updated.width() != obstacles_map.width() ||
@@ -99,8 +101,8 @@ void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated,
         {
             MapGrid2D::map_flags flag_src;
             MapGrid2D::map_flags flag_dst;
-            map_to_be_updated.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_dst);
-            obstacles_map.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_src);
+            map_to_be_updated.getMapFlag(XYCell (x,y), flag_dst);
+            obstacles_map.getMapFlag(XYCell (x,y), flag_src);
             if (flag_dst==MapGrid2D::MAP_CELL_FREE)
             {
                 if      (flag_src==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
@@ -111,12 +113,12 @@ void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated,
         }
 }
 
-bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell src, MapGrid2D::XYCell dst)
+bool map_utilites::checkStraightLine(MapGrid2D& map, XYCell src, XYCell dst)
 {
     //here using the fast Bresenham algorithm to check if cells belonging to a straight line (from src to dst)
     //are free or occupied by an obstacle
-    int dx = abs(dst.x-src.x);
-    int dy = abs(dst.y-src.y); 
+    int dx = abs(int(dst.x-src.x));
+    int dy = abs(int(dst.y-src.y)); 
     int err = dx-dy;
     
     int sx;
@@ -143,16 +145,17 @@ bool map_utilites::checkStraightLine(yarp::dev::MapGrid2D& map, MapGrid2D::XYCel
     return true;
 }
 
-bool map_utilites::findPath(yarp::dev::MapGrid2D& map, MapGrid2D::XYCell start, MapGrid2D::XYCell goal, PlannerPath& path)
+bool map_utilites::findPath(MapGrid2D& map, XYCell start, XYCell goal, Map2DPath& path)
 {
     //computes path from start to goal using A* algorithm
-    std::deque<MapGrid2D::XYCell> cell_path;
+    std::deque<XYCell> cell_path;
     bool b = aStar_algorithm::find_astar_path(map, start, goal, cell_path);
     if (b)
     {
         for (auto it = cell_path.begin(); it != cell_path.end(); it++)
         {
-            path.push(*it);
+            Map2DLocation tmploc = map.toLocation(*it);
+            path.push_back(tmploc);
         }
         return true;
     }

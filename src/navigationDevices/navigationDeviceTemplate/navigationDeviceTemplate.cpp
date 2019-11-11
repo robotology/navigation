@@ -132,7 +132,7 @@ bool navigationDeviceTemplate::getRelativeLocationOfCurrentTarget(double& x, dou
     return true;
 }
 
-bool navigationDeviceTemplate::getAllNavigationWaypoints(std::vector<Map2DLocation>& waypoints)
+bool navigationDeviceTemplate::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;

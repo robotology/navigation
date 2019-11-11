@@ -56,20 +56,21 @@ bool map_utilites::sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelR
     return false;
 }
 
-bool map_utilites::drawPath(IplImage *map, XYCell current_position, XYCell current_target, std::queue<XYCell> path, const CvScalar& color)
+bool map_utilites::drawPath(IplImage *map, XYCell current_position, XYCell current_target, std::queue<XYCell> path, const CvScalar& color1, const CvScalar& color2)
 {
     if (map==0) return false;
-    cvLine(map, cvPoint(current_position.x, current_position.y), cvPoint(current_target.x, current_target.y), color);
-
     if (path.size()==0) return true;
+    
     XYCell src = current_target;
     while (path.size()>0)
     {
         XYCell dst = path.front();
         path.pop();
-        cvLine(map, cvPoint(src.x, src.y), cvPoint(dst.x, dst.y), color);
+        cvLine(map, cvPoint(src.x, src.y), cvPoint(dst.x, dst.y), color2);
         src=dst;
     };
+    
+    cvLine(map, cvPoint(current_position.x, current_position.y), cvPoint(current_target.x, current_target.y), color1);
     return true;
 }
 

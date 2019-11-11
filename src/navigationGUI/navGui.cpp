@@ -31,6 +31,7 @@
 #include <yarp/dev/INavigation2D.h>
 #include <string>
 #include <algorithm>
+#include <yarp/cv/Cv.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -48,6 +49,23 @@ using namespace yarp::dev::Nav2D;
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180
 #endif
+
+NavGuiThread::~NavGuiThread()
+{
+  /* { m_ptf.close(); };
+   {m_pLoc.close(); };
+   {m_pLas.close(); };
+   {m_pMap.close(); };
+   {m_pNav.close(); };
+   cvReleaseImage(&i1_map);
+   cvReleaseImage(&i2_map_menu);
+   cvReleaseImage(&i3_map_menu_scan);
+   cvReleaseImage(&i4_map_with_path);
+   m_estimated_poses->push_back(Map2DLocation());
+   m_estimated_poses->clear();
+   delete m_estimated_poses;
+   yDebug() << "";*/
+}
 
 bool NavGuiThread::click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p)
 {
@@ -403,20 +421,31 @@ void NavGuiThread::draw_map()
     static CvScalar blue_color  = cvScalar(0, 0, 200);
     static CvScalar azure_color = cvScalar(80, 80, 200);
     static CvScalar azure_color2 = cvScalar(130, 130, 200);
-    XYCell start = m_current_map.world2Cell(XYWorld(m_localization_data.x, m_localization_data.y));
+    XYCell current_position = m_current_map.world2Cell(XYWorld(m_localization_data.x, m_localization_data.y));
     XYCell final_goal = m_current_map.world2Cell(XYWorld(m_curr_goal.x, m_curr_goal.y));
 
     if (i1_map == nullptr)
     {
+#if 1
         yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
         m_current_map.getMapImage(map_image);
         IplImage* tmp = (IplImage*)map_image.getIplImage();
         int w = tmp->width;
         int h = tmp->height;
         if (w < 320) w = 320;
-        i1_map = cvCreateImage(CvSize(w,h), 8, 3);
-      //  cvCopy(tmp, i1_map);
+        i1_map = cvCreateImage(CvSize(w, h), 8, 3);
         cvCopyMakeBorder(tmp, i1_map, CvPoint(0, 0), cv::BORDER_ISOLATED);
+#else
+        yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
+        m_current_map.getMapImage(map_image);
+        auto tmp = yarp::cv::toCvMat(map_image);
+        int w = tmp.cols;
+        int h = tmp.rows;
+        if (w < 320) w = 320;
+        i1_map = cvCreateImage(CvSize(w, h), 8, 3);
+        cvCopyMakeBorder(&tmp, i1_map, CvPoint(0, 0), cv::BORDER_ISOLATED);
+#endif
+
     }
     if (i2_map_menu == nullptr)
     {
@@ -471,8 +500,9 @@ void NavGuiThread::draw_map()
     int particles_to_be_drawn = std::min((int)m_enable_estimated_particles, (int)m_estimated_poses.size());
     for (size_t i = 0; i < particles_to_be_drawn; i++)
     {
-         map_utilites::drawPose(i3_map_menu_scan, m_current_map.world2Cell(XYWorld(m_estimated_poses[i].x, m_estimated_poses[i].y)), m_estimated_poses[i].theta* DEG2RAD, green_color);
+         map_utilites::drawPose(i3_map_menu_scan, m_current_map.world2Cell(XYWorld((m_estimated_poses)[i].x, (m_estimated_poses)[i].y)), (m_estimated_poses)[i].theta* DEG2RAD, green_color);
     }
+    
 
     //############### draw locations
     if (m_enable_draw_all_locations)
@@ -494,7 +524,7 @@ void NavGuiThread::draw_map()
     }
 
     //############### draw Current Position
-    map_utilites::drawCurrentPosition(i3_map_menu_scan, start, m_localization_data.theta* DEG2RAD, azure_color);
+    map_utilites::drawCurrentPosition(i3_map_menu_scan, current_position, m_localization_data.theta* DEG2RAD, azure_color);
 
     //############### draw Infos
     if (m_enable_draw_infos)
@@ -505,7 +535,7 @@ void NavGuiThread::draw_map()
         XYCell x_axis = m_current_map.world2Cell(w_x_axis);
         XYCell y_axis = m_current_map.world2Cell(w_y_axis);
         XYCell orig = m_current_map.world2Cell(w_orig);
-//        map_utilites::drawInfo(i3_map_menu_scan, start, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font, blue_color);
+//        map_utilites::drawInfo(i3_map_menu_scan, current_position, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font, blue_color);
 
         XYCell whereToDraw(10, i1_map->height+32);
         map_utilites::drawInfoFixed(i3_map_menu_scan, whereToDraw, orig, x_axis, y_axis, getNavigationStatusAsString(), m_localization_data, font2, azure_color2);
@@ -516,6 +546,7 @@ void NavGuiThread::draw_map()
 
     CvScalar color = cvScalar(0, 200, 0);
     CvScalar color2 = cvScalar(0, 200, 100);
+    CvScalar color3 = cvScalar(0, 50, 0);
 
     if (m_navigation_status != navigation_status_idle &&
         m_navigation_status != navigation_status_goal_reached &&
@@ -533,7 +564,7 @@ void NavGuiThread::draw_map()
 
             XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
             XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-            map_utilites::drawPath(i4_map_with_path, start, curr_waypoint_cell, all_waypoints_cell, color);
+            map_utilites::drawPath(i4_map_with_path, current_position, curr_waypoint_cell, all_waypoints_cell, color3, color2);
         }
 
     //############### finished, send to port
@@ -542,7 +573,7 @@ void NavGuiThread::draw_map()
 
 void NavGuiThread::run()
 {
-    m_mutex.wait();
+    std::lock_guard<std::mutex> lock(m_guithread_mutex);
     //double check1 = yarp::os::Time::now();
 
     bool changed = false;
@@ -572,6 +603,7 @@ void NavGuiThread::run()
         m_iNav->getEstimatedPoses(m_estimated_poses);
         last_drawn_estimated_poses = yarp::os::Time::now();
     }
+    
 
     static double last_drawn_map_locations = yarp::os::Time::now();
     if (yarp::os::Time::now() - last_drawn_map_locations > m_period_draw_map_locations)
@@ -641,8 +673,6 @@ void NavGuiThread::run()
         //yDebug() << check4-check3;
         last_drawn = yarp::os::Time::now();
     }
-    
-    m_mutex.post();
 }
 
 bool NavGuiThread::readWaypointsAndGoal()

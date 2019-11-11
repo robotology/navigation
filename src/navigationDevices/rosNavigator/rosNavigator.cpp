@@ -454,7 +454,7 @@ bool rosNavigator::resumeNavigation()
     return false;
 }
 
-bool rosNavigator::getAllNavigationWaypoints(std::vector<Map2DLocation>& waypoints)
+bool rosNavigator::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     yDebug() << "Not yet implemented";
     return false;

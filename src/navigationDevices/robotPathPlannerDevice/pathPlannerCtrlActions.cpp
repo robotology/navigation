@@ -38,8 +38,10 @@ bool PlannerThread::setNewAbsTarget(Map2DLocation target)
 
     if (target.map_id == m_current_map.getMapName())
     {
+        //this a trick to clean the queue
         std::queue<Map2DLocation> empty;
         std::swap(m_sequence_of_goals, empty);
+
         m_sequence_of_goals.push(m_final_goal);
         if (startPath())
         {

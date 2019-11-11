@@ -184,7 +184,7 @@ bool simpleVelocityNavigation::getRelativeLocationOfCurrentTarget(double& x, dou
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getAllNavigationWaypoints(std::vector<Map2DLocation>& waypoints)
+bool simpleVelocityNavigation::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     yError() << "getAllNavigationWaypoints() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;

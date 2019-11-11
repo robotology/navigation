@@ -40,6 +40,7 @@
 #include "rosLocalizer.h"
 
 using namespace yarp::os;
+using namespace yarp::dev::Nav2D;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -500,4 +501,30 @@ bool rosLocalizer::close()
     rpcPort.interrupt();
     rpcPort.close();
     return true;
+}
+
+bool rosLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by rosLocalizer";
+    thread->getCurrentLoc(loc);
+    return true;
+}
+
+bool rosLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by rosLocalizer";
+    thread->initializeLocalization(loc);
+    return true;
+}
+
+bool  rosLocalizer::startLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
+bool  rosLocalizer::stopLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
 }

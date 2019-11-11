@@ -79,6 +79,32 @@ bool   t265Localizer::setInitialPose(const Map2DLocation& loc)
     return true;
 }
 
+bool   t265Localizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by t265Localizer";
+    thread->getCurrentLoc(loc);
+    return true;
+}
+
+bool   t265Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by t265Localizer";
+    thread->initializeLocalization(loc);
+    return true;
+}
+
+bool    t265Localizer::startLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
+bool    t265Localizer::stopLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
 //////////////////////////
 
 t265LocalizerThread::t265LocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)

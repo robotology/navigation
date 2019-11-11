@@ -324,3 +324,28 @@ bool gazeboLocalizer::close()
     return true;
 }
  
+bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by gazeboLocalizer";
+    thread->getCurrentLoc(loc);
+    return true;
+}
+
+bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by gazeboLocalizer";
+    thread->initializeLocalization(loc);
+    return true;
+}
+
+bool    gazeboLocalizer::startLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
+bool    gazeboLocalizer::stopLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}

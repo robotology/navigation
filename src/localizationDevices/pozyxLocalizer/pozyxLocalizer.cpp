@@ -416,3 +416,29 @@ bool pozyxLocalizer::close()
     return true;
 }
  
+
+bool pozyxLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by pozyxLocalizer";
+    thread->getCurrentLoc(loc);
+    return true;
+}
+
+bool pozyxLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by pozyxLocalizer";
+    thread->initializeLocalization(loc);
+    return true;
+}
+
+bool  pozyxLocalizer::startLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
+bool  pozyxLocalizer::stopLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}

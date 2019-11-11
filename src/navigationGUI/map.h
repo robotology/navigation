@@ -46,7 +46,7 @@ namespace map_utilites
     //draw stuff on the map image
     bool drawInfo(IplImage *map, XYCell current, XYCell orig, XYCell x_axis, XYCell y_axis, std::string status, const yarp::dev::Nav2D::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
     bool drawInfoFixed(IplImage *map, XYCell whereToDraw, XYCell orig, XYCell x_axis, Nav2D::XYCell y_axis, std::string status, const yarp::dev::Nav2D::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
-    bool drawPath(IplImage *map, XYCell current_position, XYCell current_target, std::queue<Nav2D::XYCell> path, const CvScalar& color);
+    bool drawPath(IplImage *map, XYCell current_position, XYCell current_target, std::queue<Nav2D::XYCell> path, const CvScalar& color, const CvScalar& color2);
     bool drawCurrentPosition(IplImage *map, XYCell current, double angle, const CvScalar& color);
     bool drawGoal(IplImage *map, XYCell current, double angle, const CvScalar& color);
     bool drawArea(IplImage *map, std::vector<XYCell> area, const CvScalar& color);

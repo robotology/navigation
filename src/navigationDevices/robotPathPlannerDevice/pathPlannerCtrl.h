@@ -133,15 +133,16 @@ class PlannerThread: public yarp::os::PeriodicThread
     double                                 m_navigation_started_at_timeX;
     double                                 m_final_goal_reached_at_timeX;
     std::queue<yarp::dev::Nav2D::Map2DLocation>   m_sequence_of_goals;
-    std::vector<yarp::dev::Nav2D::Map2DLocation>  m_locations_list;
     std::string                            m_last_target;
     std::vector<yarp::dev::Nav2D::XYCell>   m_laser_map_cells;
 
     //the path computed by the planner, stored a sequence of waypoints to be reached
-    yarp::dev::Nav2D::PlannerPath                 m_computed_path;
-    yarp::dev::Nav2D::PlannerPath                 m_computed_simplified_path;
-    yarp::dev::Nav2D::PlannerPath*                m_current_path;
-    
+    yarp::dev::Nav2D::Map2DPath                   m_computed_path;
+    yarp::dev::Nav2D::Map2DPath                   m_computed_simplified_path;
+    yarp::dev::Nav2D::Map2DPath*                  m_current_path;
+    yarp::dev::Nav2D::Map2DPath::iterator         m_current_path_iterator;
+    std::deque< yarp::dev::Nav2D::Map2DLocation>  m_remaining_path;
+
     //statuses of the internal finite-state machine
     NavigationStatusEnum   m_planner_status;
     NavigationStatusEnum   m_inner_status;
@@ -264,8 +265,8 @@ class PlannerThread: public yarp::os::PeriodicThread
     void          getTimeouts(int& localiz, int& laser, int& inner_status);
 
     bool          getCurrentWaypoint(yarp::dev::Nav2D::Map2DLocation &loc) const;
-    bool          getCurrentPath(std::vector<yarp::dev::Nav2D::Map2DLocation>& path) const;
     bool          getCurrentMap(yarp::dev::Nav2D::MapGrid2D& current_map) const;
+    bool          getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const;
     bool          getOstaclesMap(yarp::dev::Nav2D::MapGrid2D& obstacles_map);
     bool          setRobotRadius(double size);
     bool          getRobotRadius(double& size);
@@ -278,7 +279,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     void          readLaserData();
     bool          readInnerNavigationStatus();
     bool          getCurrentWaypoint(yarp::dev::Nav2D::XYCell &c) const;
-    bool          updateLocations();
 
     public:
     /**

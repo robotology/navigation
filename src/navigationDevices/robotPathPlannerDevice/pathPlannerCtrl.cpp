@@ -49,20 +49,6 @@ using namespace yarp::dev::Nav2D;
 #define DEG2RAD M_PI/180
 #endif
 
-bool  PlannerThread::updateLocations()
-{
-    std::vector<std::string> all_locations;
-    m_iMap->getLocationsList(all_locations);
-    Map2DLocation tmp_loc;
-    m_locations_list.clear();
-    for (size_t i=0; i<all_locations.size(); i++)
-    {
-        m_iMap->getLocation(all_locations[i],tmp_loc);
-        m_locations_list.push_back(tmp_loc);
-    }
-    return true;
-}
-
 bool  PlannerThread::readLocalizationData()
 {
     bool ret = m_iLoc->getCurrentPosition(m_localization_data);
@@ -97,7 +83,6 @@ bool  PlannerThread::readLocalizationData()
             m_current_map.enlargeObstacles(m_robot_radius);
             m_augmented_map = m_current_map;
             yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
-            updateLocations();
         }
         else
         {
@@ -167,7 +152,7 @@ void  PlannerThread::readLaserData()
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
             //performs a rotation from the robot to the world reference frame
-            MapGrid2D::XYWorld world;
+            XYWorld world;
             double ss = sin(m_localization_data.theta * DEG2RAD);
             double cs = cos(m_localization_data.theta * DEG2RAD);
             world.x = las_x*cs - las_y*ss + m_localization_data.x;
@@ -270,25 +255,26 @@ void PlannerThread::run()
     /////////////////////////////
     // the finite-state-machine
     /////////////////////////////
-    size_t path_size = m_current_path->size();
     switch (m_planner_status)
     {
         case navigation_status_moving:
         {
             if (m_inner_status == navigation_status_goal_reached)
             {
-                if (path_size == 0)
+                if (m_current_path_iterator == m_current_path->end())
                 {
                     //navigation is complete
                     yInfo("goal reached, navigation complete");
                     m_planner_status = navigation_status_goal_reached;
-                    m_final_goal_reached_at_timeX == yarp::os::Time::now();
+                    m_final_goal_reached_at_timeX = yarp::os::Time::now();
                 }
-                else if (path_size == 1)
+                else if (m_current_path_iterator == m_current_path->end()-1)
                 {
                     yInfo("waypoint reached");
                     //remove the current waypoint, just reached
-                    m_current_path->pop();
+                    m_current_path_iterator++;
+                    m_remaining_path.pop_front();
+
                     //send the final waypoint
                     yInfo("sending the last waypoint (final goal)");
                     {
@@ -354,7 +340,9 @@ void PlannerThread::run()
                 {
                     yInfo("waypoint reached");
                     //remove the current waypoint, just reached
-                    m_current_path->pop();
+                    m_current_path_iterator++;
+                    m_remaining_path.pop_front();
+
                     //send the next waypoint
                     yInfo("sending the next waypoint");
                     {
@@ -452,7 +440,9 @@ void PlannerThread::run()
             else if (m_inner_status == navigation_status_idle)
             {
                 //send the first waypoint
+                m_current_path_iterator = m_current_path->begin();
                 yInfo("sending the first waypoint");
+
                 //send the tolerance to the inner controller
                 {
                     Bottle cmd1, ans1;
@@ -594,39 +584,29 @@ void PlannerThread::run()
     m_mutex.post();
 }
 
-bool PlannerThread::getCurrentPath(std::vector<Map2DLocation>& path) const
+bool PlannerThread::getCurrentWaypoint(Map2DLocation &loc) const
 {
-    if (m_current_path != NULL)
+    if (m_current_path == nullptr) return false;
+
+    if (m_current_path_iterator != m_current_path->end())
     {
-        m_current_path->getPath(path);
+        loc = *m_current_path_iterator;
         return true;
     }
+
     return false;
 }
 
-bool PlannerThread::getCurrentWaypoint(Map2DLocation &loc) const
+bool PlannerThread::getCurrentWaypoint(XYCell &c) const
 {
-    if (m_current_path->size() > 0)
+    if (m_current_path == nullptr) return false;
+
+    if (m_current_path_iterator != m_current_path->end())
     {
-        XYCell c = m_current_path->current_waypoint();
-        loc.map_id = m_current_map.getMapName();
-        XYWorld w = m_current_map.cell2World(c);
-        loc.x = w.x;
-        loc.y = w.y;
-        loc.theta = 0;
+        c = m_current_map.toXYCell(*m_current_path_iterator);
         return true;
     }
-    else if (m_current_path->size() == 0 &&
-             m_planner_status == yarp::dev::NavigationStatusEnum::navigation_status_moving)
-    {
-        loc = m_final_goal;
-        return true;
-    }
-    else
-    {
-        yInfo() << "robotPathPlanner::getCurrentWaypoint(): info not available, no waypoint set";
-    }
-    return false;
+    return true;
 }
 
 bool PlannerThread::getCurrentMap(MapGrid2D& map) const
@@ -635,35 +615,35 @@ bool PlannerThread::getCurrentMap(MapGrid2D& map) const
     return true;
 }
 
+bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const
+{
+    if (m_current_path != nullptr)
+    {
+#if 0
+        current_path = *m_current_path;
+#elif 0
+        current_path.clear();
+        for (auto it = m_remaining_path.begin(); it != m_remaining_path.end(); it++)
+        {
+            current_path.push_back(*it);
+        }
+#else
+        current_path.clear();
+        for (auto it = m_current_path_iterator; it != m_current_path->end(); it++)
+        {
+            current_path.push_back(*it);
+        }
+#endif
+        return true;
+    }
+    return false;
+}
+
 bool PlannerThread::getOstaclesMap(MapGrid2D& obstacles_map) 
 {
     m_temporary_obstacles_map_mutex.lock();
     obstacles_map = m_temporary_obstacles_map;
     m_temporary_obstacles_map_mutex.unlock();
-    return true;
-}
-
-bool PlannerThread::getCurrentWaypoint(XYCell &c) const
-{
-    if (m_current_path == NULL)
-    {
-        yError() << "PlannerThread::getCurrentWaypoint() m_current_path is NULL";
-        return false;
-    }
-    if (m_current_path->size() == 0)
-    {
-        if (m_planner_status == yarp::dev::NavigationStatusEnum::navigation_status_moving)
-        {
-            c = m_current_map.world2Cell(XYWorld(m_final_goal.x, m_final_goal.y));
-            return true;
-        }
-        else
-        {
-            yError() << "PlannerThread::getCurrentWaypoint() m_current_path is empty (size==0)";
-            return false;
-        }
-    }
-    c = m_current_path->current_waypoint();
     return true;
 }
 
@@ -774,12 +754,14 @@ bool PlannerThread::startPath()
     {
         m_current_path = &m_computed_path;
     }
+    m_current_path_iterator = m_current_path->begin();
+    std::copy(m_current_path->begin(), m_current_path->end(), std::back_inserter(m_remaining_path));
 
     //debug print
     if (1)
     {
         yDebug() << "Current pos" << " x:" << start_vec.x << " y:" << start_vec.y;
-        m_current_path->print();
+        yDebug() << m_current_path->toString();
         yDebug() << "Final goal" << " x:" << goal_vec.x << " y:" << goal_vec.y << " t:" << m_sequence_of_goals.front().theta;
     }
 
