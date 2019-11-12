@@ -720,7 +720,7 @@ void extendedRangefinder2DWrapper::run()
                         yTorso = transformMat(1,3);
                         rhoTorso = sqrt(std::pow(xTorso, 2) + std::pow(yTorso, 2));
                         thetaTorso = atan2 (yTorso, xTorso)*180/3.14159;        //degrees  -180 to +180
-                        thetaTorso = thetaTorso + 90;                           // +90 degree to be consistent woth the fake laser
+                        thetaTorso = thetaTorso + 180;                           // +90 degree to be consistent woth the fake laser
                         if (thetaTorso<0)
                             thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
                         if (remRadius > rhoTorso)
