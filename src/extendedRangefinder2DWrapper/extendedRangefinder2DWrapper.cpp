@@ -488,7 +488,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
     if (config.check("refFrame"))
         targetFrame = config.find("refFrame").asString();
     else
-        targetFrame = "/mobile_robot_base";
+        targetFrame = "/mobile_base_body_link";
 
     if (config.check("remRadius"))
         remRadius = config.find("remRadius").asDouble();
@@ -569,11 +569,17 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
             pTC.put("remote",config.find("remoteTC").asString());
             pTC.put("period",config.find("period").asString());
 
-            if (transformClientDriver.open(pTC) == false)
+            while (transformClientDriver.open(pTC) == false)
             {
-                yError() << "Unable to connect to transform client";
-                return false;
+                yInfo() << "tranformClient waiting to open";
+
+                yarp::os::Time::delay(10);
             }
+            yInfo() << "tranformClient successfully open";
+
+
+//            yError() << "Unable to connect to transform client";
+//            return false;
 
             transformClientDriver.view(transformClientInt);
             if (transformClientInt == nullptr)
