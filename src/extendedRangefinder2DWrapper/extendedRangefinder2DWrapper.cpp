@@ -502,7 +502,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
     }
     else
     {
-
+        extendedFuncEnabled = 1;
     }
 
     if (!config.check("period"))
@@ -543,6 +543,42 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         return false;
     }DEFAULT_THREAD_PERIOD_2D;
 
+    // connect to transform client and load interface
+    if (extendedFuncEnabled)
+    {
+        Property    pTC;
+        pTC.put("device","transformClient");
+        if (config.check("localTC"))
+            pTC.put("local",config.find("localTC").asString());
+        else
+            pTC.put("local",config.find("remoteTC").asString()+ "/local:i");
+
+        pTC.put("remote",config.find("remoteTC").asString());
+        pTC.put("period",config.find("period").asString());
+
+        while (transformClientDriver.open(pTC) == false)
+        {
+             yInfo() << "tranformClient waiting to open";
+             yarp::os::Time::delay(10);
+        }
+        yInfo() << "tranformClient successfully open";
+
+//          yError() << "Unable to connect to transform client";
+//          return false;
+
+        transformClientDriver.view(transformClientInt);
+        if (transformClientInt == nullptr)
+        {
+             yError() << "Unable to open Transform Client interface";
+             return false;
+        }
+        yInfo() << "tranformClient successfully open";
+    }
+    else
+    {
+        yDebug() << "extendedFuncEnabled=false";
+    }
+        
     if(config.check("subdevice"))
     {
         Property       p;
@@ -554,44 +590,6 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         {
             yError() << "extendedRangefinder2DWrapper: failed to open subdevice.. check params";
             return false;
-        }
-
-        // connect to transform client and load interface
-        if (extendedFuncEnabled)
-        {
-            Property    pTC;
-            pTC.put("device","transformClient");
-            if (config.check("localTC"))
-                pTC.put("local",config.find("localTC").asString());
-            else
-                pTC.put("local",config.find("remoteTC").asString()+ "/local:i");
-
-            pTC.put("remote",config.find("remoteTC").asString());
-            pTC.put("period",config.find("period").asString());
-
-            while (transformClientDriver.open(pTC) == false)
-            {
-                yInfo() << "tranformClient waiting to open";
-
-                yarp::os::Time::delay(10);
-            }
-            yInfo() << "tranformClient successfully open";
-
-
-//            yError() << "Unable to connect to transform client";
-//            return false;
-
-            transformClientDriver.view(transformClientInt);
-            if (transformClientInt == nullptr)
-            {
-                yError() << "Unable to open Transform Client interface";
-                return false;
-            }
-            yInfo() << "tranformClient successfully open";
-        }
-        else
-        {
-            yDebug() << "extendedFuncEnabled=false";
         }
 
         driverlist.push(&laserDriver, "1");
