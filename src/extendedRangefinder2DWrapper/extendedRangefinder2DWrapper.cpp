@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
@@ -698,7 +698,7 @@ void extendedRangefinder2DWrapper::run()
                 for (int i=0; i<allFrameIds.size(); i++)
                 {
                     //if (it2->compare(0, 6, "/human") == 0)
-                    if ((allFrameIds[i].compare(0, 6, "/human") == 0) && (allFrameIds[i].find("/torso")!=string::npos))
+                    if ((allFrameIds[i].compare(0, 6, "/human") == 0) && (allFrameIds[i].find("/shoulderCenter")!=string::npos))
                     {
                         filteredFrameIds.push_back(allFrameIds[i]);
                     }
@@ -720,7 +720,7 @@ void extendedRangefinder2DWrapper::run()
                         yTorso = transformMat(1,3);
                         rhoTorso = sqrt(std::pow(xTorso, 2) + std::pow(yTorso, 2));
                         thetaTorso = atan2 (yTorso, xTorso)*180/3.14159;        //degrees  -180 to +180
-                        thetaTorso = thetaTorso + 180;                           // +90 degree to be consistent woth the fake laser
+                        thetaTorso = thetaTorso + 180;                           // +180 degree to be consistent woth the fake laser
                         if (thetaTorso<0)
                             thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
                         if (remRadius > rhoTorso)
