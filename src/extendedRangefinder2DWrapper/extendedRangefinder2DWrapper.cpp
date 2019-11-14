@@ -673,7 +673,7 @@ void extendedRangefinder2DWrapper::run()
         std::vector< double > x_coord(5);
         std::vector< double > y_coord(5);
         std::vector< double > theta_coord(5,0.0);
-        std::vector< double > debVect(14,0.0);
+        std::vector< double > debVect(17,0.0);
         //std::vector< double > rho_coord(5);
         double xTorso;
         double yTorso;
@@ -755,7 +755,7 @@ void extendedRangefinder2DWrapper::run()
 
                         if (theta_min <0 )
                         {
-                            theta_min = theta_min + 360;
+                            theta_min = theta_min + 36-20;
                             index_min = (int) (theta_min / resolution);
                             index_max = (int) (theta_max / resolution);
                             if (index_max>ranges_size)
@@ -801,7 +801,9 @@ void extendedRangefinder2DWrapper::run()
                 }
             }
 
-
+            debVect[14] = extendedFuncEnabled;
+            debVect[15] = allFrameIds.size();
+            debVect[16] = filteredFrameIds.size();
 
 
             // publish standard laser port
