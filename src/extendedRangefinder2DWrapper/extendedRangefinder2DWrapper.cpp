@@ -632,6 +632,12 @@ bool extendedRangefinder2DWrapper::initialize_YARP(yarp::os::Searchable &params)
             }
         rpcPortMod.setReader(*this);
 
+        if (!streamingPortDebug.open(streamingPortName + "/debug"))
+            {
+                yError("extendedRangefinder2DWrapper: failed to open port %s", (streamingPortName + "/debug").c_str());
+                return false;
+            }
+
 
     }
     return true;
@@ -647,6 +653,8 @@ void extendedRangefinder2DWrapper::threadRelease()
     rpcPort.close();
     rpcPortMod.interrupt();
     rpcPortMod.close();
+    streamingPortDebug.interrupt();
+    streamingPortDebug.close();
 }
 
 void extendedRangefinder2DWrapper::run()
@@ -659,11 +667,13 @@ void extendedRangefinder2DWrapper::run()
         yarp::sig::Vector rangesMod;
         std::vector< std::string > allFrameIds;
         std::vector< std::string > filteredFrameIds;
+        //std::vector< std::string > debVect;
         yarp::sig::Matrix transformMat;
         std::string test;
         std::vector< double > x_coord(5);
         std::vector< double > y_coord(5);
-        std::vector< double > theta_coord(5);
+        std::vector< double > theta_coord(5,0.0);
+        std::vector< double > debVect(14,0.0);
         //std::vector< double > rho_coord(5);
         double xTorso;
         double yTorso;
@@ -734,7 +744,14 @@ void extendedRangefinder2DWrapper::run()
 
                         index_min = (int) (theta_min / resolution);
                         index_max = (int) (theta_max / resolution);
-
+                        debVect[0] = xTorso;
+                        debVect[1] = yTorso;
+                        debVect[2] = thetaTorso;
+                        debVect[3] = rhoTorso;
+                        debVect[4] = circ_sect;
+                        debVect[5] = theta_min;
+                        debVect[6] = theta_max;
+                        debVect[7] = -1;
 
                         if (theta_min <0 )
                         {
@@ -771,6 +788,13 @@ void extendedRangefinder2DWrapper::run()
                                 rangesMod[i] = std::numeric_limits<double>::infinity();
                         }
 
+                        debVect[8] = ranges_size;
+                        debVect[9] = index_min;
+                        debVect[10] = index_max;
+                        debVect[11] = theta_min;
+                        debVect[12] = theta_max;
+                        debVect[13] = -2;
+
                         yDebug() << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution ;
 
                     }
@@ -799,6 +823,18 @@ void extendedRangefinder2DWrapper::run()
             bMod.addInt32(status);
             streamingPortMod.setEnvelope(lastStateStamp);
             streamingPortMod.write();
+
+            //publish debug port
+            yarp::os::Bottle& bd = streamingPortDebug.prepare();
+            bd.clear();
+            for(int i=0;i<debVect.size();i++)
+            {
+                bd.addDouble(debVect[i]);
+            }
+
+            //bd.addInt32(status);
+            streamingPortDebug.setEnvelope(lastStateStamp);
+            streamingPortDebug.write();
 
 
             // publish ROS topic if required

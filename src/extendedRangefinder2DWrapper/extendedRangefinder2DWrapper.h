@@ -101,6 +101,7 @@ private:
     yarp::os::Port rpcPortMod;
     yarp::os::BufferedPort<yarp::os::Bottle> streamingPort;
     yarp::os::BufferedPort<yarp::os::Bottle> streamingPortMod;
+    yarp::os::BufferedPort<yarp::os::Bottle> streamingPortDebug;
     yarp::dev::IRangefinder2D *sens_p;
     yarp::dev::IPreciselyTimed *iTimed;
     yarp::os::Stamp lastStateStamp;
