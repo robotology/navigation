@@ -563,7 +563,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         if (config.check("localTC"))
             pTC.put("local",config.find("localTC").asString());
         else
-            pTC.put("local","/extendedRangefinder2D/transformClient");
+            pTC.put("local","/extendedRangefinder2DTESTL/transformClient");
 
         pTC.put("remote",config.find("remoteTC").asString());
         pTC.put("period",config.find("period").asString());
