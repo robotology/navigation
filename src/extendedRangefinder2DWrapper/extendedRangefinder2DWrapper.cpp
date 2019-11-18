@@ -675,6 +675,7 @@ void extendedRangefinder2DWrapper::run()
     if (sens_p!=nullptr)
     {
         bool ret = true;
+
         IRangefinder2D::Device_status status;
         yarp::sig::Vector ranges;
         yarp::sig::Vector rangesMod;
@@ -735,7 +736,11 @@ void extendedRangefinder2DWrapper::run()
                     {
                         yDebug() << "FRAME: " << *it << ": " ;
 
-                        transformClientInt->getTransform(targetFrame, *it, transformMat);
+                       if (transformClientInt->getTransform(targetFrame, *it, transformMat) == false)
+                       {
+                           continue;
+                           yDebug() << "no transform between: " << *it << " and " << targetFrame;
+                       }
 
                         //std::cout << "TransformMatrix:" << std::endl;
                         yDebug() << transformMat.toString() ;
