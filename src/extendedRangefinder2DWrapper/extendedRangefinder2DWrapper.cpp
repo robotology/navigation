@@ -752,6 +752,8 @@ void extendedRangefinder2DWrapper::run()
                         thetaTorso = thetaTorso - 90;                           // -90 degree to be consistent with the fake laser
                         if (thetaTorso<0)
                             thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
+                        thetaTorso = 360 - thetaTorso;                           //to shift from anticlockwise to clockwise movement
+
                         if (remRadius > rhoTorso)
                             remRadius = rhoTorso;
                         circ_sect = asin(remRadius/rhoTorso)*180/3.14159;
