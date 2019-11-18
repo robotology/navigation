@@ -551,7 +551,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         if (config.check("localTC"))
             pTC.put("local",config.find("localTC").asString());
         else
-            pTC.put("local",config.find("remoteTC").asString()+ "/local:i");
+            pTC.put("local","/extendedRangefinder2D/transformClient");
 
         pTC.put("remote",config.find("remoteTC").asString());
         pTC.put("period",config.find("period").asString());
@@ -561,7 +561,6 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
              yInfo() << "tranformClient waiting to open";
              yarp::os::Time::delay(10);
         }
-        yInfo() << "tranformClient successfully open";
 
 //          yError() << "Unable to connect to transform client";
 //          return false;
@@ -673,7 +672,7 @@ void extendedRangefinder2DWrapper::run()
         std::vector< double > x_coord(5);
         std::vector< double > y_coord(5);
         std::vector< double > theta_coord(5,0.0);
-        std::vector< double > debVect(17,0.0);
+        std::vector< double > debVect(18,0.0);
         //std::vector< double > rho_coord(5);
         double xTorso;
         double yTorso;
@@ -701,6 +700,7 @@ void extendedRangefinder2DWrapper::run()
 
             if (extendedFuncEnabled)
             {
+                debVect[17] = -2;
                 // READ HUMAN PRESENCE AD ERASE LEGS
                 //scan only for /human /torso reference systems
                 transformClientInt->getAllFrameIds(allFrameIds);
