@@ -500,7 +500,7 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
     if (config.check("refFrame"))
         targetFrame = config.find("refFrame").asString();
     else
-        targetFrame = "/mobile_base_body_link";
+        targetFrame = "mobile_base_body_link";
 
     if (config.check("remRadius"))
         remRadius = config.find("remRadius").asDouble();
