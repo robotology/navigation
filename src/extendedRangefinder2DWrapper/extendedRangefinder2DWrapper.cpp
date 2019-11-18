@@ -52,10 +52,12 @@ extendedRangefinder2DWrapper::extendedRangefinder2DWrapper() : PeriodicThread(DE
     // init ROS data
     useROS(ROS_disabled),
     frame_id(""),
+    frame_idMod(""),
     rosNodeName(""),
     rosTopicName(""),
     rosNode(nullptr),
     rosMsgCounter(0),
+    rosMsgCounterMod(0),
     transformClientInt(nullptr)
 {}
 
@@ -146,6 +148,8 @@ bool extendedRangefinder2DWrapper::checkROSParams(yarp::os::Searchable &config)
     frame_id = rosGroup.find("frame_id").asString();
     yInfo() << partName << "frame_id is " << frame_id;
 
+    frame_idMod = frame_id + "nolegs";
+
     return true;
 }
 
@@ -170,6 +174,14 @@ bool extendedRangefinder2DWrapper::initialize_ROS()
                 success = false;
                 break;
             }
+            if (!rosPublisherPortMod.topic(rosTopicName))
+            {
+                yError() << " opening " << rosTopicName << " Topic, check your yarp-ROS network configuration\n";
+                success = false;
+                break;
+            }
+
+
             success = true;
         } break;
 
@@ -862,8 +874,29 @@ void extendedRangefinder2DWrapper::run()
                     rosData.ranges[i] = ranges[i];
                     rosData.intensities[i] = 0.0;
                 }
-
                 rosPublisherPort.write();
+
+                yarp::rosmsg::sensor_msgs::LaserScan &rosDataMod = rosPublisherPortMod.prepare();
+                rosDataMod.header.seq = rosMsgCounterMod++;
+                rosDataMod.header.stamp = lastStateStamp.getTime();
+                rosDataMod.header.frame_id = frame_idMod;
+
+                rosDataMod.angle_min = minAngle * M_PI / 180.0;
+                rosDataMod.angle_max = maxAngle * M_PI / 180.0;
+                rosDataMod.angle_increment = resolution * M_PI / 180.0;
+                rosDataMod.time_increment = 0;             // all points in a single scan are considered took at the very same time
+                rosDataMod.scan_time = getPeriod();        // time elapsed between two successive readings
+                rosDataMod.range_min = minDistance;
+                rosDataMod.range_max = maxDistance;
+                rosDataMod.ranges.resize(ranges_size);
+                rosDataMod.intensities.resize(ranges_size);
+
+                for (int i = 0; i < ranges_size; i++)
+                {
+                    rosDataMod.ranges[i] = rangesMod[i];
+                    rosDataMod.intensities[i] = 0.0;
+                }
+                rosPublisherPortMod.write();
             }
         }
         else

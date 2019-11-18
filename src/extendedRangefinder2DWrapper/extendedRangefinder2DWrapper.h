@@ -122,11 +122,15 @@ private:
     // ROS data
     ROSTopicUsageType                                   useROS;                     // decide if open ROS topic or not
     std::string                                         frame_id;                   // name of the frame measures are referred to
+    std::string                                         frame_idMod;                   // name of the frame measures are referred to
     std::string                                         rosNodeName;                // name of the rosNode
     std::string                                         rosTopicName;               // name of the rosTopic
     yarp::os::Node                                      *rosNode;                   // add a ROS node
     yarp::os::NetUint32                                 rosMsgCounter;              // incremental counter in the ROS message
+    yarp::os::NetUint32                                 rosMsgCounterMod;              // incremental counter in the ROS message
     yarp::os::Publisher<yarp::rosmsg::sensor_msgs::LaserScan> rosPublisherPort;     // Dedicated ROS topic publisher
+    yarp::os::Publisher<yarp::rosmsg::sensor_msgs::LaserScan> rosPublisherPortMod;     // Dedicated ROS topic publisher
+
 };
 
 #endif // DEV_EXTENDEDRANGEFINDER2DWRAPPER_H
