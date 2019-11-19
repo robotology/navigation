@@ -52,9 +52,9 @@ extendedRangefinder2DWrapper::extendedRangefinder2DWrapper() : PeriodicThread(DE
     // init ROS data
     useROS(ROS_disabled),
     frame_id(""),
-    frame_idMod(""),
     rosNodeName(""),
     rosTopicName(""),
+    rosTopicNameMod(""),
     rosNode(nullptr),
     rosMsgCounter(0),
     rosMsgCounterMod(0),
@@ -136,7 +136,9 @@ bool extendedRangefinder2DWrapper::checkROSParams(yarp::os::Searchable &config)
         return false;
     }
     rosTopicName = rosGroup.find("ROS_topicName").asString();
+    rosTopicNameMod = rosTopicName + "/nolegs";
     yInfo() << partName << "rosTopicName is " << rosTopicName;
+    yInfo() << partName << "rosTopicNameMod is " << rosTopicNameMod;
 
     // check for frame_id parameter
     if (!rosGroup.check("frame_id"))
@@ -147,8 +149,6 @@ bool extendedRangefinder2DWrapper::checkROSParams(yarp::os::Searchable &config)
     }
     frame_id = rosGroup.find("frame_id").asString();
     yInfo() << partName << "frame_id is " << frame_id;
-
-    frame_idMod = frame_id + "nolegs";
 
     return true;
 }
@@ -174,9 +174,9 @@ bool extendedRangefinder2DWrapper::initialize_ROS()
                 success = false;
                 break;
             }
-            if (!rosPublisherPortMod.topic(rosTopicName))
+            if (!rosPublisherPortMod.topic(rosTopicNameMod))
             {
-                yError() << " opening " << rosTopicName << " Topic, check your yarp-ROS network configuration\n";
+                yError() << " opening " << rosTopicNameMod << " Topic, check your yarp-ROS network configuration\n";
                 success = false;
                 break;
             }
@@ -888,7 +888,7 @@ void extendedRangefinder2DWrapper::run()
                 yarp::rosmsg::sensor_msgs::LaserScan &rosDataMod = rosPublisherPortMod.prepare();
                 rosDataMod.header.seq = rosMsgCounterMod++;
                 rosDataMod.header.stamp = lastStateStamp.getTime();
-                rosDataMod.header.frame_id = frame_idMod;
+                rosDataMod.header.frame_id = frame_id;
 
                 rosDataMod.angle_min = minAngle * M_PI / 180.0;
                 rosDataMod.angle_max = maxAngle * M_PI / 180.0;
