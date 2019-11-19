@@ -736,7 +736,7 @@ void extendedRangefinder2DWrapper::run()
                     {
                         yDebug() << "FRAME: " << *it << ": " ;
 
-                       if (transformClientInt->getTransform(targetFrame, *it, transformMat) == false)
+                       if (transformClientInt->getTransform(*it, targetFrame, transformMat) == false)
                        {
                            continue;
                            yDebug() << "no transform between: " << *it << " and " << targetFrame;
@@ -749,10 +749,10 @@ void extendedRangefinder2DWrapper::run()
                         yTorso = transformMat(1,3);
                         rhoTorso = sqrt(std::pow(xTorso, 2) + std::pow(yTorso, 2));
                         thetaTorso = atan2 (yTorso, xTorso)*180/3.14159;        //degrees  -180 to +180
-                        thetaTorso = thetaTorso - 90;                           // -90 degree to be consistent with the fake laser
+                        //thetaTorso = thetaTorso - 90;                           // -90 degree to be consistent with the fake laser
                         if (thetaTorso<0)
                             thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
-                        thetaTorso = 360 - thetaTorso;                           //to shift from anticlockwise to clockwise movement
+                        //thetaTorso = 360 - thetaTorso;                           //to shift from anticlockwise to clockwise movement
 
                         if (remRadius > rhoTorso)
                             remRadius = rhoTorso;
@@ -776,7 +776,7 @@ void extendedRangefinder2DWrapper::run()
 
                         if (theta_min <0 )
                         {
-                            theta_min = theta_min + 36-20;
+                            theta_min = theta_min + 360;
                             index_min = (int) (theta_min / resolution);
                             index_max = (int) (theta_max / resolution);
                             if (index_max>ranges_size)
