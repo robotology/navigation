@@ -114,6 +114,8 @@ private:
     bool   isDeviceOwned;
     bool   extendedFuncEnabled;
 
+    std::vector< yarp::sig::Matrix > transformMatStorage;
+
     bool checkROSParams(yarp::os::Searchable &config);
     bool initialize_ROS();
     bool initialize_YARP(yarp::os::Searchable &config);

@@ -59,7 +59,17 @@ extendedRangefinder2DWrapper::extendedRangefinder2DWrapper() : PeriodicThread(DE
     rosMsgCounter(0),
     rosMsgCounterMod(0),
     transformClientInt(nullptr)
-{}
+{
+    yarp::sig::Matrix a(1,3);
+    a.zero();
+    a(0,2) = yarp::os::Time::now();
+    for (int i=0;i<20;i++)
+    {
+        transformMatStorage.push_back(a);
+    }
+
+
+}
 
 extendedRangefinder2DWrapper::~extendedRangefinder2DWrapper()
 {
@@ -683,11 +693,14 @@ void extendedRangefinder2DWrapper::run()
         std::vector< std::string > filteredFrameIds;
         //std::vector< std::string > debVect;
         yarp::sig::Matrix transformMat;
+
         std::string test;
         std::vector< double > x_coord(5);
         std::vector< double > y_coord(5);
         std::vector< double > theta_coord(5,0.0);
         std::vector< double > debVect(18,0.0);
+        std::vector< bool > refreshed_strings(20,false);
+
         //std::vector< double > rho_coord(5);
         double xTorso;
         double yTorso;
@@ -696,6 +709,7 @@ void extendedRangefinder2DWrapper::run()
         double theta_min;
         double theta_max;
         double circ_sect;
+        double refr_cont = 0;
 
         std::size_t index_max;
         std::size_t index_min;
@@ -719,7 +733,7 @@ void extendedRangefinder2DWrapper::run()
                 // READ HUMAN PRESENCE AD ERASE LEGS
                 //scan only for /human /torso reference systems
                 transformClientInt->getAllFrameIds(allFrameIds);
-                //for (auto it2=allFrameIds.begin(); it2!=allFrameIds.end(); it2++)
+
                 for (int i=0; i<allFrameIds.size(); i++)
                 {
                     //if (it2->compare(0, 6, "/human") == 0)
@@ -729,98 +743,128 @@ void extendedRangefinder2DWrapper::run()
                     }
                 }
 
+
                 //creating laser signal with removed legs (corresponding to torso position)
+                refreshed_strings.assign(20,false);
                 if (filteredFrameIds.size()>0)
                 {
+                    int num_frame;
                     for (auto it=filteredFrameIds.begin(); it!=filteredFrameIds.end(); it++)
                     {
                         yDebug() << "FRAME: " << *it << ": " ;
 
-                       if (transformClientInt->getTransform(*it, targetFrame, transformMat) == false)
-                       {
-                           continue;
-                           yDebug() << "no transform between: " << *it << " and " << targetFrame;
-                       }
+                        if (transformClientInt->getTransform(*it, targetFrame, transformMat) == false)
+                        {
+                            yDebug() << "no transform between: " << *it << " and " << targetFrame;
+                            continue;
+                        }
+                        //yarp::os::Time::delay(0.1);
+                        num_frame = stoi(it->substr(6,2));
+                        refreshed_strings[num_frame]= true;
 
                         //std::cout << "TransformMatrix:" << std::endl;
                         yDebug() << transformMat.toString() ;
+                        yDebug() << "num frame" << num_frame;
 
-                        xTorso = transformMat(0,3);
-                        yTorso = transformMat(1,3);
-                        rhoTorso = sqrt(std::pow(xTorso, 2) + std::pow(yTorso, 2));
-                        thetaTorso = atan2 (yTorso, xTorso)*180/3.14159;        //degrees  -180 to +180
-                        //thetaTorso = thetaTorso - 90;                           // -90 degree to be consistent with the fake laser
-                        if (thetaTorso<0)
-                            thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
-                        //thetaTorso = 360 - thetaTorso;                           //to shift from anticlockwise to clockwise movement
-
-                        if (remRadius > rhoTorso)
-                            remRadius = rhoTorso;
-                        circ_sect = asin(remRadius/rhoTorso)*180/3.14159;
-
-                        theta_min = thetaTorso - circ_sect ;
-                        theta_max = thetaTorso + circ_sect ;
-
-                        yDebug() << "X: \t" << xTorso << "\t Y: \t" << yTorso<< "\t Theta:" << thetaTorso << "\t Rho:" << rhoTorso << "\t circ_sect:" << circ_sect << "\t theta_min:" << theta_min << "\t theta_max:" << theta_max;
-
-                        index_min = (int) (theta_min / resolution);
-                        index_max = (int) (theta_max / resolution);
-                        debVect[0] = xTorso;
-                        debVect[1] = yTorso;
-                        debVect[2] = thetaTorso;
-                        debVect[3] = rhoTorso;
-                        debVect[4] = circ_sect;
-                        debVect[5] = theta_min;
-                        debVect[6] = theta_max;
-                        debVect[7] = -1;
-
-                        if (theta_min <0 )
-                        {
-                            theta_min = theta_min + 360;
-                            index_min = (int) (theta_min / resolution);
-                            index_max = (int) (theta_max / resolution);
-                            if (index_max>ranges_size)
-                                index_max = ranges_size;
-                            for (int i=index_min; i<ranges_size; i++ )
-                                rangesMod[i] = std::numeric_limits<double>::infinity();
-                            for (int i=0; i<index_max; i++ )
-                                rangesMod[i] = std::numeric_limits<double>::infinity();
-
-                        }
-                        else if (theta_max > 360 )
-                        {
-                            theta_max = theta_max - 360;
-                            index_min = (int) (theta_min / resolution);
-                            index_max = (int) (theta_max / resolution);
-                            if (index_min>ranges_size)
-                                index_min = ranges_size;
-                            for (int i=0; i<index_max; i++ )
-                                rangesMod[i] = std::numeric_limits<double>::infinity();
-                            for (int i=index_min; i<ranges_size; i++ )
-                                rangesMod[i] = std::numeric_limits<double>::infinity();
-                        }
-                        else
-                        {
-                            index_min = (int) (theta_min / resolution);
-                            index_max = (int) (theta_max / resolution);
-                            if (index_max>ranges_size)
-                                index_max = ranges_size;
-                            for (int i=index_min; i<index_max; i++ )
-                                rangesMod[i] = std::numeric_limits<double>::infinity();
-                        }
-
-                        debVect[8] = ranges_size;
-                        debVect[9] = index_min;
-                        debVect[10] = index_max;
-                        debVect[11] = theta_min;
-                        debVect[12] = theta_max;
-                        debVect[13] = -2;
-
-                        yDebug() << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution ;
-
+                        (transformMatStorage.at(num_frame))(0,0) = transformMat(0,3);
+                        (transformMatStorage.at(num_frame))(0,1) = transformMat(1,3);
+                        (transformMatStorage.at(num_frame))(0,2) = yarp::os::Time::now();
                     }
                 }
+
+                int contframe = 0;
+                double time_now = yarp::os::Time::now();
+                for(auto it=transformMatStorage.begin(); it!=transformMatStorage.end(); it++)
+                {
+                    yDebug() << "FRAME: " << contframe << " Stored matrix: " << it->toString();
+
+                    if (((time_now - (*it)(0,2) > 0.02)) && refreshed_strings[contframe] == false)
+                    {
+                        yDebug() << ": skipped, delta time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe] ;
+                        contframe = contframe + 1;
+                        continue;
+                    }
+
+                    yDebug() << "not skipped, time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe];
+
+                    xTorso = (*it)(0,0);
+                    yTorso = (*it)(0,1);
+
+                    rhoTorso = sqrt(std::pow(xTorso, 2) + std::pow(yTorso, 2));
+                    thetaTorso = atan2 (yTorso, xTorso)*180/3.14159;        //degrees  -180 to +180
+                    //thetaTorso = thetaTorso - 90;                           // -90 degree to be consistent with the fake laser
+                    if (thetaTorso<0)
+                        thetaTorso = thetaTorso + 360;                       //degrees  0 to +360
+                    //thetaTorso = 360 - thetaTorso;                           //to shift from anticlockwise to clockwise movement
+
+                    if (remRadius > rhoTorso)
+                        remRadius = rhoTorso;
+                    circ_sect = asin(remRadius/rhoTorso)*180/3.14159;
+
+                    theta_min = thetaTorso - circ_sect ;
+                    theta_max = thetaTorso + circ_sect ;
+
+                    yDebug() << "X: \t" << xTorso << "\t Y: \t" << yTorso<< "\t Theta:" << thetaTorso << "\t Rho:" << rhoTorso << "\t circ_sect:" << circ_sect << "\t theta_min:" << theta_min << "\t theta_max:" << theta_max;
+
+                    index_min = (int) (theta_min / resolution);
+                    index_max = (int) (theta_max / resolution);
+                    debVect[0] = xTorso;
+                    debVect[1] = yTorso;
+                    debVect[2] = thetaTorso;
+                    debVect[3] = rhoTorso;
+                    debVect[4] = circ_sect;
+                    debVect[5] = theta_min;
+                    debVect[6] = theta_max;
+                    debVect[7] = -1;
+
+                    if (theta_min <0 )
+                    {
+                        theta_min = theta_min + 360;
+                        index_min = (int) (theta_min / resolution);
+                        index_max = (int) (theta_max / resolution);
+                        if (index_max>ranges_size)
+                            index_max = ranges_size;
+                        for (int i=index_min; i<ranges_size; i++ )
+                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                        for (int i=0; i<index_max; i++ )
+                            rangesMod[i] = std::numeric_limits<double>::infinity();
+
+                    }
+                    else if (theta_max > 360 )
+                    {
+                        theta_max = theta_max - 360;
+                        index_min = (int) (theta_min / resolution);
+                        index_max = (int) (theta_max / resolution);
+                        if (index_min>ranges_size)
+                            index_min = ranges_size;
+                        for (int i=0; i<index_max; i++ )
+                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                        for (int i=index_min; i<ranges_size; i++ )
+                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                    }
+                    else
+                    {
+                        index_min = (int) (theta_min / resolution);
+                        index_max = (int) (theta_max / resolution);
+                        if (index_max>ranges_size)
+                            index_max = ranges_size;
+                        for (int i=index_min; i<index_max; i++ )
+                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                    }
+
+                    debVect[8] = ranges_size;
+                    debVect[9] = index_min;
+                    debVect[10] = index_max;
+                    debVect[11] = theta_min;
+                    debVect[12] = theta_max;
+                    debVect[13] = -2;
+
+                    yDebug() << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution ;
+
+                    contframe = contframe + 1;
+                }
             }
+
 
             debVect[14] = extendedFuncEnabled;
             debVect[15] = allFrameIds.size();
@@ -912,6 +956,7 @@ void extendedRangefinder2DWrapper::run()
         {
             yError("extendedRangefinder2DWrapper: %s: Sensor returned error", sensorId.c_str());
         }
+
     }
 }
 
