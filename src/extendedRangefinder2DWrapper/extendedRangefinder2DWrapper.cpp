@@ -731,7 +731,7 @@ void extendedRangefinder2DWrapper::run()
             {
                 debVect[17] = -2;
                 // READ HUMAN PRESENCE AD ERASE LEGS
-                //scan only for /human /torso reference systems
+                //scan only for /human#/shoulderCenter reference systems
                 transformClientInt->getAllFrameIds(allFrameIds);
 
                 for (int i=0; i<allFrameIds.size(); i++)
@@ -825,9 +825,11 @@ void extendedRangefinder2DWrapper::run()
                         if (index_max>ranges_size)
                             index_max = ranges_size;
                         for (int i=index_min; i<ranges_size; i++ )
-                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                            if (rangesMod[i] > (rhoTorso - remRadius))
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
                         for (int i=0; i<index_max; i++ )
-                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                            if (rangesMod[i] > (rhoTorso - remRadius))
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
 
                     }
                     else if (theta_max > 360 )
@@ -838,9 +840,11 @@ void extendedRangefinder2DWrapper::run()
                         if (index_min>ranges_size)
                             index_min = ranges_size;
                         for (int i=0; i<index_max; i++ )
-                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                            if (rangesMod[i] > (rhoTorso - remRadius))
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
                         for (int i=index_min; i<ranges_size; i++ )
-                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                            if (rangesMod[i] > (rhoTorso - remRadius))
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
                     }
                     else
                     {
@@ -849,7 +853,8 @@ void extendedRangefinder2DWrapper::run()
                         if (index_max>ranges_size)
                             index_max = ranges_size;
                         for (int i=index_min; i<index_max; i++ )
-                            rangesMod[i] = std::numeric_limits<double>::infinity();
+                            if (rangesMod[i] > (rhoTorso - remRadius))
+                                rangesMod[i] = std::numeric_limits<double>::infinity();
                     }
 
                     debVect[8] = ranges_size;
