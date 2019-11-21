@@ -803,7 +803,7 @@ void extendedRangefinder2DWrapper::run()
                     theta_min = thetaTorso - circ_sect ;
                     theta_max = thetaTorso + circ_sect ;
 
-                    yDebug() << "X: \t" << xTorso << "\t Y: \t" << yTorso<< "\t Theta:" << thetaTorso << "\t Rho:" << rhoTorso << "\t circ_sect:" << circ_sect << "\t theta_min:" << theta_min << "\t theta_max:" << theta_max;
+                    yDebug() << "X: \t" << xTorso << "\t Y: \t" << yTorso<< "\t Theta:" << thetaTorso << "\t Rho:" << rhoTorso << "\r remRadius" << remRadius <<"\t circ_sect:" << circ_sect << "\t theta_min:" << theta_min << "\t theta_max:" << theta_max;
 
                     index_min = (int) (theta_min / resolution);
                     index_max = (int) (theta_max / resolution);
