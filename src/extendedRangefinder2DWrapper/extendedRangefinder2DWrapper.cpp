@@ -776,15 +776,14 @@ void extendedRangefinder2DWrapper::run()
                 double time_now = yarp::os::Time::now();
                 for(auto it=transformMatStorage.begin(); it!=transformMatStorage.end(); it++)
                 {
-                    yDebug() << "FRAME: " << contframe << " Stored matrix: " << it->toString();
 
                     if (((time_now - (*it)(0,2) > 0.02)) && refreshed_strings[contframe] == false)
                     {
-                        yDebug() << ": skipped, delta time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe] ;
+                        //yDebug() << "FRAME: " << contframe << " skipped, delta time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe] ;
                         contframe = contframe + 1;
                         continue;
                     }
-
+                    yDebug() << "FRAME: " << contframe << " Stored matrix: " << it->toString();
                     yDebug() << "not skipped, time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe];
 
                     xTorso = (*it)(0,0);
