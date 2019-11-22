@@ -113,6 +113,7 @@ private:
     double remRadius;
     bool   isDeviceOwned;
     bool   extendedFuncEnabled;
+    bool   verbose;
 
     std::vector< yarp::sig::Matrix > transformMatStorage;
 

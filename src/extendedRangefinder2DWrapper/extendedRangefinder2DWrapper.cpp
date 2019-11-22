@@ -58,7 +58,8 @@ extendedRangefinder2DWrapper::extendedRangefinder2DWrapper() : PeriodicThread(DE
     rosNode(nullptr),
     rosMsgCounter(0),
     rosMsgCounterMod(0),
-    transformClientInt(nullptr)
+    transformClientInt(nullptr),
+    verbose(false)
 {
     yarp::sig::Matrix a(1,3);
     a.zero();
@@ -550,6 +551,9 @@ bool extendedRangefinder2DWrapper::open(yarp::os::Searchable &config)
         setId("extendedRangefinder2DWrapper");
     }
 
+    if (config.check("verbose"))
+        verbose = true;
+
     checkROSParams(config);
 
     if(!initialize_YARP(config) )
@@ -751,11 +755,13 @@ void extendedRangefinder2DWrapper::run()
                     int num_frame;
                     for (auto it=filteredFrameIds.begin(); it!=filteredFrameIds.end(); it++)
                     {
-                        yDebug() << "FRAME: " << *it << ": " ;
+                        if (verbose)
+                            yDebug() << "FRAME: " << *it << ": " ;
 
                         if (transformClientInt->getTransform(*it, targetFrame, transformMat) == false)
                         {
-                            yDebug() << "no transform between: " << *it << " and " << targetFrame;
+                            if (verbose)
+                                yDebug() << "no transform between: " << *it << " and " << targetFrame;
                             continue;
                         }
                         //yarp::os::Time::delay(0.1);
@@ -763,8 +769,11 @@ void extendedRangefinder2DWrapper::run()
                         refreshed_strings[num_frame]= true;
 
                         //std::cout << "TransformMatrix:" << std::endl;
-                        yDebug() << transformMat.toString() ;
-                        yDebug() << "num frame" << num_frame;
+                        if (verbose)
+                        {
+                            yDebug() << transformMat.toString() ;
+                            yDebug() << "num frame" << num_frame;
+                        }
 
                         (transformMatStorage.at(num_frame))(0,0) = transformMat(0,3);
                         (transformMatStorage.at(num_frame))(0,1) = transformMat(1,3);
@@ -783,8 +792,11 @@ void extendedRangefinder2DWrapper::run()
                         contframe = contframe + 1;
                         continue;
                     }
-                    yDebug() << "FRAME: " << contframe << " Stored matrix: " << it->toString();
-                    yDebug() << "not skipped, time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe];
+                    if (verbose)
+                    {
+                        yDebug() << "FRAME: " << contframe << " Stored matrix: " << it->toString();
+                        yDebug() << "not skipped, time : " << (time_now - (*it)(0,2)) << " is refreshed: " << refreshed_strings[contframe];
+                    }
 
                     xTorso = (*it)(0,0);
                     yTorso = (*it)(0,1);
@@ -803,7 +815,8 @@ void extendedRangefinder2DWrapper::run()
                     theta_min = thetaTorso - circ_sect ;
                     theta_max = thetaTorso + circ_sect ;
 
-                    yDebug() << "X: \t" << xTorso << "\t Y: \t" << yTorso<< "\t Theta:" << thetaTorso << "\t Rho:" << rhoTorso << "\r remRadius" << remRadius <<"\t circ_sect:" << circ_sect << "\t theta_min:" << theta_min << "\t theta_max:" << theta_max;
+                    if (verbose)
+                        yDebug() << "X:" << xTorso <<"Y:" << yTorso<< "Theta:" << thetaTorso <<"Rho:" << rhoTorso <<"remRadius:" << remRadius <<"circ_sect:" << circ_sect << "theta_min:" << theta_min << "theta_max:" << theta_max;
 
                     index_min = (int) (theta_min / resolution);
                     index_max = (int) (theta_max / resolution);
@@ -863,7 +876,8 @@ void extendedRangefinder2DWrapper::run()
                     debVect[12] = theta_max;
                     debVect[13] = -2;
 
-                    yDebug() << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution ;
+                    if (verbose)
+                        yDebug() << "ranges_size:" << ranges_size << " index_min:" << index_min << " index_max:" << index_max << " theta_min:" << theta_min << " theta_max:" << theta_max << " resolution:" << resolution ;
 
                     contframe = contframe + 1;
                 }
