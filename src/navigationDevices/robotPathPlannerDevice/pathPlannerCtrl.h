@@ -104,7 +104,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     //storage for the environment map
     yarp::dev::Nav2D::MapGrid2D m_current_map;
     yarp::dev::Nav2D::MapGrid2D m_temporary_obstacles_map;
-    yarp::os::Mutex m_temporary_obstacles_map_mutex;
+    std::mutex m_temporary_obstacles_map_mutex;
     yarp::dev::Nav2D::MapGrid2D m_augmented_map;
     bool      m_force_map_reload;
 

@@ -20,14 +20,13 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <mutex>
 #include <math.h>
 #include "pozyxLocalizer.h"
 
@@ -114,7 +113,7 @@ void pozyxLocalizerThread::run()
         m_last_statistics_printed = yarp::os::Time::now();
     }
 
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
 
     //@@@@READ DATA FROM DEVICE here
     m_pozyx_data.x=0;
@@ -133,7 +132,7 @@ void pozyxLocalizerThread::run()
 bool pozyxLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "pozyxLocalizerThread: Localization init request: (" << loc.map_id << ")";
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     //@@@@ put some check here on validity of loc
     m_localization_data.map_id = loc.map_id;
     m_map_to_pozyx_transform.map_id = loc.map_id;
@@ -170,7 +169,7 @@ bool pozyxLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 
 bool pozyxLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     loc = m_localization_data;
     return true;
 }

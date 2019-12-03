@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/dev/PolyDriver.h>
@@ -32,8 +30,10 @@
 #include <math.h>
 #include <random>
 #include <chrono>
+#include <mutex>
 #include "odomLocalizer.h"
 
+using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev::Nav2D;
 
@@ -128,7 +128,7 @@ void odomLocalizerThread::run()
         m_last_statistics_printed = yarp::os::Time::now();
     }
 
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     yarp::sig::Vector *loc = m_port_odometry_input.read(false);
     if (loc)
     {
@@ -158,7 +158,7 @@ void odomLocalizerThread::run()
 bool odomLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     m_initial_loc.map_id = loc.map_id;
     m_initial_loc.x = loc.x;
     m_initial_loc.y = loc.y;
@@ -181,7 +181,7 @@ bool odomLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 
 bool odomLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     loc = m_current_loc;
     return true;
 }

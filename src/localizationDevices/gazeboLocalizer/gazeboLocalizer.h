@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/dev/PolyDriver.h>
@@ -32,6 +30,7 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/RpcClient.h>
 #include <math.h>
+#include <mutex>
 #include <yarp/dev/IMap2D.h>
 
 #ifndef GAZEBO_LOCALIZER_H
@@ -133,7 +132,7 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_map_to_gazebo_transform;
     yarp::dev::Nav2D::Map2DLocation     m_localization_data;
     yarp::dev::Nav2D::Map2DLocation     m_gazebo_data;
-    yarp::os::Mutex              m_mutex;
+    std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name_prefix;
     std::string                  m_local_gazebo_port_name;

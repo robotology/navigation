@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Publisher.h>
 #include <yarp/os/Node.h>
@@ -37,7 +35,7 @@
 #include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
 #include <yarp/rosmsg/geometry_msgs/PoseWithCovarianceStamped.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
-
+#include <mutex>
 #include <math.h>
 
 using namespace yarp::os;
@@ -160,7 +158,7 @@ protected:
     yarp::dev::Nav2D::MapGrid2D         m_current_map;
     yarp::dev::Nav2D::Map2DLocation     m_initial_loc;
     yarp::dev::Nav2D::Map2DLocation     m_localization_data;
-    yarp::os::Mutex              m_mutex;
+    std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
 

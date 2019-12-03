@@ -9,8 +9,6 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/Map2DLocation.h>
@@ -18,7 +16,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IFrameTransform.h>
-
+#include <mutex>
 #include <math.h>
 
 using namespace yarp::os;

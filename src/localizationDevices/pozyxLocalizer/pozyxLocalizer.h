@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/dev/PolyDriver.h>
@@ -30,6 +28,7 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/os/PeriodicThread.h>
+#include <mutex>
 #include <math.h>
 #include <yarp/dev/IMap2D.h>
 
@@ -133,7 +132,7 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_localization_data;
     yarp::dev::Nav2D::Map2DLocation     m_pozyx_data;
     std::vector<yarp::dev::Nav2D::Map2DLocation> m_anchors_pos;
-    yarp::os::Mutex              m_mutex;
+    std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
     std::string                  m_local_name_prefix;

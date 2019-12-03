@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Publisher.h>
 #include <yarp/os/Node.h>
@@ -37,8 +35,10 @@
 #include <yarp/rosmsg/geometry_msgs/PoseWithCovarianceStamped.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
 #include <math.h>
+#include <mutex>
 #include "rosLocalizer.h"
 
+using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev::Nav2D;
 
@@ -160,7 +160,7 @@ void rosLocalizerThread::run()
         m_last_statistics_printed = yarp::os::Time::now();
     }
 
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     yarp::sig::Vector iv;
     yarp::sig::Vector pose;
     iv.resize(6, 0.0);

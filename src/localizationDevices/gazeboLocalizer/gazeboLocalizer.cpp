@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Bottle.h>
@@ -29,6 +27,7 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <math.h>
+#include <mutex>
 #include "gazeboLocalizer.h"
 
 using namespace yarp::os;
@@ -110,7 +109,7 @@ void gazeboLocalizerThread::run()
         yDebug() << "gazeboLocalizerThread running with period: " << this->getPeriod();
     }
 
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
 
     //@@@@READ DATA FROM DEVICE here
     Bottle cmd, ans;
@@ -147,7 +146,7 @@ void gazeboLocalizerThread::run()
 bool gazeboLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "gazeboLocalizerThread: Localization init request: (" << loc.map_id << ")";
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     //@@@@ put some check here on validity of loc
     m_localization_data.map_id = loc.map_id;
     m_map_to_gazebo_transform.map_id = loc.map_id;
@@ -160,7 +159,7 @@ bool gazeboLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 
 bool gazeboLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     loc = m_localization_data;
     return true;
 }

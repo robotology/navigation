@@ -36,12 +36,12 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/os/Log.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/ILocalization2D.h>
 #include <string>
 #include <math.h>
+#include <mutex>
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 #include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
 #include <yarp/rosmsg/nav_msgs/Path.h>
