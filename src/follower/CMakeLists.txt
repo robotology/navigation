@@ -74,7 +74,7 @@ else()
 endif()
 
 # link with YARP libraries
-target_link_libraries(follower YARP::YARP_OS 
+target_link_libraries(follower YARP::YARP_os 
                                YARP::YARP_sig
                                YARP::YARP_math 
                                YARP::YARP_dev
