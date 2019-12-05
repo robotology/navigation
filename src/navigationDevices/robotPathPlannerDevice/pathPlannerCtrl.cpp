@@ -511,9 +511,10 @@ void PlannerThread::run()
         case navigation_status_goal_reached:
         {
             //do nothing, just wait. After some time(1s), reset the status to navigation idle
-            if (yarp::os::Time::now() - m_navigation_started_at_timeX > 1.0)
+            const double goal_reached_timeout = 1.0;
+            if (yarp::os::Time::now() - m_navigation_started_at_timeX > goal_reached_timeout)
             {
-                yInfo() << "Goal reached timeout expired. Navigation status is now idle";
+                yInfo() << "Goal was reached "<< goal_reached_timeout<<" second(s) ago. On timeout expiration, navigation status was set idle";
                 m_planner_status = navigation_status_idle;
             }
         }
@@ -754,6 +755,24 @@ bool PlannerThread::startPath()
     {
         m_current_path = &m_computed_path;
     }
+
+    //check if the size of the path. This is needed to allow in-place rotations only.
+    if (m_current_path->size() == 0)
+    {
+        double threshold = 1.0; //deg
+        if (fabs(m_localization_data.theta - m_sequence_of_goals.front().theta) > threshold)
+        {
+           yWarning() << "Requested path has zero length. Adding waypoint with final orientation";
+           m_current_path->push_back(m_sequence_of_goals.front());
+        }
+        else
+        {
+            yWarning() << "Requested path has zero length. Aborting;";
+            m_planner_status = navigation_status_goal_reached;
+            return true;
+        }
+    }
+
     m_current_path_iterator = m_current_path->begin();
     std::copy(m_current_path->begin(), m_current_path->end(), std::back_inserter(m_remaining_path));
 
