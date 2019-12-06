@@ -297,7 +297,19 @@ bool GotoThread::threadInit()
 
     //open module ports
     string localName = "/robotGoto";
-
+    string localizationServer_name = "/localizationServer";
+    
+    Bottle general_group = m_cfg.findGroup("GENERAL");
+    if (general_group.isNull())
+    {
+        yError() << "Missing GENERAL group!";
+        return false;
+    }
+    if (general_group.check("name")) localName = general_group.find("name").asString();
+    
+    if (localization_group.check("localizationServer_name")) localizationServer_name = localization_group.find("localizationServer_name").asString();
+        
+    
     bool ret = true;
     ret &= m_port_commands_output.open((localName + "/control:o").c_str());
     ret &= m_port_status_output.open((localName + "/status:o").c_str());
@@ -312,8 +324,8 @@ bool GotoThread::threadInit()
     //open the localization client and the corresponding interface
     Property loc_options;
     loc_options.put("device", "localization2DClient");
-    loc_options.put("local", "/robotGoto/localizationClient");
-    loc_options.put("remote", "/localizationServer");
+    loc_options.put("local", localName+"/localizationClient");
+    loc_options.put("remote", localizationServer_name);
 
     if (m_pLoc.open(loc_options) == false)
     {
@@ -348,7 +360,7 @@ bool GotoThread::threadInit()
     //opens the laser client and the corresponding interface
     Property options;
     options.put("device", "Rangefinder2DClient");
-    options.put("local", "/robotGoto/laser:i");
+    options.put("local", localName+"/laser:i");
     options.put("remote", laser_remote_port);
     if (m_pLas.open(options) == false)
     {
@@ -372,7 +384,7 @@ bool GotoThread::threadInit()
 
     //automatic connections for debug
     bool b = true;
-    b = yarp::os::Network::connect("/robotGoto/gui:o", "/yarpLaserScannerGui/nav_display:i","udp",false);
+    b = yarp::os::Network::connect(localName+"/gui:o", "/yarpLaserScannerGui/nav_display:i","udp",false);
 
     //automatic port connections
     b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i","udp",false);

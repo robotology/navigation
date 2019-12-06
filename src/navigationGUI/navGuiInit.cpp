@@ -141,6 +141,10 @@ bool NavGuiThread::threadInit()
     {
         m_remote_localization = general_group.find("remote_localization").asString();
     }
+    if (general_group.check("remote_navigation"))
+    {
+        m_remote_navigation = general_group.find("remote_navigation").asString();
+    }
     if (general_group.check("remote_map"))
     {
         m_remote_map = general_group.find("remote_map").asString();

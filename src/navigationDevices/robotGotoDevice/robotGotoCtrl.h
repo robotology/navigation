@@ -90,6 +90,7 @@ public:
     double m_robot_laser_t;       //deg
 
     //configuration parameters
+    string m_local_name; 
     double m_beta_angle_threshold;
     double m_gain_lin;
     double m_gain_ang;

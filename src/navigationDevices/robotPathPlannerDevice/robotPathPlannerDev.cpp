@@ -43,6 +43,9 @@ robotPathPlannerDev::robotPathPlannerDev()
 
 bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 {
+	//default values
+	m_local_name = "/robotPathPlanner";
+	
 #if 1
     yDebug() << "config configuration: \n" << config.toString().c_str();
 
@@ -61,6 +64,15 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "robotPathPlannerDev configuration: \n" << p.toString().c_str();
+    
+    Bottle general_group = p.findGroup("GENERAL");
+    if (general_group.isNull())
+    {
+        yError() << "Missing GENERAL group!";
+        return false;
+    }
+    if (general_group.check("name")) m_local_name = general_group.find("name").asString();
+    
 #else
     Property p;
     p.fromString(config.toString());
@@ -68,7 +80,7 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 
     m_plannerThread = new PlannerThread(0.020,p);
 
-    bool ret = m_rpcPort.open("/robotPathPlanner/rpc");
+    bool ret = m_rpcPort.open(m_local_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";
