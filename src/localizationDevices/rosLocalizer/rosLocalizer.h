@@ -79,6 +79,10 @@ public:
 class rosLocalizer : public yarp::dev::DeviceDriver,
                      public yarp::dev::ILocalization2D
 {
+private:
+    yarp::sig::Matrix                m_default_covariance_3x3;
+    yarp::dev::Nav2D::Map2DLocation  m_initial_loc;
+    	
 public:
     rosLocalizerThread*    thread;
     rosLocalizerRPCHandler rpcPortHandler;
@@ -156,7 +160,6 @@ protected:
     double                       m_last_statistics_printed;
     double                       m_last_published_map;
     yarp::dev::Nav2D::MapGrid2D         m_current_map;
-    yarp::dev::Nav2D::Map2DLocation     m_initial_loc;
     yarp::dev::Nav2D::Map2DLocation     m_localization_data;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
@@ -180,6 +183,8 @@ protected:
     yarp::dev::IMap2D*           m_iMap;
 
     //ROS
+    size_t                            m_seq_counter;
+    yarp::rosmsg::TickTime            m_rosTime; 
     yarp::os::Node*                   m_rosNode;
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
@@ -194,6 +199,6 @@ public:
     void publish_map();
 
 public:
-    bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
 };

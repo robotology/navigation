@@ -89,7 +89,20 @@ bool   rosLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
 {
 	if (thread)
 	{
-		return thread->initializeLocalization(loc);
+		yarp::sig::Matrix cov6x6(6,6);
+	    cov6x6.zero();
+	    cov6x6[0][0]=m_default_covariance_3x3[0][0];
+	    cov6x6[1][0]=m_default_covariance_3x3[1][0];
+	    cov6x6[5][0]=m_default_covariance_3x3[2][0];
+	    
+	    cov6x6[0][1]=m_default_covariance_3x3[0][1];
+	    cov6x6[1][1]=m_default_covariance_3x3[1][1];
+	    cov6x6[5][1]=m_default_covariance_3x3[2][1];
+	    
+	    cov6x6[0][5]=m_default_covariance_3x3[0][2];
+	    cov6x6[1][5]=m_default_covariance_3x3[1][2];
+	    cov6x6[5][5]=m_default_covariance_3x3[2][2];
+		return thread->initializeLocalization(loc, cov6x6);
 	}
 	yError() << "rosLocalizer thread not running";
     return false;
@@ -111,6 +124,9 @@ rosLocalizerThread::rosLocalizerThread(double _period, yarp::os::Searchable& _cf
     m_localization_data.x = nan("");
     m_localization_data.y = nan("");
     m_localization_data.theta = nan("");
+      
+    m_seq_counter=0;
+    m_rosTime = yarp::os::Time::now();
 }
 
 void rosLocalizerThread::publish_map()
@@ -190,7 +206,7 @@ void rosLocalizerThread::run()
 	}
 }
 
-bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc)
+bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6)
 {
     m_localization_data.map_id = loc.map_id;
     
@@ -212,12 +228,13 @@ bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLoc
     m_localization_data.theta = loc.theta;
     
     //send data to ROS localization module
+    m_rosTime = (yarp::os::Time::now());
     yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped& pos = m_rosPublisher_initial_pose.prepare();
     pos.clear();
-    pos.header.frame_id=m_frame_robot_id;
-    pos.header.seq=0;
-    pos.header.stamp.sec=0;
-    pos.header.stamp.nsec=0;
+    pos.header.frame_id="map";
+    pos.header.seq=m_seq_counter++;
+    pos.header.stamp.sec=m_rosTime.sec;
+    pos.header.stamp.nsec=m_rosTime.nsec;
     pos.pose.pose.position.x= loc.x;
     pos.pose.pose.position.y= loc.y;
     pos.pose.pose.position.z= 0;
@@ -232,6 +249,9 @@ bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLoc
     pos.pose.pose.orientation.y = q.y();
     pos.pose.pose.orientation.z = q.z();
     pos.pose.pose.orientation.w = q.w();
+    for (size_t ix=0; ix<6; ix++)
+		for (size_t iy=0; iy<6; iy++)
+           pos.pose.covariance[iy*6+ix] = roscov6x6[ix][iy];
     m_rosPublisher_initial_pose.write();
     return true;
 }
@@ -249,13 +269,6 @@ bool rosLocalizerThread::threadInit()
     if (general_group.isNull())
     {
         yError() << "Missing GENERAL group!";
-        return false;
-    }
-
-    Bottle initial_group = m_cfg.findGroup("INITIAL_POS");
-    if (initial_group.isNull())
-    {
-        yError() << "Missing INITIAL_POS group!";
         return false;
     }
 
@@ -393,17 +406,6 @@ bool rosLocalizerThread::threadInit()
         }
     }
 
-    //initial location initialization
-    if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
-    else { yError() << "missing initial_x param"; return false; }
-    if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
-    else { yError() << "missing initial_y param"; return false; }
-    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
-    else { yError() << "missing initial_theta param"; return false; }
-    if (initial_group.check("initial_map"))   { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
-    this->initializeLocalization(m_initial_loc);
-
     return true;
 }
 
@@ -455,14 +457,38 @@ bool rosLocalizer::open(yarp::os::Searchable& config)
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "rosLocalizer configuration: \n" << p.toString().c_str();
 
+    //create the thread
     thread = new rosLocalizerThread(0.010, p);
 
+    //initial location initialization
+    Bottle initial_group = p.findGroup("INITIAL_POS");
+    if (initial_group.isNull())
+    {
+        yError() << "Missing INITIAL_POS group!";
+        return false;
+    }
+    if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
+    else { yError() << "missing initial_x param"; return false; }
+    if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
+    else { yError() << "missing initial_y param"; return false; }
+    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
+    else { yError() << "missing initial_theta param"; return false; }
+    if (initial_group.check("initial_map"))   { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
+    else { yError() << "missing initial_map param"; return false; }
+    m_default_covariance_3x3.resize(3,3);
+    m_default_covariance_3x3.zero();
+    m_default_covariance_3x3[0][0] = 0.25;
+    m_default_covariance_3x3[1][1] = 0.25;
+    m_default_covariance_3x3[2][2] = 0.068538;
+    setInitialPose(m_initial_loc,m_default_covariance_3x3);
+    
+    //start the thread
     if (!thread->start())
     {
         delete thread;
         return false;
     }
-
+    
     std::string local_name = "rosLocalizer";
     Bottle general_group = p.findGroup("GENERAL");
     if (general_group.isNull()==false)
@@ -512,9 +538,25 @@ bool rosLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov
 
 bool rosLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by rosLocalizer";
-    thread->initializeLocalization(loc);
-    return true;
+	if (thread)
+	{
+        yarp::sig::Matrix cov6x6(6,6);
+	    cov6x6.zero();
+	    cov6x6[0][0]=cov[0][0];
+	    cov6x6[1][0]=cov[1][0];
+	    cov6x6[5][0]=cov[2][0];
+	    
+	    cov6x6[0][1]=cov[0][1];
+	    cov6x6[1][1]=cov[1][1];
+	    cov6x6[5][1]=cov[2][1];
+	    
+	    cov6x6[0][5]=cov[0][2];
+	    cov6x6[1][5]=cov[1][2];
+	    cov6x6[5][5]=cov[2][2];
+		return thread->initializeLocalization(loc, cov6x6);
+	}
+	yError() << "rosLocalizer thread not running";
+	return false;
 }
 
 bool  rosLocalizer::startLocalizationService()
