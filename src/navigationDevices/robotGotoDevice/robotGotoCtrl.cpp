@@ -383,11 +383,15 @@ bool GotoThread::threadInit()
     m_laser_angle_of_view = fabs(m_min_laser_angle) + fabs(m_max_laser_angle);
 
     //automatic connections for debug
-    bool b = true;
-    b = yarp::os::Network::connect(localName+"/gui:o", "/yarpLaserScannerGui/nav_display:i","udp",false);
+    bool autoconnect = false;
+    if (general_group.check("autoconnect")) { autoconnect = general_group.find("autoconnect").asBool(); }
+    if (autoconnect)
+    {
+        bool b = true;
+        b = yarp::os::Network::connect(localName + "/gui:o", "/yarpLaserScannerGui/nav_display:i", "udp", false);
 
-    //automatic port connections
-    b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i","udp",false);
+        b = yarp::os::Network::connect(localName + "/control:o", "/baseControl/control:i", "udp", false);
+    }
 
     return true;
 }
@@ -896,7 +900,8 @@ void GotoThread::sendOutput()
 
     stamp.update();
     //send the motors commands and the status to the yarp ports
-    if (m_port_commands_output.getOutputCount() > 0)
+    if (m_port_commands_output.getOutputCount() > 0 &&
+        m_status == navigation_status_moving)
     {
         Bottle &b = m_port_commands_output.prepare();
         m_port_commands_output.setEnvelope(stamp);
