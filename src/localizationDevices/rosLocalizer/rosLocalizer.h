@@ -23,6 +23,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Publisher.h>
 #include <yarp/os/Node.h>
+#include <yarp/os/Subscriber.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
@@ -35,6 +36,7 @@
 #include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
 #include <yarp/rosmsg/geometry_msgs/PoseWithCovarianceStamped.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
+#include <yarp/rosmsg/geometry_msgs/PoseArray.h>
 #include <mutex>
 #include <math.h>
 
@@ -188,8 +190,11 @@ protected:
     yarp::os::Node*                   m_rosNode;
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
+    std::string                       m_topic_particles;
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
     yarp::os::Publisher<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosPublisher_occupancyGrid;
+    yarp::os::Subscriber<yarp::rosmsg::geometry_msgs::PoseArray> m_rosSubscriber_particles;
+    yarp::rosmsg::geometry_msgs::PoseArray m_last_received_particles;
 
 public:
     rosLocalizerThread(double _period, yarp::os::Searchable& _cfg);
@@ -201,4 +206,7 @@ public:
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
+    bool getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses);
+    bool startLoc();
+    bool stopLoc();
 };

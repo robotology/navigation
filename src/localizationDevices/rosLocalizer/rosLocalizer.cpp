@@ -72,7 +72,12 @@ bool   rosLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& st
 
 bool   rosLocalizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
 {
-    return true;
+    if (thread)
+    {
+        return thread->getEstimatedPoses(poses);
+    }
+    yError() << "rosLocalizer thread not running";
+    return false;
 }
 
 bool   rosLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
@@ -250,7 +255,7 @@ bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLoc
     pos.pose.pose.orientation.z = q.z();
     pos.pose.pose.orientation.w = q.w();
     for (size_t ix=0; ix<6; ix++)
-		for (size_t iy=0; iy<6; iy++)
+       for (size_t iy=0; iy<6; iy++)
            pos.pose.covariance[iy*6+ix] = roscov6x6[ix][iy];
     m_rosPublisher_initial_pose.write();
     return true;
@@ -260,6 +265,57 @@ bool rosLocalizerThread::getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc)
 {
     loc = m_localization_data;
     return true;
+}
+
+bool rosLocalizerThread::startLoc()
+{
+    this->resume();
+    return true;
+}
+bool rosLocalizerThread::stopLoc()
+{
+    this->suspend();
+    return true;
+}
+
+
+bool rosLocalizerThread::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
+{
+	if (m_rosSubscriber_particles.asPort().isOpen())
+    {
+        if (this->isRunning()==false ||
+            this->isSuspended() == true)
+        {
+			poses.clear();
+			return true;
+	    }
+    
+        yarp::rosmsg::geometry_msgs::PoseArray* poseArr = m_rosSubscriber_particles.read(false);
+		if (poseArr)
+		{
+			m_last_received_particles = *poseArr;
+	    }
+	    
+    	poses.clear();
+		for (auto it = m_last_received_particles.poses.begin(); it!=m_last_received_particles.poses.end(); it++)
+		{
+			double xp = it->position.x;
+			double yp = it->position.y;
+			yarp::math::Quaternion q;
+			q.x() = it->orientation.x;
+			q.y() = it->orientation.y;
+			q.z() = it->orientation.z;
+			q.w() = it->orientation.w;
+			yarp::sig::Vector v = q.toAxisAngle();
+			double t = v[2];
+			Map2DLocation loc(m_localization_data.map_id, xp, yp, t);
+			poses.push_back(loc);
+		}
+        return true;
+    }
+    //data not available. Returning true to prevent message flooding.
+    poses.clear();
+    return true; 
 }
 
 bool rosLocalizerThread::threadInit()
@@ -321,6 +377,23 @@ bool rosLocalizerThread::threadInit()
              yError() << "localizationModule: unable to publish data on " << m_topic_occupancyGrid << " topic, check your yarp-ROS network configuration";
              return false;
         }
+    }
+
+    //initialize a subscriber for pose particles
+    if (ros_group.check("particles_topic"))
+    {
+        m_topic_particles = ros_group.find("particles_topic").asString();
+        if (!m_rosSubscriber_particles.topic(m_topic_particles))
+        {
+            if (m_rosNode)
+            {
+                delete m_rosNode;
+                m_rosNode = 0;
+            }
+            yError() << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
+            return false;
+        }
+        yDebug() << "opened " << m_topic_particles << " topic";
     }
 
      //initialize an initial pose publisher
@@ -429,6 +502,11 @@ void rosLocalizerThread::threadRelease()
     {
         m_rosPublisher_initial_pose.interrupt();
         m_rosPublisher_initial_pose.close();
+    }
+    if (m_rosSubscriber_particles.asPort().isOpen())
+    {
+        m_rosSubscriber_particles.interrupt();
+        m_rosSubscriber_particles.close();
     }
     if (m_rosNode)
     {
@@ -561,12 +639,18 @@ bool rosLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Mat
 
 bool  rosLocalizer::startLocalizationService()
 {
-    yError() << "Not yet implemented";
+    if (thread)
+    {
+        return thread->startLoc();
+    }
     return false;
 }
 
 bool  rosLocalizer::stopLocalizationService()
 {
-    yError() << "Not yet implemented";
+    if (thread)
+    {
+        return thread->stopLoc();
+    }
     return false;
 }
