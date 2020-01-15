@@ -66,7 +66,7 @@ Odometry::Odometry(PolyDriver* _driver)
     rosMsgCounter        = 0;
 }
 
-bool Odometry::open(Property &options)
+bool Odometry::open(const Property &options)
 {
     if (ctrl_options.check("GENERAL"))
     {

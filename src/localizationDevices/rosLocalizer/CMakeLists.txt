@@ -15,7 +15,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(rosLocalizer rosLocalizer.h rosLocalizer.cpp)
                               
-target_link_libraries(rosLocalizer YARP::YARP_OS
+target_link_libraries(rosLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math

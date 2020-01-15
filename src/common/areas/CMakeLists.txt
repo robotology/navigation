@@ -9,7 +9,7 @@ project(areas)
 file(GLOB folder_source *.cpp)
 file(GLOB folder_header *.h)
 
-find_package(YARP 3.1 COMPONENTS OS sig dev math gsl rosmsg idl_tools REQUIRED)
+find_package(YARP 3.3 COMPONENTS os sig dev math gsl rosmsg idl_tools REQUIRED)
 find_package(OpenCV)
 
 source_group("Source Files" FILES ${folder_source})

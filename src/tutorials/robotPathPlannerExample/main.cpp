@@ -33,6 +33,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace std;
 
 bool gotoLoc(string location, INavigation2D* iNav)

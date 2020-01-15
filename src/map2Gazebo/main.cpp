@@ -31,6 +31,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 class map2GazeboModule : public yarp::os::RFModule
 {
@@ -38,7 +39,7 @@ protected:
     yarp::os::Port               rpcPort;
     yarp::dev::PolyDriver        m_pMap;
     yarp::dev::IMap2D*           m_iMap;
-    yarp::dev::MapGrid2D         m_yarp_map;
+    MapGrid2D                    m_yarp_map;
     double                       m_ceiling;
     double                       m_floor_c;
     bool                         m_crop;
@@ -249,8 +250,8 @@ public:
         
 
         //heightmap color code is the following: black=bottom, white=top
-        yarp::dev::MapGrid2D::map_flags flag;
-        yarp::dev::MapGrid2D::XYCell cell;
+        MapGrid2D::map_flags flag;
+        XYCell cell;
         yarp::sig::ImageOf<yarp::sig::PixelMono> heightmap;
         heightmap.setQuantum(1);
         heightmap.resize(map_size, map_size);
@@ -287,15 +288,15 @@ public:
                 }
                 switch (flag)
                 {
-                    case yarp::dev::MapGrid2D::map_flags::MAP_CELL_WALL:
+                    case MapGrid2D::map_flags::MAP_CELL_WALL:
                     {
                         heightmap.safePixel(computed_x, computed_y) = 255;
                     } break;
-                    case yarp::dev::MapGrid2D::map_flags::MAP_CELL_UNKNOWN:
+                    case MapGrid2D::map_flags::MAP_CELL_UNKNOWN:
                     {
                         heightmap.safePixel(computed_x, computed_y) = 0;
                     } break;
-                    case yarp::dev::MapGrid2D::map_flags::MAP_CELL_FREE:
+                    case MapGrid2D::map_flags::MAP_CELL_FREE:
                     default:
                     {
                         heightmap.safePixel(computed_x, computed_y) = m_floor_c;

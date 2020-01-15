@@ -32,6 +32,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180.0
@@ -255,7 +256,7 @@ void rosNavigator::run()
             {
                 for (size_t x = 0; x < ros_global_map->info.width; x++)
                 {
-                    MapGrid2D::XYCell cell(x, ros_global_map->info.height - 1 - y);
+                    XYCell cell(x, ros_global_map->info.height - 1 - y);
                     double occ = ros_global_map->data[x + y * ros_global_map->info.width];
                     m_global_map.setOccupancyData(cell, occ);
 
@@ -287,7 +288,7 @@ void rosNavigator::run()
             {
                 for (size_t x = 0; x < ros_local_map->info.width; x++)
                 {
-                    MapGrid2D::XYCell cell(x, ros_local_map->info.height - 1 - y);
+                    XYCell cell(x, ros_local_map->info.height - 1 - y);
                     double occ = ros_local_map->data[x + y * ros_local_map->info.width];
                     m_local_map.setOccupancyData(cell, occ);
 
@@ -319,7 +320,7 @@ void rosNavigator::run()
     }
 }
 
-bool rosNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
+bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
@@ -378,7 +379,7 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y, double theta
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
-        yarp::dev::Map2DLocation loc;
+        Map2DLocation loc;
         loc.map_id = m_current_position.map_id;
         loc.x = m_current_position.x - x; //@@@THIS NEEDS TO BE FIXED
         loc.y = m_current_position.y - y; //@@@THIS NEEDS TO BE FIXED
@@ -393,7 +394,7 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y)
 {
     if (m_navigation_status == yarp::dev::navigation_status_idle)
     {
-        yarp::dev::Map2DLocation loc;
+        Map2DLocation loc;
         loc.map_id = m_current_position.map_id;
         loc.x = m_current_position.x - x; //@@@THIS NEEDS TO BE FIXED
         loc.y = m_current_position.y - y; //@@@THIS NEEDS TO BE FIXED
@@ -427,7 +428,7 @@ bool rosNavigator::stopNavigation()
     return true;
 }
 
-bool rosNavigator::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
+bool rosNavigator::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
     target = m_current_goal;
     return true;
@@ -453,7 +454,7 @@ bool rosNavigator::resumeNavigation()
     return false;
 }
 
-bool rosNavigator::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+bool rosNavigator::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     yDebug() << "Not yet implemented";
     return false;
@@ -464,13 +465,13 @@ bool rosNavigator::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocatio
 * @param curr_waypoint the current waypoint pursued by the navigation algorithm
 * @return true/false
 */
-bool rosNavigator::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+bool rosNavigator::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
     yDebug() << "Not yet implemented";
     return false;
 }
 
-bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     if (map_type == yarp::dev::NavigationMapTypeEnum::global_map)
     {

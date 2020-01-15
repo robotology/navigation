@@ -20,11 +20,10 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Publisher.h>
 #include <yarp/os/Node.h>
+#include <yarp/os/Subscriber.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
@@ -37,7 +36,8 @@
 #include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
 #include <yarp/rosmsg/geometry_msgs/PoseWithCovarianceStamped.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
-
+#include <yarp/rosmsg/geometry_msgs/PoseArray.h>
+#include <mutex>
 #include <math.h>
 
 using namespace yarp::os;
@@ -81,6 +81,10 @@ public:
 class rosLocalizer : public yarp::dev::DeviceDriver,
                      public yarp::dev::ILocalization2D
 {
+private:
+    yarp::sig::Matrix                m_default_covariance_3x3;
+    yarp::dev::Nav2D::Map2DLocation  m_initial_loc;
+    	
 public:
     rosLocalizerThread*    thread;
     rosLocalizerRPCHandler rpcPortHandler;
@@ -105,21 +109,49 @@ public:
     * Gets a set of pose estimates computed by the localization algorithm.
     * @return true/false
     */
-    bool   getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses) override;
+    bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
 
     /**
     * Gets the current position of the robot w.r.t world reference frame
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   getCurrentPosition(yarp::dev::Map2DLocation& loc) override;
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
 
     /**
     * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   setInitialPose(const yarp::dev::Map2DLocation& loc) override;
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
+
+    /**
+    * Gets the current position of the robot w.r.t world reference frame, plus the covariance
+    * @param loc the location of the robot
+    * @param cov the 3x3 covariance matrix
+    * @return true/false
+    */
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
+
+    /**
+    * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
+    * @param loc the location of the robot
+    * @param cov the 3x3 covariance matrix
+    * @return true/false
+    */
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
+
+    /**
+    * Starts the localization service
+    * @return true/false
+    */
+    bool   startLocalizationService() override;
+
+    /**
+    * Stops the localization service
+    * @return true/false
+    */
+    bool   stopLocalizationService() override;
 };
 
 class rosLocalizerThread : public yarp::os::PeriodicThread
@@ -129,10 +161,9 @@ protected:
     std::string                  m_module_name;
     double                       m_last_statistics_printed;
     double                       m_last_published_map;
-    yarp::dev::MapGrid2D         m_current_map;
-    yarp::dev::Map2DLocation     m_initial_loc;
-    yarp::dev::Map2DLocation     m_localization_data;
-    yarp::os::Mutex              m_mutex;
+    yarp::dev::Nav2D::MapGrid2D         m_current_map;
+    yarp::dev::Nav2D::Map2DLocation     m_localization_data;
+    std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
 
@@ -154,11 +185,16 @@ protected:
     yarp::dev::IMap2D*           m_iMap;
 
     //ROS
+    size_t                            m_seq_counter;
+    yarp::rosmsg::TickTime            m_rosTime; 
     yarp::os::Node*                   m_rosNode;
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
+    std::string                       m_topic_particles;
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
     yarp::os::Publisher<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosPublisher_occupancyGrid;
+    yarp::os::Subscriber<yarp::rosmsg::geometry_msgs::PoseArray> m_rosSubscriber_particles;
+    yarp::rosmsg::geometry_msgs::PoseArray m_last_received_particles;
 
 public:
     rosLocalizerThread(double _period, yarp::os::Searchable& _cfg);
@@ -168,6 +204,9 @@ public:
     void publish_map();
 
 public:
-    bool initializeLocalization(const yarp::dev::Map2DLocation& loc);
-    bool getCurrentLoc(yarp::dev::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6);
+    bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
+    bool getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses);
+    bool startLoc();
+    bool stopLoc();
 };

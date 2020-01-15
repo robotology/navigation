@@ -76,7 +76,7 @@ CER_Odometry::CER_Odometry(PolyDriver* _driver) : Odometry(_driver)
     geom_L = 0;
 }
 
-bool CER_Odometry::open(Property& _options)
+bool CER_Odometry::open(const Property& _options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();

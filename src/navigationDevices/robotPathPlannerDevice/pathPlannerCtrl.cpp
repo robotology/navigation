@@ -43,24 +43,11 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180
 #endif
-
-bool  PlannerThread::updateLocations()
-{
-    std::vector<std::string> all_locations;
-    m_iMap->getLocationsList(all_locations);
-    Map2DLocation tmp_loc;
-    m_locations_list.clear();
-    for (size_t i=0; i<all_locations.size(); i++)
-    {
-        m_iMap->getLocation(all_locations[i],tmp_loc);
-        m_locations_list.push_back(tmp_loc);
-    }
-    return true;
-}
 
 bool  PlannerThread::readLocalizationData()
 {
@@ -96,7 +83,6 @@ bool  PlannerThread::readLocalizationData()
             m_current_map.enlargeObstacles(m_robot_radius);
             m_augmented_map = m_current_map;
             yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
-            updateLocations();
         }
         else
         {
@@ -166,7 +152,7 @@ void  PlannerThread::readLaserData()
             double las_y = 0;
             scan[i].get_cartesian(las_x, las_y);
             //performs a rotation from the robot to the world reference frame
-            MapGrid2D::XYWorld world;
+            XYWorld world;
             double ss = sin(m_localization_data.theta * DEG2RAD);
             double cs = cos(m_localization_data.theta * DEG2RAD);
             world.x = las_x*cs - las_y*ss + m_localization_data.x;
@@ -186,11 +172,11 @@ void  PlannerThread::readLaserData()
     //the purpose of the following copy of m_temporary_obstacles_map in temp_map is to minimize the duration of the critical section
     //protected by the mutex. Indeed enlargeObstacles() can take some time and should be outside the mutex.
     m_temporary_obstacles_map_mutex.lock();
-    yarp::dev::MapGrid2D temp_map = m_temporary_obstacles_map;
+    MapGrid2D temp_map = m_temporary_obstacles_map;
     m_temporary_obstacles_map_mutex.unlock();
     for (size_t y=0; y< temp_map.height(); y++)
         for (size_t x=0; x< temp_map.width(); x++)
-            temp_map.setMapFlag(MapGrid2D::XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
+            temp_map.setMapFlag(XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
     for (size_t i=0; i< m_laser_map_cells.size(); i++)
     {
         temp_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
@@ -269,26 +255,28 @@ void PlannerThread::run()
     /////////////////////////////
     // the finite-state-machine
     /////////////////////////////
-    size_t path_size = m_current_path->size();
     switch (m_planner_status)
     {
         case navigation_status_moving:
         {
             if (m_inner_status == navigation_status_goal_reached)
             {
-                yInfo("waypoint reached");
-                if (path_size == 0)
+                if (m_current_path_iterator == m_current_path->end())
                 {
                     //navigation is complete
-                    yInfo("navigation complete");
+                    yInfo("goal reached, navigation complete");
                     m_planner_status = navigation_status_goal_reached;
+                    m_final_goal_reached_at_timeX = yarp::os::Time::now();
                 }
-                else if (path_size == 1)
+                else if (m_current_path_iterator == m_current_path->end()-1)
                 {
+                    yInfo("waypoint reached");
                     //remove the current waypoint, just reached
-                    m_current_path->pop();
-                    //send the next waypoint
-                    yInfo("sending the last waypoint");
+                    m_current_path_iterator++;
+                    m_remaining_path.pop_front();
+
+                    //send the final waypoint
+                    yInfo("sending the last waypoint (final goal)");
                     {
                         //send the tolerance to the inner controller
                         Bottle cmd, ans;
@@ -346,12 +334,15 @@ void PlannerThread::run()
                         cmd.addDouble(m_goal_lin_gain);
                         m_port_commands_output.write(cmd, ans);
                     }
-                    sendWaypoint();
+                    sendFinalGoal();
                 }
                 else
                 {
+                    yInfo("waypoint reached");
                     //remove the current waypoint, just reached
-                    m_current_path->pop();
+                    m_current_path_iterator++;
+                    m_remaining_path.pop_front();
+
                     //send the next waypoint
                     yInfo("sending the next waypoint");
                     {
@@ -449,7 +440,9 @@ void PlannerThread::run()
             else if (m_inner_status == navigation_status_idle)
             {
                 //send the first waypoint
+                m_current_path_iterator = m_current_path->begin();
                 yInfo("sending the first waypoint");
+
                 //send the tolerance to the inner controller
                 {
                     Bottle cmd1, ans1;
@@ -517,7 +510,13 @@ void PlannerThread::run()
         break;
         case navigation_status_goal_reached:
         {
-            //do nothing, just wait
+            //do nothing, just wait. After some time(1s), reset the status to navigation idle
+            const double goal_reached_timeout = 1.0;
+            if (yarp::os::Time::now() - m_navigation_started_at_timeX > goal_reached_timeout)
+            {
+                yInfo() << "Goal was reached "<< goal_reached_timeout<<" second(s) ago. On timeout expiration, navigation status was set idle";
+                m_planner_status = navigation_status_idle;
+            }
         }
         break;
         case navigation_status_waiting_obstacle:
@@ -586,72 +585,66 @@ void PlannerThread::run()
     m_mutex.post();
 }
 
-bool PlannerThread::getCurrentPath(std::vector<yarp::dev::Map2DLocation>& path) const
+bool PlannerThread::getCurrentWaypoint(Map2DLocation &loc) const
 {
-    if (m_current_path != NULL)
-    {
-        std::queue<MapGrid2D::XYCell> cells_path = *(m_current_path);
-        while (cells_path.size() != 0)
-        {
-            MapGrid2D::XYCell cell = cells_path.front();
-            Map2DLocation loc;
-            loc.map_id = m_current_map.getMapName();
-            MapGrid2D::XYWorld w = m_current_map.cell2World(cell);
-            loc.x = w.x;
-            loc.y = w.y;
-            loc.theta = 0;
-            path.push_back(loc);
-            cells_path.pop();
-        }
+    if (m_current_path == nullptr) return false;
 
+    if (m_current_path_iterator != m_current_path->end())
+    {
+        loc = *m_current_path_iterator;
         return true;
     }
+
     return false;
 }
 
-bool PlannerThread::getCurrentWaypoint(yarp::dev::Map2DLocation &loc) const
+bool PlannerThread::getCurrentWaypoint(XYCell &c) const
 {
-    if (m_current_path->size() > 0)
+    if (m_current_path == nullptr) return false;
+
+    if (m_current_path_iterator != m_current_path->end())
     {
-        yarp::dev::MapGrid2D::XYCell c = m_current_path->front();
-        loc.map_id = m_current_map.getMapName();
-        yarp::dev::MapGrid2D::XYWorld w = m_current_map.cell2World(c);
-        loc.x = w.x;
-        loc.y = w.y;
-        loc.theta = 0;
+        c = m_current_map.toXYCell(*m_current_path_iterator);
         return true;
     }
-    yInfo() << "robotPathPlanner::getCurrentWaypoint(): info not available, no waypoint set";
-    return false;
+    return true;
 }
 
-bool PlannerThread::getCurrentMap(yarp::dev::MapGrid2D& map) const
+bool PlannerThread::getCurrentMap(MapGrid2D& map) const
 {
     map = m_current_map;
     return true;
 }
 
-bool PlannerThread::getOstaclesMap(yarp::dev::MapGrid2D& obstacles_map) 
+bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const
+{
+    if (m_current_path != nullptr)
+    {
+#if 0
+        current_path = *m_current_path;
+#elif 0
+        current_path.clear();
+        for (auto it = m_remaining_path.begin(); it != m_remaining_path.end(); it++)
+        {
+            current_path.push_back(*it);
+        }
+#else
+        current_path.clear();
+        for (auto it = m_current_path_iterator; it != m_current_path->end(); it++)
+        {
+            current_path.push_back(*it);
+        }
+#endif
+        return true;
+    }
+    return false;
+}
+
+bool PlannerThread::getOstaclesMap(MapGrid2D& obstacles_map) 
 {
     m_temporary_obstacles_map_mutex.lock();
     obstacles_map = m_temporary_obstacles_map;
     m_temporary_obstacles_map_mutex.unlock();
-    return true;
-}
-
-bool PlannerThread::getCurrentWaypoint(yarp::dev::MapGrid2D::XYCell &c) const
-{
-    if (m_current_path == NULL)
-    {
-        yError() << "PlannerThread::getCurrentWaypoint() m_current_path is NULL";
-        return false;
-    }
-    if (m_current_path->size() == 0)
-    {
-        yError() << "PlannerThread::getCurrentWaypoint() m_current_path is empty (size==0)";
-        return false;
-    }
-    c = m_current_path->front();
     return true;
 }
 
@@ -665,7 +658,7 @@ void PlannerThread::sendWaypoint()
         return;
     }
     //get the current waypoint from the list
-    MapGrid2D::XYCell current_waypoint;
+    XYCell current_waypoint;
     if (getCurrentWaypoint(current_waypoint)==false)
     {
         yError("getCurrentWaypoint failed!");
@@ -693,6 +686,22 @@ void PlannerThread::sendWaypoint()
     m_inner_status = inner_status;
 }
 
+void PlannerThread::sendFinalGoal()
+{
+    if (std::isnan(m_final_goal.theta) == false)
+    {
+        //add the orientation to the last waypoint
+        yDebug();
+    }
+    yDebug("sending command: %s", m_final_goal.toString().c_str());
+    m_iInnerNav_target->gotoTargetByAbsoluteLocation(m_final_goal);
+
+    //get inner navigation status
+    NavigationStatusEnum inner_status;
+    m_iInnerNav_ctrl->getNavigationStatus(inner_status);
+    m_inner_status = inner_status;
+}
+
 bool PlannerThread::startPath()
 {
     yarp::math::Vec2D<double> start_vec;
@@ -711,18 +720,16 @@ bool PlannerThread::startPath()
         yError() << "PlannerThread::startPath() requested goal (" << goal_vec.toString() << ") is not inside map" << m_current_map.getMapName();
         return false;
     }
-    MapGrid2D::XYCell goal = m_current_map.world2Cell(goal_vec);
-    MapGrid2D::XYCell start = m_current_map.world2Cell(start_vec);
+    XYCell goal = m_current_map.world2Cell(goal_vec);
+    XYCell start = m_current_map.world2Cell(start_vec);
 #ifdef DEBUG_WITH_CELLS
     start.x = 150;//&&&&&
     start.y = 150;//&&&&&
 #endif
     double t1 = yarp::os::Time::now();
     //clear the memory 
-    std::queue<MapGrid2D::XYCell> empty;
-    std::swap(m_computed_path, empty);
-    std::queue<MapGrid2D::XYCell> empty2;
-    std::swap(m_computed_simplified_path, empty2);
+    m_computed_path.clear();
+    m_computed_simplified_path.clear();
     m_planner_status = navigation_status_thinking;
 
     //search for a path
@@ -749,9 +756,38 @@ bool PlannerThread::startPath()
         m_current_path = &m_computed_path;
     }
 
+    //check if the size of the path. This is needed to allow in-place rotations only.
+    if (m_current_path->size() == 0)
+    {
+        double threshold = 1.0; //deg
+        if (fabs(m_localization_data.theta - m_sequence_of_goals.front().theta) > threshold)
+        {
+           yWarning() << "Requested path has zero length. Adding waypoint with final orientation";
+           m_current_path->push_back(m_sequence_of_goals.front());
+        }
+        else
+        {
+            yWarning() << "Requested path has zero length. Aborting;";
+            m_planner_status = navigation_status_goal_reached;
+            return true;
+        }
+    }
+
+    m_current_path_iterator = m_current_path->begin();
+    std::copy(m_current_path->begin(), m_current_path->end(), std::back_inserter(m_remaining_path));
+
+    //debug print
+    if (1)
+    {
+        yDebug() << "Current pos" << " x:" << start_vec.x << " y:" << start_vec.y;
+        yDebug() << m_current_path->toString();
+        yDebug() << "Final goal" << " x:" << goal_vec.x << " y:" << goal_vec.y << " t:" << m_sequence_of_goals.front().theta;
+    }
+
     //just set the status to moving, do not set position commands.
     //The waypoint is set in the main 'run' loop.
     m_planner_status = navigation_status_moving;
+    m_navigation_started_at_timeX = yarp::os::Time::now();
     return true;
 }
 

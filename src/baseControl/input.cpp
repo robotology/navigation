@@ -28,7 +28,14 @@
 void Input::printStats()
 {
     yInfo( "* Input thread:\n");
-    yInfo( "timeouts: %d joy1: %d joy2: %d aux: %d cmd %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter);
+    if (rosInputEnabled)
+    {
+       yInfo( "timeouts: %d joy1: %d joy2: %d aux: %d cmd: %d ros: %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter, ros_timeout_counter);
+    }
+    else
+    {
+	   yInfo( "timeouts: %d joy1: %d joy2: %d aux: %d cmd: %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter);
+    }
 
     if (joystick_received[0]>0) 
         yInfo( "Under joystick1 control (%d)\n", joystick_received[0]);

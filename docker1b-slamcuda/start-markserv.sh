@@ -1,0 +1,1 @@
+cd /workspace && markserv --browser false -a 0.0.0.0 -p 8080 &

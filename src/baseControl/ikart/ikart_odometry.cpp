@@ -73,7 +73,7 @@ iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : Odometry(_driver)
     encv.resize(3);
 }
 
-bool iKart_Odometry::open(Property &_options)
+bool iKart_Odometry::open(const Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();
@@ -148,7 +148,7 @@ bool iKart_Odometry::open(Property &_options)
     geom_r = geometry_group.find("geom_r").asDouble();
     geom_L = geometry_group.find("geom_L").asDouble();
     g_angle = geometry_group.find("g_angle").asDouble();
-
+    geometry_group.toString();
     return true;
 }
 

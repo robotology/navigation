@@ -34,6 +34,8 @@
 #include "pathPlannerCtrl.h"
 #include <math.h>
 
+using namespace yarp::dev::Nav2D;
+
 robotPathPlannerDev::robotPathPlannerDev()
 {
     m_plannerThread=NULL;
@@ -41,6 +43,9 @@ robotPathPlannerDev::robotPathPlannerDev()
 
 bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 {
+	//default values
+	m_local_name = "/robotPathPlanner";
+	
 #if 1
     yDebug() << "config configuration: \n" << config.toString().c_str();
 
@@ -59,6 +64,15 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "robotPathPlannerDev configuration: \n" << p.toString().c_str();
+    
+    Bottle general_group = p.findGroup("GENERAL");
+    if (general_group.isNull())
+    {
+        yError() << "Missing GENERAL group!";
+        return false;
+    }
+    if (general_group.check("name")) m_local_name = general_group.find("name").asString();
+    
 #else
     Property p;
     p.fromString(config.toString());
@@ -66,7 +80,7 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 
     m_plannerThread = new PlannerThread(0.020,p);
 
-    bool ret = m_rpcPort.open("/robotPathPlanner/rpc");
+    bool ret = m_rpcPort.open(m_local_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";
@@ -137,7 +151,7 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
 }
 
 
-bool robotPathPlannerDev::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
+bool robotPathPlannerDev::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
     bool b = m_plannerThread->setNewAbsTarget(loc);
     return b;
@@ -176,7 +190,7 @@ bool robotPathPlannerDev::recomputeCurrentNavigationPath()
         return false;
     }
 
-    yarp::dev::Map2DLocation loc;
+    Map2DLocation loc;
     bool b = true;
     b &= m_plannerThread->getCurrentAbsTarget(loc);
     //@@@ check timing here
@@ -208,7 +222,7 @@ bool robotPathPlannerDev::applyVelocityCommand(double x_vel, double y_vel, doubl
     return true;
 }
 
-bool robotPathPlannerDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
+bool robotPathPlannerDev::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
     m_plannerThread->getCurrentAbsTarget(target);
     return true;
@@ -249,19 +263,19 @@ bool robotPathPlannerDev::resumeNavigation()
      return b;
 }
 
-bool robotPathPlannerDev::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+bool robotPathPlannerDev::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     bool b = m_plannerThread->getCurrentPath(waypoints);
     return b;
 }
 
-bool robotPathPlannerDev::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+bool robotPathPlannerDev::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
     bool b = m_plannerThread->getCurrentWaypoint(curr_waypoint);
     return b;
 }
 
-bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     if (map_type == yarp::dev::NavigationMapTypeEnum::global_map)
     {

@@ -10,8 +10,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Bottle.h>
@@ -20,11 +18,13 @@
 #include <yarp/math/Quaternion.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <mutex>
 #include <math.h>
 #include "t265Localizer.h"
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace std;
 
 #ifndef M_PI
@@ -57,25 +57,51 @@ bool   t265Localizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& s
     return true;
 }
 
-bool   t265Localizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses)
+bool   t265Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
 {
     poses.clear();
-    yarp::dev::Map2DLocation loc;
+    yarp::dev::Nav2D::Map2DLocation loc;
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
     return true;
 }
 
-bool   t265Localizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
+bool   t265Localizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
     return true;
 }
 
-bool   t265Localizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
+bool   t265Localizer::setInitialPose(const Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
+}
+
+bool   t265Localizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by t265Localizer";
+    thread->getCurrentLoc(loc);
+    return true;
+}
+
+bool   t265Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by t265Localizer";
+    thread->initializeLocalization(loc);
+    return true;
+}
+
+bool    t265Localizer::startLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
+bool    t265Localizer::stopLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
 }
 
 //////////////////////////
@@ -104,7 +130,7 @@ void t265LocalizerThread::run()
         m_last_statistics_printed = yarp::os::Time::now();
     }
 
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
 
     //read data from the device
     // Wait for the next set of frames from the camera
@@ -151,10 +177,10 @@ void t265LocalizerThread::run()
     else if (m_current_loc.theta <= -360) m_current_loc.theta += 360;
 }
 
-bool t265LocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
+bool t265LocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "t265LocalizerThread: Localization init request: (" << loc.map_id << ")";
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     m_initial_loc.map_id = loc.map_id;
     m_initial_loc.x = loc.x;
     m_initial_loc.y = loc.y;
@@ -175,9 +201,9 @@ bool t265LocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation&
     return true;
 }
 
-bool t265LocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
+bool t265LocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     loc = m_current_loc;
     return true;
 }
@@ -247,7 +273,7 @@ bool t265LocalizerThread::threadInit()
     }
 
     //initial location initialization
-    yarp::dev::Map2DLocation tmp_loc;
+    Map2DLocation tmp_loc;
     if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asDouble(); }
     else { yError() << "missing map_transform_x param"; return false; }
     if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asDouble(); }

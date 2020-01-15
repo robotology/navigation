@@ -31,7 +31,7 @@ CER_MotorControl::~CER_MotorControl()
     close();
 }
 
-bool CER_MotorControl::open(Property &_options)
+bool CER_MotorControl::open(const Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();

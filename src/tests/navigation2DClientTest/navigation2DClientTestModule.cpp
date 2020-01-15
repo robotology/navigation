@@ -21,6 +21,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace std;
 #define PERIOD  0
 #define TIMEOUT 60
@@ -146,7 +147,7 @@ void NavTestModule::printRegisteredLocations()
 {
     std::vector<std::string>    locations;
     std::vector<std::string>    emptyLocationList;
-    std::vector<yarp::dev::Map2DLocation> coords;
+    std::vector<Map2DLocation> coords;
     if(!iNav->getLocationsList(locations))
     {
         yError() << "error retrieving location list";
@@ -159,7 +160,7 @@ void NavTestModule::printRegisteredLocations()
 
     for(size_t i = 0; i < locations.size(); i++)
     {
-        yarp::dev::Map2DLocation l;
+        Map2DLocation l;
         if(!iNav->getLocation(locations[i], l))
         {
             yError() << "error retrieving location" << locations[i];
@@ -212,7 +213,7 @@ void NavTestModule::printRegisteredLocations()
 
     for(size_t i = 0; i < locations.size(); i++)
     {
-        yarp::dev::Map2DLocation l;
+        Map2DLocation l;
         iNav->getLocation(locations[i], l);
         yDebug() << locations[i] << " is located in x: " << l.x << " y: " << l.y << " and theta: " << l.theta;
     }
@@ -223,7 +224,7 @@ void NavTestModule::absLocationTest()
 {
     yInfo() << "Test: go to by absolute location:";
     double time = Time::now();
-    if(!iNav->gotoTargetByAbsoluteLocation( yarp::dev::Map2DLocation("map",0,0,0) ) )
+    if(!iNav->gotoTargetByAbsoluteLocation( Map2DLocation("map",0,0,0) ) )
     {
         yError() << "failed!";
     }
@@ -279,7 +280,7 @@ bool NavTestModule::updateModule()
     if(!locationsStored)
     {
         navStep step;
-        yarp::dev::Map2DLocation initialPos;
+        Map2DLocation initialPos;
         iNav->getCurrentPosition(initialPos);
 
         //quick version
