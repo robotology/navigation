@@ -414,6 +414,15 @@ public:
 /////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
+    //Initialize Yarp network
+    Network yarp;
+
+    if (!yarp.checkNetwork())
+    {
+        std::cerr << "Sorry YARP network does not seem to be available, is the yarp server available?\n";
+        return -1;
+    }
+
     ResourceFinder rf;
     rf.setVerbose(true);
     rf.setDefaultContext("navigation");
@@ -430,15 +439,6 @@ int main(int argc, char *argv[])
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
         yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
         return 0;
-    }
-
-    //Initialize Yarp network
-    Network yarp;
-
-    if (!yarp.checkNetwork())
-    {
-        yError("Sorry YARP network does not seem to be available, is the yarp server available?\n");
-        return -1;
     }
 
     //Starts the control module
