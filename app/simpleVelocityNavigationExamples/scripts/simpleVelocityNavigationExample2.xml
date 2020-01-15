@@ -1,5 +1,5 @@
 <application>
-<name>simpleVelocityNavigation EXAMPLE1</name>
+<name>simpleVelocityNavigation (with Laser) EXAMPLE2</name>
 
 <dependencies>
 </dependencies>
@@ -42,7 +42,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device navigation2DServer --subdevice simpleVelocityNavigation --context simpleVelocityNavigationExamples --from simpleVelocityControl.ini</parameters>
+   <parameters>--device navigation2DServer --subdevice simpleVelocityNavigationWithLaser --context simpleVelocityNavigationExamples --from simpleVelocityControl.ini</parameters>
    <node>console</node>
 </module>
 

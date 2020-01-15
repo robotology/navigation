@@ -45,7 +45,7 @@
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 #include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
 #include <yarp/rosmsg/nav_msgs/Path.h>
-#include "obstacles.h"
+#include <obstacles.h>
 
 using namespace std;
 using namespace yarp::os;
