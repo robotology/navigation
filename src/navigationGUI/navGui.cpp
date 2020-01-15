@@ -36,7 +36,14 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <opencv2/core/version.hpp>
+#if CV_MAJOR_VERSION >= 3
+#include <opencv2/highgui/highgui_c.h>
+#else
 #include <cv.h>
+#include <highgui.h>
+#endif
+
 #include <highgui.h> 
 
 #include "navGui.h"
@@ -347,14 +354,14 @@ void NavGuiThread::addMenu(CvFont& font)
     button3_b = button3_t + 20;
     button4_t = i1_map->height;
     button4_b = button4_t + 20;
-    cvRectangle(i2_map_menu, CvPoint(button1_l, button1_t), CvPoint(button1_r, button1_b), CvScalar(200, 50, 50), -1);
-    cvRectangle(i2_map_menu, CvPoint(button2_l, button2_t), CvPoint(button2_r, button2_b), CvScalar(50, 200, 50), -1);
-    cvRectangle(i2_map_menu, CvPoint(button3_l, button3_t), CvPoint(button3_r, button3_b), CvScalar(50, 50, 200), -1);
-    cvRectangle(i2_map_menu, CvPoint(button4_l, button4_t), CvPoint(button4_r, button4_b), CvScalar(50, 150, 200), -1);
-    cvRectangle(i2_map_menu, CvPoint(button1_l + 2, button1_t + 2), CvPoint(button1_r - 2, button1_b - 2), CvScalar(0, 0, 0));
-    cvRectangle(i2_map_menu, CvPoint(button2_l + 2, button2_t + 2), CvPoint(button2_r - 2, button2_b - 2), CvScalar(0, 0, 0));
-    cvRectangle(i2_map_menu, CvPoint(button3_l + 2, button3_t + 2), CvPoint(button3_r - 2, button3_b - 2), CvScalar(0, 0, 0));
-    cvRectangle(i2_map_menu, CvPoint(button4_l + 2, button4_t + 2), CvPoint(button4_r - 2, button4_b - 2), CvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, cvPoint(button1_l, button1_t), cvPoint(button1_r, button1_b), cvScalar(200, 50, 50), -1);
+    cvRectangle(i2_map_menu, cvPoint(button2_l, button2_t), cvPoint(button2_r, button2_b), cvScalar(50, 200, 50), -1);
+    cvRectangle(i2_map_menu, cvPoint(button3_l, button3_t), cvPoint(button3_r, button3_b), cvScalar(50, 50, 200), -1);
+    cvRectangle(i2_map_menu, cvPoint(button4_l, button4_t), cvPoint(button4_r, button4_b), cvScalar(50, 150, 200), -1);
+    cvRectangle(i2_map_menu, cvPoint(button1_l + 2, button1_t + 2), cvPoint(button1_r - 2, button1_b - 2), cvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, cvPoint(button2_l + 2, button2_t + 2), cvPoint(button2_r - 2, button2_b - 2), cvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, cvPoint(button3_l + 2, button3_t + 2), cvPoint(button3_r - 2, button3_b - 2), cvScalar(0, 0, 0));
+    cvRectangle(i2_map_menu, cvPoint(button4_l + 2, button4_t + 2), cvPoint(button4_r - 2, button4_b - 2), cvScalar(0, 0, 0));
     char txt[255];
 
     //button 1
@@ -367,7 +374,7 @@ void NavGuiThread::addMenu(CvFont& font)
     {
         snprintf(txt, 255, "- - -");
     }
-    cvPutText(i2_map_menu, txt, cvPoint(button1_l + 5, button1_t + 12), &font, CvScalar(0, 0, 0));
+    cvPutText(i2_map_menu, txt, cvPoint(button1_l + 5, button1_t + 12), &font, cvScalar(0, 0, 0));
 
     //button 4
     if (m_navigation_status == navigation_status_moving ||
@@ -381,7 +388,7 @@ void NavGuiThread::addMenu(CvFont& font)
     {
         snprintf(txt, 255, "- - -");
     }
-    cvPutText(i2_map_menu, txt, cvPoint(button4_l + 5, button4_t + 12), &font, CvScalar(0, 0, 0));
+    cvPutText(i2_map_menu, txt, cvPoint(button4_l + 5, button4_t + 12), &font, cvScalar(0, 0, 0));
 
     //button 2
     if (m_navigation_status == navigation_status_moving)
@@ -396,7 +403,7 @@ void NavGuiThread::addMenu(CvFont& font)
     {
         snprintf(txt, 255, "- - -");
     }
-    cvPutText(i2_map_menu, txt, cvPoint(button2_l + 5, button2_t + 12), &font, CvScalar(0, 0, 0));
+    cvPutText(i2_map_menu, txt, cvPoint(button2_l + 5, button2_t + 12), &font, cvScalar(0, 0, 0));
 
     //button 3
     if (button3_status == button_status_goto)
@@ -407,7 +414,7 @@ void NavGuiThread::addMenu(CvFont& font)
     {
         snprintf(txt, 255, "Localize");
     }
-    cvPutText(i2_map_menu, txt, cvPoint(button3_l + 5, button3_t + 12), &font, CvScalar(0, 0, 0));
+    cvPutText(i2_map_menu, txt, cvPoint(button3_l + 5, button3_t + 12), &font, cvScalar(0, 0, 0));
 }
 
 void NavGuiThread::draw_map()
@@ -433,8 +440,8 @@ void NavGuiThread::draw_map()
         int w = tmp->width;
         int h = tmp->height;
         if (w < 320) w = 320;
-        i1_map = cvCreateImage(CvSize(w, h), 8, 3);
-        cvCopyMakeBorder(tmp, i1_map, CvPoint(0, 0), cv::BORDER_ISOLATED);
+        i1_map = cvCreateImage(cvSize(w, h), 8, 3);
+        cvCopyMakeBorder(tmp, i1_map, cvPoint(0, 0), cv::BORDER_ISOLATED);
 #else
         yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
         m_current_map.getMapImage(map_image);
@@ -451,14 +458,14 @@ void NavGuiThread::draw_map()
     {
         //i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height), 8, 3);
         //cvCopy(i1_map, i2_map_menu);
-        i2_map_menu = cvCreateImage(CvSize(i1_map->width, i1_map->height+40), 8, 3);
-        cvCopyMakeBorder(i1_map, i2_map_menu, CvPoint(0, 0), cv::BORDER_ISOLATED);
+        i2_map_menu = cvCreateImage(cvSize(i1_map->width, i1_map->height+40), 8, 3);
+        cvCopyMakeBorder(i1_map, i2_map_menu, cvPoint(0, 0), cv::BORDER_ISOLATED);
     }
     addMenu(font);
 
     if (i3_map_menu_scan == nullptr)
     {
-        i3_map_menu_scan = cvCreateImage(CvSize(i2_map_menu->width, i2_map_menu->height), 8, 3);
+        i3_map_menu_scan = cvCreateImage(cvSize(i2_map_menu->width, i2_map_menu->height), 8, 3);
     }
     cvCopy(i2_map_menu, i3_map_menu_scan);
 
