@@ -20,7 +20,7 @@ yarp_add_plugin(extendedRangefinder2DWrapper extendedRangefinder2DWrapper.cpp
 
 
 
-target_link_libraries(extendedRangefinder2DWrapper  YARP::YARP_OS
+target_link_libraries(extendedRangefinder2DWrapper  YARP::YARP_os
                                                     YARP::YARP_sig
                                                     YARP::YARP_dev
                                                     YARP::YARP_math

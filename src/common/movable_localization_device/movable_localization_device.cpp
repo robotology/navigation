@@ -10,6 +10,7 @@
 #include <yarp/math/Math.h>
 
 using namespace yarp::os;
+using namespace yarp::dev::Nav2D;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -26,7 +27,7 @@ using namespace yarp::os;
 
 //////////////////////////
 
-void movable_localization_device::relocate_data(yarp::dev::Map2DLocation& device_location)
+void movable_localization_device::relocate_data(Map2DLocation& device_location)
 {
     if (m_device_position==DEVICE_POS_IS_NONE)
     {

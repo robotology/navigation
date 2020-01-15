@@ -14,7 +14,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(pozyxLocalizer pozyxLocalizer.h pozyxLocalizer.cpp)
                               
-target_link_libraries(pozyxLocalizer YARP::YARP_OS
+target_link_libraries(pozyxLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math

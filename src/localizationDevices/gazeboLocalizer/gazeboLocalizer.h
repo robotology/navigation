@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/dev/PolyDriver.h>
@@ -32,6 +30,7 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/RpcClient.h>
 #include <math.h>
+#include <mutex>
 #include <yarp/dev/IMap2D.h>
 
 #ifndef GAZEBO_LOCALIZER_H
@@ -80,21 +79,49 @@ public:
     * Gets a set of pose estimates computed by the localization algorithm.
     * @return true/false
     */
-    bool   getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses) override;
+    bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
 
     /**
     * Gets the current position of the robot w.r.t world reference frame
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   getCurrentPosition(yarp::dev::Map2DLocation& loc) override;
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
 
     /**
     * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
     * @param loc the location of the robot
     * @return true/false
     */
-    bool   setInitialPose(const yarp::dev::Map2DLocation& loc) override;
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
+
+    /**
+     * Gets the current position of the robot w.r.t world reference frame, plus the covariance
+     * @param loc the location of the robot
+     * @param cov the 3x3 covariance matrix
+     * @return true/false
+     */
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
+
+    /**
+    * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
+    * @param loc the location of the robot
+    * @param cov the 3x3 covariance matrix
+    * @return true/false
+    */
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
+
+    /**
+    * Starts the localization service
+    * @return true/false
+    */
+    bool   startLocalizationService() override;
+
+    /**
+    * Stops the localization service
+    * @return true/false
+    */
+    bool   stopLocalizationService() override;
 };
 
 class gazeboLocalizerThread : public yarp::os::PeriodicThread
@@ -102,10 +129,10 @@ class gazeboLocalizerThread : public yarp::os::PeriodicThread
 protected:
     //general
     double                       m_last_statistics_printed;
-    yarp::dev::Map2DLocation     m_map_to_gazebo_transform;
-    yarp::dev::Map2DLocation     m_localization_data;
-    yarp::dev::Map2DLocation     m_gazebo_data;
-    yarp::os::Mutex              m_mutex;
+    yarp::dev::Nav2D::Map2DLocation     m_map_to_gazebo_transform;
+    yarp::dev::Nav2D::Map2DLocation     m_localization_data;
+    yarp::dev::Nav2D::Map2DLocation     m_gazebo_data;
+    std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name_prefix;
     std::string                  m_local_gazebo_port_name;
@@ -124,8 +151,8 @@ public:
     virtual void run() override;
 
 public:
-    bool initializeLocalization(const yarp::dev::Map2DLocation& loc);
-    bool getCurrentLoc(yarp::dev::Map2DLocation& loc);
+    bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
+    bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
 };
 
 #endif

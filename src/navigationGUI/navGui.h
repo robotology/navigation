@@ -64,7 +64,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
 {
     //semaphore
     public:
-    Semaphore m_mutex;
+    std::mutex m_guithread_mutex;
 
     protected:
     //configuration parameters: robot geometric properties
@@ -99,27 +99,24 @@ class NavGuiThread: public yarp::os::PeriodicThread
 
     //internal data
     ResourceFinder                         &m_rf;
-    yarp::dev::Map2DLocation               m_localization_data;
-    yarp::dev::Map2DLocation               m_curr_goal;
-    yarp::dev::Map2DLocation               m_curr_waypoint;
-    std::vector<Map2DLocation>             m_all_waypoints;
+    yarp::dev::Nav2D::Map2DLocation        m_localization_data;
+    yarp::dev::Nav2D::Map2DLocation        m_curr_goal;
+    yarp::dev::Nav2D::Map2DLocation        m_curr_waypoint;
+    yarp::dev::Nav2D::Map2DPath            m_all_waypoints;
     std::vector<Map2DLocation>             m_locations_list;
     std::vector<Map2DArea>                 m_areas_list;
 
     //storage for the environment map
-    yarp::dev::MapGrid2D m_current_map;
-    yarp::dev::MapGrid2D m_temporary_obstacles_map;
-    std::vector<yarp::dev::MapGrid2D::XYCell>   m_laser_map_cells;
+    yarp::dev::Nav2D::MapGrid2D m_current_map;
+    yarp::dev::Nav2D::MapGrid2D m_temporary_obstacles_map;
+    std::vector<yarp::dev::Nav2D::XYCell>   m_laser_map_cells;
 
-    //the path computed by the planner, stored a sequence of waypoints to be reached
-    std::queue<MapGrid2D::XYCell>*                m_current_path;
-    
     //statuses of the internal finite-state machine
     NavigationStatusEnum   m_navigation_status;
     NavigationStatusEnum   m_previous_navigation_status;
 
     //estimated poses (pointcloud localization)
-    std::vector<yarp::dev::Map2DLocation> m_estimated_poses;
+    std::vector<yarp::dev::Nav2D::Map2DLocation> m_estimated_poses;
 
     //timeout counters (watchdog on the communication with external modules)
     protected:
@@ -213,6 +210,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     * @param _rf the resource finder containing the configuration options
     */
     NavGuiThread(double _period, ResourceFinder &_rf);
+    virtual ~NavGuiThread();
 
     //methods inherited from yarp::os::RateThread
     virtual void run() override;

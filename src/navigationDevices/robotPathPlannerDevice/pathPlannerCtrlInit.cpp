@@ -59,10 +59,17 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_iInnerNav_ctrl = 0;
     m_iInnerNav_target = 0;
     m_force_map_reload = false;
+    m_navigation_started_at_timeX = 0;
+    m_final_goal_reached_at_timeX = 0;
 }
 
 bool PlannerThread::threadInit()
 {
+	//default values
+	string localName = "/robotPathPlanner";
+    string localizationServer_name = "/localizationServer";
+    string mapServer_name = "/mapServer";
+    
     //read configuration parameters
     std::string debug_rf = m_cfg.toString();
     Bottle navigation_group = m_cfg.findGroup("NAVIGATION");
@@ -130,14 +137,16 @@ bool PlannerThread::threadInit()
         return false;
     }
 
+    if (localization_group.check("robot_frame_id")) { m_frame_robot_id = localization_group.find("robot_frame_id").asString(); }
+    if (localization_group.check("map_frame_id")) { m_frame_map_id = localization_group.find("map_frame_id").asString(); }
+    if (localization_group.check("localizationServer_name")) localizationServer_name = localization_group.find("localizationServer_name").asString();
+    if (localization_group.check("mapServer_name")) mapServer_name = localization_group.find("mapServer_name").asString();
+    if (general_group.check("name")) localName = general_group.find("name").asString();
+    
     bool ff = geometry_group.check("robot_radius");
     ff &= geometry_group.check("laser_pos_x");
     ff &= geometry_group.check("laser_pos_y");
     ff &= geometry_group.check("laser_pos_theta");
-
-    if (localization_group.check("robot_frame_id")) { m_frame_robot_id = localization_group.find("robot_frame_id").asString(); }
-    if (localization_group.check("map_frame_id")) { m_frame_map_id = localization_group.find("map_frame_id").asString(); }
-
     if (ff)
     {
         m_robot_radius = geometry_group.find("robot_radius").asDouble();
@@ -150,10 +159,9 @@ bool PlannerThread::threadInit()
         yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
         return false;
     }
-
+    
     //open module ports
     bool ret = true;
-    string localName = "/robotPathPlanner";
     ret &= m_port_status_output.open((localName + "/plannerStatus:o").c_str());
     ret &= m_port_commands_output.open((localName + "/commands:o").c_str());
     ret &= m_port_map_output.open((localName + "/map:o").c_str());
@@ -167,8 +175,8 @@ bool PlannerThread::threadInit()
     {
         Property loc_options;
         loc_options.put("device", "localization2DClient");
-        loc_options.put("local", "/robotPathPlanner/localizationClient");
-        loc_options.put("remote", "/localizationServer");
+        loc_options.put("local", localName+"/localizationClient");
+        loc_options.put("remote", localizationServer_name);
         if (m_pLoc.open(loc_options) == false)
         {
             yError() << "Unable to open localization driver";
@@ -186,8 +194,8 @@ bool PlannerThread::threadInit()
     {
         Property map_options;
         map_options.put("device", "map2DClient");
-        map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
-        map_options.put("remote", "/mapServer");
+        map_options.put("local", localName); //This is just a prefix. map2DClient will complete the port name.
+        map_options.put("remote", mapServer_name);
         if (m_pMap.open(map_options) == false)
         {
             yError() << "Unable to open mapClient";
@@ -218,7 +226,7 @@ bool PlannerThread::threadInit()
 
         Property las_options;
         las_options.put("device", "Rangefinder2DClient");
-        las_options.put("local", "/robotPathPlanner/laser:i");
+        las_options.put("local", localName+"/laser:i");
         las_options.put("remote", laser_remote_port);
         if (m_pLas.open(las_options) == false)
         {

@@ -9,8 +9,6 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/Map2DLocation.h>
@@ -18,7 +16,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IFrameTransform.h>
-
+#include <mutex>
 #include <math.h>
 
 using namespace yarp::os;
@@ -47,14 +45,14 @@ private:
     std::string                  m_frame_device_id;
     
     //fixed position
-    yarp::dev::Map2DLocation     m_device_to_robot_transform;
+    yarp::dev::Nav2D::Map2DLocation     m_device_to_robot_transform;
     
     
 
 public:
     movable_localization_device();
     bool init(const yarp::os::Searchable& cfg, yarp::dev::IFrameTransform*  iTf=nullptr);
-    void relocate_data(yarp::dev::Map2DLocation& device_location);
+    void relocate_data(yarp::dev::Nav2D::Map2DLocation& device_location);
     
 private:
     bool init_tf();

@@ -89,49 +89,53 @@ public:
     }
     
     virtual bool updateModule()
-    { 
+    {
         if (isStopping())
         {
-            guiThread->stop();
+            if (guiThread) guiThread->stop();
             return false;
         }
-        
+
         int loc, las, sta;
-        guiThread->getTimeouts(loc,las,sta);
+        if (guiThread) guiThread->getTimeouts(loc, las, sta);
 
         bool err = false;
-        if (las>TIMEOUT_MAX)
+        if (las > TIMEOUT_MAX)
         {
             yError("timeout, no laser data received!\n");
-            err= true;
+            err = true;
         }
-        if (loc>TIMEOUT_MAX)
+        if (loc > TIMEOUT_MAX)
         {
             yError(" timeout, no localization data received!\n");
-            err= true;
+            err = true;
         }
-        if (sta>TIMEOUT_MAX)
+        if (sta > TIMEOUT_MAX)
         {
             yError("timeout, no status info received!\n");
-            err= true;
+            err = true;
         }
-        
-        if (err==false)
-            yInfo() << "module running, ALL ok. Navigation status:" << guiThread->getNavigationStatusAsString();
 
+        if (err == false)
+        {
+            std::string status = "error";
+            if (guiThread) status = guiThread->getNavigationStatusAsString();
+            yInfo() << "module running, ALL ok. Navigation status:" << status;
+        }
         return true; 
     }
 
     virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
     {
+        std::lock_guard<std::mutex> lock(guiThread->m_guithread_mutex);
+        if (rpcPort.isOpen() == false) return false;
+
         reply.clear(); 
 
-        guiThread->m_mutex.wait();
         if (command.get(0).isString())
         {
             if (command.get(0).asString()=="quit")
             {
-                guiThread->m_mutex.post();
                 return false;
             }
 
@@ -152,7 +156,6 @@ public:
             yError() << "Invalid command type";
             reply.addVocab(VOCAB_ERR);
         }
-        guiThread->m_mutex.post();
         return true;
     }
 };

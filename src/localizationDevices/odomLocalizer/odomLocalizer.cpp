@@ -20,8 +20,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
 #include <yarp/dev/PolyDriver.h>
@@ -32,9 +30,12 @@
 #include <math.h>
 #include <random>
 #include <chrono>
+#include <mutex>
 #include "odomLocalizer.h"
 
+using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev::Nav2D;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -64,10 +65,10 @@ bool   odomLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& s
     return true;
 }
 
-bool   odomLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& poses)
+bool   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
-    yarp::dev::Map2DLocation loc;
+    Map2DLocation loc;
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
 #if 0
@@ -92,13 +93,13 @@ bool   odomLocalizer::getEstimatedPoses(std::vector<yarp::dev::Map2DLocation>& p
     return true;
 }
 
-bool   odomLocalizer::getCurrentPosition(yarp::dev::Map2DLocation& loc)
+bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
     return true;
 }
 
-bool   odomLocalizer::setInitialPose(const yarp::dev::Map2DLocation& loc)
+bool   odomLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
     return true;
@@ -127,7 +128,7 @@ void odomLocalizerThread::run()
         m_last_statistics_printed = yarp::os::Time::now();
     }
 
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     yarp::sig::Vector *loc = m_port_odometry_input.read(false);
     if (loc)
     {
@@ -154,10 +155,10 @@ void odomLocalizerThread::run()
     }
 }
 
-bool odomLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation& loc)
+bool odomLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     m_initial_loc.map_id = loc.map_id;
     m_initial_loc.x = loc.x;
     m_initial_loc.y = loc.y;
@@ -178,9 +179,9 @@ bool odomLocalizerThread::initializeLocalization(const yarp::dev::Map2DLocation&
     return true;
 }
 
-bool odomLocalizerThread::getCurrentLoc(yarp::dev::Map2DLocation& loc)
+bool odomLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
-    LockGuard lock(m_mutex);
+    lock_guard<std::mutex> lock(m_mutex);
     loc = m_current_loc;
     return true;
 }
@@ -247,7 +248,7 @@ bool odomLocalizerThread::threadInit()
     }
 
     //initial location initialization
-    yarp::dev::Map2DLocation tmp_loc;
+    Map2DLocation tmp_loc;
     if (initial_group.check("initial_x")) { tmp_loc.x = initial_group.find("initial_x").asDouble(); }
     else { yError() << "missing initial_x param"; return false; }
     if (initial_group.check("initial_y")) { tmp_loc.y = initial_group.find("initial_y").asDouble(); }
@@ -336,3 +337,28 @@ bool odomLocalizer::close()
     return true;
 }
  
+bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by odomLocalizer";
+    thread->getCurrentLoc(loc);
+    return true;
+}
+
+bool   odomLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+{
+    yWarning() << "Covariance matrix is not currently handled by odomLocalizer";
+    thread->initializeLocalization(loc);
+    return true;
+}
+
+bool    odomLocalizer::startLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}
+
+bool    odomLocalizer::stopLocalizationService()
+{
+    yError() << "Not yet implemented";
+    return false;
+}

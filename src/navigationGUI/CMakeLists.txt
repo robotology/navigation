@@ -12,8 +12,9 @@ file(GLOB folder_header *.h)
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
 
+find_package(YARP REQUIRED COMPONENTS sig cv dev os)
 include_directories(${OpenCV_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} YARP::YARP_rosmsg ${ICUB_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} YARP::YARP_rosmsg YARP::YARP_math ${ICUB_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

@@ -22,7 +22,7 @@ if(ENABLE_navmod_t265Localizer)
             
     include_directories(include ${realsense_INCLUDE_DIR})
 
-    target_link_libraries(t265Localizer YARP::YARP_OS
+    target_link_libraries(t265Localizer YARP::YARP_os
                                        YARP::YARP_sig
                                        YARP::YARP_dev
                                        YARP::YARP_math

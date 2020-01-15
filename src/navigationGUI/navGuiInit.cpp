@@ -141,6 +141,10 @@ bool NavGuiThread::threadInit()
     {
         m_remote_localization = general_group.find("remote_localization").asString();
     }
+    if (general_group.check("remote_navigation"))
+    {
+        m_remote_navigation = general_group.find("remote_navigation").asString();
+    }
     if (general_group.check("remote_map"))
     {
         m_remote_map = general_group.find("remote_map").asString();
@@ -265,14 +269,32 @@ bool NavGuiThread::threadInit()
 
 void NavGuiThread:: threadRelease()
 {
-    if (m_pLoc.isValid()) m_pLoc.close();
-    if (m_ptf.isValid()) m_ptf.close();
-    if (m_pLas.isValid()) m_pLas.close();
+    std::lock_guard<std::mutex> lock(m_guithread_mutex);
+
+    //beware: in order to prevent segfault (memory unloaded by the dll), the following vector
+    //needs to be cleared BEFORE closing the device drivers with m_pLoc.close() m_pNav.close()
+    m_estimated_poses.clear();
+
+    if (m_ptf.isValid())  m_ptf.close(); 
+    if (m_pLoc.isValid()) m_pLoc.close(); 
+    if (m_pLas.isValid()) m_pLas.close(); 
+    if (m_pMap.isValid()) m_pMap.close(); 
     if (m_pNav.isValid()) m_pNav.close();
+
+    m_iLaser = nullptr;
+    m_iMap = nullptr;
+    m_iLoc = nullptr;
+    m_iNav = nullptr;
+
     m_port_map_output.interrupt();
     m_port_map_output.close();
     m_port_yarpview_target_input.interrupt();
     m_port_yarpview_target_input.close();
+
+    cvReleaseImage(&i1_map);
+    cvReleaseImage(&i2_map_menu);
+    cvReleaseImage(&i3_map_menu_scan);
+    cvReleaseImage(&i4_map_with_path);
 }
 
 

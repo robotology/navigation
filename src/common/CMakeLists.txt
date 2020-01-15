@@ -25,7 +25,7 @@ target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CM
                                                          "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                          "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
 
-target_link_libraries (${LIBRARY_TARGET_NAME} PUBLIC YARP::YARP_OS YARP::YARP_dev YARP::YARP_math)
+target_link_libraries (${LIBRARY_TARGET_NAME} PUBLIC YARP::YARP_os YARP::YARP_dev YARP::YARP_math)
 
 install(TARGETS ${LIBRARY_TARGET_NAME}
         EXPORT  ${PROJECT_NAME}

@@ -56,24 +56,25 @@ bool map_utilites::sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelR
     return false;
 }
 
-bool map_utilites::drawPath(IplImage *map, MapGrid2D::XYCell current_position, MapGrid2D::XYCell current_target, std::queue<MapGrid2D::XYCell> path, const CvScalar& color)
+bool map_utilites::drawPath(IplImage *map, XYCell current_position, XYCell current_target, std::queue<XYCell> path, const CvScalar& color1, const CvScalar& color2)
 {
     if (map==0) return false;
-    cvLine(map, cvPoint(current_position.x, current_position.y), cvPoint(current_target.x, current_target.y), color);
-
     if (path.size()==0) return true;
-    MapGrid2D::XYCell src = current_target;
+    
+    XYCell src = current_target;
     while (path.size()>0)
     {
-        MapGrid2D::XYCell dst = path.front();
+        XYCell dst = path.front();
         path.pop();
-        cvLine(map, cvPoint(src.x, src.y), cvPoint(dst.x, dst.y), color);
+        cvLine(map, cvPoint(src.x, src.y), cvPoint(dst.x, dst.y), color2);
         src=dst;
     };
+    
+    cvLine(map, cvPoint(current_position.x, current_position.y), cvPoint(current_target.x, current_target.y), color1);
     return true;
 }
 
-bool map_utilites::drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawCurrentPosition(IplImage *map, XYCell current, double angle, const CvScalar& color)
 {
     if (map==0) return false;
     cvCircle(map, cvPoint(current.x, current.y), 6, color);
@@ -83,7 +84,7 @@ bool map_utilites::drawCurrentPosition(IplImage *map, MapGrid2D::XYCell current,
     return true;
 }
 
-bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawGoal(IplImage *map, XYCell current, double angle, const CvScalar& color)
 {
     if (map == 0) return false;
     cvCircle(map, cvPoint(current.x, current.y), 3, color);
@@ -96,7 +97,7 @@ bool map_utilites::drawGoal(IplImage *map, MapGrid2D::XYCell current, double ang
     return true;
 }
 
-bool map_utilites::drawArea(IplImage *map, std::vector<MapGrid2D::XYCell> area, const CvScalar& color)
+bool map_utilites::drawArea(IplImage *map, std::vector<XYCell> area, const CvScalar& color)
 {
     if (map == 0) return false;
     if (area.size() < 3) return false;
@@ -109,7 +110,7 @@ bool map_utilites::drawArea(IplImage *map, std::vector<MapGrid2D::XYCell> area, 
     return true;
 }
 
-bool map_utilites::drawPose(IplImage *map, MapGrid2D::XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawPose(IplImage *map, XYCell current, double angle, const CvScalar& color)
 {
     if (map == 0) return false;
     cvCircle(map, cvPoint(current.x, current.y), 2, color);
@@ -122,7 +123,7 @@ bool map_utilites::drawPose(IplImage *map, MapGrid2D::XYCell current, double ang
     return true;
 }
 
-bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
+bool map_utilites::drawInfo(IplImage *map, XYCell current, XYCell orig, XYCell x_axis, XYCell y_axis, std::string status, const Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
 {
     if (map==0) return false;
     char txt[255];
@@ -141,7 +142,7 @@ bool map_utilites::drawInfo(IplImage *map, MapGrid2D::XYCell current, MapGrid2D:
     return true;
 }
 
-bool map_utilites::drawInfoFixed(IplImage *map, MapGrid2D::XYCell whereToDraw, MapGrid2D::XYCell orig, MapGrid2D::XYCell x_axis, MapGrid2D::XYCell y_axis, std::string status, const yarp::dev::Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
+bool map_utilites::drawInfoFixed(IplImage *map, XYCell whereToDraw, XYCell orig, XYCell x_axis, XYCell y_axis, std::string status, const Map2DLocation& localiz, const CvFont& font, const CvScalar& color)
 {
     if (map == 0) return false;
     char txt[255];
@@ -155,7 +156,7 @@ bool map_utilites::drawInfoFixed(IplImage *map, MapGrid2D::XYCell whereToDraw, M
     return true;
 }
 
-bool map_utilites::drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>& laser_scan, const CvScalar& color)
+bool map_utilites::drawLaserScan(IplImage *map, std::vector <XYCell>& laser_scan, const CvScalar& color)
 {
     if (map==0) return false;
     for (unsigned int i=0; i<laser_scan.size(); i++)
@@ -163,14 +164,14 @@ bool map_utilites::drawLaserScan(IplImage *map, std::vector <MapGrid2D::XYCell>&
     return true;
 }
 
-bool map_utilites::drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laserMap, const CvScalar& color)
+bool map_utilites::drawLaserMap(IplImage *map, const MapGrid2D& laserMap, const CvScalar& color)
 {
     if (map==0) return false;
     for (size_t y=0; y<laserMap.height(); y++)
         for (size_t x=0; x<laserMap.width(); x++)
         {
             MapGrid2D::map_flags flag;
-            laserMap.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag);
+            laserMap.getMapFlag(XYCell (x,y), flag);
             if (flag==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE ||
                 flag==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
             {
@@ -180,7 +181,7 @@ bool map_utilites::drawLaserMap(IplImage *map, const yarp::dev::MapGrid2D& laser
     return true;
 }
 
-void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated, const yarp::dev::MapGrid2D& obstacles_map)
+void map_utilites::update_obstacles_map(MapGrid2D& map_to_be_updated, const MapGrid2D& obstacles_map)
 {
     //copies obstacles (and only them) from a source map to a destination map
     if (map_to_be_updated.width() != obstacles_map.width() ||
@@ -194,8 +195,8 @@ void map_utilites::update_obstacles_map(yarp::dev::MapGrid2D& map_to_be_updated,
         {
             MapGrid2D::map_flags flag_src;
             MapGrid2D::map_flags flag_dst;
-            map_to_be_updated.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_dst);
-            obstacles_map.getMapFlag(yarp::dev::MapGrid2D::XYCell (x,y), flag_src);
+            map_to_be_updated.getMapFlag(XYCell (x,y), flag_dst);
+            obstacles_map.getMapFlag(XYCell (x,y), flag_src);
             if (flag_dst==MapGrid2D::MAP_CELL_FREE)
             {
                 if      (flag_src==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)

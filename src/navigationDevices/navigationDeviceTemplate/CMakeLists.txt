@@ -9,7 +9,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 yarp_add_plugin(navigationDeviceTemplate navigationDeviceTemplate.h
                              navigationDeviceTemplate.cpp)
                               
-target_link_libraries(navigationDeviceTemplate YARP::YARP_OS
+target_link_libraries(navigationDeviceTemplate YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math)

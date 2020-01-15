@@ -15,7 +15,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(gazeboLocalizer gazeboLocalizer.h gazeboLocalizer.cpp)
                               
-target_link_libraries(gazeboLocalizer YARP::YARP_OS
+target_link_libraries(gazeboLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math

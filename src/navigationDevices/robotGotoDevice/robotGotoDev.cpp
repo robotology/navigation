@@ -34,6 +34,8 @@
 #include <math.h>
 #include <cmath>
 
+using namespace yarp::dev::Nav2D;
+
 void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 {
     this->interface = iface;
@@ -41,6 +43,9 @@ void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 
 bool robotGotoDev :: open(yarp::os::Searchable& config)
 {
+	//default values
+	m_local_name = "/robotGoto";
+	
 #if 1
 
     yDebug() << "config configuration: \n" << config.toString().c_str();
@@ -61,6 +66,14 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "robotGotoDev configuration: \n" << p.toString().c_str();
 
+    Bottle general_group = p.findGroup("GENERAL");
+    if (general_group.isNull())
+    {
+        yError() << "Missing GENERAL group!";
+        return false;
+    }
+    if (general_group.check("name")) m_local_name = general_group.find("name").asString();
+    
 #else
     Property p;
     p.fromString(config.toString());
@@ -73,7 +86,7 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
         return false;
     }
 
-    bool ret = rpcPort.open("/robotGoto/rpc");
+    bool ret = rpcPort.open(m_local_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";
@@ -215,7 +228,7 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
     return true;
 }
 
-bool robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Map2DLocation loc)
+bool robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocation loc)
 {
     yarp::sig::Vector v;
     v.push_back(loc.x);
@@ -274,19 +287,19 @@ bool robotGotoDev::resumeNavigation()
     return b;
 }
 
-bool robotGotoDev::getAllNavigationWaypoints(std::vector<yarp::dev::Map2DLocation>& waypoints)
+bool robotGotoDev::getAllNavigationWaypoints(Map2DPath& waypoints)
 {
     yError() << "Not yet implemented";
     return false;
 }
 
-bool robotGotoDev::getCurrentNavigationWaypoint(yarp::dev::Map2DLocation& curr_waypoint)
+bool robotGotoDev::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation& curr_waypoint)
 {
     yError() << "Not yet implemented";
     return false;
 }
 
-bool robotGotoDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::MapGrid2D& map)
+bool robotGotoDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::Nav2D::MapGrid2D& map)
 {
     yError() << "Not yet implemented";
     return false;
@@ -335,7 +348,7 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     return true;
 }
 
-bool robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Map2DLocation& target)
+bool robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Nav2D::Map2DLocation& target)
 {
     bool b= gotoThread->getCurrentAbsTarget(target);
     return b;
@@ -349,7 +362,7 @@ bool robotGotoDev::recomputeCurrentNavigationPath()
 
 bool robotGotoDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
-    yarp::dev::Map2DLocation loc;
+    Map2DLocation loc;
     bool b = gotoThread->getCurrentRelTarget(loc);
     x = loc.x;
     y = loc.y;

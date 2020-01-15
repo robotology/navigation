@@ -21,8 +21,9 @@
 
 using namespace std;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
-bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
+bool PlannerThread::setNewAbsTarget(Map2DLocation target)
 {
     if (m_planner_status != navigation_status_idle &&
         m_planner_status != navigation_status_goal_reached &&
@@ -37,8 +38,10 @@ bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
 
     if (target.map_id == m_current_map.getMapName())
     {
-        std::queue<yarp::dev::Map2DLocation> empty;
+        //this a trick to clean the queue
+        std::queue<Map2DLocation> empty;
         std::swap(m_sequence_of_goals, empty);
+
         m_sequence_of_goals.push(m_final_goal);
         if (startPath())
         {
@@ -57,7 +60,7 @@ bool PlannerThread::setNewAbsTarget(yarp::dev::Map2DLocation target)
         //1) find in the location server a connection between target.map_id and m_current_map.m_map_name
         //2) obtain a list of targets, put them in a queue.
         //3) startNewPath with this first element of the queue
-        std::queue<yarp::dev::Map2DLocation> empty;
+        std::queue<Map2DLocation> empty;
         std::swap(m_sequence_of_goals, empty);
         m_sequence_of_goals.push(m_final_goal);
         return false;
@@ -98,7 +101,7 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     m_final_goal.y = +target[0] * sin(a) + target[1] * cos(a) + m_localization_data.y;
     m_final_goal.theta = target[2] + m_localization_data.theta;
     m_final_goal.map_id = this->getCurrentMapId();
-    std::queue<yarp::dev::Map2DLocation> empty;
+    std::queue<Map2DLocation> empty;
     std::swap(m_sequence_of_goals, empty);
     m_sequence_of_goals.push(m_final_goal);
     if (startPath())
