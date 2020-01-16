@@ -105,9 +105,29 @@ bool    t265Localizer::stopLocalizationService()
 }
 
 //////////////////////////
+odometry_handler::odometry_handler(const rs2::device& dev) : m_rs_odometry_handler(rs2::wheel_odometer(dev.first<rs2::wheel_odometer>()))
+{
+   m_linear_velocity.x = 0;
+   m_linear_velocity.y = 0;
+   m_linear_velocity.z = 0;
+   m_counter = 0;
+}
 
+void odometry_handler::onRead(yarp::dev::OdometryData& b)
+{
+    //the following lines perform a reference frame tranformation
+    m_linear_velocity.x = 0;
+    m_linear_velocity.y = 0;
+    m_linear_velocity.z = b.odom_x;
+//    m_rs_odometry_handler.send_wheel_odometry(0, 0, m_linear_velocity);
+    m_rs_odometry_handler.send_wheel_odometry(0, m_counter, m_linear_velocity);
+    m_counter++;
+}
+
+//////////////////////////
 t265LocalizerThread::t265LocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
 {
+    m_odometry_handler = nullptr;
     m_last_statistics_printed = -1;
 
     m_iMap = 0;
@@ -120,9 +140,14 @@ t265LocalizerThread::t265LocalizerThread(double _period, yarp::os::Searchable& _
     m_current_loc.theta = m_current_device_data.theta = m_initial_device_data.theta = m_initial_loc.theta = 0;
 }
 
+void t265LocalizerThread::odometry_update()
+{
+
+}
+
 void t265LocalizerThread::run()
 {
-    double current_time = yarp::os::Time::now();
+   double current_time = yarp::os::Time::now();
 
     //print some stats every 10 seconds
     if (current_time - m_last_statistics_printed > 10.0)
@@ -322,12 +347,35 @@ bool t265LocalizerThread::threadInit()
             return false;
         }
     }
+
+    //the odometry port
+    if (m_odometry_handler)
+    {
+        m_odometry_handler = new odometry_handler(m_realsense_pipe.get_active_profile().get_device());
+        m_odometry_handler->useCallback();  // input should go to onRead() callback
+        string odometry_port_name = m_local_name + "/odometry:i";
+        if (m_odometry_handler->open(odometry_port_name) == false)
+        {
+            yError() << "Unable to open odometry port" << odometry_port_name;
+            return false;
+        }
+    }
+    else
+    {
+       yError() << "m_odometry_handler not initialized"; 
+       return false;
+    }
+
     return true;
 }
 
 void t265LocalizerThread::threadRelease()
 {
-
+   if (m_odometry_handler)
+   {
+       m_odometry_handler->interrupt();
+       m_odometry_handler->close();
+   }
 }
 
 

@@ -129,13 +129,13 @@ void odomLocalizerThread::run()
     }
 
     lock_guard<std::mutex> lock(m_mutex);
-    yarp::sig::Vector *loc = m_port_odometry_input.read(false);
+    yarp::dev::OdometryData *loc = m_port_odometry_input.read(false);
     if (loc)
     {
         m_last_odometry_data_received = yarp::os::Time::now();
-        m_current_odom.x     = loc->data()[0];
-        m_current_odom.y     = loc->data()[1];
-        m_current_odom.theta = loc->data()[2];
+        m_current_odom.x     = loc->odom_x;
+        m_current_odom.y     = loc->odom_y;
+        m_current_odom.theta = loc->odom_theta;
 
         double c = cos((-m_initial_odom.theta + m_initial_loc.theta)*DEG2RAD);
         double s = sin((-m_initial_odom.theta + m_initial_loc.theta)*DEG2RAD);

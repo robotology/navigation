@@ -38,7 +38,7 @@
 #include <string>
 #include <math.h>
 
-#include "odometry.h"
+#include "odometryHandler.h"
 #include "motors.h"
 #include "input.h"
 
@@ -107,9 +107,9 @@ protected:
     BufferedPort<Bottle> port_debug_linear;
     BufferedPort<Bottle> port_debug_angular;
 
-    Odometry*            odometry_handler;
-    MotorControl*        motor_handler;
-    Input*               input_handler;
+    OdometryHandler*            m_odometry_handler;
+    MotorControl*        m_motor_handler;
+    Input*               m_input_handler;
 
     string               remoteName;
     string               localName;
@@ -117,9 +117,9 @@ protected:
 
 public:
     //Odometry, MotorControl and Input are instantiated by ControlThread.
-    Odometry* const      get_odometry_handler() { return odometry_handler;}
-    MotorControl* const  get_motor_handler()    { return motor_handler;}
-    Input* const         get_input_handler()    { return input_handler; }
+    OdometryHandler* const      get_odometry_handler() { return m_odometry_handler;}
+    MotorControl* const  get_motor_handler()    { return m_motor_handler;}
+    Input* const         get_input_handler()    { return m_input_handler; }
     void                 enable_debug(bool b);
 
 public:

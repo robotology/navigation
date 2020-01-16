@@ -42,6 +42,7 @@
 #include <yarp/rosmsg/geometry_msgs/PolygonStamped.h>
 #include <yarp/rosmsg/geometry_msgs/TransformStamped.h>
 #include <yarp/rosmsg/tf2_msgs/TFMessage.h>
+#include <yarp/dev/OdometryData.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -59,7 +60,7 @@ using namespace yarp::math;
 #define DEG2RAD M_PI/180.0
 #endif
 
-class Odometry
+class OdometryHandler
 {
 protected:
     Property              ctrl_options;
@@ -107,7 +108,7 @@ protected:
     double              odom_theta;
 
 protected:
-    BufferedPort<Bottle>            port_odometry;
+    BufferedPort<yarp::dev::OdometryData>          port_odometry;
     BufferedPort<Bottle>            port_odometer;
     BufferedPort<Bottle>            port_vels;
     string                          localName;
@@ -121,12 +122,12 @@ public:
     * Constructor
     * @param _driver is a pointer to a remoteControlBoard driver.
     */
-    Odometry(PolyDriver* _driver); 
+    OdometryHandler(PolyDriver* _driver);
 
     /**
     * Default destructor
     */
-    ~Odometry();
+    ~OdometryHandler();
     
     /**
     * Resets the robot odometry, meaning the current robot pose becomes 0,0,0.
