@@ -354,7 +354,7 @@ public:
         {
             if (control_thr)
             {
-                Odometry* pOdometry=0;
+                OdometryHandler* pOdometry=0;
                 pOdometry = control_thr->get_odometry_handler();
                 if (pOdometry) 
                 {pOdometry->reset_odometry(); reply.addString("Odometry reset done.");}
@@ -389,7 +389,7 @@ public:
     { 
         if (control_thr)
         {
-            Odometry* pOdometry=0;
+            OdometryHandler* pOdometry=0;
             if (verbose_print) control_thr->printStats();
             control_thr->get_motor_handler()->updateControlMode();
             pOdometry = control_thr->get_odometry_handler();

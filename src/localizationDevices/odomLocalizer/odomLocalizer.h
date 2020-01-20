@@ -27,6 +27,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/OdometryData.h>
 #include <yarp/os/PeriodicThread.h>
 #include <mutex>
 #include <math.h>
@@ -149,7 +150,7 @@ protected:
 
     //odometry port
     std::string                  m_port_broadcast_odometry_name;
-    yarp::os::BufferedPort<yarp::sig::Vector>  m_port_odometry_input;
+    yarp::os::BufferedPort<yarp::dev::OdometryData>  m_port_odometry_input;
     double                       m_last_odometry_data_received;
 
 public:

@@ -17,6 +17,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/OdometryData.h>
 #include <yarp/os/PeriodicThread.h>
 #include <math.h>
 #include <mutex>
@@ -117,6 +118,20 @@ public:
     bool   stopLocalizationService() override;
 };
 
+class odometry_handler : public BufferedPort<yarp::dev::OdometryData>
+{
+public:
+
+    rs2::wheel_odometer          m_rs_odometry_handler;
+    rs2_vector                   m_linear_velocity;
+    size_t                       m_counter;
+
+    odometry_handler(const rs2::device& dev);
+
+    using BufferedPort<yarp::dev::OdometryData>::onRead;
+    void onRead(yarp::dev::OdometryData& b) override;
+};
+
 class t265LocalizerThread : public yarp::os::PeriodicThread,
                                    movable_localization_device
 {
@@ -142,6 +157,7 @@ protected:
     //device
     rs2::pipeline                m_realsense_pipe;
     rs2::config                  m_realsense_cfg;
+    odometry_handler*            m_odometry_handler;
 
 private:
     bool open_device();
@@ -155,6 +171,7 @@ public:
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
+    void odometry_update();
 };
 
 #endif

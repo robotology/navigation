@@ -49,7 +49,7 @@ iKart_Odometry::~iKart_Odometry()
     close();
 }
 
-iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : Odometry(_driver)
+iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
 {
     control_board_driver= _driver;
     odom_x=0;
@@ -110,7 +110,7 @@ bool iKart_Odometry::open(const Property &_options)
     reset_odometry();
 
     //the base class open
-    if (!Odometry::open(_options))
+    if (!OdometryHandler::open(_options))
     {
         yError() << "Error in Odometry::open()"; return false;
     }

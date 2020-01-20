@@ -16,7 +16,7 @@
 * Public License for more details
 */
 
-#include "odometry.h"
+#include "odometryHandler.h"
 #include <yarp/os/LogStream.h>
 #include <limits>
 
@@ -41,12 +41,12 @@ inline yarp::rosmsg::TickTime normalizeSecNSec(double yarpTimeStamp)
     return ret;
 }
 
-Odometry::~Odometry()
+OdometryHandler::~OdometryHandler()
 {
     close();
 }
 
-Odometry::Odometry(PolyDriver* _driver)
+OdometryHandler::OdometryHandler(PolyDriver* _driver)
 {
     control_board_driver = _driver;
     odom_x               = 0;
@@ -66,7 +66,7 @@ Odometry::Odometry(PolyDriver* _driver)
     rosMsgCounter        = 0;
 }
 
-bool Odometry::open(const Property &options)
+bool OdometryHandler::open(const Property &options)
 {
     if (ctrl_options.check("GENERAL"))
     {
@@ -148,7 +148,7 @@ bool Odometry::open(const Property &options)
     return true;
 }
 
-void Odometry::close()
+void OdometryHandler::close()
 {
     port_odometry.interrupt();
     port_odometry.close();
@@ -168,24 +168,23 @@ void Odometry::close()
     }
 }
 
-void Odometry::broadcast()
+void OdometryHandler::broadcast()
 {
     mutex.wait();
     timeStamp.update();
     if (port_odometry.getOutputCount()>0)
     {
         port_odometry.setEnvelope(timeStamp);
-        Bottle &b = port_odometry.prepare();
-        b.clear();
-        b.addDouble(odom_x); //position in the odom reference frame
-        b.addDouble(odom_y);
-        b.addDouble(odom_theta);
-        b.addDouble(base_vel_x); //velocity in the robot reference frame
-        b.addDouble(base_vel_y);
-        b.addDouble(base_vel_theta);
-        b.addDouble(odom_vel_x); //velocity in the odom reference frame
-        b.addDouble(odom_vel_y);
-        b.addDouble(odom_vel_theta);
+        yarp::dev::OdometryData &b = port_odometry.prepare();
+        b.odom_x=odom_x; //position in the odom reference frame
+        b.odom_y=odom_y;
+        b.odom_theta=odom_theta;
+        b.base_vel_x=base_vel_x; //velocity in the robot reference frame
+        b.base_vel_y=base_vel_y;
+        b.base_vel_theta=base_vel_theta;
+        b.odom_vel_x=odom_vel_x; //velocity in the odom reference frame
+        b.odom_vel_y=odom_vel_y;
+        b.odom_vel_theta=odom_vel_theta;
         port_odometry.write();
     }
 
@@ -285,12 +284,12 @@ void Odometry::broadcast()
     mutex.post();
 }
 
-double Odometry::get_base_vel_lin()
+double OdometryHandler::get_base_vel_lin()
 {
     return this->base_vel_lin;
 }
 
-double Odometry::get_base_vel_theta()
+double OdometryHandler::get_base_vel_theta()
 {
     return this->base_vel_theta;
 }

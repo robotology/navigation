@@ -33,9 +33,9 @@ void ControlThread::afterStart(bool s)
 
 void ControlThread::threadRelease()
 {
-    if (odometry_handler)  {delete odometry_handler; odometry_handler=0;}
-    if (motor_handler)     {delete motor_handler; motor_handler=0;}
-    if (input_handler)     {delete input_handler; input_handler = 0; }
+    if (m_odometry_handler)  {delete m_odometry_handler; m_odometry_handler=0;}
+    if (m_motor_handler)     {delete m_motor_handler; m_motor_handler=0;}
+    if (m_input_handler)     {delete m_input_handler; m_input_handler = 0; }
 
     if (linear_speed_pid)  {delete linear_speed_pid;  linear_speed_pid=0;}
     if (angular_speed_pid) {delete angular_speed_pid; angular_speed_pid=0;}
@@ -90,9 +90,9 @@ ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property opti
     max_linear_acc           = 0;
     remoteName               = ctrl_options.find("remote").asString();
     localName                = ctrl_options.find("local").asString();
-    odometry_handler         = 0;
-    motor_handler            = 0;
-    input_handler            = 0;
+    m_odometry_handler       = 0;
+    m_motor_handler          = 0;
+    m_input_handler          = 0;
 }
 
 void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_speed)
@@ -220,8 +220,8 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,doubl
 {
     double feedback_linear_speed = 0;
     double feedback_angular_speed = 0;
-    if (odometry_handler) this->odometry_handler->get_base_vel_lin();
-    if (odometry_handler) this->odometry_handler->get_base_vel_theta();
+    if (m_odometry_handler) this->m_odometry_handler->get_base_vel_lin();
+    if (m_odometry_handler) this->m_odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_speed_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_throttle = 1.0 * tmp[0];
@@ -255,8 +255,8 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
 {
     double feedback_linear_speed = 0; 
     double feedback_angular_speed = 0; 
-    if (odometry_handler) this->odometry_handler->get_base_vel_lin();
-    if (odometry_handler) this->odometry_handler->get_base_vel_theta();
+    if (m_odometry_handler) this->m_odometry_handler->get_base_vel_lin();
+    if (m_odometry_handler) this->m_odometry_handler->get_base_vel_theta();
     yarp::sig::Vector tmp;
     tmp = linear_ol_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_throttle = 1.0 * tmp[0];
@@ -282,15 +282,15 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
 
 void ControlThread::run()
 {
-    if (odometry_handler) this->odometry_handler->compute();
-    if (odometry_handler) this->odometry_handler->broadcast();
+    if (m_odometry_handler) this->m_odometry_handler->compute();
+    if (m_odometry_handler) this->m_odometry_handler->broadcast();
 
     double pidout_linear_throttle = 0;
     double pidout_angular_throttle = 0;
     double pidout_direction     = 0;
 
     //read inputs (input_linear_speed in m/s, input_angular_speed in deg/s...)
-    this->input_handler->read_inputs(input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
+    this->m_input_handler->read_inputs(input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
 
     if (input_linear_speed < 0)
     {
@@ -334,10 +334,10 @@ void ControlThread::run()
     {
         double exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
         //the following /2 is used to avoid saturation due to decoupling
-        pidout_linear_throttle = input_linear_speed / this->max_linear_vel * this->motor_handler->get_max_motor_pwm()/2 * exec_pwm_gain;
-        pidout_angular_throttle = input_angular_speed / this->max_angular_vel * this->motor_handler->get_max_motor_pwm()/2 * exec_pwm_gain;
+        pidout_linear_throttle = input_linear_speed / this->max_linear_vel * this->m_motor_handler->get_max_motor_pwm()/2 * exec_pwm_gain;
+        pidout_angular_throttle = input_angular_speed / this->max_angular_vel * this->m_motor_handler->get_max_motor_pwm()/2 * exec_pwm_gain;
         pidout_direction = input_desired_direction;
-        this->motor_handler->execute_openloop(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
+        this->m_motor_handler->execute_openloop(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
@@ -345,7 +345,7 @@ void ControlThread::run()
         pidout_linear_throttle = input_linear_speed * exec_pwm_gain;
         pidout_angular_throttle = input_angular_speed * exec_pwm_gain;
         pidout_direction     = input_desired_direction;
-        this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
+        this->m_motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_OPENLOOP_PID)
     {
@@ -353,7 +353,7 @@ void ControlThread::run()
         apply_control_openloop_pid(pidout_linear_throttle, pidout_angular_throttle,
             (input_linear_speed * exec_pwm_gain),
             (input_angular_speed * exec_pwm_gain));
-        this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
+        this->m_motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_PID)
     {
@@ -361,12 +361,12 @@ void ControlThread::run()
         apply_control_speed_pid(pidout_linear_throttle, pidout_angular_throttle,
             (input_linear_speed * exec_pwm_gain),
             (input_angular_speed * exec_pwm_gain));
-        this->motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
+        this->m_motor_handler->execute_speed(pidout_linear_throttle, pidout_direction, pidout_angular_throttle);
     }
     else
     {
         yError ("Unknown control mode!");
-        this->motor_handler->execute_none();
+        this->m_motor_handler->execute_none();
 }
 }
 
@@ -515,9 +515,9 @@ bool ControlThread::threadInit()
     {
         yInfo("Using cer robot type");
         robot_type       = ROBOT_TYPE_DIFFERENTIAL;
-        if (odometry_enabled) odometry_handler = new CER_Odometry(control_board_driver);
-        motor_handler    = new CER_MotorControl(control_board_driver);
-        input_handler    = new Input();
+        if (odometry_enabled) m_odometry_handler = new CER_Odometry(control_board_driver);
+        m_motor_handler    = new CER_MotorControl(control_board_driver);
+        m_input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 320.0 / 2 / 1000.0);
         robot_geom.put("geom_L", 338 / 1000.0);
@@ -526,9 +526,9 @@ bool ControlThread::threadInit()
     {
         yInfo("Using ikart_V1 robot type");
         robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
-        if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
-        motor_handler    = new iKart_MotorControl(control_board_driver);
-        input_handler    = new Input();
+        if (odometry_enabled) m_odometry_handler = new iKart_Odometry(control_board_driver);
+        m_motor_handler    = new iKart_MotorControl(control_board_driver);
+        m_input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 62.5 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);
@@ -538,9 +538,9 @@ bool ControlThread::threadInit()
     {
         yInfo("Using ikart_V2 robot type");
         robot_type       = ROBOT_TYPE_THREE_MECHANUM;
-        if (odometry_enabled) odometry_handler = new iKart_Odometry(control_board_driver);
-        motor_handler    = new iKart_MotorControl(control_board_driver);
-        input_handler    = new Input();
+        if (odometry_enabled) m_odometry_handler = new iKart_Odometry(control_board_driver);
+        m_motor_handler    = new iKart_MotorControl(control_board_driver);
+        m_input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", 76.15 / 1000.0);
         robot_geom.put("geom_L", 273 / 1000.0);
@@ -558,19 +558,19 @@ bool ControlThread::threadInit()
         //input_handler->rosNode    = rosNode;
     }
     
-    if (odometry_handler && odometry_handler->open(ctrl_options) == false)
+    if (m_odometry_handler && m_odometry_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening odometry handler";
         return false;
     }
 
-    if (motor_handler->open(ctrl_options) == false)
+    if (m_motor_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening motor handler";
         return false;
     }
 
-    if (input_handler->open(ctrl_options) == false)
+    if (m_input_handler->open(ctrl_options) == false)
     {
         yError() << "Problem occurred while opening input handler";
         return false;

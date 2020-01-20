@@ -38,14 +38,14 @@
 #include <string>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
-#include "../odometry.h"
+#include "../odometryHandler.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::math;
 
-class CER_Odometry: public Odometry
+class CER_Odometry: public OdometryHandler
 {
 private:
     //encoder variables

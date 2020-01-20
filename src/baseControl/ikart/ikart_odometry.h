@@ -37,14 +37,14 @@
 #include <yarp/os/Stamp.h>
 #include <string>
 #include <math.h>
-#include "../odometry.h"
+#include "../odometryHandler.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::math;
 
-class iKart_Odometry: public Odometry
+class iKart_Odometry: public OdometryHandler
 {
 private:
     //encoder variables

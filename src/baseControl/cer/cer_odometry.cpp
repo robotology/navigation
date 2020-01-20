@@ -49,7 +49,7 @@ CER_Odometry::~CER_Odometry()
     close();
 }
 
-CER_Odometry::CER_Odometry(PolyDriver* _driver) : Odometry(_driver)
+CER_Odometry::CER_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
 {
     control_board_driver= _driver;
     odom_x=0;
@@ -113,7 +113,7 @@ bool CER_Odometry::open(const Property& _options)
     reset_odometry();
 
     //the base class open
-    if (!Odometry::open(_options))
+    if (!OdometryHandler::open(_options))
     {
         yError() << "Error in Odometry::open()"; return false;
     }
