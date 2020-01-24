@@ -21,6 +21,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
         PeriodicThread(_period), m_cfg(_cfg)

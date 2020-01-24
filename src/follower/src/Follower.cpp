@@ -27,6 +27,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 using namespace FollowerTarget;
 
 void FollowerConfig::print(void)
@@ -291,7 +292,7 @@ Result_t Follower::followTarget(Target_t &target)
 
             case RunningSubStMachine::waitAutoNav:
             {
-                yarp::dev::NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
+                NavigationStatusEnum navst = m_navCtrl.getNavigationStatus();
 
                 switch(navst)
                 {

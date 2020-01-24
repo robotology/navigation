@@ -186,7 +186,7 @@ NavigationStatusEnum PlannerThread::getNavigationStatusAsInt()
 
 string PlannerThread::getNavigationStatusAsString()
 {
-    string s = yarp::dev::INavigation2DHelpers::statusToString(m_planner_status);
+    string s = INavigation2DHelpers::statusToString(m_planner_status);
     return s;
 }
 

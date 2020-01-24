@@ -21,6 +21,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 void  NavGuiThread::getTimeouts(int& localiz, int& laser, int& nav_status)
 {
@@ -41,6 +42,6 @@ NavigationStatusEnum NavGuiThread::getNavigationStatusAsInt()
 
 string NavGuiThread::getNavigationStatusAsString()
 {
-    string s = yarp::dev::INavigation2DHelpers::statusToString(m_navigation_status);
+    string s = INavigation2DHelpers::statusToString(m_navigation_status);
     return s;
 }

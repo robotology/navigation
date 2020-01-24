@@ -238,8 +238,8 @@ bool  NavGuiThread::updateAreas()
 bool  NavGuiThread::readMaps()
 {
     bool ret = true;
-    ret &= m_iNav->getCurrentNavigationMap(yarp::dev::global_map, m_current_map);
-    ret &= m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
+    ret &= m_iNav->getCurrentNavigationMap(yarp::dev::Nav2D::global_map, m_current_map);
+    ret &= m_iNav->getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
     return ret;
 }
 
@@ -600,7 +600,7 @@ void NavGuiThread::run()
     static double last_drawn_enlarged_obstacles = yarp::os::Time::now();
     if (yarp::os::Time::now() - last_drawn_enlarged_obstacles > m_period_draw_enalarged_obstacles)
     {
-        m_iNav->getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
+        m_iNav->getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
         last_drawn_enlarged_obstacles = yarp::os::Time::now();
     }
 

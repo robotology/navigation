@@ -59,9 +59,9 @@ bool odomLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os:
 }
 
 
-bool   odomLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status)
+bool   odomLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
-    status = yarp::dev::LocalizationStatusEnum::localization_status_localized_ok;
+    status = LocalizationStatusEnum::localization_status_localized_ok;
     return true;
 }
 
@@ -97,6 +97,12 @@ bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
     return true;
+}
+
+bool  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+{
+    yError() << " odomLocalizer::getEstimatedOdometry is not yet implemented";
+    return false;
 }
 
 bool   odomLocalizer::setInitialPose(const Map2DLocation& loc)

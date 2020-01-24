@@ -57,9 +57,9 @@ bool gazeboLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::o
 }
 
 
-bool   gazeboLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status)
+bool   gazeboLocalizer::getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status)
 {
-    status = yarp::dev::LocalizationStatusEnum::localization_status_localized_ok;
+    status = yarp::dev::Nav2D::LocalizationStatusEnum::localization_status_localized_ok;
     return true;
 }
 
@@ -76,6 +76,12 @@ bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
     return true;
+}
+
+bool  gazeboLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+{
+    yError() << " gazeboLocalizer::getEstimatedOdometry is not yet implemented";
+    return false;
 }
 
 bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc)

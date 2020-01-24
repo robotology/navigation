@@ -169,22 +169,22 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
 
 bool robotPathPlannerDev::recomputeCurrentNavigationPath()
 {
-    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_idle)
+    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_idle)
     {
         yError() << "Unable to recompute path. Navigation task not assigned yet.";
         return false;
     }
-    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_paused)
+    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_paused)
     {
         yError() << "Unable to recompute path. Navigation task is currently paused.";
         return false;
     }
-    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_goal_reached)
+    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_goal_reached)
     {
         yError() << "Unable to recompute path. Navigation Goal has been already reached.";
         return false;
     }
-    if (m_plannerThread->getNavigationStatusAsInt() == yarp::dev::navigation_status_thinking)
+    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_thinking)
     {
         yError() << "Unable to recompute path. A navigation plan is already under computation.";
         return false;
@@ -238,10 +238,10 @@ bool robotPathPlannerDev::getRelativeLocationOfCurrentTarget(double& x, double& 
     return true;
 }
 
-bool robotPathPlannerDev::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
+bool robotPathPlannerDev::getNavigationStatus(NavigationStatusEnum& status)
 {
      int nav_status = m_plannerThread->getNavigationStatusAsInt();
-     status = (yarp::dev::NavigationStatusEnum)(nav_status);
+     status = (NavigationStatusEnum)(nav_status);
      return true;
 }
 
@@ -275,14 +275,14 @@ bool robotPathPlannerDev::getCurrentNavigationWaypoint(Map2DLocation& curr_waypo
     return b;
 }
 
-bool robotPathPlannerDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
+bool robotPathPlannerDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
-    if (map_type == yarp::dev::NavigationMapTypeEnum::global_map)
+    if (map_type == NavigationMapTypeEnum::global_map)
     {
         m_plannerThread->getCurrentMap(map);
         return true;
     }
-    else if (map_type == yarp::dev::NavigationMapTypeEnum::local_map)
+    else if (map_type == NavigationMapTypeEnum::local_map)
     {
         m_plannerThread->getOstaclesMap(map);
         return true;

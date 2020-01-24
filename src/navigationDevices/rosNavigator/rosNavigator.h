@@ -47,21 +47,21 @@
 
 class rosNavigator : public yarp::dev::DeviceDriver,
     public yarp::os::PeriodicThread,
-    public yarp::dev::INavigation2DTargetActions,
-    public yarp::dev::INavigation2DControlActions
+    public yarp::dev::Nav2D::INavigation2DTargetActions,
+    public yarp::dev::Nav2D::INavigation2DControlActions
 {
 protected:
-    yarp::dev::PolyDriver             m_pLoc;
-    yarp::dev::ILocalization2D*       m_iLoc;
-    yarp::dev::PolyDriver             m_pMap;
-    yarp::dev::IMap2D*                m_iMap;
+    yarp::dev::PolyDriver              m_pLoc;
+    yarp::dev::Nav2D::ILocalization2D* m_iLoc;
+    yarp::dev::PolyDriver              m_pMap;
+    yarp::dev::Nav2D::IMap2D*          m_iMap;
 
-    yarp::dev::NavigationStatusEnum   m_navigation_status;
-    std::string                       m_abs_frame_id;
-    std::string                       m_local_name_prefix;
-    std::string                       m_remote_localization;
-    yarp::dev::Nav2D::Map2DLocation   m_current_position;
-    yarp::dev::Nav2D::Map2DLocation   m_current_goal;
+    yarp::dev::Nav2D::NavigationStatusEnum  m_navigation_status;
+    std::string                             m_abs_frame_id;
+    std::string                             m_local_name_prefix;
+    std::string                             m_remote_localization;
+    yarp::dev::Nav2D::Map2DLocation         m_current_position;
+    yarp::dev::Nav2D::Map2DLocation         m_current_goal;
 
     double                            m_stats_time_curr;
     double                            m_stats_time_last;
@@ -101,7 +101,7 @@ public:
     virtual void run() override;
 
 private:
-    std::string getStatusAsString(yarp::dev::NavigationStatusEnum status);
+    std::string getStatusAsString(yarp::dev::Nav2D::NavigationStatusEnum status);
 
 public:
     /**
@@ -153,7 +153,7 @@ public:
     * //Gets the status of the current navigation task. Typically stored into navigation_status variable.
     * @return the current navigation status expressed as NavigationStatusEnum.
     */
-    bool getNavigationStatus(yarp::dev::NavigationStatusEnum& status) override;
+    bool getNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum& status) override;
 
     /**
     * //Stops the current navigation task.
@@ -193,7 +193,7 @@ public:
     * @param map the map, currently used by the navigation algorithm
     * @return true/false
     */
-    bool getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::Nav2D::MapGrid2D& map) override;
+    bool getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapTypeEnum map_type, yarp::dev::Nav2D::MapGrid2D& map) override;
 
     /**
     * Forces the navigation system to recompute the path from the current robot position to the current goal.

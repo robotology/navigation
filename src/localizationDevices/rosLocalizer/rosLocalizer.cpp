@@ -64,9 +64,9 @@ bool rosLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::
 }
 
 
-bool   rosLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status)
+bool   rosLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
-    status = yarp::dev::LocalizationStatusEnum::localization_status_localized_ok;
+    status = LocalizationStatusEnum::localization_status_localized_ok;
     return true;
 }
 
@@ -87,6 +87,12 @@ bool   rosLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
 		return thread->getCurrentLoc(loc);
 	}
 	yError() << "rosLocalizer thread not running";
+    return false;
+}
+
+bool  rosLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+{
+    yError() << " rosLocalizer::getEstimatedOdometry is not yet implemented";
     return false;
 }
 

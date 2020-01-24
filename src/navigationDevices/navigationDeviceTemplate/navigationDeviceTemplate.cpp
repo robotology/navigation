@@ -30,7 +30,7 @@ using namespace yarp::dev::Nav2D;
 
 navigationDeviceTemplate::navigationDeviceTemplate() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
-    m_navigation_status = yarp::dev::navigation_status_idle;
+    m_navigation_status = navigation_status_idle;
     //### TO BE IMPLEMENTED BY USER
 }
 
@@ -64,7 +64,7 @@ void navigationDeviceTemplate::run()
 
 bool navigationDeviceTemplate::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_idle)
+    if (m_navigation_status == navigation_status_idle)
     {
         //### TO BE IMPLEMENTED BY USER
         return true;
@@ -75,7 +75,7 @@ bool navigationDeviceTemplate::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 
 bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_idle)
+    if (m_navigation_status == navigation_status_idle)
     {
         //### TO BE IMPLEMENTED BY USER
         return true;
@@ -86,7 +86,7 @@ bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y)
 }
 bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_idle)
+    if (m_navigation_status == navigation_status_idle)
     {
         //### TO BE IMPLEMENTED BY USER
         return true;
@@ -101,7 +101,7 @@ bool navigationDeviceTemplate::applyVelocityCommand(double x_vel, double y_vel, 
     return true;
 }
 
-bool navigationDeviceTemplate::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
+bool navigationDeviceTemplate::getNavigationStatus(NavigationStatusEnum& status)
 {
     status = m_navigation_status;
     return true;
@@ -110,7 +110,7 @@ bool navigationDeviceTemplate::getNavigationStatus(yarp::dev::NavigationStatusEn
 bool navigationDeviceTemplate::stopNavigation()
 {
     //### TO BE IMPLEMENTED BY USER
-    m_navigation_status = yarp::dev::navigation_status_idle;
+    m_navigation_status = navigation_status_idle;
     return true;
 }
 
@@ -146,10 +146,10 @@ bool navigationDeviceTemplate::getCurrentNavigationWaypoint(Map2DLocation& curr_
 
 bool navigationDeviceTemplate::suspendNavigation(double time)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_moving)
+    if (m_navigation_status == navigation_status_moving)
     {
         //### TO BE IMPLEMENTED BY USER
-        m_navigation_status = yarp::dev::navigation_status_paused;
+        m_navigation_status = navigation_status_paused;
         return true;
     }
     yError() << "Unable to pause current navigation task";
@@ -158,7 +158,7 @@ bool navigationDeviceTemplate::suspendNavigation(double time)
 
 bool navigationDeviceTemplate::resumeNavigation()
 {
-    if (m_navigation_status == yarp::dev::navigation_status_paused)
+    if (m_navigation_status == navigation_status_paused)
     {
         //### TO BE IMPLEMENTED BY USER
         return true;
@@ -169,7 +169,7 @@ bool navigationDeviceTemplate::resumeNavigation()
 
 bool navigationDeviceTemplate::recomputeCurrentNavigationPath()
 {
-    if (m_navigation_status == yarp::dev::navigation_status_moving)
+    if (m_navigation_status == navigation_status_moving)
     {
         //### TO BE IMPLEMENTED BY USER
         return true;
@@ -178,7 +178,7 @@ bool navigationDeviceTemplate::recomputeCurrentNavigationPath()
     return false;
 }
 
-bool navigationDeviceTemplate::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
+bool navigationDeviceTemplate::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;

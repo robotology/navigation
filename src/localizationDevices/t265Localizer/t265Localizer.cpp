@@ -51,9 +51,9 @@ bool t265LocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os:
 }
 
 
-bool   t265Localizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status)
+bool   t265Localizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
-    status = yarp::dev::LocalizationStatusEnum::localization_status_localized_ok;
+    status = LocalizationStatusEnum::localization_status_localized_ok;
     return true;
 }
 
@@ -64,6 +64,12 @@ bool   t265Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocat
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
     return true;
+}
+
+bool  t265Localizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+{
+    yError() << " t265Localizer::getEstimatedOdometry is not yet implemented";
+    return false;
 }
 
 bool   t265Localizer::getCurrentPosition(Map2DLocation& loc)

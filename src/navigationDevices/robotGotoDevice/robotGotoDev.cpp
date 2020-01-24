@@ -299,16 +299,16 @@ bool robotGotoDev::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation&
     return false;
 }
 
-bool robotGotoDev::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, yarp::dev::Nav2D::MapGrid2D& map)
+bool robotGotoDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     yError() << "Not yet implemented";
     return false;
 }
 
-bool robotGotoDev::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
+bool robotGotoDev::getNavigationStatus(NavigationStatusEnum& status)
 {
     int nav_status = gotoThread->getNavigationStatusAsInt();
-    status = (yarp::dev::NavigationStatusEnum)(nav_status);
+    status = (NavigationStatusEnum)(nav_status);
     return true;
 }
 

@@ -575,7 +575,7 @@ void PlannerThread::run()
     //broadcast the planner status
     if (m_port_status_output.getOutputCount()>0)
     {
-        string s = yarp::dev::INavigation2DHelpers::statusToString(m_planner_status);
+        string s = INavigation2DHelpers::statusToString(m_planner_status);
         Bottle &b = m_port_status_output.prepare();
         b.clear();
         b.addString(s.c_str());

@@ -49,8 +49,6 @@
 #include "map.h"
 
 using namespace std;
-using namespace yarp::os;
-using namespace yarp::dev;
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -109,21 +107,21 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool      m_force_map_reload;
 
     //yarp device drivers and interfaces
-    PolyDriver                                             m_ptf;
-    PolyDriver                                             m_pLoc;
-    PolyDriver                                             m_pLas;
-    PolyDriver                                             m_pMap;
-    IRangefinder2D*                                        m_iLaser;
-    IMap2D*                                                m_iMap;
-    ILocalization2D*                                       m_iLoc;
+    yarp::dev::PolyDriver                                  m_ptf;
+    yarp::dev::PolyDriver                                  m_pLoc;
+    yarp::dev::PolyDriver                                  m_pLas;
+    yarp::dev::PolyDriver                                  m_pMap;
+    yarp::dev::IRangefinder2D*                             m_iLaser;
+    yarp::dev::Nav2D::IMap2D*                              m_iMap;
+    yarp::dev::Nav2D::ILocalization2D*                     m_iLoc;
 
     //yarp ports
     BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > m_port_map_output;
     BufferedPort<yarp::os::Bottle>                         m_port_status_output;
     RpcClient                                              m_port_commands_output;
     yarp::dev::PolyDriver                                  m_pInnerNav;
-    yarp::dev::INavigation2DControlActions*                m_iInnerNav_ctrl;
-    yarp::dev::INavigation2DTargetActions*                 m_iInnerNav_target;
+    yarp::dev::Nav2D::INavigation2DControlActions*         m_iInnerNav_ctrl;
+    yarp::dev::Nav2D::INavigation2DTargetActions*          m_iInnerNav_target;
     std::string                                            m_localNavigatorPlugin_name;
 
     //internal data
@@ -144,8 +142,8 @@ class PlannerThread: public yarp::os::PeriodicThread
     std::deque< yarp::dev::Nav2D::Map2DLocation>  m_remaining_path;
 
     //statuses of the internal finite-state machine
-    NavigationStatusEnum   m_planner_status;
-    NavigationStatusEnum   m_inner_status;
+    yarp::dev::Nav2D::NavigationStatusEnum   m_planner_status;
+    yarp::dev::Nav2D::NavigationStatusEnum   m_inner_status;
 
     //timeout counters (watchdog on the communication with external modules)
     protected:
@@ -192,7 +190,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param loc the current absolute position of the robot
     * @return true if the command is executed successfully, false otherwise
     */
-    bool          getCurrentPos(Nav2D::Map2DLocation& v);
+    bool          getCurrentPos(yarp::dev::Nav2D::Map2DLocation& v);
     
     /**
     * Sets as navigation target a location previously stored into the map server
@@ -206,14 +204,14 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param the current goal (computed by the pathplanner algorithm)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getCurrentAbsTarget(Nav2D::Map2DLocation& target);
+    bool          getCurrentAbsTarget(yarp::dev::Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the current waypoint in the target queue, expressed in local (robot) reference frame.
     * @param the current goal (computed by the pathplanner algorithm)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getCurrentRelTarget(Nav2D::Map2DLocation& target);
+    bool          getCurrentRelTarget(yarp::dev::Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the name of the map to which the current waypoint belongs to.
@@ -227,7 +225,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param the current target (set by a setNewAbsTarget)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getFinalAbsTarget(Nav2D::Map2DLocation& target);
+    bool          getFinalAbsTarget(yarp::dev::Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the final target, expressed in relative (local) reference frame.
@@ -235,7 +233,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @param the current target (set by a setNewAbsTarget/setNewRelTarget)
     * @return true if the returned target is valid, false otherwise
     */
-    bool          getFinalRelTarget(Nav2D::Map2DLocation& target);
+    bool          getFinalRelTarget(yarp::dev::Nav2D::Map2DLocation& target);
 
     /**
     * Retrieves the name of the map to which the final target, requested by the user, belongs to.
@@ -253,7 +251,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     * Returns the current navigation status, used by the internal finite-state machine
     * @return the internal navigation status, expressed as an enum
     */
-    NavigationStatusEnum getNavigationStatusAsInt();
+    yarp::dev::Nav2D::NavigationStatusEnum getNavigationStatusAsInt();
 
     /**
     * Returns info about the current status of the navigation thread.

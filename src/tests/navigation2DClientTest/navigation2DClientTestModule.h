@@ -42,7 +42,7 @@ private:
     //device drivers and interfaces
     yarp::dev::PolyDriver      ddNavClient;
     yarp::dev::PolyDriver      ddLocServer;
-    yarp::dev::INavigation2D*  iNav;
+    yarp::dev::Nav2D::INavigation2D*  iNav;
 
     //goal/location variables
     std::vector<navStep>       stepVector;
