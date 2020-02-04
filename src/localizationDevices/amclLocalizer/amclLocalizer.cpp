@@ -98,8 +98,8 @@ bool   amclLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, y
 
 bool   amclLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    yError() << "Not yet implemented";
-    return false;
+    thread->getCurrentOdom(odom);
+    return true;
 }
 
 bool   amclLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
@@ -146,6 +146,8 @@ amclLocalizerThread::amclLocalizerThread(double _period, yarp::os::Searchable& _
     m_localization_data.x = nan("");
     m_localization_data.y = nan("");
     m_localization_data.theta = nan("");
+
+    m_estimator = new iCub::ctrl::AWLinEstimator(3,3);
 }
 
 void amclLocalizerThread::updateFilter()
@@ -388,6 +390,41 @@ void amclLocalizerThread::updateFilter()
             m_localization_data.y = hyps[max_weight_hyp].pf_pose_mean.v[1];
             m_localization_data.theta = hyps[max_weight_hyp].pf_pose_mean.v[2] * RAD2DEG;
             m_localization_data_mutex.unlock();
+
+
+            // odometry estimation from position
+
+            //velocity estimation block
+            if (1)
+            {
+                m_current_odom_mutex.lock();
+                //m_current_loc is in the world reference frame.
+                // hence this velocity is estimated in the world reference frame.
+                iCub::ctrl::AWPolyElement el;
+                el.data = yarp::sig::Vector(3);
+                el.data[0]=  m_current_odom.odom_x = m_localization_data.x;
+                el.data[1] = m_current_odom.odom_y = m_localization_data.y;
+                el.data[2] = m_current_odom.odom_theta = m_localization_data.theta;
+                el.time = Time::now();
+                m_odom_vel.resize(3,0.0);
+                m_odom_vel = m_estimator->estimate(el);
+                m_current_odom.odom_vel_x = m_odom_vel[0];
+                m_current_odom.odom_vel_y = m_odom_vel[1];
+                m_current_odom.odom_vel_theta = m_odom_vel[2];
+
+                //this is the velocity in robot reference frame.
+                //NB: for a non-holonomic robot robot_vel[1] ~= 0
+                m_robot_vel.resize(3, 0.0);
+                m_robot_vel[0] = m_odom_vel[0] * cos(m_localization_data.theta * DEG2RAD) - m_odom_vel[0] * sin(m_localization_data.theta * DEG2RAD);
+                m_robot_vel[1] = m_odom_vel[1] * sin(m_localization_data.theta * DEG2RAD) + m_odom_vel[1] * cos(m_localization_data.theta * DEG2RAD);
+                m_robot_vel[2] = m_odom_vel[2];
+                m_current_odom.base_vel_x = m_robot_vel[0];
+                m_current_odom.base_vel_y = m_robot_vel[1];
+                m_current_odom.base_vel_theta = m_robot_vel[2];
+
+                m_current_odom_mutex.unlock();
+            }
+
         }
 
     }
@@ -397,6 +434,13 @@ bool amclLocalizerThread::getPoses(std::vector<Map2DLocation>& poses)
 {
     std::lock_guard<std::mutex> lock(m_particle_poses_mutex);
     poses = m_particle_poses;
+    return true;
+}
+
+bool amclLocalizerThread::getCurrentOdom(OdometryData& odom)
+{
+    std::lock_guard<std::mutex> lock(m_current_odom_mutex);
+    odom = m_current_odom;
     return true;
 }
 

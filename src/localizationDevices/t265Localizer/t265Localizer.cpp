@@ -122,10 +122,10 @@ odometry_handler::odometry_handler(const rs2::device& dev) : m_rs_odometry_handl
 void odometry_handler::onRead(yarp::dev::OdometryData& b)
 {
     //the following lines perform a reference frame tranformation
-    m_linear_velocity.x = 0;
+    m_linear_velocity.x = b.odom_y;
     m_linear_velocity.y = 0;
     m_linear_velocity.z = b.odom_x;
-//    m_rs_odometry_handler.send_wheel_odometry(0, 0, m_linear_velocity);
+    //m_rs_odometry_handler.send_wheel_odometry(0, 0, m_linear_velocity);
     m_rs_odometry_handler.send_wheel_odometry(0, m_counter, m_linear_velocity);
     m_counter++;
 }
@@ -177,35 +177,79 @@ void t265LocalizerThread::run()
     auto f = frames.first_or_default(RS2_STREAM_POSE);
     // Cast the frame to pose_frame and get its data
     rs2_pose pose_data = f.as<rs2::pose_frame>().get_pose_data();
-    if (0)
+    
+    yarp::sig::Matrix transformMat(3,3);
+    yarp::sig::Matrix transformMatRot(3,3);
+    yarp::sig::Matrix rotationMatCameraZ(3,3);
+    yarp::sig::Matrix rotationMatCameraY(3,3);
+    yarp::sig::Matrix rotationMatCameraX(3,3);
+    
+    transformMat.zero();
+    transformMatRot.zero();
+    rotationMatCameraZ.zero();
+    rotationMatCameraY.zero();
+    rotationMatCameraX.zero();
+    
+    // 90 deg around z
+    rotationMatCameraZ(0,1) = -1;
+    rotationMatCameraZ(1,0) = 1;
+    rotationMatCameraZ(2,2) = 1;
+
+    // 90 deg around y
+    rotationMatCameraY(0,2) = 1;
+    rotationMatCameraY(2,0) = 1;
+    rotationMatCameraY(1,1) = 1;
+
+    // -90 deg around x
+    rotationMatCameraX(0,0) = 1;
+    rotationMatCameraX(2,1) = -1;
+    rotationMatCameraX(1,2) = 1;
+
+
+    // transformMatRot*-rotationMatCameraX*rotationMatCameraZ*poserotationmatrix
+    if (transformClientInt->getTransform(baseFrame, targetFrame, transformMat))
     {
-        m_current_device_data.x = pose_data.translation.x;
-        m_current_device_data.y = pose_data.translation.y;
-        yarp::math::Quaternion q(pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
+        transformMatRot = transformMat.submatrix(0,2,0,2);
+
+        m_current_device_data.x = -pose_data.translation.z;
+        m_current_device_data.y = -pose_data.translation.x;
+       yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
         auto m = q.toRotationMatrix3x3();
+        //m = transformMatRot*rotationMatCameraZ*rotationMatCameraX*m;
+        m = transformMatRot*rotationMatCameraX*rotationMatCameraY*m;   //OK WITH euler
+
+        //auto v = yarp::math::dcm2euler(m);
+        //auto v = yarp::math::dcm2ypr(m);
         auto v = yarp::math::dcm2euler(m);
-        m_current_device_data.theta = v[2] * RAD2DEG;
+
+        m_current_device_data.theta = v[0] * RAD2DEG;
+
+        //yDebug() << "transformMat" << transformMat.toString();
+        //yDebug() << "Mat" << m.toString();
+        //yDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+
     }
     else
     {
         m_current_device_data.x = -pose_data.translation.z;
         m_current_device_data.y = -pose_data.translation.x;
+        // yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
         yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
-    //    yDebug()<<"********************************";
-     //   yDebug() << "quat" << q.toString();
+        //yDebug() << "quat" << q.toString();
         auto m = q.toRotationMatrix3x3();
-    //    yDebug() << "Mat" << m.toString();
-   //     auto v = yarp::math::dcm2euler(m);
-   //     yDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+        //yDebug() << "Mat" << m.toString();
+        //auto v = yarp::math::dcm2euler(m);
+        //yDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
         auto v = yarp::math::dcm2rpy(m);
-     //   yDebug() << "A2" << v2.toString() << v2[0] *RAD2DEG  << v2[1] *RAD2DEG << v2[2] *RAD2DEG;
-        m_current_device_data.theta =  v[1]*RAD2DEG;
+        //yDebug() << "A2" << v.toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+        // m_current_device_data.theta =  v[1]*RAD2DEG; // no, give only rotation around y between -90 and +90
+        m_current_device_data.theta = atan2(m(0,2),m(0,0))*RAD2DEG;
     }
-  //  yDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
+    //yDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //relocate data in robot frame
     relocate_data(m_current_device_data);
-    yDebug() << "device pose (x y t) after relocation: " << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
+    //yDebug() << "device pose (x y t) after relocation: " << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //compute data localization
     double c = cos((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
@@ -338,6 +382,16 @@ bool t265LocalizerThread::threadInit()
         return false;
     }
 
+    Bottle tfC_group = m_cfg.findGroup("TF_CLIENT");
+    if (tfC_group.isNull())
+    {
+        yError() << "Missing TF_CLIENT group!";
+        return false;
+    }
+
+
+
+
     //general group
     if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString(); }
 
@@ -419,6 +473,59 @@ bool t265LocalizerThread::threadInit()
        yError() << "m_odometry_handler not initialized"; 
        return false;
     }
+
+
+    // the transform client
+
+
+    Property    pTC;
+    pTC.put("device","transformClient");
+    if (tfC_group.check("localTC"))
+        pTC.put("local",tfC_group.find("localTC").asString());
+    else
+    {
+       yError() << "localTC not initialized";
+       return false;
+    }
+
+    if (tfC_group.check("remoteTC"))
+        pTC.put("remote",tfC_group.find("remoteTC").asString());
+    else
+    {
+       yError() << "remoteTC not initialized";
+       return false;
+    }
+
+    if (tfC_group.check("period"))
+        pTC.put("period",tfC_group.find("period").asString());
+    else
+    {
+       yError() << "period not initialized";
+       return false;
+    }
+
+    if (tfC_group.check("refFrame"))
+        targetFrame = tfC_group.find("refFrame").asString();
+    else
+        targetFrame = "head_link";
+    if (tfC_group.check("baseFrame"))
+        baseFrame = tfC_group.find("baseFrame").asString();
+    else
+        baseFrame = "mobile_base_body_link";
+        
+																		yDebug() << baseFrame;
+
+
+    transformClientDriver.open(pTC);
+
+    transformClientDriver.view(transformClientInt);
+    if (transformClientInt == nullptr)
+    {
+        yError() << "Unable to open Transform Client interface";
+        return false;
+    }
+
+    yInfo() << "tranformClient successfully open";
 
     return true;
 }
