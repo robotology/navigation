@@ -148,6 +148,7 @@ amclLocalizerThread::amclLocalizerThread(double _period, yarp::os::Searchable& _
     m_localization_data.theta = nan("");
 
     m_estimator = new iCub::ctrl::AWLinEstimator(3,3);
+
 }
 
 void amclLocalizerThread::updateFilter()
@@ -160,11 +161,8 @@ void amclLocalizerThread::updateFilter()
     pose.v[1] = m_odometry_data.y;
     pose.v[2] = m_odometry_data.theta*DEG2RAD; //@@@@ CHECK THIS!!!
 
-    if (m_pf_init)
+    if (m_pf_initialized)
     {
-#ifdef LOWLEVEL_DEBUG
-        yDebug() << "m_pf_init=true, it means pf is initialized";
-#endif
         // Compute change in pose
         delta.v[0] = pose.v[0] - m_pf_odom_pose.v[0];
         delta.v[1] = pose.v[1] - m_pf_odom_pose.v[1];
@@ -177,9 +175,15 @@ void amclLocalizerThread::updateFilter()
 
 #ifdef LOWLEVEL_DEBUG
         if (update)
-        {   yDebug() << "Update requested by thresholds";   }
+        {
+            yDebug() << "Update requested by thresholds";
+        }
         else
-        {   yDebug() << "No threshold update requested";   }
+        {
+    #ifdef LOWLEVEL_ALWAYS_DEBUG
+            yDebug() << "No threshold update requested";
+    #endif
+        }
         if(m_force_update)
         {
             yDebug() << "Force Update requested";
@@ -203,22 +207,24 @@ void amclLocalizerThread::updateFilter()
         else
         {
 #ifdef LOWLEVEL_DEBUG
+    #ifdef LOWLEVEL_ALWAYS_DEBUG
             yDebug() << "1. Laser updated unrequested";
+    #endif
 #endif
         }
     }
 
     bool force_publication = false;
     //first run, filter initialization
-    if (!m_pf_init)
+    if (m_pf_initialized==false)
     {
 #ifdef LOWLEVEL_DEBUG
-        yDebug() << "m_pf_init=false, it means pf is NOT YET initialized";
+        yDebug() << "m_pf_initialized=false, intialiazing...";
 #endif
         // Pose at last filter update
         m_pf_odom_pose = pose;
         // Filter is now initialized
-        m_pf_init = true;
+        m_pf_initialized = true;
         // Should update sensor data
         for (unsigned int i = 0; i < m_lasers_update.size(); i++)
         {
@@ -228,7 +234,7 @@ void amclLocalizerThread::updateFilter()
         m_resample_count = 0;
     }
     // If the robot has moved, update the filter
-    else if (m_pf_init && m_lasers_update[laser_index])
+    else if (m_pf_initialized && m_lasers_update[laser_index])
     {
 #ifdef LOWLEVEL_DEBUG
         yDebug() << "m_pf_init=true, m_lasers_update=true. update odometry";
@@ -261,12 +267,12 @@ void amclLocalizerThread::updateFilter()
         ldata.sensor = m_lasers[laser_index];
         ldata.range_count = m_laser_measurement_data.size(); //@@@ 360? get this form the laser
         double angle_min = m_min_laser_angle * DEG2RAD; ///@@@ get this from the laser, THIS needs to be expressed in the base frame, in RADIAS
-        double angle_increment = 1.0*DEG2RAD; //@@@ THIS needs to expressed in the base frame, in RADIANS
-
+        double angle_increment = m_horizontal_resolution *DEG2RAD; //@@@ THIS needs to expressed in the base frame, in RADIANS
         // wrapping angle to [-pi .. pi]
         angle_increment = fmod(angle_increment + 5 * M_PI, 2 * M_PI) - M_PI; //@@@CHEKC THIS
+
 #ifdef  LOWLEVEL_DEBUG 
-        yDebug("Laser %d angles in base frame: min: %.3f inc: %.3f", laser_index, angle_min, angle_increment);
+        yDebug("Laser #%d, angles in base frame: min: %.3f, inc: %.3f, size %d", laser_index, angle_min, angle_increment, ldata.range_count);
 #endif
 
         // Apply range min/max thresholds, if the user supplied them
@@ -308,6 +314,7 @@ void amclLocalizerThread::updateFilter()
             }
             // Compute bearing
             ldata.ranges[i][1] = angle_min + (i * angle_increment);
+            yDebug() << ldata.ranges[i][1];
         }
 
         m_lasers[laser_index]->UpdateSensor(m_handler_pf, (AMCLSensorData*)&ldata);
@@ -379,16 +386,19 @@ void amclLocalizerThread::updateFilter()
 
         if (max_weight > 0.0)
         {
-            yDebug("Max weight pose: %.3f %.3f %.3f (%.3f)",
+            yDebug("Max weight pose: x:%.3f y:%.3f t:%.3f (t_deg:%.3f)",
                 hyps[max_weight_hyp].pf_pose_mean.v[0],
                 hyps[max_weight_hyp].pf_pose_mean.v[1],
                 hyps[max_weight_hyp].pf_pose_mean.v[2],
                 hyps[max_weight_hyp].pf_pose_mean.v[2]*RAD2DEG);
 
             m_localization_data_mutex.lock();
-            m_localization_data.x = hyps[max_weight_hyp].pf_pose_mean.v[0];
-            m_localization_data.y = hyps[max_weight_hyp].pf_pose_mean.v[1];
-            m_localization_data.theta = hyps[max_weight_hyp].pf_pose_mean.v[2] * RAD2DEG;
+                m_pf_data.x = hyps[max_weight_hyp].pf_pose_mean.v[0];
+                m_pf_data.y = hyps[max_weight_hyp].pf_pose_mean.v[1];
+                m_pf_data.theta = hyps[max_weight_hyp].pf_pose_mean.v[2] * RAD2DEG;
+                m_pf_data.x     -= m_odometry_data.x;
+                m_pf_data.y     -= m_odometry_data.y;
+                m_pf_data.theta -= m_odometry_data.theta;
             m_localization_data_mutex.unlock();
 
 
@@ -446,11 +456,12 @@ bool amclLocalizerThread::getCurrentOdom(OdometryData& odom)
 
 void amclLocalizerThread::run()
 {
-#ifdef LOWLEVEL_DEBUG
-    yDebug();
-#endif // LOWLEVEL_DEBUG
-
     double current_time = yarp::os::Time::now();
+
+#ifdef LOWLEVEL_DEBUG
+//    yDebug();
+//    yDebug("current time: %f", current_time);
+#endif // LOWLEVEL_DEBUG
 
     //print some stats every 10 seconds
     if (current_time - m_last_statistics_printed > 10.0)
@@ -461,6 +472,10 @@ void amclLocalizerThread::run()
     std::lock_guard<std::mutex> lock(m_mutex);
 
     //read odometry data
+    if (current_time - m_last_odometry_data_received > 0.1)
+    {
+        yWarning() << "No localization data received for more than 0.1s!";
+    }
     yarp::dev::OdometryData* odom = m_port_odometry_input.read(false);
     if (odom)
     {
@@ -468,10 +483,6 @@ void amclLocalizerThread::run()
         m_odometry_data.x = odom->odom_x;
         m_odometry_data.y = odom->odom_y;
         m_odometry_data.theta = odom->odom_theta;
-    }
-    if (current_time - m_last_odometry_data_received > 0.1)
-    {
-        yWarning() << "No localization data received for more than 0.1s!";
     }
 
     //read laser data
@@ -489,6 +500,25 @@ void amclLocalizerThread::run()
 
     //process data
     updateFilter();
+
+    //add the odometry
+    m_localization_data_mutex.lock();
+        m_localization_data.x     = m_pf_data.x     + m_odometry_data.x;
+        m_localization_data.y     = m_pf_data.y     + m_odometry_data.y;
+        m_localization_data.theta = m_pf_data.theta + m_odometry_data.theta;
+#if DEBUG_DATA
+        auto& od = m_port_odometry_debug_out.prepare();
+        od.odom_x = m_localization_data.x;
+        od.odom_y = m_localization_data.y;
+        od.odom_theta = m_localization_data.theta;
+        m_port_odometry_debug_out.write();
+        auto& pd = m_port_pd_debug_out.prepare();
+        pd.odom_x = m_pf_data.x;
+        pd.odom_y = m_pf_data.y;
+        pd.odom_theta = m_pf_data.theta;
+        m_port_pd_debug_out.write();
+#endif
+    m_localization_data_mutex.unlock();
 }
 
 bool amclLocalizerThread::initializeLocalization(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
@@ -528,10 +558,14 @@ bool amclLocalizerThread::initializeLocalization(const Map2DLocation& loc, const
 bool amclLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
+    m_pf_data.map_id = loc.map_id;
+    m_pf_data.x = loc.x - m_odometry_data.x;
+    m_pf_data.y = loc.y - m_odometry_data.y;
+    m_pf_data.theta = loc.theta - m_odometry_data.theta;
     m_localization_data.map_id = loc.map_id;
-    m_localization_data.x = loc.x;
-    m_localization_data.y = loc.y;
-    m_localization_data.theta = loc.theta;
+    m_localization_data.x      = loc.x;
+    m_localization_data.y      = loc.y;
+    m_localization_data.theta  = loc.theta;
 
     // Re-initialize the filter
     pf_vector_t pf_init_pose_mean = pf_vector_zero();
@@ -650,6 +684,11 @@ bool amclLocalizerThread::threadInit()
         return false;
     }
     m_port_broadcast_odometry_name = odometry_group.find("odometry_broadcast_port").asString();
+
+#if DEBUG_DATA
+    m_port_odometry_debug_out.open("/amcl/odom:o");
+    m_port_pd_debug_out.open("/amcl/pf:o");
+#endif
 
     //opens a YARP port to receive odometry data
     std::string odom_portname = "/" + m_local_name + "/odometry:i";
@@ -815,7 +854,7 @@ bool amclLocalizerThread::threadInit()
     pf_init_pose_mean.v[2] = m_initial_loc.theta *DEG2RAD;
 
     pf_init(m_handler_pf, pf_init_pose_mean, pf_init_pose_cov);
-    m_pf_init = false;
+    m_pf_initialized = false;
 
     // Instantiate the sensor objects
     // Odometry
@@ -876,6 +915,12 @@ bool amclLocalizerThread::threadInit()
     if (m_iLaser->getScanLimits(m_min_laser_angle, m_max_laser_angle) == false)
     {
         yError() << "Unable to obtain laser scan limits (angles)";
+        return false;
+    }
+
+    if (m_iLaser->getHorizontalResolution(m_horizontal_resolution) == false)
+    {
+        yError() << "Unable to getHorizontalResolution()";
         return false;
     }
 
@@ -1058,7 +1103,7 @@ bool amclLocalizer::open(yarp::os::Searchable& config)
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "amclLocalizer configuration: \n" << p.toString().c_str();
 
-    double amclThreadPeriod = 1.000; //1000 ms
+    double amclThreadPeriod = 0.010; //10 ms
     if (p.check("period"))
     {
         amclThreadPeriod = p.find("period").asDouble();
@@ -1117,7 +1162,7 @@ void amclLocalizerThread::applyInitialPose()
     if (m_initial_pose_hyp != nullptr && m_amcl_map != nullptr)
     {
         pf_init(m_handler_pf, m_initial_pose_hyp->pf_pose_mean, m_initial_pose_hyp->pf_pose_cov);
-        m_pf_init = false;
+        m_pf_initialized = false;
 
         delete m_initial_pose_hyp;
         m_initial_pose_hyp = NULL;

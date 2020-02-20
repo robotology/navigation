@@ -34,6 +34,7 @@ using namespace yarp::os;
 
 class amclLocalizer;
 class amclLocalizerThread;
+#define DEBUG_DATA 1
 
 // Pose hypothesis
 typedef struct
@@ -113,7 +114,10 @@ protected:
     yarp::dev::OdometryData      m_current_odom;
     std::mutex                   m_current_odom_mutex;
 
-
+#ifdef DEBUG_DATA
+    yarp::os::BufferedPort<yarp::dev::OdometryData> m_port_odometry_debug_out;
+    yarp::os::BufferedPort<yarp::dev::OdometryData> m_port_pd_debug_out;
+#endif
 
     //map interface 
     yarp::dev::PolyDriver        m_pMap;
@@ -127,6 +131,7 @@ protected:
     double                                       m_laser_measurement_timestamp;
     double                                       m_min_laser_angle;
     double                                       m_max_laser_angle;
+    double                                       m_horizontal_resolution;
     double                                       m_min_laser_distance;
     double                                       m_max_laser_distance;
     double                                       m_laser_angle_of_view;
@@ -183,7 +188,7 @@ protected:
     bool             m_force_update;
 
     pf_t* m_handler_pf;
-    bool m_pf_init;
+    bool m_pf_initialized;
     pf_vector_t m_pf_odom_pose;
     amcl_hyp_t* m_initial_pose_hyp;
     map_t* m_amcl_map;
@@ -193,8 +198,10 @@ protected:
     std::vector<yarp::dev::Nav2D::Map2DLocation> m_particle_poses;
 
     //the robot most probable position
-    std::mutex m_localization_data_mutex;
+    std::mutex                          m_localization_data_mutex;
     yarp::dev::Nav2D::Map2DLocation     m_localization_data;
+    yarp::dev::Nav2D::Map2DLocation     m_pf_data;
+
     yarp::sig::Matrix    m_initial_covariance_msg;
 public:
     amclLocalizerThread(double _period, yarp::os::Searchable& _cfg);
