@@ -25,6 +25,9 @@
 #include <movable_localization_device.h>
 #include <iCub/ctrl/adaptWinPolyEstimator.h>
 
+#include <yarp/dev/IFrameTransform.h>
+
+
 //realsense
 #include <librealsense2/rs.hpp>
 
@@ -125,6 +128,12 @@ protected:
 
 private:
     bool open_device();
+
+    yarp::dev::PolyDriver transformClientDriver;
+    yarp::dev::IFrameTransform *transformClientInt;
+    std::string targetFrame;
+    std::string baseFrame;
+
 
 public:
     t265LocalizerThread(double _period, yarp::os::Searchable& _cfg);
