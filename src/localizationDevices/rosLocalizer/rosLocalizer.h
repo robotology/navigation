@@ -40,6 +40,9 @@
 #include <mutex>
 #include <math.h>
 
+#include <iCub/ctrl/adaptWinPolyEstimator.h>
+
+
 using namespace yarp::os;
 
 /**
@@ -79,7 +82,7 @@ public:
 };
 
 class rosLocalizer : public yarp::dev::DeviceDriver,
-                     public yarp::dev::ILocalization2D
+                     public yarp::dev::Nav2D::ILocalization2D
 {
 private:
     yarp::sig::Matrix                m_default_covariance_3x3;
@@ -99,58 +102,15 @@ public:
     virtual bool close() override;
 
 public:
-    /**
-    * Gets the current status of the localization task.
-    * @return true/false
-    */
-    bool   getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status) override;
 
-    /**
-    * Gets a set of pose estimates computed by the localization algorithm.
-    * @return true/false
-    */
+    bool   getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
     bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
-
-    /**
-    * Gets the current position of the robot w.r.t world reference frame
-    * @param loc the location of the robot
-    * @return true/false
-    */
+    bool   getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
     bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
-
-    /**
-    * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
-    * @param loc the location of the robot
-    * @return true/false
-    */
     bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
-
-    /**
-    * Gets the current position of the robot w.r.t world reference frame, plus the covariance
-    * @param loc the location of the robot
-    * @param cov the 3x3 covariance matrix
-    * @return true/false
-    */
     bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
-
-    /**
-    * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
-    * @param loc the location of the robot
-    * @param cov the 3x3 covariance matrix
-    * @return true/false
-    */
     bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
-
-    /**
-    * Starts the localization service
-    * @return true/false
-    */
     bool   startLocalizationService() override;
-
-    /**
-    * Stops the localization service
-    * @return true/false
-    */
     bool   stopLocalizationService() override;
 };
 
@@ -167,6 +127,13 @@ protected:
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
 
+    //velocity estimation
+    yarp::sig::Vector            m_odom_vel;
+    yarp::sig::Vector            m_robot_vel;
+    iCub::ctrl::AWLinEstimator*  m_estimator;
+    yarp::dev::OdometryData      m_current_odom;
+    std::mutex                   m_current_odom_mutex;
+
     //configuration options
     bool                         m_ros_enabled;
     bool                         m_use_localization_from_odometry_port;
@@ -182,7 +149,7 @@ protected:
 
     //map interface 
     yarp::dev::PolyDriver        m_pmap;
-    yarp::dev::IMap2D*           m_iMap;
+    yarp::dev::Nav2D::IMap2D*    m_iMap;
 
     //ROS
     size_t                            m_seq_counter;
@@ -206,6 +173,7 @@ public:
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
+    bool getCurrentOdom(yarp::dev::OdometryData& odom);
     bool getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses);
     bool startLoc();
     bool stopLoc();

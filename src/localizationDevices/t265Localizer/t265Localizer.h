@@ -23,6 +23,10 @@
 #include <mutex>
 #include <yarp/dev/IMap2D.h>
 #include <movable_localization_device.h>
+#include <iCub/ctrl/adaptWinPolyEstimator.h>
+
+#include <yarp/dev/IFrameTransform.h>
+
 
 //realsense
 #include <librealsense2/rs.hpp>
@@ -47,7 +51,7 @@ public:
 };
 
 class t265Localizer : public yarp::dev::DeviceDriver,
-                     public yarp::dev::ILocalization2D
+                      public yarp::dev::Nav2D::ILocalization2D
 {
 public:
     t265LocalizerThread*    thread;
@@ -63,58 +67,15 @@ public:
     virtual bool close() override;
 
 public:
-    /**
-    * Gets the current status of the localization task.
-    * @return true/false
-    */
-    bool   getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status) override;
 
-    /**
-    * Gets a set of pose estimates computed by the localization algorithm.
-    * @return true/false
-    */
+    bool   getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
     bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
-
-    /**
-    * Gets the current position of the robot w.r.t world reference frame
-    * @param loc the location of the robot
-    * @return true/false
-    */
+    bool   getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
     bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
-
-    /**
-    * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
-    * @param loc the location of the robot
-    * @return true/false
-    */
     bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
-
-    /**
-     * Gets the current position of the robot w.r.t world reference frame, plus the covariance
-     * @param loc the location of the robot
-     * @param cov the 3x3 covariance matrix
-     * @return true/false
-     */
     bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
-
-    /**
-    * Sets the initial pose for the localization algorithm which estimates the current position of the robot w.r.t world reference frame.
-    * @param loc the location of the robot
-    * @param cov the 3x3 covariance matrix
-    * @return true/false
-    */
     bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
-
-    /**
-    * Starts the localization service
-    * @return true/false
-    */
     bool   startLocalizationService() override;
-
-    /**
-    * Stops the localization service
-    * @return true/false
-    */
     bool   stopLocalizationService() override;
 };
 
@@ -147,12 +108,18 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_initial_loc;
     yarp::dev::Nav2D::Map2DLocation     m_initial_device_data;
     yarp::dev::Nav2D::Map2DLocation     m_current_loc;
+    yarp::dev::OdometryData             m_current_odom;
     yarp::dev::Nav2D::Map2DLocation     m_current_device_data;
+
+    //velocity estimation
+    yarp::sig::Vector            m_odom_vel;
+    yarp::sig::Vector            m_robot_vel;
+    iCub::ctrl::AWLinEstimator*  m_estimator;
 
     //map server
     std::string                  m_remote_map;
     yarp::dev::PolyDriver        m_pMap;
-    yarp::dev::IMap2D*           m_iMap;
+    yarp::dev::Nav2D::IMap2D*    m_iMap;
 
     //device
     rs2::pipeline                m_realsense_pipe;
@@ -162,8 +129,15 @@ protected:
 private:
     bool open_device();
 
+    yarp::dev::PolyDriver transformClientDriver;
+    yarp::dev::IFrameTransform *transformClientInt;
+    std::string targetFrame;
+    std::string baseFrame;
+
+
 public:
     t265LocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    ~t265LocalizerThread();
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;
@@ -171,6 +145,7 @@ public:
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
+    bool getCurrentOdom(yarp::dev::OdometryData& odom);
     void odometry_update();
 };
 

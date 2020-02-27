@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     navTestCfg.put("map_locations_server", "/mapServer");
     navTestCfg.put("localization_server",  "/localizationServer");
     yarp::dev::PolyDriver     ddNavClient;
-    yarp::dev::INavigation2D* iNav                 = 0;
+    yarp::dev::Nav2D::INavigation2D* iNav                 = 0;
     bool okClient             = ddNavClient.open(navTestCfg);
     bool okView               = ddNavClient.view(iNav);
     if(!okClient || !okView)
@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
     map_options.put("device", "map2DClient");
     map_options.put("local", "/navigationTest_mapClient");
     map_options.put("remote", "/mapServer");
-    yarp::dev::PolyDriver ddMapClient;
-    yarp::dev::IMap2D* iMap                 = 0;
+    PolyDriver      ddMapClient;
+    IMap2D* iMap    = 0;
     okClient             = ddMapClient.open(map_options);
     okView               = ddMapClient.view(iMap);
     if(!okClient || !okView)

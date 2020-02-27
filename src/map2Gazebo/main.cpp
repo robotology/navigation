@@ -36,9 +36,9 @@ using namespace yarp::dev::Nav2D;
 class map2GazeboModule : public yarp::os::RFModule
 {
 protected:
-    yarp::os::Port               rpcPort;
-    yarp::dev::PolyDriver        m_pMap;
-    yarp::dev::IMap2D*           m_iMap;
+    Port                         rpcPort;
+    PolyDriver                   m_pMap;
+    IMap2D*                      m_iMap;
     MapGrid2D                    m_yarp_map;
     double                       m_ceiling;
     double                       m_floor_c;

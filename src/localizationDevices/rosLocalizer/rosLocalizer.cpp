@@ -39,6 +39,7 @@
 #include "rosLocalizer.h"
 
 using namespace std;
+using namespace yarp::dev;
 using namespace yarp::os;
 using namespace yarp::dev::Nav2D;
 
@@ -64,9 +65,9 @@ bool rosLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::
 }
 
 
-bool   rosLocalizer::getLocalizationStatus(yarp::dev::LocalizationStatusEnum& status)
+bool   rosLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
-    status = yarp::dev::LocalizationStatusEnum::localization_status_localized_ok;
+    status = LocalizationStatusEnum::localization_status_localized_ok;
     return true;
 }
 
@@ -88,6 +89,12 @@ bool   rosLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
 	}
 	yError() << "rosLocalizer thread not running";
     return false;
+}
+
+bool  rosLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+{
+    thread->getCurrentOdom(odom);
+    return true;
 }
 
 bool   rosLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
@@ -132,7 +139,10 @@ rosLocalizerThread::rosLocalizerThread(double _period, yarp::os::Searchable& _cf
       
     m_seq_counter=0;
     m_rosTime = yarp::os::Time::now();
+
+    m_estimator = new iCub::ctrl::AWLinEstimator(3,3);
 }
+
 
 void rosLocalizerThread::publish_map()
 {
@@ -194,6 +204,38 @@ void rosLocalizerThread::run()
         m_localization_data.x = pose[0];
         m_localization_data.y = pose[1];
         m_localization_data.theta = pose[5] * RAD2DEG;
+
+        //velocity estimation block
+        if (1)
+        {
+            m_current_odom_mutex.lock();
+            //m_current_loc is in the world reference frame.
+            // hence this velocity is estimated in the world reference frame.
+            iCub::ctrl::AWPolyElement el;
+            el.data = yarp::sig::Vector(3);
+            el.data[0]=  m_current_odom.odom_x = m_localization_data.x;
+            el.data[1] = m_current_odom.odom_y = m_localization_data.y;
+            el.data[2] = m_current_odom.odom_theta = m_localization_data.theta;
+            el.time = Time::now();
+            m_odom_vel.resize(3,0.0);
+            m_odom_vel = m_estimator->estimate(el);
+            m_current_odom.odom_vel_x = m_odom_vel[0];
+            m_current_odom.odom_vel_y = m_odom_vel[1];
+            m_current_odom.odom_vel_theta = m_odom_vel[2];
+
+            //this is the velocity in robot reference frame.
+            //NB: for a non-holonomic robot robot_vel[1] ~= 0
+            m_robot_vel.resize(3, 0.0);
+            m_robot_vel[0] = m_odom_vel[0] * cos(m_localization_data.theta * DEG2RAD) - m_odom_vel[0] * sin(m_localization_data.theta * DEG2RAD);
+            m_robot_vel[1] = m_odom_vel[1] * sin(m_localization_data.theta * DEG2RAD) + m_odom_vel[1] * cos(m_localization_data.theta * DEG2RAD);
+            m_robot_vel[2] = m_odom_vel[2];
+            m_current_odom.base_vel_x = m_robot_vel[0];
+            m_current_odom.base_vel_y = m_robot_vel[1];
+            m_current_odom.base_vel_theta = m_robot_vel[2];
+
+            m_current_odom_mutex.unlock();
+        }
+
     }
     if (current_time - m_tf_data_received > 0.1)
     {
@@ -316,6 +358,13 @@ bool rosLocalizerThread::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLo
     //data not available. Returning true to prevent message flooding.
     poses.clear();
     return true; 
+}
+
+bool rosLocalizerThread::getCurrentOdom(OdometryData& odom)
+{
+    std::lock_guard<std::mutex> lock(m_current_odom_mutex);
+    odom = m_current_odom;
+    return true;
 }
 
 bool rosLocalizerThread::threadInit()

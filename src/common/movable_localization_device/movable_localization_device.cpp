@@ -37,13 +37,13 @@ void movable_localization_device::relocate_data(Map2DLocation& device_location)
     {
         device_location.x     += m_device_to_robot_transform.x;
         device_location.y     += m_device_to_robot_transform.y;
-        device_location.theta += device_location.theta;
+        device_location.theta += m_device_to_robot_transform.theta;
     }
     else if (m_device_position == DEVICE_FROM_TF_FIXED)
     {
         device_location.x += m_device_to_robot_transform.x;
         device_location.y += m_device_to_robot_transform.y;
-        device_location.theta += device_location.theta;
+        device_location.theta += m_device_to_robot_transform.theta;
     }
     else if (m_device_position == DEVICE_FROM_TF_VARIABLE)
     {

@@ -38,7 +38,7 @@ using namespace yarp::dev::Nav2D;
 
 simpleVelocityNavigation::simpleVelocityNavigation() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
-    m_navigation_status = yarp::dev::navigation_status_idle;
+    m_navigation_status = navigation_status_idle;
     m_localName = "simpleVelocityNavigation";
     m_send_zero_when_expired = false;
 }
@@ -90,14 +90,14 @@ void simpleVelocityNavigation::run()
         if (m_control_out.timeout == std::numeric_limits<double>::infinity())
         {
             send_command(m_control_out);
-            m_navigation_status = yarp::dev::navigation_status_moving;
+            m_navigation_status = navigation_status_moving;
         }
         else
         {
             if ((current_time - m_control_out.reception_time) < m_control_out.timeout)
             {
                 send_command(m_control_out);
-                m_navigation_status = yarp::dev::navigation_status_moving;
+                m_navigation_status = navigation_status_moving;
             }
             else
             {
@@ -111,7 +111,7 @@ void simpleVelocityNavigation::run()
                 {
                     //do not send anything
                 }
-                m_navigation_status = yarp::dev::navigation_status_idle;
+                m_navigation_status = navigation_status_idle;
             }
         }
     }
@@ -160,7 +160,7 @@ bool simpleVelocityNavigation::applyVelocityCommand(double x_vel, double y_vel, 
     return true;
 }
 
-bool simpleVelocityNavigation::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
+bool simpleVelocityNavigation::getNavigationStatus(NavigationStatusEnum& status)
 {
     status = m_navigation_status;
     return true;
@@ -214,7 +214,7 @@ bool simpleVelocityNavigation::recomputeCurrentNavigationPath()
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
+bool simpleVelocityNavigation::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     yError() << "getCurrentNavigationMap() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;

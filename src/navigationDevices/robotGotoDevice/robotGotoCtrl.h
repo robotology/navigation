@@ -133,7 +133,7 @@ protected:
     PolyDriver                      m_pLas;
     PolyDriver                      m_pLoc;
     IRangefinder2D*                 m_iLaser;
-    ILocalization2D*                m_iLoc;
+    Nav2D::ILocalization2D*         m_iLoc;
 
     //yarp ports
     BufferedPort<yarp::sig::Vector> m_port_target_input;
@@ -155,8 +155,8 @@ protected:
     target_type                        m_target_data;
     std::vector<LaserMeasurementData>  m_laser_data;
     
-    NavigationStatusEnum m_status;
-    NavigationStatusEnum m_status_after_approach;
+    Nav2D::NavigationStatusEnum m_status;
+    Nav2D::NavigationStatusEnum m_status_after_approach;
     double               m_retreat_duration_time;
     double               m_retreat_starting_time;
     bool                 m_useGoalFromRosTopic;
@@ -262,7 +262,7 @@ public:
     * Returns the current navigation status, used by the internal finite-state machine
     * @return the internal navigation status, expressed as an enum
     */
-    NavigationStatusEnum getNavigationStatusAsInt();
+    Nav2D::NavigationStatusEnum getNavigationStatusAsInt();
     
     /**
     * Retrieves the current target, expressed in absolute (map) reference frame

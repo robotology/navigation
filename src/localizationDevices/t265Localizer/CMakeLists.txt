@@ -26,6 +26,7 @@ if(ENABLE_navmod_t265Localizer)
                                        YARP::YARP_sig
                                        YARP::YARP_dev
                                        YARP::YARP_math
+                                       ctrlLib
                                        navigation_lib
                                        ${realsense2_LIBRARY})
 

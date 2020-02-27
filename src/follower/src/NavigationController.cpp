@@ -22,6 +22,7 @@ using namespace FollowerTarget;
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 {
@@ -111,7 +112,7 @@ bool NavigationController::startAutonomousNav(double x, double y, double theta)
 
 }
 
-yarp::dev::NavigationStatusEnum NavigationController::getNavigationStatus(void)
+NavigationStatusEnum NavigationController::getNavigationStatus(void)
 {
     NavigationStatusEnum status=navigation_status_error ;
     if(nullptr == m_iNav)

@@ -47,7 +47,7 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_rosTopicName_feedback = "/move_base/feedback";
     m_rosTopicName_status = "/move_base/status";
     m_rosTopicName_result = "/move_base/result";
-    m_navigation_status = yarp::dev::navigation_status_idle;
+    m_navigation_status = navigation_status_idle;
     m_local_name_prefix = "/rosNavigator";
     m_remote_localization = "/localizationServer";
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
@@ -306,10 +306,10 @@ void rosNavigator::run()
         switch (feedback->status.status)
         {
            case feedback->status.PENDING: {} break;
-           case feedback->status.ACTIVE: {m_navigation_status = yarp::dev::navigation_status_moving; } break;
+           case feedback->status.ACTIVE: {m_navigation_status = navigation_status_moving; } break;
            case feedback->status.PREEMPTED: {} break;
-           case feedback->status.SUCCEEDED: {m_navigation_status = yarp::dev::navigation_status_goal_reached; } break;
-           case feedback->status.ABORTED: {m_navigation_status = yarp::dev::navigation_status_aborted; } break;
+           case feedback->status.SUCCEEDED: {m_navigation_status = navigation_status_goal_reached; } break;
+           case feedback->status.ABORTED: {m_navigation_status = navigation_status_aborted; } break;
            case feedback->status.REJECTED: {} break;
            case feedback->status.PREEMPTING: {} break;
            case feedback->status.RECALLING: {} break;
@@ -322,7 +322,7 @@ void rosNavigator::run()
 
 bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_idle)
+    if (m_navigation_status == navigation_status_idle)
     {
         yarp::rosmsg::geometry_msgs::Pose gpose;
         gpose.position.x = loc.x;
@@ -377,7 +377,7 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 
 bool rosNavigator::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_idle)
+    if (m_navigation_status == navigation_status_idle)
     {
         Map2DLocation loc;
         loc.map_id = m_current_position.map_id;
@@ -392,7 +392,7 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y, double theta
 
 bool rosNavigator::gotoTargetByRelativeLocation(double x, double y)
 {
-    if (m_navigation_status == yarp::dev::navigation_status_idle)
+    if (m_navigation_status == navigation_status_idle)
     {
         Map2DLocation loc;
         loc.map_id = m_current_position.map_id;
@@ -411,7 +411,7 @@ bool rosNavigator::applyVelocityCommand(double x_vel, double y_vel, double theta
     return true;
 }
 
-bool rosNavigator::getNavigationStatus(yarp::dev::NavigationStatusEnum& status)
+bool rosNavigator::getNavigationStatus(NavigationStatusEnum& status)
 {
     status = m_navigation_status;
     return true;
@@ -424,7 +424,7 @@ bool rosNavigator::stopNavigation()
     goal_id.id = "goal_0";
     m_rosPublisher_cancel.write();
 
-    m_navigation_status = yarp::dev::navigation_status_idle;
+    m_navigation_status = navigation_status_idle;
     return true;
 }
 
@@ -471,14 +471,14 @@ bool rosNavigator::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
     return false;
 }
 
-bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_type, MapGrid2D& map)
+bool rosNavigator::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
-    if (map_type == yarp::dev::NavigationMapTypeEnum::global_map)
+    if (map_type == NavigationMapTypeEnum::global_map)
     {
         map = m_global_map;
         return true;
     }
-    else if (map_type == yarp::dev::NavigationMapTypeEnum::local_map)
+    else if (map_type == NavigationMapTypeEnum::local_map)
     {
         map = m_local_map;
         return true;
@@ -489,7 +489,7 @@ bool rosNavigator::getCurrentNavigationMap(yarp::dev::NavigationMapTypeEnum map_
 
 bool rosNavigator::recomputeCurrentNavigationPath()
 {
-    if (m_navigation_status == yarp::dev::navigation_status_moving)
+    if (m_navigation_status == navigation_status_moving)
     {
         yDebug() << "Not yet implemented";
         return false;
