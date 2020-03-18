@@ -31,6 +31,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
+#include <yarp/dev/MobileBaseVelocity.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IJoypadController.h>
 #include <yarp/os/RateThread.h>
@@ -126,9 +127,9 @@ protected:
     bool                              rosInputEnabled;
 
     // YARP ports input
-    BufferedPort<Bottle>              port_movement_control;
-    BufferedPort<Bottle>              port_auxiliary_control;
-    BufferedPort<Bottle>*             port_joystick_control[2];
+    BufferedPort<Bottle>                          port_movement_control;
+    BufferedPort<yarp::dev::MobileBaseVelocity>   port_auxiliary_control;
+    BufferedPort<Bottle>*                         port_joystick_control[2];
 
     //Joypad input
     PolyDriver                        joyPolyDriver[2];

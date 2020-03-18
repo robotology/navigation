@@ -25,6 +25,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#ifndef RAD2DEG
+#define RAD2DEG 180.0/M_PI
+#endif 
+
 void Input::printStats()
 {
     yInfo( "* Input thread:\n");
@@ -562,33 +566,13 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     }
 
     //- - -read aux port - - -
-    if (Bottle *b = port_auxiliary_control.read(false))
+    if (yarp::dev::MobileBaseVelocity *b = port_auxiliary_control.read(false))
     {
-        if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
-        {
-            read_percent_polar(b, aux_desired_direction,aux_linear_speed,aux_angular_speed,aux_pwm_gain);
-            wdt_old_aux_cmd = wdt_aux_cmd;
-            wdt_aux_cmd = Time::now();
-            auxiliary_received = 100;
-        }
-        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_POLAR)
-        {
-            read_speed_polar(b, aux_desired_direction,aux_linear_speed,aux_angular_speed,aux_pwm_gain);
-            wdt_old_aux_cmd = wdt_aux_cmd;
-            wdt_aux_cmd = Time::now();
-            auxiliary_received = 100;
-        }
-        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
-        {
-            read_speed_cart(b, aux_desired_direction,aux_linear_speed,aux_angular_speed,aux_pwm_gain);
-            wdt_old_aux_cmd = wdt_aux_cmd;
-            wdt_aux_cmd = Time::now();
-            auxiliary_received = 100;
-        }
-        else
-        {
-            yError() << "Invalid format received on port_auxiliary_control";
-        }
+        aux_desired_direction = atan2(b->vel_y, b->vel_x)*RAD2DEG;
+        aux_linear_speed  = sqrt((b->vel_x*b->vel_x)+ (b->vel_y * b->vel_y));
+        aux_angular_speed = b->vel_theta;
+        aux_pwm_gain = 100;
+        auxiliary_received = 100;
     }
     
     //- - - read ROS commands - - -
