@@ -26,6 +26,7 @@ add_subdirectory(map2Gazebo)
 
 add_subdirectory(follower)
 
+add_subdirectory(portmonitors)
 add_subdirectory(tests)
 add_subdirectory(tutorials)
 
