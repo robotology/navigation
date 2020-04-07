@@ -36,6 +36,6 @@ private:
 public:
     localization_device_with_estimated_odometry();
     virtual ~localization_device_with_estimated_odometry();
-    yarp::dev::OdometryData estimate(const yarp::dev::Nav2D::Map2DLocation& m_localization_data);
+    yarp::dev::OdometryData estimateOdometry(const yarp::dev::Nav2D::Map2DLocation& m_localization_data);
     yarp::dev::OdometryData getOdometry();
 };

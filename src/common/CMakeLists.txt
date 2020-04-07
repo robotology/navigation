@@ -28,6 +28,7 @@ set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       ${navigati
 
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/recovery_behaviors>" 
                                                          "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/movable_localization_device>"
+                                                         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/odometry_estimation>"
                                                          "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                          "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
 

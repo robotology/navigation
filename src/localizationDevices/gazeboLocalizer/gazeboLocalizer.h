@@ -32,6 +32,7 @@
 #include <math.h>
 #include <mutex>
 #include <yarp/dev/IMap2D.h>
+#include <localization_device_with_estimated_odometry.h>
 
 #ifndef GAZEBO_LOCALIZER_H
 #define GAZEBO_LOCALIZER_H
@@ -81,7 +82,8 @@ public:
     bool   stopLocalizationService() override;
 };
 
-class gazeboLocalizerThread : public yarp::os::PeriodicThread
+class gazeboLocalizerThread : public yarp::os::PeriodicThread,
+                              public localization_device_with_estimated_odometry
 {
 protected:
     //general
