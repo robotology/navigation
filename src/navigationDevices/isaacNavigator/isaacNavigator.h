@@ -61,7 +61,10 @@ protected:
     yarp::dev::Nav2D::MapGrid2D       m_global_map;
 
     //ISAAC
-    //@@@
+    std::string m_port_navigation_status_name;
+    std::string m_port_navigation_command_name;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_port_navigation_status;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_port_navigation_command;
 
 public:
     isaacNavigator();

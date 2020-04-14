@@ -30,6 +30,7 @@
 #include <yarp/math/Math.h>
 #include "isaacNavigator.h"
 
+using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
@@ -41,10 +42,12 @@ using namespace yarp::dev::Nav2D;
 isaacNavigator::isaacNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
     m_navigation_status = navigation_status_idle;
-    m_local_name_prefix = "/rosNavigator";
+    m_local_name_prefix = "/isaacNavigator";
     m_remote_localization = "/localizationServer";
 //    m_abs_frame_id = "/odom";
     m_abs_frame_id = "/map";
+    m_port_navigation_status_name= m_local_name_prefix+string("/status:i");
+    m_port_navigation_command_name= m_local_name_prefix+ string("/command:o");
 }
 
 bool isaacNavigator::open(yarp::os::Searchable& config)
@@ -113,12 +116,19 @@ bool isaacNavigator::threadInit()
     m_stats_time_curr = yarp::os::Time::now();
     m_stats_time_last = yarp::os::Time::now();
 
+    //ports to isaac
+    m_port_navigation_status.open(m_port_navigation_status_name);
+    m_port_navigation_command.open(m_port_navigation_command_name);
     return true;
 }
 
 void isaacNavigator::threadRelease()
 {
     m_pLoc.close();
+    m_port_navigation_status.interrupt();
+    m_port_navigation_status.close();
+    m_port_navigation_command.interrupt();
+    m_port_navigation_command.close();
 }
 
 void isaacNavigator::run()
@@ -149,14 +159,44 @@ void isaacNavigator::run()
 
     bool b1 = m_iLoc->getCurrentPosition(m_current_position);
 
-    //@@@
+    // ISAAC feedback
+    yarp::os::Bottle* feedback = m_port_navigation_status.read(false);
+    if (feedback)
+    {
+        Bottle* goal_rel_loc     = feedback->get(0).asList();
+        bool    has_goal         = feedback->get(1).asBool();
+        bool    is_arrived       = feedback->get(2).asBool();
+        bool    is_stationary    = feedback->get(3).asBool();
+    }
+
+    //statemachine
+    switch (m_navigation_status)
+    {
+        case NavigationStatusEnum::navigation_status_aborted:
+        case NavigationStatusEnum::navigation_status_error:
+        break;
+
+        case NavigationStatusEnum::navigation_status_idle:
+        case NavigationStatusEnum::navigation_status_moving:
+        case NavigationStatusEnum::navigation_status_waiting_obstacle:
+        case NavigationStatusEnum::navigation_status_goal_reached:
+        case NavigationStatusEnum::navigation_status_failing:
+        case NavigationStatusEnum::navigation_status_paused:
+        case NavigationStatusEnum::navigation_status_preparing_before_move:
+        case NavigationStatusEnum::navigation_status_thinking:
+
+        break;
+    }
 }
 
 bool isaacNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocation loc)
 {
     if (m_navigation_status == yarp::dev::Nav2D::navigation_status_idle)
     {
-        //@@@
+        auto& cmd = m_port_navigation_command.prepare();
+        cmd.clear();
+        m_port_navigation_command.write();
+        m_navigation_status = yarp::dev::Nav2D::navigation_status_thinking;
         return true;
     }
     yError() << "A navigation task is already running. Stop it first";
@@ -201,8 +241,9 @@ bool isaacNavigator::getNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum&
 
 bool isaacNavigator::stopNavigation()
 {
-    //@@@
-
+    auto& cmd= m_port_navigation_command.prepare();
+    cmd.clear();
+    m_port_navigation_command.write();
     m_navigation_status = yarp::dev::Nav2D::navigation_status_idle;
     return true;
 }
@@ -245,11 +286,7 @@ bool isaacNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::Map2DPath& wayp
     return false;
 }
 
-/**
-* Returns the current waypoint pursued by the navigation algorithm
-* @param curr_waypoint the current waypoint pursued by the navigation algorithm
-* @return true/false
-*/
+
 bool isaacNavigator::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation& curr_waypoint)
 {
     yDebug() << "Not yet implemented";
@@ -285,15 +322,15 @@ bool isaacNavigator::recomputeCurrentNavigationPath()
 
 std::string isaacNavigator::getStatusAsString(NavigationStatusEnum status)
 {
-    if (status == navigation_status_idle) return std::string("navigation_status_idle");
-    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
+    if      (status == navigation_status_idle)     return std::string("navigation_status_idle");
+    else if (status == navigation_status_moving)   return std::string("navigation_status_moving");
     else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
-    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
-    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
-    else if (status == navigation_status_failing) return std::string("navigation_status_failing");
-    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
+    else if (status == navigation_status_goal_reached)     return std::string("navigation_status_goal_reached");
+    else if (status == navigation_status_aborted)  return std::string("navigation_status_aborted");
+    else if (status == navigation_status_failing)  return std::string("navigation_status_failing");
+    else if (status == navigation_status_paused)   return std::string("navigation_status_paused");
     else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
     else if (status == navigation_status_thinking) return std::string("navigation_status_thinking");
-    else if (status == navigation_status_error) return std::string("navigation_status_error");
+    else if (status == navigation_status_error)    return std::string("navigation_status_error");
     return std::string("navigation_status_error");
 }

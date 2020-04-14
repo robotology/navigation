@@ -149,7 +149,6 @@ void isaacLocalizerThread::run()
         m_last_statistics_printed = yarp::os::Time::now();
     }
 
-    LockGuard lock(m_mutex);
     yarp::sig::Vector iv;
     yarp::sig::Vector pose;
     iv.resize(6, 0.0);
