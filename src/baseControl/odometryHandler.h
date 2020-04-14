@@ -173,18 +173,6 @@ public:
     * @return the current angular velocity
     */
     virtual double get_base_vel_theta();
-
-    /**
-    * Returns the linear velocity coefficient, defined by robot kinematic model
-    * @return the coefficient
-    */
-    virtual double get_vlin_coeff() = 0;
-
-    /**
-    * Returns the angular velocity coefficient, defined by robot kinematic model
-    * @return the coefficient
-    */
-    virtual double get_vang_coeff() = 0;
 };
 
 #endif

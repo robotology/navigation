@@ -141,7 +141,7 @@ void ControlThread::apply_acceleration_limiter(double& linear_speed, double& ang
     xcomp = control_filters::ratelim_filter_0(xcomp, 8, max_linear_acc*period);
     ycomp = control_filters::ratelim_filter_0(ycomp, 9, max_linear_acc*period);
     linear_speed = sqrt(xcomp * xcomp+ ycomp * ycomp);
-    desired_direction = atan2(xcomp, ycomp) * 180.0 / M_PI;
+    desired_direction = atan2(xcomp, ycomp) * RAD2DEG;
 #endif
 
     #if DEBUG_LIMTER

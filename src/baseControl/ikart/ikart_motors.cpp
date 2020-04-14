@@ -113,9 +113,9 @@ void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_
     //wheel contribution calculation
     double wheels_off = 0;
 
-    F[0] = - appl_linear_speed * cos((-30 - 120 + appl_desired_direction + wheels_off) / 180.0 * M_PI) - appl_angular_speed;
-    F[1] = - appl_linear_speed * cos((-30 + 0   + appl_desired_direction + wheels_off) / 180.0 * M_PI) - appl_angular_speed;
-    F[2] = - appl_linear_speed * cos((-30 + 120 + appl_desired_direction + wheels_off) / 180.0 * M_PI) - appl_angular_speed;
+    F[0] = - appl_linear_speed * cos((-30 - 120 + appl_desired_direction + wheels_off) * DEG2RAD) - appl_angular_speed;
+    F[1] = - appl_linear_speed * cos((-30 + 0   + appl_desired_direction + wheels_off) * DEG2RAD) - appl_angular_speed;
+    F[2] = - appl_linear_speed * cos((-30 + 120 + appl_desired_direction + wheels_off) * DEG2RAD) - appl_angular_speed;
 }
 
 void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)

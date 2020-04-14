@@ -383,7 +383,7 @@ void Input::read_percent_cart(const Bottle *b, double& des_dir, double& lin_spd,
     double y_speed = b->get(2).asDouble();
     double t_speed = b->get(3).asDouble();
     pwm_gain       = b->get(4).asDouble();
-    des_dir        = atan2(y_speed, x_speed) * 180.0 / M_PI;
+    des_dir        = atan2(y_speed, x_speed) * RAD2DEG;
     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
     ang_spd        = t_speed;
     pwm_gain       = (pwm_gain<+100) ? pwm_gain : +100;
@@ -405,7 +405,7 @@ void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, d
      double x_speed = b->get(1).asDouble();
      double y_speed = b->get(2).asDouble();
      double t_speed = b->get(3).asDouble();
-     des_dir        = atan2(y_speed, x_speed) * 180.0 / M_PI;
+     des_dir        = atan2(y_speed, x_speed) * RAD2DEG;
      lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
      ang_spd        = t_speed;
      pwm_gain = b->get(4).asDouble();
@@ -436,7 +436,7 @@ void Input::read_joystick_data(JoyDescription *jDescr, IJoypadController* iJoy, 
     ang_spd       *= jDescr->tAxis.Factor;
     pwm_gain      *= jDescr->gain.Factor;
 
-    des_dir  = atan2(y_speed, x_speed) * 180.0 / M_PI;
+    des_dir  = atan2(y_speed, x_speed) * RAD2DEG;
     lin_spd  = sqrt (x_speed*x_speed+y_speed*y_speed);
     pwm_gain = (pwm_gain<+100) ? pwm_gain : +100;
     pwm_gain = (pwm_gain>0) ? pwm_gain : 0;
@@ -584,7 +584,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
             b.addInt(3);
             b.addDouble(rosTwist->linear.x);
             b.addDouble(rosTwist->linear.y);
-            b.addDouble(rosTwist->angular.z * 180 / M_PI);
+            b.addDouble(rosTwist->angular.z * RAD2DEG);
             b.addDouble(100);
             read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
             wdt_old_ros_cmd   = wdt_ros_cmd;

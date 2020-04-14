@@ -44,13 +44,13 @@ void MotorControl::execute_speed(double appl_linear_speed, double appl_desired_d
     {
         yarp::rosmsg::geometry_msgs::Twist &twist = rosPublisherPort_cmd_twist.prepare();
 
-        twist.linear.x = appl_linear_speed * cos(appl_desired_direction*0.0174532925);
-        twist.linear.y = appl_linear_speed * sin(appl_desired_direction*0.0174532925);
+        twist.linear.x = appl_linear_speed * cos(appl_desired_direction* DEG2RAD);
+        twist.linear.y = appl_linear_speed * sin(appl_desired_direction* DEG2RAD);
         twist.linear.z = 0;
 
         twist.angular.x = 0;
         twist.angular.y = 0;
-        twist.angular.z = appl_angular_speed*0.0174532925;
+        twist.angular.z = appl_angular_speed*DEG2RAD;
 
         rosPublisherPort_cmd_twist.write();
     }
