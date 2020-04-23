@@ -43,92 +43,114 @@ isaacNavigator::isaacNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
     m_navigation_status = navigation_status_idle;
     m_local_name_prefix = "/isaacNavigator";
-    m_remote_localization = "/localizationServer";
-//    m_abs_frame_id = "/odom";
-    m_abs_frame_id = "/map";
+    m_map_dd_enable = false;
+    m_localization_dd_enable = false;
     m_port_navigation_status_name= m_local_name_prefix+string("/status:i");
     m_port_navigation_command_name= m_local_name_prefix+ string("/command:o");
+    m_port_global_trajectory_name = m_local_name_prefix + string("/global_trajectory:i");
+    m_port_local_trajectory_name = m_local_name_prefix + string("/local_trajectory:o");
 }
 
 bool isaacNavigator::open(yarp::os::Searchable& config)
 {
-    //ISAAC
-    //@@@
-
+    //ports for communication with isaac
+    m_port_navigation_status.open(m_port_navigation_status_name);
+    m_port_navigation_command.open(m_port_navigation_command_name);
+    m_port_global_trajectory.open(m_port_global_trajectory_name);
+    m_port_local_trajectory.open(m_port_local_trajectory_name);
     this->start();
     return true;
 }
 
 bool isaacNavigator::close()
 {
+    m_port_navigation_status.interrupt();
+    m_port_navigation_status.close();
+    m_port_navigation_command.interrupt();
+    m_port_navigation_command.close();
+    m_port_global_trajectory.interrupt();
+    m_port_global_trajectory.close();
+    m_port_local_trajectory.interrupt();
+    m_port_local_trajectory.close();
     return true;
 }
 
 bool isaacNavigator::threadInit()
 {
-    //localization
-    Property loc_options;
-    loc_options.put("device", "localization2DClient");
-    loc_options.put("local", m_local_name_prefix + "/localizationClient");
-    loc_options.put("remote", m_remote_localization);
-    if (m_pLoc.open(loc_options) == false)
+    if (m_localization_dd_enable)
     {
-        yError() << "Unable to open localization driver";
-        return false;
-    }
-    m_pLoc.view(m_iLoc);
-    if (m_pLoc.isValid() == false || m_iLoc == 0)
-    {
-        yError() << "Unable to view localization interface";
-        return false;
+        //localization
+        m_remote_localization = "/localizationServer";
+        //m_abs_frame_id = "/odom";
+        m_abs_frame_id = "/map";
+
+        Property loc_options;
+        loc_options.put("device", "localization2DClient");
+        loc_options.put("local", m_local_name_prefix + "/localizationClient");
+        loc_options.put("remote", m_remote_localization);
+        if (m_pLoc.open(loc_options) == false)
+        {
+            yError() << "Unable to open localization driver";
+            return false;
+        }
+        m_pLoc.view(m_iLoc);
+        if (m_pLoc.isValid() == false || m_iLoc == 0)
+        {
+            yError() << "Unable to view localization interface";
+            return false;
+        }
     }
 
-    //map_server
-    Property map_options;
-    map_options.put("device", "map2DClient");
-    map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
-    map_options.put("remote", "/mapServer");
-    if (m_pMap.open(map_options) == false)
-    {
-        yError() << "Unable to open mapClient";
-        return false;
-    }
-    m_pMap.view(m_iMap);
-    if (m_iMap == 0)
-    {
-        yError() << "Unable to open map interface";
-        return false;
-    }
-
-    //get the map
-    yInfo() << "Asking for map 'ros_map'...";
-    bool b = m_iMap->get_map("ros_map",m_global_map);
-    m_global_map.crop(-1,-1,-1,-1);
-    if (b)
-    {
-        yInfo() << "'ros_map' received";
-    }
-    else
-    {
-        yError() << "'ros_map' not found";
+    if (m_map_dd_enable)
+    {    m_remote_localization = "/localizationServer";
+        //map_server
+        Property map_options;
+        map_options.put("device", "map2DClient");
+        map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
+        map_options.put("remote", "/mapServer");
+        if (m_pMap.open(map_options) == false)
+        {
+            yError() << "Unable to open mapClient";
+            return false;
+        }
+        m_pMap.view(m_iMap);
+        if (m_iMap == 0)
+        {
+            yError() << "Unable to open map interface";
+            return false;
+        }
+        
+        //get the map
+        yInfo() << "Asking for map 'isaac_map'...";
+        bool b = m_iMap->get_map("isaac_map",m_global_map);
+        m_global_map.crop(-1,-1,-1,-1);
+        if (b)
+        {
+            yInfo() << "'isaac_map' received";
+        }
+        else
+        {
+            yError() << "'isaac_map' not found";
+        }
     }
 
     m_stats_time_curr = yarp::os::Time::now();
     m_stats_time_last = yarp::os::Time::now();
 
-    //ports to isaac
-    m_port_navigation_status.open(m_port_navigation_status_name);
-    m_port_navigation_command.open(m_port_navigation_command_name);
     return true;
 }
 
 void isaacNavigator::threadRelease()
 {
-    m_pLoc.close();
-    m_port_navigation_status.interrupt();
-    m_port_navigation_status.close();
-    m_port_navigation_command.interrupt();
-    m_port_navigation_command.close();
+    if (m_map_dd_enable)
+    {
+        m_pMap.close();
+    }
+
+    if (m_localization_dd_enable)
+    {
+        m_pLoc.close();
+    }
 }
 
 void isaacNavigator::run()
@@ -138,21 +160,13 @@ void isaacNavigator::run()
     {
         m_stats_time_last = m_stats_time_curr;
         bool err = false;
-        /*if (m_laser_timeout_counter > TIMEOUT_MAX)
-        {
-            yError("timeout, no laser data received!\n");
-            err = true;
-        }
+        /*
         if (m_loc_timeout_counter > TIMEOUT_MAX)
         {
             yError(" timeout, no localization data received!\n");
             err = true;
         }
-        if (m_inner_status_timeout_counter > TIMEOUT_MAX)
-        {
-            yError("timeout, no status info received!\n");
-            err = true;
-        }*/
+        */
         if (err == false)
             yInfo() << "isaacNavigator running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
     }
@@ -243,6 +257,18 @@ bool isaacNavigator::stopNavigation()
 {
     auto& cmd= m_port_navigation_command.prepare();
     cmd.clear();
+    //map location
+    yarp::os::Bottle& loc = cmd.addList();
+    loc.addString("");
+    loc.addFloat64(0.0);
+    loc.addFloat64(0.0);
+    loc.addFloat64(0.0);
+    //goal tolerance
+    cmd.addFloat64(0.0);
+    //stop command
+    cmd.addBool(true);
+    //reference frame
+    cmd.addString("stop");
     m_port_navigation_command.write();
     m_navigation_status = yarp::dev::Nav2D::navigation_status_idle;
     return true;
@@ -264,8 +290,23 @@ bool isaacNavigator::getRelativeLocationOfCurrentTarget(double& x, double& y, do
 
 bool isaacNavigator::suspendNavigation(double time)
 {
-    yError() << "Unable to pause current navigation task";
-    return false;
+    auto& cmd = m_port_navigation_command.prepare();
+    cmd.clear();
+    //map location
+    yarp::os::Bottle& loc = cmd.addList();
+    loc.addString("");
+    loc.addFloat64(0.0);
+    loc.addFloat64(0.0);
+    loc.addFloat64(0.0);
+    //goal tolerance
+    cmd.addFloat64(0.0);
+    //stop command
+    cmd.addBool(true);
+    //reference frame
+    cmd.addString("stop");
+    m_port_navigation_command.write();
+    m_navigation_status = yarp::dev::Nav2D::navigation_status_idle;
+    return true;
 }
 
 bool isaacNavigator::resumeNavigation()
@@ -282,15 +323,17 @@ bool isaacNavigator::applyVelocityCommand(double x_vel, double y_vel, double the
 
 bool isaacNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::Map2DPath& waypoints)
 {
-    yDebug() << "Not yet implemented";
-    return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    waypoints = m_global_plan;
+    return true;
 }
 
 
 bool isaacNavigator::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation& curr_waypoint)
 {
-    yDebug() << "Not yet implemented";
-    return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    curr_waypoint = m_current_waypoint;
+    return true;
 }
 
 bool isaacNavigator::getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapTypeEnum map_type, yarp::dev::Nav2D::MapGrid2D& map)

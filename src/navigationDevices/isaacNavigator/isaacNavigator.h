@@ -42,6 +42,10 @@ class isaacNavigator : public yarp::dev::DeviceDriver,
     public yarp::dev::Nav2D::INavigation2DControlActions
 {
 protected:
+    bool m_map_dd_enable;
+    bool m_localization_dd_enable;
+
+    std::mutex                          m_mutex;
     yarp::dev::PolyDriver               m_pLoc;
     yarp::dev::Nav2D::ILocalization2D*  m_iLoc;
     yarp::dev::PolyDriver               m_pMap;
@@ -53,6 +57,9 @@ protected:
     std::string                       m_remote_localization;
     yarp::dev::Nav2D::Map2DLocation   m_current_position;
     yarp::dev::Nav2D::Map2DLocation   m_current_goal;
+    yarp::dev::Nav2D::Map2DLocation   m_current_waypoint;
+    yarp::dev::Nav2D::Map2DPath       m_global_plan;
+    yarp::dev::Nav2D::Map2DPath       m_local_plan;
 
     double                            m_stats_time_curr;
     double                            m_stats_time_last;
@@ -63,8 +70,12 @@ protected:
     //ISAAC
     std::string m_port_navigation_status_name;
     std::string m_port_navigation_command_name;
+    std::string m_port_global_trajectory_name;
+    std::string m_port_local_trajectory_name;
     yarp::os::BufferedPort<yarp::os::Bottle> m_port_navigation_status;
     yarp::os::BufferedPort<yarp::os::Bottle> m_port_navigation_command;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_port_global_trajectory;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_port_local_trajectory;
 
 public:
     isaacNavigator();
