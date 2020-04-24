@@ -264,9 +264,23 @@ bool isaacNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocatio
     if (m_navigation_status == yarp::dev::Nav2D::navigation_status_idle)
     {
         auto& cmd = m_port_navigation_command.prepare();
-        cmd.clear();
-        m_port_navigation_command.write();
-        m_navigation_status = yarp::dev::Nav2D::navigation_status_thinking;
+		cmd.clear();
+		//map location
+		yarp::os::Bottle& locb = cmd.addList();
+		locb.addString(loc.map_id);
+		locb.addFloat64(loc.x);
+		locb.addFloat64(loc.y);
+		locb.addFloat64(loc.theta );
+		//goal tolerance
+		cmd.addFloat64(0.2);
+		//stop command
+		//cmd.addBool(false); //@@@@
+		cmd.addInt(0);
+		//reference frame
+		cmd.addString("world");
+		m_port_navigation_command.write();
+        m_navigation_status = yarp::dev::Nav2D::navigation_status_moving;
+        m_current_goal = loc;
         return true;
     }
     yError() << "A navigation task is already running. Stop it first";
@@ -363,13 +377,34 @@ bool isaacNavigator::suspendNavigation(double time)
     //reference frame
     cmd.addString("stop");
     m_port_navigation_command.write();
-    m_navigation_status = yarp::dev::Nav2D::navigation_status_idle;
+    m_navigation_status = yarp::dev::Nav2D::navigation_status_paused;
     return true;
 }
 
 bool isaacNavigator::resumeNavigation()
 {
-    yError() << "Unable to resume any paused navigation task";
+    if (m_navigation_status == yarp::dev::Nav2D::navigation_status_paused)
+    {
+        auto& cmd = m_port_navigation_command.prepare();
+		cmd.clear();
+		//map location
+		yarp::os::Bottle& locb = cmd.addList();
+		locb.addString(m_current_goal.map_id);
+		locb.addFloat64(m_current_goal.x);
+		locb.addFloat64(m_current_goal.y);
+		locb.addFloat64(m_current_goal.theta );
+		//goal tolerance
+		cmd.addFloat64(0.2);
+		//stop command
+		//cmd.addBool(false); //@@@@
+		cmd.addInt(0);
+		//reference frame
+		cmd.addString("world");
+		m_port_navigation_command.write();
+        m_navigation_status = yarp::dev::Nav2D::navigation_status_moving;
+        return true;
+    }
+    yError() << "No navigation tasks to resume";
     return false;
 }
 
