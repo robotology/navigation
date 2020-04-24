@@ -83,37 +83,43 @@ bool   isaacLocalizer::getCurrentPosition(Map2DLocation& loc)
 
 bool   isaacLocalizer::setInitialPose(const Map2DLocation& loc)
 {
-    yError() << "isaacLocalizer not yet implemented";
+    yError() << "isaacLocalizer setInitialPose not yet implemented";
     return false;
 }
 
 bool isaacLocalizer::startLocalizationService()
 {
-    yError() << "isaacLocalizer not yet implemented";
+    yError() << "isaacLocalizer startLocalizationService not yet implemented";
     return false;
 }
 
 bool isaacLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    yError() << "isaacLocalizer not yet implemented";
+    yError() << "isaacLocalizer getEstimatedOdometry not yet implemented";
     return false;
 }
 
 bool isaacLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yError() << "isaacLocalizer not yet implemented";
+    if (thread)
+    {
+        yWarning() << "isaacLocalizer covariance matrix not set";
+        thread->getCurrentLoc(loc);
+        return true;
+    }
+    yError() << "isaacLocalizer thread not running";
     return false;
 }
 
 bool isaacLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    yError() << "isaacLocalizer not yet implemented";
+    yError() << "isaacLocalizer setInitialPose not yet implemented";
     return false;
 }
 
 bool isaacLocalizer::stopLocalizationService()
 {
-    yError() << "isaacLocalizer not yet implemented";
+    yError() << "isaacLocalizer stopLocalizationService not yet implemented";
     return false;
 }
 
@@ -121,11 +127,7 @@ bool isaacLocalizer::stopLocalizationService()
 
 isaacLocalizerThread::isaacLocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
 {
-    m_iMap = 0;
-    m_iTf = 0;
-    m_ros_enabled = false;
     m_module_name = "localizationServer";
-    m_tf_data_received = -1;
     m_last_statistics_printed = -1;
 
     m_localization_data.map_id = "unknown";
@@ -153,19 +155,6 @@ void isaacLocalizerThread::run()
     yarp::sig::Vector pose;
     iv.resize(6, 0.0);
     pose.resize(6, 0.0);
-    bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
-    if (r)
-    {
-        //data is formatted as follows: x, y, angle (in degrees)
-        m_tf_data_received = yarp::os::Time::now();
-        m_localization_data.x = pose[0];
-        m_localization_data.y = pose[1];
-        m_localization_data.theta = pose[5] * RAD2DEG;
-    }
-    if (current_time - m_tf_data_received > 0.1)
-    {
-        yWarning() << "No localization data received for more than 0.1s!";
-    }
     
     //republish the map periodically
     if (0)
@@ -182,19 +171,6 @@ bool isaacLocalizerThread::initializeLocalization(Map2DLocation& loc)
 {
     m_localization_data.map_id = loc.map_id;
     
-    if (m_iMap)
-    {
-        bool b = m_iMap->get_map(m_localization_data.map_id, m_current_map);
-        if (b==false)
-        {
-            yError() << "Map "<<m_localization_data.map_id << " not found.";
-        }
-        else
-        {
-            publish_map();
-        }
-    }
-
     m_localization_data.x = loc.x;
     m_localization_data.y = loc.y;
     m_localization_data.theta = loc.theta;
@@ -227,106 +203,20 @@ bool isaacLocalizerThread::threadInit()
         return false;
     }
 
-    Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
-    if (localization_group.isNull())
-    {
-        yError() << "Missing LOCALIZATION group!";
-        return false;
-    }
-
-    Bottle tf_group = m_cfg.findGroup("TF");
-    if (tf_group.isNull())
-    {
-        yError() << "Missing TF group!";
-        return false;
-    }
-
-    Bottle map_group = m_cfg.findGroup("MAP");
-    if (map_group.isNull())
-    {
-        yError() << "Missing MAP group!";
-        return false;
-    }
-    yDebug() << map_group.toString();
-
     //general group
-    if (general_group.check("module_name") == false)
+    /*if (general_group.check("module_name") == false)
     {
         yError() << "Missing `module_name` in [GENERAL] group";
         return false;
     }
     m_module_name = general_group.find("module_name").asString();
+    */
 
     //initialize an occupancy grid publisher (every time the localization is re-initialized, the map is published too)
     //@@@
 
      //initialize an initial pose publisher
     //@@@
-
-    //map server group
-    yDebug() << map_group.toString();
-
-    if (map_group.check("connect_to_yarp_mapserver") == false)
-    {
-        yError() << "Missing `connect_to_yarp_mapserver` in [MAP] group";
-        return false;
-    }
-    m_use_map_server= (map_group.find("connect_to_yarp_mapserver").asInt()==1);
-
-    //tf group
-    if (tf_group.check("map_frame_id") == false)
-    {
-        yError() << "Missing `map_frame_id` in [TF] group";
-        return false;
-    }
-    if (tf_group.check("robot_frame_id") == false)
-    {
-        yError() << "Missing `robot_frame_id` in [TF] group";
-        return false;
-    }
-    m_frame_map_id = tf_group.find("map_frame_id").asString();
-    m_frame_robot_id = tf_group.find("robot_frame_id").asString();
-
-
-    //opens a client to receive localization data from transformServer
-    Property options;
-    options.put("device", "transformClient");
-    options.put("local", "/"+m_module_name + "/TfClient");
-    options.put("remote", "/transformServer");
-    if (m_ptf.open(options) == false)
-    {
-        yError() << "Unable to open transform client";
-        return false;
-    }
-    m_ptf.view(m_iTf);
-    if (m_ptf.isValid() == false || m_iTf == 0)
-    {
-        yError() << "Unable to view iTransform interface";
-        return false;
-    }
-
-    if (m_use_map_server)
-    {
-        //opens a client to send/received data from mapServer
-        Property map_options;
-        map_options.put("device", "map2DClient");
-        map_options.put("local", "/" +m_module_name); //This is just a prefix. map2DClient will complete the port name.
-        map_options.put("remote", "/mapServer");
-        if (m_pmap.open(map_options) == false)
-        {
-            yWarning() << "Unable to open mapClient";
-        }
-        else
-        {
-            yInfo() << "Opened mapClient";
-            m_pmap.view(m_iMap);
-            if (m_pmap.isValid() == false || m_iMap == 0)
-            {
-                yError() << "Unable to view map interface";
-                return false;
-            }
-        }
-    }
 
     //initial location initialization
     if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
@@ -344,14 +234,6 @@ bool isaacLocalizerThread::threadInit()
 
 void isaacLocalizerThread::threadRelease()
 {
-    if (m_ptf.isValid())
-    {
-        m_ptf.close();
-    }
-    if (m_pmap.isValid())
-    {
-        m_pmap.close();
-    }
 }
 
 bool isaacLocalizer::open(yarp::os::Searchable& config)

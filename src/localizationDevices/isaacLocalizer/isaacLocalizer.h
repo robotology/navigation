@@ -119,23 +119,6 @@ protected:
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
 
-    //configuration options
-    bool                         m_ros_enabled;
-    bool                         m_use_localization_from_odometry_port;
-    bool                         m_use_localization_from_tf;
-    bool                         m_use_map_server;
-
-    //tf data
-    yarp::dev::PolyDriver        m_ptf;
-    yarp::dev::IFrameTransform*  m_iTf;
-    double                       m_tf_data_received;
-    std::string                  m_frame_robot_id;
-    std::string                  m_frame_map_id;
-
-    //map interface 
-    yarp::dev::PolyDriver        m_pmap;
-    yarp::dev::Nav2D::IMap2D*    m_iMap;
-
     //ISAAC
     //@@@
 

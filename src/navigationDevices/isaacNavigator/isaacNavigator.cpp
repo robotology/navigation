@@ -48,16 +48,32 @@ isaacNavigator::isaacNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_port_navigation_status_name= m_local_name_prefix+string("/status:i");
     m_port_navigation_command_name= m_local_name_prefix+ string("/command:o");
     m_port_global_trajectory_name = m_local_name_prefix + string("/global_trajectory:i");
-    m_port_local_trajectory_name = m_local_name_prefix + string("/local_trajectory:o");
+    m_port_local_trajectory_name = m_local_name_prefix + string("/local_trajectory:i");
 }
 
 bool isaacNavigator::open(yarp::os::Searchable& config)
 {
+    m_iLoc = nullptr;
+    m_iMap = nullptr;
     //ports for communication with isaac
     m_port_navigation_status.open(m_port_navigation_status_name);
     m_port_navigation_command.open(m_port_navigation_command_name);
     m_port_global_trajectory.open(m_port_global_trajectory_name);
     m_port_local_trajectory.open(m_port_local_trajectory_name);
+    if (config.check("autoconnect"))
+    {
+       bool ret = true;
+       ret &= yarp::os::Network::connect("/yarpbridge/goalfeedback:o", m_port_navigation_status_name);
+       ret &= yarp::os::Network::connect(m_port_navigation_command_name,"/yarpbridge/goal:i");
+       ret &= yarp::os::Network::connect("/yarpbridge/plan:o", m_port_global_trajectory_name);
+       ret &= yarp::os::Network::connect("/yarpbridge/differential_trajectory_plan:o", m_port_local_trajectory_name);
+       if (!ret)
+       {
+           yError() << "Autoconnect failed";
+           return false;
+       }
+    }
+
     this->start();
     return true;
 }
@@ -171,9 +187,47 @@ void isaacNavigator::run()
             yInfo() << "isaacNavigator running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
     }
 
-    bool b1 = m_iLoc->getCurrentPosition(m_current_position);
+    //robot position
+    if (m_iLoc)
+    {
+        bool b1 = m_iLoc->getCurrentPosition(m_current_position);
+    }
 
     // ISAAC feedback
+    yarp::os::Bottle* plan = m_port_global_trajectory.read(false);
+    if (plan)
+    {
+        m_global_plan.clear();
+        string frame = plan->get(0).asString();
+        for (size_t i = 1; i < plan->size(); i++)
+        {
+            Bottle* list_traj = plan->get(1).asList();
+            Map2DLocation loc;
+            loc.map_id = "";
+            loc.x = list_traj->get(0).asFloat64();
+            loc.y = list_traj->get(1).asFloat64();
+            loc.theta = list_traj->get(2).asFloat64();
+            m_global_plan.push_back(loc);
+        }
+    }
+
+    yarp::os::Bottle* trajectory = m_port_local_trajectory.read(false);
+    if (trajectory)
+    {
+       m_local_plan.clear();
+       string frame = trajectory->get(0).asString();
+       for (size_t i = 1; i < trajectory->size(); i++)
+       {
+           Bottle* list_traj = trajectory->get(1).asList();
+           Map2DLocation loc;
+           loc.map_id = "";
+           loc.x = list_traj->get(0).asFloat64();
+           loc.y = list_traj->get(1).asFloat64();
+           loc.theta = list_traj->get(2).asFloat64();
+           m_local_plan.push_back(loc);
+       }
+    }
+
     yarp::os::Bottle* feedback = m_port_navigation_status.read(false);
     if (feedback)
     {
@@ -266,7 +320,8 @@ bool isaacNavigator::stopNavigation()
     //goal tolerance
     cmd.addFloat64(0.0);
     //stop command
-    cmd.addBool(true);
+    //cmd.addBool(true); //@@@@
+    cmd.addInt(1);
     //reference frame
     cmd.addString("stop");
     m_port_navigation_command.write();
@@ -301,7 +356,8 @@ bool isaacNavigator::suspendNavigation(double time)
     //goal tolerance
     cmd.addFloat64(0.0);
     //stop command
-    cmd.addBool(true);
+    //cmd.addBool(true); //@@@@
+    cmd.addInt(1);
     //reference frame
     cmd.addString("stop");
     m_port_navigation_command.write();
