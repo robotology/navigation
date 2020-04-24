@@ -93,13 +93,14 @@ bool isaacNavigator::close()
 
 bool isaacNavigator::threadInit()
 {
+    //init values
+    m_remote_localization = "/localizationServer";
+    m_remote_mapserver = "/mapServer";
+    m_abs_frame_id = "/map";
+    m_map_name = "isaacMap";
+
     if (m_localization_dd_enable)
     {
-        //localization
-        m_remote_localization = "/localizationServer";
-        //m_abs_frame_id = "/odom";
-        m_abs_frame_id = "/map";
-
         Property loc_options;
         loc_options.put("device", "localization2DClient");
         loc_options.put("local", m_local_name_prefix + "/localizationClient");
@@ -117,13 +118,14 @@ bool isaacNavigator::threadInit()
         }
     }
 
-    if (m_map_dd_enable)
-    {    m_remote_localization = "/localizationServer";
+    //if (m_map_dd_enable)
+    //map server is needed because navigationGUI will ask a map to us
+    {
         //map_server
         Property map_options;
         map_options.put("device", "map2DClient");
-        map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
-        map_options.put("remote", "/mapServer");
+        map_options.put("local", m_local_name_prefix); //This is just a prefix. map2DClient will complete the port name.
+        map_options.put("remote", m_remote_mapserver);
         if (m_pMap.open(map_options) == false)
         {
             yError() << "Unable to open mapClient";
@@ -137,16 +139,16 @@ bool isaacNavigator::threadInit()
         }
         
         //get the map
-        yInfo() << "Asking for map 'isaac_map'...";
-        bool b = m_iMap->get_map("isaac_map",m_global_map);
+        yInfo() << "Asking for map..." << m_map_name;
+        bool b = m_iMap->get_map(m_map_name,m_global_map);
         m_global_map.crop(-1,-1,-1,-1);
         if (b)
         {
-            yInfo() << "'isaac_map' received";
+            yInfo() << "map name:" << m_map_name << " received";
         }
         else
         {
-            yError() << "'isaac_map' not found";
+            yError() << "map name:" << m_map_name << " not found";
         }
     }
 

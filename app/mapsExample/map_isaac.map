@@ -3,5 +3,5 @@
 #it points to ROS occupancy grid (optional)
 
 MapName     isaacMap
-YarpMapData map_isaac_yarpflags.ppm
+YarpMapData map_isaac_yarpflags.png
 #RosMapData  map_isaac_grid.yaml

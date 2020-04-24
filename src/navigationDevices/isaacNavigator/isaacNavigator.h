@@ -55,6 +55,8 @@ protected:
     std::string                       m_abs_frame_id;
     std::string                       m_local_name_prefix;
     std::string                       m_remote_localization;
+    std::string                       m_remote_mapserver;
+    std::string                       m_map_name;
     yarp::dev::Nav2D::Map2DLocation   m_current_position;
     yarp::dev::Nav2D::Map2DLocation   m_current_goal;
     yarp::dev::Nav2D::Map2DLocation   m_current_waypoint;
