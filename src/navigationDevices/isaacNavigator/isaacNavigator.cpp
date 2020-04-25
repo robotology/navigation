@@ -64,7 +64,7 @@ bool isaacNavigator::open(yarp::os::Searchable& config)
     {
        bool ret = true;
        ret &= yarp::os::Network::connect("/yarpbridge/goalfeedback:o", m_port_navigation_status_name);
-       ret &= yarp::os::Network::connect(m_port_navigation_command_name,"/yarpbridge/goal:i");
+       ret &= yarp::os::Network::connect(m_port_navigation_command_name,"/yarpbridge/goal_cmd:i");
        ret &= yarp::os::Network::connect("/yarpbridge/plan:o", m_port_global_trajectory_name);
        ret &= yarp::os::Network::connect("/yarpbridge/differential_trajectory_plan:o", m_port_local_trajectory_name);
        if (!ret)

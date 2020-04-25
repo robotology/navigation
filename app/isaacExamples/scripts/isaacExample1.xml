@@ -90,7 +90,7 @@
 
 <connection>
   <from>/isaacNavigator/command:o</from>
-  <to>/yarpbridge/goal:i</to>
+  <to>/yarpbridge/goal_cmd:i</to>
   <protocol>udp</protocol>
 </connection>
 
