@@ -35,6 +35,7 @@
 #include <math.h>
 #include "isaacLocalizer.h"
 
+using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev::Nav2D;
 
@@ -143,6 +144,7 @@ void isaacLocalizerThread::publish_map()
 
 void isaacLocalizerThread::run()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     double current_time = yarp::os::Time::now();
     
     //print some stats every 10 seconds
@@ -156,6 +158,13 @@ void isaacLocalizerThread::run()
     iv.resize(6, 0.0);
     pose.resize(6, 0.0);
     
+    //get data from isaac
+    Map2DLocation* loc = m_port_localization_data.read(false);
+    if (loc)
+    {
+        m_localization_data = *loc;
+    }
+
     //republish the map periodically
     if (0)
     {
@@ -182,6 +191,7 @@ bool isaacLocalizerThread::initializeLocalization(Map2DLocation& loc)
 
 bool isaacLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 {
+    std::lock_guard<std::mutex> lock (m_mutex);
     loc = m_localization_data;
     return true;
 }
@@ -218,6 +228,21 @@ bool isaacLocalizerThread::threadInit()
      //initialize an initial pose publisher
     //@@@
 
+    //ports for communication with isaac
+    std::string local_name_prefix = "/isaacLocalizer";
+    std::string port_loc_name = local_name_prefix + string("/localization:i");
+    m_port_localization_data.open(port_loc_name);
+    if (m_cfg.check("autoconnect"))
+    {
+        bool ret = true;
+        ret &= yarp::os::Network::connect("/yarpbridge/pose_W2R:o", port_loc_name);
+        if (!ret)
+        {
+            yError() << "Autoconnect failed";
+            return false;
+        }
+    }
+
     //initial location initialization
     if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
     else { yError() << "missing initial_x param"; return false; }
@@ -234,6 +259,8 @@ bool isaacLocalizerThread::threadInit()
 
 void isaacLocalizerThread::threadRelease()
 {
+    m_port_localization_data.interrupt();
+    m_port_localization_data.close();
 }
 
 bool isaacLocalizer::open(yarp::os::Searchable& config)

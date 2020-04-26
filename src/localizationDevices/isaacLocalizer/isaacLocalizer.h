@@ -120,7 +120,7 @@ protected:
     std::string                  m_local_name;
 
     //ISAAC
-    //@@@
+    yarp::os::BufferedPort<yarp::dev::Nav2D::Map2DLocation> m_port_localization_data;
 
 public:
     isaacLocalizerThread(double _period, yarp::os::Searchable& _cfg);
