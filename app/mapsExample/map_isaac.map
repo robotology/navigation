@@ -4,6 +4,7 @@
 
 MapName     isaacMap
 YarpMapData map_isaac_yarpflags.png
-#RosMapData  map_isaac_grid.yaml
 
 resolution 0.02
+origin (0 -100 -90)
+
