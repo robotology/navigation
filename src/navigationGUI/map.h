@@ -47,12 +47,12 @@ namespace map_utilites
     bool drawInfo(IplImage *map, XYCell current, XYCell orig, XYCell x_axis, XYCell y_axis, std::string status, const yarp::dev::Nav2D::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
     bool drawInfoFixed(IplImage *map, XYCell whereToDraw, XYCell orig, XYCell x_axis, Nav2D::XYCell y_axis, std::string status, const yarp::dev::Nav2D::Map2DLocation& localiz, const CvFont& font, const CvScalar& color);
     bool drawPath(IplImage *map, XYCell current_position, XYCell current_target, std::queue<Nav2D::XYCell> path, const CvScalar& color, const CvScalar& color2);
-    bool drawCurrentPosition(IplImage *map, XYCell current, double angle, const CvScalar& color);
-    bool drawGoal(IplImage *map, XYCell current, double angle, const CvScalar& color);
+    bool drawCurrentPosition(IplImage* map, const yarp::dev::Nav2D::MapGrid2D& info ,const yarp::dev::Nav2D::Map2DLocation& current, const CvScalar& color);
+    bool drawGoal(IplImage* map, const yarp::dev::Nav2D::MapGrid2D& info, const yarp::dev::Nav2D::Map2DLocation current, const CvScalar& color);
+    bool drawPose(IplImage* map, const yarp::dev::Nav2D::MapGrid2D& info, const yarp::dev::Nav2D::Map2DLocation current, const CvScalar& color);
     bool drawArea(IplImage *map, std::vector<XYCell> area, const CvScalar& color);
     bool drawLaserScan(IplImage *map, std::vector <Nav2D::XYCell>& laser_scan, const CvScalar& color);
     bool drawLaserMap(IplImage *map, const yarp::dev::Nav2D::MapGrid2D& laserMap, const CvScalar& color);
-    bool drawPose(IplImage *map, XYCell current, double angle, const CvScalar& color);
 
     //sends and image through the given port
     bool sendToPort(BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send);

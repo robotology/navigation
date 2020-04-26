@@ -492,10 +492,10 @@ void NavGuiThread::draw_map()
         case navigation_status_failing:
         case navigation_status_paused:
         case navigation_status_thinking:
-            map_utilites::drawGoal(i3_map_menu_scan, final_goal, m_curr_goal.theta* DEG2RAD, red_color);
+            map_utilites::drawGoal(i3_map_menu_scan, m_current_map, m_curr_goal, red_color);
         break;
         case navigation_status_goal_reached:
-            map_utilites::drawGoal(i3_map_menu_scan, final_goal, m_curr_goal.theta* DEG2RAD, green_color);
+            map_utilites::drawGoal(i3_map_menu_scan, m_current_map, m_curr_goal, green_color);
         break;
         case navigation_status_idle:
         default:
@@ -507,7 +507,7 @@ void NavGuiThread::draw_map()
     int particles_to_be_drawn = std::min((int)m_enable_estimated_particles, (int)m_estimated_poses.size());
     for (size_t i = 0; i < particles_to_be_drawn; i++)
     {
-         map_utilites::drawPose(i3_map_menu_scan, m_current_map.world2Cell(XYWorld((m_estimated_poses)[i].x, (m_estimated_poses)[i].y)), (m_estimated_poses)[i].theta* DEG2RAD, green_color);
+         map_utilites::drawPose(i3_map_menu_scan, m_current_map, m_estimated_poses[i], green_color);
     }
     
 
@@ -516,7 +516,7 @@ void NavGuiThread::draw_map()
     {
         for (size_t i=0; i<m_locations_list.size(); i++)
         {
-            map_utilites::drawGoal(i3_map_menu_scan, m_current_map.world2Cell(XYWorld(m_locations_list[i].x, m_locations_list[i].y)), m_locations_list[i].theta* DEG2RAD, blue_color);
+            map_utilites::drawGoal(i3_map_menu_scan, m_current_map, m_locations_list[i], blue_color);
         }
         for (size_t i = 0; i<m_areas_list.size(); i++)
         {
@@ -531,7 +531,7 @@ void NavGuiThread::draw_map()
     }
 
     //############### draw Current Position
-    map_utilites::drawCurrentPosition(i3_map_menu_scan, current_position, m_localization_data.theta* DEG2RAD, azure_color);
+    map_utilites::drawCurrentPosition(i3_map_menu_scan, m_current_map, m_localization_data, azure_color);
 
     //############### draw Infos
     if (m_enable_draw_infos)

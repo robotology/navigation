@@ -16,6 +16,9 @@
  * Public License for more details
 */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Bottle.h>
@@ -35,6 +38,9 @@
 
 #include "map.h"
 
+#ifndef DEG2RAD
+#define DEG2RAD M_PI/180.0
+#endif
 
 using namespace std;
 using namespace yarp::os;
@@ -74,25 +80,31 @@ bool map_utilites::drawPath(IplImage *map, XYCell current_position, XYCell curre
     return true;
 }
 
-bool map_utilites::drawCurrentPosition(IplImage *map, XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawCurrentPosition(IplImage* map, const yarp::dev::Nav2D::MapGrid2D& info, const yarp::dev::Nav2D::Map2DLocation& current, const CvScalar& color)
 {
-    if (map==0) return false;
-    cvCircle(map, cvPoint(current.x, current.y), 6, color);
-    int orient_x = current.x + int(12 * cos(-angle));
-    int orient_y = current.y + int(12 * sin(-angle));
-    cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+    if (map == 0) return false;
+    XYCell cell = info.toXYCell(current);
+    double t = current.theta+info.m_origin.get_theta();
+
+    cvCircle(map, cvPoint(cell.x, cell.y), 6, color);
+    int orient_x = cell.x + int(12 * cos(-t * DEG2RAD));
+    int orient_y = cell.y + int(12 * sin(-t * DEG2RAD));
+    cvLine(map, cvPoint(cell.x, cell.y), cvPoint(orient_x, orient_y), color);
     return true;
 }
 
-bool map_utilites::drawGoal(IplImage *map, XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawGoal(IplImage* map, const yarp::dev::Nav2D::MapGrid2D& info, const yarp::dev::Nav2D::Map2DLocation current, const CvScalar& color)
 {
     if (map == 0) return false;
-    cvCircle(map, cvPoint(current.x, current.y), 3, color);
-    if (std::isnan(angle)==false)
+    XYCell cell = info.toXYCell(current);
+    double t = current.theta + info.m_origin.get_theta();
+
+    cvCircle(map, cvPoint(cell.x, cell.y), 3, color);
+    if (std::isnan(t) == false)
     {
-        int orient_x = current.x + int(6 * cos(-angle));
-        int orient_y = current.y + int(6 * sin(-angle));
-        cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+        int orient_x = cell.x + int(6 * cos(-t * DEG2RAD));
+        int orient_y = cell.y + int(6 * sin(-t * DEG2RAD));
+        cvLine(map, cvPoint(cell.x, cell.y), cvPoint(orient_x, orient_y), color);
     }
     return true;
 }
@@ -110,15 +122,18 @@ bool map_utilites::drawArea(IplImage *map, std::vector<XYCell> area, const CvSca
     return true;
 }
 
-bool map_utilites::drawPose(IplImage *map, XYCell current, double angle, const CvScalar& color)
+bool map_utilites::drawPose(IplImage* map, const yarp::dev::Nav2D::MapGrid2D& info, const yarp::dev::Nav2D::Map2DLocation current, const CvScalar& color)
 {
     if (map == 0) return false;
-    cvCircle(map, cvPoint(current.x, current.y), 2, color);
-    if (std::isnan(angle) == false)
+    XYCell cell = info.toXYCell(current);
+    double t = current.theta + info.m_origin.get_theta();
+
+    cvCircle(map, cvPoint(cell.x, cell.y), 2, color);
+    if (std::isnan(t) == false)
     {
-        int orient_x = current.x + int(6 * cos(-angle));
-        int orient_y = current.y + int(6 * sin(-angle));
-        cvLine(map, cvPoint(current.x, current.y), cvPoint(orient_x, orient_y), color);
+        int orient_x = cell.x + int(6 * cos(-t * DEG2RAD));
+        int orient_y = cell.y + int(6 * sin(-t * DEG2RAD));
+        cvLine(map, cvPoint(cell.x, cell.y), cvPoint(orient_x, orient_y), color);
     }
     return true;
 }
