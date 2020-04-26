@@ -106,4 +106,10 @@
   <protocol>udp</protocol>
 </connection>
 
+<connection>
+  <from>/yarpbridge/pose_W2R:o </from>
+  <to>/isaacLocalizer/localization:i</to>
+  <protocol>udp</protocol>
+</connection>
+
 </application>
