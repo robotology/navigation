@@ -150,6 +150,7 @@ bool isaacNavigator::threadInit()
         {
             yError() << "map name:" << m_map_name << " not found";
         }
+        m_local_map = m_global_map;
     }
 
     m_stats_time_curr = yarp::os::Time::now();
@@ -433,11 +434,13 @@ bool isaacNavigator::getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapType
 {
     if (map_type == yarp::dev::Nav2D::NavigationMapTypeEnum::global_map)
     {
+		yDebug() << "****global map";
         map = m_global_map;
         return true;
     }
     else if (map_type == yarp::dev::Nav2D::NavigationMapTypeEnum::local_map)
     {
+		yDebug() << "****local map";
         map = m_local_map;
         return true;
     }
