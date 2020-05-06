@@ -129,5 +129,11 @@
   <to>/baseControl/aux_control:i</to>
   <protocol>udp</protocol>
 </connection>
+
+<connection>
+  <from>/baseControl/odometry:o </from>
+  <to>/yarpbridge/differential_base_dynamics:i</to>
+  <protocol>udp</protocol>
+</connection>
  
 </application>
