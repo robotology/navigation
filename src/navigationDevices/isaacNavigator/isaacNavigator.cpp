@@ -74,6 +74,8 @@ bool isaacNavigator::open(yarp::os::Searchable& config)
        }
     }
 
+    m_goal_lin_tol = 0.05;
+
     this->start();
     return true;
 }
@@ -204,13 +206,17 @@ void isaacNavigator::run()
         string frame = plan->get(0).asString();
         for (size_t i = 1; i < plan->size(); i++)
         {
-            Bottle* list_traj = plan->get(1).asList();
+            Bottle* list_traj = plan->get(i).asList();
             Map2DLocation loc;
             loc.map_id = "";
             loc.x = list_traj->get(0).asFloat64();
             loc.y = list_traj->get(1).asFloat64();
             loc.theta = list_traj->get(2).asFloat64();
             m_global_plan.push_back(loc);
+            if (i==2)
+            {
+				m_current_waypoint = loc;
+			}
         }
     }
 
@@ -221,7 +227,7 @@ void isaacNavigator::run()
        string frame = trajectory->get(0).asString();
        for (size_t i = 1; i < trajectory->size(); i++)
        {
-           Bottle* list_traj = trajectory->get(1).asList();
+           Bottle* list_traj = trajectory->get(i).asList();
            Map2DLocation loc;
            loc.map_id = "";
            loc.x = list_traj->get(0).asFloat64();
@@ -235,9 +241,9 @@ void isaacNavigator::run()
     if (feedback)
     {
         Bottle* goal_rel_loc     = feedback->get(0).asList();
-        bool    has_goal         = feedback->get(1).asBool();
-        bool    is_arrived       = feedback->get(2).asBool();
-        bool    is_stationary    = feedback->get(3).asBool();
+        m_isaac_has_goal         = feedback->get(1).asBool();
+        m_isaac_is_arrived       = feedback->get(2).asBool();
+        m_isaac_is_stationary    = feedback->get(3).asBool();
     }
 
     //statemachine
@@ -248,9 +254,29 @@ void isaacNavigator::run()
         break;
 
         case NavigationStatusEnum::navigation_status_idle:
+			m_arrived_timer=0;
+        break;
         case NavigationStatusEnum::navigation_status_moving:
+			 if (m_isaac_has_goal &&
+			     m_isaac_is_arrived &&
+			     m_isaac_is_stationary)
+			 {
+				 m_arrived_timer = yarp::os::Time::now();
+				 m_navigation_status = navigation_status_goal_reached;
+			 }
+	    break;
+					  
+			      
         case NavigationStatusEnum::navigation_status_waiting_obstacle:
-        case NavigationStatusEnum::navigation_status_goal_reached:
+        break;
+        case NavigationStatusEnum::navigation_status_goal_reached: 
+             if (yarp::os::Time::now() - m_arrived_timer > 5.0)
+			 {
+                 m_navigation_status = navigation_status_idle;
+                 stopNavigation();
+			 }
+        break;
+        
         case NavigationStatusEnum::navigation_status_failing:
         case NavigationStatusEnum::navigation_status_paused:
         case NavigationStatusEnum::navigation_status_preparing_before_move:
@@ -273,7 +299,7 @@ bool isaacNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocatio
 		locb.addFloat64(loc.y);
 		locb.addFloat64(loc.theta );
 		//goal tolerance
-		cmd.addFloat64(0.2);
+		cmd.addFloat64(m_goal_lin_tol);
 		//stop command
 		//cmd.addBool(false); //@@@@
 		cmd.addInt(0);
@@ -281,6 +307,7 @@ bool isaacNavigator::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocatio
 		cmd.addString("world");
 		m_port_navigation_command.write();
         m_navigation_status = yarp::dev::Nav2D::navigation_status_moving;
+        m_isaac_is_arrived = false;
         m_current_goal = loc;
         return true;
     }
@@ -395,7 +422,7 @@ bool isaacNavigator::resumeNavigation()
 		locb.addFloat64(m_current_goal.y);
 		locb.addFloat64(m_current_goal.theta );
 		//goal tolerance
-		cmd.addFloat64(0.2);
+		cmd.addFloat64(m_goal_lin_tol);
 		//stop command
 		//cmd.addBool(false); //@@@@
 		cmd.addInt(0);

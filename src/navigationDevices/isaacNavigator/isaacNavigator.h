@@ -62,9 +62,11 @@ protected:
     yarp::dev::Nav2D::Map2DLocation   m_current_waypoint;
     yarp::dev::Nav2D::Map2DPath       m_global_plan;
     yarp::dev::Nav2D::Map2DPath       m_local_plan;
+    double                            m_goal_lin_tol;
 
     double                            m_stats_time_curr;
     double                            m_stats_time_last;
+    double                            m_arrived_timer;
     
     yarp::dev::Nav2D::MapGrid2D       m_local_map;
     yarp::dev::Nav2D::MapGrid2D       m_global_map;
@@ -74,6 +76,9 @@ protected:
     std::string m_port_navigation_command_name;
     std::string m_port_global_trajectory_name;
     std::string m_port_local_trajectory_name;
+    bool m_isaac_has_goal;
+    bool m_isaac_is_arrived;
+    bool m_isaac_is_stationary;
     yarp::os::BufferedPort<yarp::os::Bottle> m_port_navigation_status;
     yarp::os::BufferedPort<yarp::os::Bottle> m_port_navigation_command;
     yarp::os::BufferedPort<yarp::os::Bottle> m_port_global_trajectory;
