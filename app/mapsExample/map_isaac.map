@@ -6,5 +6,5 @@ MapName     isaacMap
 YarpMapData map_isaac_yarpflags.png
 
 resolution 0.02
-origin (0 -100 -90)
+origin (0 -10.56 -90)
 
