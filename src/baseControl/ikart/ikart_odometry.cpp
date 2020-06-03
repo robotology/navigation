@@ -294,13 +294,3 @@ void iKart_Odometry::compute()
     last_time = yarp::os::Time::now();
 }
 
-double iKart_Odometry::get_vlin_coeff()
-{
-    return 1;
-}
-
-double iKart_Odometry::get_vang_coeff()
-{
-    // theta = - r(e0 + e1 +e2)/eL
-    return geom_L/geom_r;
-}

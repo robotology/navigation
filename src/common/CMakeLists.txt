@@ -20,7 +20,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
 add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC} ${${LIBRARY_TARGET_NAME}_HDR})
 add_library(${PROJECT_NAME}::${LIBRARY_TARGET_NAME} ALIAS ${LIBRARY_TARGET_NAME})
 
-set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       0}
+set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       0
                                                         PUBLIC_HEADER "${${LIBRARY_TARGET_NAME}_HDR}")
 
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/movable_localization_device>"

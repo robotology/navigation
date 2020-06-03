@@ -220,7 +220,7 @@ void OdometryHandler::broadcast()
         rosData.pose.pose.position.y = odom_y;
         rosData.pose.pose.position.z = 0.0;
         yarp::rosmsg::geometry_msgs::Quaternion odom_quat;
-        double halfYaw = odom_theta / 180.0*M_PI * 0.5;
+        double halfYaw = odom_theta * DEG2RAD * 0.5;
         double cosYaw = cos(halfYaw);
         double sinYaw = sin(halfYaw);
         odom_quat.x = 0;
@@ -233,7 +233,7 @@ void OdometryHandler::broadcast()
         rosData.twist.twist.linear.z = 0;
         rosData.twist.twist.angular.x = 0;
         rosData.twist.twist.angular.y = 0;
-        rosData.twist.twist.angular.z = base_vel_theta / 180.0*M_PI;
+        rosData.twist.twist.angular.z = base_vel_theta * DEG2RAD;
 
         rosPublisherPort_odometry.write();
     }
@@ -256,7 +256,7 @@ void OdometryHandler::broadcast()
         transform.header.frame_id = odometry_frame_id;
         transform.header.seq = rosMsgCounter;
         transform.header.stamp = normalizeSecNSec(yarp::os::Time::now());
-        double halfYaw = odom_theta / 180.0*M_PI * 0.5;
+        double halfYaw = odom_theta * DEG2RAD * 0.5;
         double cosYaw = cos(halfYaw);
         double sinYaw = sin(halfYaw);
         transform.transform.rotation.x = 0;

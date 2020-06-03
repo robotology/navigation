@@ -231,12 +231,3 @@ void CER_Odometry::compute()
     last_time = yarp::os::Time::now();
 }
 
-double CER_Odometry::get_vlin_coeff()
-{
-    return 1 / geom_r;
-}
-
-double CER_Odometry::get_vang_coeff()
-{
-    return geom_L / (2 * geom_r);
-}

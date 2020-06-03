@@ -1,0 +1,10 @@
+#The YARP root map description file.
+#it points to yarp flag maps
+#it points to ROS occupancy grid (optional)
+
+MapName     isaacMap
+YarpMapData map_isaac_yarpflags.png
+
+resolution 0.05
+origin (0 -30 -90)
+

@@ -105,8 +105,8 @@ CER_MotorControl::CER_MotorControl(PolyDriver* _driver) : MotorControl(_driver)
 void CER_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
     //wheel contribution calculation
-    F[0] = appl_linear_speed * cos(appl_desired_direction / 180.0 * M_PI) - appl_angular_speed;
-    F[1] = appl_linear_speed * cos(appl_desired_direction / 180.0 * M_PI) + appl_angular_speed;
+    F[0] = appl_linear_speed * cos(appl_desired_direction * DEG2RAD) - appl_angular_speed;
+    F[1] = appl_linear_speed * cos(appl_desired_direction * DEG2RAD) + appl_angular_speed;
 }
 
 void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
@@ -152,11 +152,10 @@ void CER_MotorControl::execute_none()
 
 double CER_MotorControl::get_vlin_coeff()
 {
-    return (360 / (geom_r * 2 * M_PI));
+    return 1 / geom_r * RAD2DEG;
 }
 
 double CER_MotorControl::get_vang_coeff()
 {
-    return geom_L / (geom_r);
-    //return geom_L / (2 * geom_r);
+      return geom_L / (2 * geom_r);
 }
