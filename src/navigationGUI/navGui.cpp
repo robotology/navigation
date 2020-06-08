@@ -36,16 +36,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <opencv2/core/version.hpp>
-#if CV_MAJOR_VERSION >= 3
-#include <opencv2/highgui/highgui_c.h>
-#else
-#include <cv.h>
-#include <highgui.h>
-#endif
-
-#include <highgui.h> 
-
 #include "navGui.h"
 
 using namespace std;

@@ -34,8 +34,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include <cv.h>
-#include <highgui.h> 
+#include <opencv2/imgproc/imgproc_c.h>
 
 #include "pathPlannerCtrl.h"
 #include "pathPlannerCtrlHelpers.h"
