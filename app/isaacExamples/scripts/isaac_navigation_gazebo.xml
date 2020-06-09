@@ -1,0 +1,161 @@
+<application>
+<name>isaac navigation Gazebo</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>Gazebo</name>
+   <parameters>in ~/cer-sim/gazebo/worlds : gazebo --world cer-demo2.world</parameters>
+   <node>console</node>
+</module>
+
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 1)" "(enable_ros_subscriber 1)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>baseControl</name>
+   <parameters>--context baseControl_SIM --from baseCtrl_cer_sim.ini --skip_robot_interface_check --robot R1</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>isaac_nav_module</name>
+   <parameters>in ~/isaac/isaac-sdk : bazel run //apps/Yarp_GazeboNavigation:gazebo_navigation</parameters>
+   <node>isaac_pc</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice isaacLocalizer --context isaacExamples --from isaacLocalizer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice isaacNavigator --context isaacExamples --from isaacNavigator.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>navigationGUI</name>
+   <parameters>--context navigationGUI --from navigationGUI_sim_cerR1.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /navView:i --out /mapClick:o</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device Rangefinder2DWrapper --subdevice laserFromPointCloud --from ~/navigation/app/isaacExamples/laserFromPointCloudsimCER.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+<name>yarpdev</name>
+<parameters>
+--device Rangefinder2DWrapper --subdevice laserFromExternalPort --SENSOR::min_angle 0 --SENSOR::max_angle 360 --SENSOR::resolution 0.5 --SENSOR::input_ports_name "(/laserFromPort/las1:i /laserFromPort/las2:i)" --TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient --TRANSFORM_CLIENT::remote /transformServer --TRANSFORMS::src_frames "(/mobile_base_double_lidar /mobile_base_double_lid)" --TRANSFORMS::dst_frame /mobile_base_double_lidar --period 10 --name /augmentedLaser:o
+</parameters>
+<node>console</node>
+</module>
+
+<module>
+   <name>ROSmodule</name>
+   <parameters>in ~/cer/app/robots/CER02 : roslaunch robotStatePublisher.launch</parameters>
+   <node>console</node>
+</module>
+
+
+<connection>
+  <from>/mapClick:o</from>
+  <to>/navigationGui/yarpviewTarget:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/yarpbridge/goalfeedback:o</from>
+  <to>/isaacNavigator/status:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/yarpbridge/plan:o</from>
+  <to>/isaacNavigator/global_trajectory:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/yarpbridge/differential_trajectory_plan:o</from>
+  <to>/isaacNavigator/local_trajectory:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/isaacNavigator/command:o</from>
+  <to>/yarpbridge/goal_cmd:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/RGBDlaser:o</from>
+  <to>/laserFromPort/las1:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/R1/laser:o</from>
+  <to>/laserFromPort/las2:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/R1/laser:o</from>
+  <to>/yarpbridge/laser/localization:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/augmentedLaser:o</from>
+  <to>/yarpbridge/laser/navigation:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/navigationGui/map:o</from>
+  <to>/navView:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/yarpbridge/pose_W2R:o </from>
+  <to>/isaacLocalizer/localization:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/yarpbridge/basecommand:o </from>
+  <to>/baseControl/aux_control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/baseControl/odometry:o </from>
+  <to>/yarpbridge/differential_base_dynamics:i</to>
+  <protocol>udp</protocol>
+</connection>
+ 
+</application>
