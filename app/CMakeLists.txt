@@ -19,5 +19,6 @@ add_subdirectory(mapsExample)
 add_subdirectory(mapsSquirico)
 add_subdirectory(baseControl_SIM)
 add_subdirectory(navigationGUI)
+add_subdirectory(multipleLaserTest)
 add_subdirectory(simpleVelocityNavigationExamples)
 

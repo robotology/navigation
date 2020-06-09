@@ -1,0 +1,46 @@
+<application>
+<name>multiple_laser_test2</name>
+
+<dependencies>
+console
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser1:o --test use_constant --const_distance 0.5 --SENSOR::resolution 0.5 --SKIP::min 0 --SKIP::max 45</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters> --device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0 --USER_TF "( 0.0 0.0 0.0 0.0 0.0 0.0 /output_frame /frame1 )" </parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters> --device Rangefinder2DWrapper --subdevice laserFromExternalPort --SENSOR::min_angle 0 --SENSOR::max_angle 360 --SENSOR::resolution 0.5 --SENSOR::input_ports_name "(/laserFromPort/las1:i)" --TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient --TRANSFORM_CLIENT::remote /transformServer --TRANSFORMS::src_frames "(/frame1)" --TRANSFORMS::dst_frame /output_frame --period 10 --name /outLaser:o --override</parameters>
+   <node>console</node>
+</module>
+
+
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /fakeLaser1:o --lidar_debug --local /lasergui1</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /outLaser:o --lidar_debug --local /lasergui3</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/fakeLaser1:o</from>
+  <to>/laserFromPort/las1:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+
+</application>
