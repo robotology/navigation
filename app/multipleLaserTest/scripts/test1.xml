@@ -1,0 +1,32 @@
+<application>
+<name>multiple_laser_test1</name>
+
+<dependencies>
+console
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser1:o --test use_constant --const_distance 0.5 --SENSOR::resolution 0.5 --SKIP::min 0 --SKIP::max 45</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser2:o --test use_constant --const_distance 1.0 --SENSOR::resolution 0.5 --SKIP::min 90 --SKIP::max 135</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /fakeLaser1:o --lidar_debug --local /lasergui1</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /fakeLaser2:o --lidar_debug --local /lasergui2</parameters>
+   <node>console</node>
+</module>
+
+</application>
