@@ -49,6 +49,8 @@ void ControlThread::threadRelease()
         port_debug_angular.interrupt();
         port_debug_angular.close();
     }
+    port_filtered_commands.interrupt();
+    port_filtered_commands.close();
 
     if (rosNode)
     {
@@ -319,6 +321,12 @@ void ControlThread::run()
     
     //apply ratio limiter
     if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
+
+    Bottle &coms = port_filtered_commands.prepare();
+    coms.clear();
+    coms.addDouble(input_linear_speed);
+    coms.addDouble(input_angular_speed);
+    port_filtered_commands.write();
 
     /*
     if (!lateral_movement_enabled)
@@ -638,6 +646,7 @@ bool ControlThread::threadInit()
         port_debug_linear.open((localName + "/debug/linear:o").c_str());
         port_debug_angular.open((localName + "/debug/angular:o").c_str());
     }
+    port_filtered_commands.open((localName + "/filtered_commands:o").c_str());
 
     //start the motors
     if (rf.check("no_start"))
