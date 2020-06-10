@@ -84,7 +84,13 @@
 
 <module>
 	<name>yarpdev</name>
-	<parameters>--device Rangefinder2DWrapper --subdevice laserFromExternalPort --SENSOR::min_angle 0 --SENSOR::max_angle 360 --SENSOR::resolution 0.5 --SENSOR::input_ports_name "(/laserFromPort/las1:i /laserFromPort/las2:i)" --TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient --TRANSFORM_CLIENT::remote /transformServer --TRANSFORMS::src_frames "(/mobile_base_double_lidar /mobile_base_double_lid)" --TRANSFORMS::dst_frame /mobile_base_double_lidar --period 10 --name /augmentedLaser:o </parameters>
+	<parameters>--device Rangefinder2DWrapper --subdevice laserFromExternalPort --SENSOR::min_angle 0 --SENSOR::max_angle 360 --SENSOR::resolution 0.5 --SENSOR::input_ports_name "(/laserFromPort/las1:i /laserFromPort/las2:i)" --TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient --TRANSFORM_CLIENT::remote /transformServer --TRANSFORMS::src_frames "(mobile_base_double_lidar mobile_base_double_lidar)" --TRANSFORMS::dst_frame mobile_base_double_lidar --period 10 --name /augmentedLaser:o</parameters>
+	<node>console</node>
+</module>
+
+<module>
+	<name>yarpdev</name>
+	<parameters>--device Rangefinder2DWrapper --subdevice laserFromExternalPort --SENSOR::min_angle 0 --SENSOR::max_angle 360 --SENSOR::resolution 0.5 --SENSOR::input_ports_name "(/laserFromPort/las1b:i /laserFromPort/las2b:i /laserFromPort/las3b:i)" --TRANSFORM_CLIENT::local /LaserFromExternalPort_b/tfClient --TRANSFORM_CLIENT::remote /transformServer --TRANSFORMS::src_frames "(mobile_base_double_lidar mobile_base_lidar_F mobile_base_lidar_B)" --TRANSFORMS::dst_frame mobile_base_double_lidar --period 10 --name /augmentedLaser_b:o</parameters>
 	<node>console</node>
 </module>
 
@@ -94,12 +100,46 @@
    <node>console</node>
 </module>
 
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /RGBDlaser:o --local /laser_gui_1 --lidar_debug</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /cer/laser:o --local /laser_gui_2 --lidar_debug</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /augmentedLaser:o --local /laser_gui_3 --lidar_debug</parameters>
+   <node>console</node>
+</module>
+<module>
+   <name>yarplaserscannergui</name>
+   <parameters>--sens_port /augmentedLaser_b:o --local /laser_gui_4 --lidar_debug</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpmotorgui</name>
+   <parameters>--robot cer</parameters>
+   <node>console</node>
+</module>
 
 
 <connection>
 <from>/joystickCtrl:o</from>
 <to>/baseControl/joystick1:i</to>
 <protocol>udp</protocol>
+</connection>
+
+<connection>
+<from>/depthCamera/rgbImage:o</from>
+<to>/yarpview/camrgb:i</to>
+<protocol>mjpeg</protocol>
 </connection>
 
 <connection>
@@ -135,25 +175,43 @@
 <connection>
   <from>/RGBDlaser:o</from>
   <to>/laserFromPort/las1:i</to>
-  <protocol>tcp</protocol>
+  <protocol>udp</protocol>
 </connection>
 
 <connection>
   <from>/cer/laser:o</from>
   <to>/laserFromPort/las2:i</to>
-  <protocol>tcp</protocol>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/RGBDlaser:o</from>
+  <to>/laserFromPort/las1b:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/cer/laser/front:o</from>
+  <to>/laserFromPort/las2b:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/cer/laser/back:o</from>
+  <to>/laserFromPort/las3b:i</to>
+  <protocol>udp</protocol>
 </connection>
 
 <connection>
   <from>/cer/laser:o</from>
   <to>/yarpbridge/laser/localization:i</to>
-  <protocol>tcp</protocol>
+  <protocol>udp</protocol>
 </connection>
 
 <connection>
   <from>/augmentedLaser:o</from>
   <to>/yarpbridge/laser/navigation:i</to>
-  <protocol>tcp</protocol>
+  <protocol>udp</protocol>
 </connection>
 
 <connection>
