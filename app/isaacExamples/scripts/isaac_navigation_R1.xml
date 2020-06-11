@@ -78,7 +78,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice laserFromPointCloud --from ~/navigation/app/isaacExamples/laserFromPointCloud.ini</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice laserFromPointCloud --context isaacExamples --from laserFromPointCloud.ini</parameters>
    <node>console</node>
 </module>
 
