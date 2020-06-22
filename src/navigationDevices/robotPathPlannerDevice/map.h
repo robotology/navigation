@@ -27,8 +27,6 @@
 #include <yarp/sig/ImageDraw.h>
 #include <yarp/dev/MapGrid2D.h>
 #include <string>
-#include <cv.h>
-#include <highgui.h> 
 #include <queue>
 
 using namespace std;
