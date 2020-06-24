@@ -106,6 +106,7 @@ protected:
 
     BufferedPort<Bottle> port_debug_linear;
     BufferedPort<Bottle> port_debug_angular;
+    BufferedPort<Bottle> port_filtered_commands;
 
     OdometryHandler*            m_odometry_handler;
     MotorControl*        m_motor_handler;

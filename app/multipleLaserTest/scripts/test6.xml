@@ -1,5 +1,5 @@
 <application>
-<name>multiple_laser_test4</name>
+<name>multiple_laser_test6</name>
 
 <dependencies>
 console
@@ -7,19 +7,19 @@ console
 
 <module>
    <name>yarpdev</name>
-   <parameters> --device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0 --USER_TF "( -0.25 0.0 0.0 0.0 0.0 0.0 /output_frame /frame1)" "( +0.25 0.0 0.0 0.0 0.0 0.0 /output_frame /frame2 )" </parameters>
+   <parameters> --device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0 --USER_TF "( -0.25 0.0 0.0 0.0 0.0 0.0 /output_frame /frame1)" "( +0.25 0.0 0.0 0.0 0.0 3.14159 /output_frame /frame2 )" </parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpdev</name>
-   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser1:o --test use_constant --const_distance 0.5 --SENSOR::resolution 0.5 </parameters>
+   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser1:o --test use_constant --const_distance 0.5 --SENSOR::resolution 0.5 --SKIP::min 45 --SKIP::max 315</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpdev</name>
-   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser2:o --test use_constant --const_distance 1.0 --SENSOR::resolution 0.5 </parameters>
+   <parameters> --device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /fakeLaser2:o --test use_constant --const_distance 1.0 --SENSOR::resolution 0.5 --SKIP::min 30 --SKIP::max 330</parameters>
    <node>console</node>
 </module>
 

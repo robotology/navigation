@@ -7,7 +7,7 @@ console
 
 <module>
    <name>yarpdev</name>
-   <parameters> --device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0 --USER_TF "( 0.0 0.0 0.0 0.0 0.0 0.0 /frame1 /output_frame ) ( 0.0 0.0 0.0 0.0 0.0 0.0 /frame2 /output_frame )" </parameters>
+   <parameters> --device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0 --USER_TF "( 0.0 0.0 0.0 0.0 0.0 0.0 /output_frame /frame1 )" "( 0.0 0.0 0.0 0.0 0.0 0.0 /output_frame /frame2  )" </parameters>
    <node>console</node>
 </module>
 

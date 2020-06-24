@@ -33,8 +33,6 @@
 #include <yarp/dev/Map2DLocation.h>
 #include <string>
 #include <math.h>
-#include <cv.h>
-#include <highgui.h> 
 
 #include "map.h"
 
