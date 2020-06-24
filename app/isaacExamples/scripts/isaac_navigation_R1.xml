@@ -13,7 +13,7 @@
 <module>
    <name>yarpdev</name>
    <parameters>--from sensors/RealSense_conf.ini</parameters>
-   <node>r1-torso1</node>
+   <node>r1-base</node>
 </module>
 
 <module>
@@ -31,7 +31,7 @@
 <module>
    <name>baseControl</name>
    <parameters>--context baseControl --from baseCtrl_cer.ini --skip_robot_interface_check --robot cer</parameters>
-   <node>console</node>
+   <node>r1-base</node>
 </module>
 
 <module>

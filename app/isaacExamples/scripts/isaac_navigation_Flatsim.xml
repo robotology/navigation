@@ -1,5 +1,5 @@
 <application>
-<name>isaac EXAMPLE1 laser from YARP</name>
+<name>isaac_navigation_Flatsim</name>
 
 <dependencies>
 </dependencies>
@@ -30,8 +30,14 @@
 
 <module>
    <name>isaac_nav_module</name>
-   <parameters></parameters>
+   <parameters>bazel run //apps/Yarp_flatsim_ex3:flatsimYarp_ex1_laserYarp</parameters>
    <node>isaac_pc</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice odomLocalizer --context isaacExamples --from odomLocalizer.ini</parameters>
+   <node>console</node>
 </module>
 
 <module>
@@ -42,7 +48,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /robot_2wheels/laser:o --test use_mapfile --map_file /home/user1/navigation/app/mapsExample/map_isaac.map --min_angle -45 --max_angle 45 --localization_client</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /robot_2wheels/laser:o --test use_mapfile --map_file /home/user1/navigation/app/mapsExample/map_isaac.map --min_angle -45 --max_angle 45 --localization_client /fake_laser/localizationClient --localization_server /localizationServer_odom</parameters>
    <node>console</node>
 </module>
 
@@ -95,12 +101,6 @@
 </connection>
 
 <connection>
-  <from>/baseControl/odometry:o</from>
-  <to>/fakeLaser/location:i</to>
-  <protocol>tcp</protocol>
-</connection>
-
-<connection>
   <from>/robot_2wheels/laser:o</from>
   <to>/yarpbridge/laser:i</to>
   <protocol>tcp</protocol>
@@ -118,4 +118,16 @@
   <protocol>udp</protocol>
 </connection>
 
+<connection>
+  <from>/yarpbridge/basecommand:o </from>
+  <to>/baseControl/aux_control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/baseControl/odometry:o </from>
+  <to>/yarpbridge/differential_base_dynamics:i</to>
+  <protocol>udp</protocol>
+</connection>
+ 
 </application>
