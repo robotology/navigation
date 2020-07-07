@@ -16,6 +16,11 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/dev/ILocalization2D.h>
+#include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/IMap2D.h>
+#include <yarp/dev/MapGrid2D.h>
+
 
 using namespace std;
 using namespace yarp::dev;
@@ -43,7 +48,19 @@ private:
     long int com_count = 0;
 
 
+
+
 public:
+    std::string  m_remote_localization = "/localizationServer";
+    std::string  m_remote_map = "/mapServer";
+    std::string  m_remote_navigation = "/navigationServer";
+    std::string  m_local_name_prefix = "/headObstaclesScanner";
+
+    PolyDriver      m_pNav;
+    yarp::dev::Nav2D::INavigation2D*  m_iNav;
+
+
+
     double getPeriod()
     {
         // module periodicity (seconds), called implicitly by the module.
@@ -119,35 +136,56 @@ public:
         // so that messages received from the port are redirected
         // to the respond method
         attach(handlerPort);
-        if (!rf.check("robot"))
+
+        // CONFIGURATION PARAMETERS
+
+        Bottle general_group = rf.findGroup("GENERAL");
+        if (general_group.isNull())
+        {
+            yError() << "Missing GENERAL group!";
+            return false;
+        }
+
+        if (!general_group.check("robot"))
         {
             fprintf(stderr, "Please specify the name of the robot\n");
             fprintf(stderr, "--robot name (e.g. icub)\n");
             return 1;
         }
-        std::string robotName=rf.find("robot").asString();
-        std::string remotePorts="/";
-        remotePorts+=robotName;
-        remotePorts+="/head";
 
-        if (!rf.check("head_speed"))
+        if (!general_group.check("head_speed"))
         {
             head_speed = 30.0;
         }
         else
         {
-            head_speed=rf.find("head_speed").asDouble();
+            head_speed=general_group.find("head_speed").asDouble();
         }
 
-        if (!rf.check("rotation_range"))
+        if (!general_group.check("rotation_range"))
         {
             rotation_range = 25.0;
         }
         else
         {
-            rotation_range=rf.find("rotation_range").asDouble();
+            rotation_range=general_group.find("rotation_range").asDouble();
         }
 
+        std::string headModeName;
+        if (!general_group.check("head_mode"))
+        {
+            fprintf(stderr, "WARNING parameter head_mode not specified, set default: sweep (other modes: --head_mode sweep, trajectory)\n");
+            headModeName = "sweep";
+        }
+        else
+        {
+            headModeName=general_group.find("head_mode").asString();
+        }
+
+        std::string robotName=general_group.find("robot").asString();
+        std::string remotePorts="/";
+        remotePorts+=robotName;
+        remotePorts+="/head";
         std::string localPorts="/test/client";
 
         Property options;
@@ -218,6 +256,57 @@ public:
             pos->checkMotionDone(&done);
             Time::delay(0.1);
         }
+
+
+        //open the navigation interface
+        if (headModeName="trajectory")
+        {
+            Bottle navigation_group = rf.findGroup("NAVIGATION");
+            if (navigation_group.isNull())
+            {
+                yWarning() << "Missing NAVIGATION group!";
+               // return false;
+            }
+
+            if (general_group.check("local"))
+            {
+                m_local_name_prefix = general_group.find("local").asString();
+            }
+            if (navigation_group.check("remote_localization"))
+            {
+                m_remote_localization = navigation_group.find("remote_localization").asString();
+            }
+            if (navigation_group.check("remote_navigation"))
+            {
+                m_remote_navigation = navigation_group.find("remote_navigation").asString();
+            }
+            if (navigation_group.check("remote_map"))
+            {
+                m_remote_map = navigation_group.find("remote_map").asString();
+            }
+
+
+            Property nav_options;
+            nav_options.put("device", "navigation2DClient");
+            nav_options.put("local", m_local_name_prefix + "/navigation2DClient");
+            nav_options.put("navigation_server", m_remote_navigation);
+            nav_options.put("map_locations_server", m_remote_map);
+            nav_options.put("localization_server", m_remote_localization);
+            if (m_pNav.open(nav_options) == false)
+            {
+                yError() << "Unable to open navigation2DClient";
+                return false;
+            }
+            m_pNav.view(m_iNav);
+            if (m_iNav == 0)
+            {
+                yError() << "Unable to open navigation interface";
+                return false;
+            }
+        }
+
+
+
         return true;
     }
     // Interrupt function.
