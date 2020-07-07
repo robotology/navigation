@@ -47,7 +47,7 @@ public:
     double getPeriod()
     {
         // module periodicity (seconds), called implicitly by the module.
-        return 3.0;
+        return 1;
     }
     // This is our main function. Will be called periodically every getPeriod() seconds
     bool updateModule()
@@ -55,22 +55,25 @@ public:
         count++;
         std::cout << "[" << count << "]" << " updateModule..." << '\n';
 
-//        while(!encs->getEncoders(encoders.data()))
-//        {
-//            Time::delay(0.1);
-//            printf(".");
-//        }
+        while(!encs->getEncoders(encoders.data()))
+        {
+            Time::delay(0.1);
+            printf(".");
+        }
 
-//        for (int ii=0; ii<encoders.length(); ii++)
-//            std::cout << encoders(ii) << " ";
-//        std::cout << std::endl;
+        if (std::abs(encoders(1)-command(1)) < 1)
+        {
+            done_run = true;
+        }
+        else
+        {
+            done_run = false;
+        }
 
-//        //now set the head to move left and right
-//        std::cout << done_run << std::endl;
+
         if (done_run)
         {
             com_count ++;
-            //std::cout << com_count << std::endl;
             if (com_count%2)
             {
                 command[0]=0;
@@ -84,7 +87,10 @@ public:
             pos->positionMove(command.data());
         }
 
-        pos->checkMotionDone(&done_run);
+        //        for (int ii=0; ii<encoders.length(); ii++)
+        //            std::cout << encoders(ii) << " ";
+        //        //now set the head to move left and right
+        //        std::cout << done_run << std::endl;
 
         return true;
     }
@@ -126,7 +132,7 @@ public:
 
         if (!rf.check("head_speed"))
         {
-            head_speed = 20.0;
+            head_speed = 30.0;
         }
         else
         {
@@ -135,7 +141,7 @@ public:
 
         if (!rf.check("rotation_range"))
         {
-            rotation_range = 30.0;
+            rotation_range = 25.0;
         }
         else
         {
