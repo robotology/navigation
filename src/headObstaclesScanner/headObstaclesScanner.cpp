@@ -20,6 +20,8 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/IMap2D.h>
 #include <yarp/dev/MapGrid2D.h>
+#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 
 
 using namespace std;
@@ -27,13 +29,15 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::os;
 
+#define DEBUG
+
 
 
 class MyModule : public yarp::os::RFModule
 {
     yarp::os::Port handlerPort; // a port to handle messages
     int count;
-private:
+//  private:
     PolyDriver *robotDevice;
     IPositionControl *pos;
     IEncoders *encs;
@@ -47,10 +51,7 @@ private:
     bool done_run;
     long int com_count = 0;
 
-
-
-
-public:
+//  public:
     std::string  m_remote_localization = "/localizationServer";
     std::string  m_remote_map = "/mapServer";
     std::string  m_remote_navigation = "/navigationServer";
@@ -58,6 +59,8 @@ public:
 
     PolyDriver      m_pNav;
     yarp::dev::Nav2D::INavigation2D*  m_iNav;
+    yarp::dev::Nav2D::Map2DPath  m_all_waypoints;
+    std::string headModeName;
 
 
 
@@ -72,42 +75,72 @@ public:
         count++;
         std::cout << "[" << count << "]" << " updateModule..." << '\n';
 
+
+        //head encoders reading
         while(!encs->getEncoders(encoders.data()))
         {
             Time::delay(0.1);
             printf(".");
         }
 
-        if (std::abs(encoders(1)-command(1)) < 1)
+        // head motion mode: sweep
+        if (headModeName=="sweep")
         {
-            done_run = true;
-        }
-        else
-        {
-            done_run = false;
-        }
-
-
-        if (done_run)
-        {
-            com_count ++;
-            if (com_count%2)
+            if (std::abs(encoders(1)-command(1)) < 1)
             {
-                command[0]=0;
-                command[1]=rotation_range;
+                done_run = true;
             }
             else
             {
-                command[0]=0;
-                command[1]=-rotation_range;
+                done_run = false;
             }
-            pos->positionMove(command.data());
+
+
+            if (done_run)
+            {
+                com_count ++;
+                if (com_count%2)
+                {
+                    command[0]=0;
+                    command[1]=rotation_range;
+                }
+                else
+                {
+                    command[0]=0;
+                    command[1]=-rotation_range;
+                }
+                pos->positionMove(command.data());
+            }
         }
 
-        //        for (int ii=0; ii<encoders.length(); ii++)
-        //            std::cout << encoders(ii) << " ";
-        //        //now set the head to move left and right
-        //        std::cout << done_run << std::endl;
+        // head motion mode: trajectory
+        if (headModeName=="trajectory")
+        {
+            // get trajectory
+            m_iNav->getAllNavigationWaypoints(m_all_waypoints);
+
+            for (int i = 0; i < m_all_waypoints.size(); i++)
+            {
+                double x1 = m_all_waypoints[i].x;
+
+                XYWorld curr_waypoint_world(m_all_waypoints[i].x, m_all_waypoints[i].y);
+                XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+                all_waypoints_cell.push(curr_waypoint_cell);
+            }
+
+            // get robot position
+
+
+
+
+#ifdef DEBUG
+            std::cout << m_all_waypoints.toString() << '\n';
+#endif
+
+
+        }
+
+
 
         return true;
     }
@@ -171,7 +204,6 @@ public:
             rotation_range=general_group.find("rotation_range").asDouble();
         }
 
-        std::string headModeName;
         if (!general_group.check("head_mode"))
         {
             fprintf(stderr, "WARNING parameter head_mode not specified, set default: sweep (other modes: --head_mode sweep, trajectory)\n");
@@ -259,7 +291,7 @@ public:
 
 
         //open the navigation interface
-        if (headModeName="trajectory")
+        if (headModeName=="trajectory")
         {
             Bottle navigation_group = rf.findGroup("NAVIGATION");
             if (navigation_group.isNull())
@@ -322,6 +354,12 @@ public:
         std::cout << "Calling close function\n";
         robotDevice->close();
         handlerPort.close();
+
+
+        if (m_pNav.isValid()) m_pNav.close();
+        m_iNav = nullptr;
+
+
         return true;
     }
 };
