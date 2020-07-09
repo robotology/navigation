@@ -9,6 +9,8 @@
 #include <string>
 #include <cstdio>
 #include <iostream>
+#include <math.h>
+#include <vector>
 
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
@@ -23,51 +25,84 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265
+#endif
+
+const double RAD2DEG = 180.0 / M_PI;
+const double DEG2RAD = M_PI / 180.0;
+
+#define TIMEOUT_MAX 100
+
+// FOR DEBUGGING INFO
+#define DEBUG
 
 using namespace std;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::os;
 
-#define DEBUG
-
-
-
 class MyModule : public yarp::os::RFModule
 {
+    // PARAMETERS
+
+    // head behaviour default parameters
+    double head_speed = 30.0;
+    double rotation_range = 25.0;
+    double circle_range = 1;
+
+    // devices default parameters
+    std::string  m_remote_localization = "/localizationServer";
+    std::string  m_remote_map = "/mapServer";
+    std::string  m_remote_navigation = "/navigationServer";
+    std::string  m_local_name_prefix = "/headObstaclesScanner";
+    std::string headModeName;
+
+
+
+
+    // DEVICES
+    PolyDriver *robotDevice;
+    IPositionControl *ipos;
+    IEncoders *iencs;
+    IPositionDirect *idirect;
+    IControlMode *icontrolMode;
+
+    PolyDriver      m_pNav;
+    PolyDriver      m_pLoc;
+
+    yarp::dev::Nav2D::INavigation2D*        m_iNav;
+    yarp::dev::Nav2D::ILocalization2D*      m_iLoc;
+
+    yarp::dev::Nav2D::Map2DPath  m_all_waypoints;
+    yarp::dev::Nav2D::Map2DLocation        m_localization_data;
+    yarp::dev::Nav2D::Map2DLocation        m_target_data;
+
+    // SERVICE VARIABLES
     yarp::os::Port handlerPort; // a port to handle messages
     int count;
-//  private:
-    PolyDriver *robotDevice;
-    IPositionControl *pos;
-    IEncoders *encs;
 
     Vector encoders;
     Vector command;
     Vector tmp;
 
-    double head_speed;
-    double rotation_range;
     bool done_run;
     long int com_count = 0;
+    int m_loc_timeout_counter = 0;
 
-//  public:
-    std::string  m_remote_localization = "/localizationServer";
-    std::string  m_remote_map = "/mapServer";
-    std::string  m_remote_navigation = "/navigationServer";
-    std::string  m_local_name_prefix = "/headObstaclesScanner";
+    yarp::sig::Matrix abs_waypoints;
+    yarp::sig::Matrix rel_waypoints;
+    yarp::sig::Matrix robot_pose;
+    std::vector<double> waypoint_distance;
+    Vector relative_target_loc = {0, 0, 0};
+    yarp::dev::Nav2D::NavigationStatusEnum  nav_status;
 
-    PolyDriver      m_pNav;
-    yarp::dev::Nav2D::INavigation2D*  m_iNav;
-    yarp::dev::Nav2D::Map2DPath  m_all_waypoints;
-    std::string headModeName;
-
-
+    //int *actualMode;
 
     double getPeriod()
     {
         // module periodicity (seconds), called implicitly by the module.
-        return 1;
+        return 0.5;
     }
     // This is our main function. Will be called periodically every getPeriod() seconds
     bool updateModule()
@@ -77,7 +112,7 @@ class MyModule : public yarp::os::RFModule
 
 
         //head encoders reading
-        while(!encs->getEncoders(encoders.data()))
+        while(!iencs->getEncoders(encoders.data()))
         {
             Time::delay(0.1);
             printf(".");
@@ -86,61 +121,112 @@ class MyModule : public yarp::os::RFModule
         // head motion mode: sweep
         if (headModeName=="sweep")
         {
-            if (std::abs(encoders(1)-command(1)) < 1)
-            {
-                done_run = true;
-            }
-            else
-            {
-                done_run = false;
-            }
-
-
-            if (done_run)
-            {
-                com_count ++;
-                if (com_count%2)
-                {
-                    command[0]=0;
-                    command[1]=rotation_range;
-                }
-                else
-                {
-                    command[0]=0;
-                    command[1]=-rotation_range;
-                }
-                pos->positionMove(command.data());
-            }
+            sweepMode();
         }
 
         // head motion mode: trajectory
         if (headModeName=="trajectory")
         {
-            // get trajectory
-            m_iNav->getAllNavigationWaypoints(m_all_waypoints);
-
-            for (int i = 0; i < m_all_waypoints.size(); i++)
-            {
-                double x1 = m_all_waypoints[i].x;
-
-                XYWorld curr_waypoint_world(m_all_waypoints[i].x, m_all_waypoints[i].y);
-                XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-                all_waypoints_cell.push(curr_waypoint_cell);
-            }
+            double abs_angle=0;
+            double rel_angle=0;
+            bool short_trajectory = true;
 
             // get robot position
+            if (!getRobotPosition())
+                return false;
 
+            // get trajectory
+            getTrajectory();
+
+            // calculate relative position
+            for (int i=0; i<abs_waypoints.rows(); i++)
+            {
+                for (int j=0; j<robot_pose.cols(); j++)
+                    rel_waypoints(i,j) = abs_waypoints(i,j) - robot_pose(0,j);
+            }
+
+            for (int j=0; j<robot_pose.cols(); j++)
+                relative_target_loc[j] = relative_target_loc[j] - robot_pose(0,j);
+
+            // calculate intersection with desired path
+            if (rel_waypoints.rows() > 1)
+            {
+                waypoint_distance.resize(rel_waypoints.rows());
+                for (int i=0; i<rel_waypoints.rows(); i++)
+                {
+                    waypoint_distance[i] = sqrt(pow(rel_waypoints(i,0),2) + pow(rel_waypoints(i,1),2));
+                    if (waypoint_distance[i] > circle_range)
+                    {
+                        abs_angle = atan2(rel_waypoints(i,1), rel_waypoints(i,0));
+                        short_trajectory = false;
+                        break;
+                    }
+                }
+                if (short_trajectory)
+                {
+                   abs_angle = atan2(relative_target_loc(1), relative_target_loc(0));
+                }
+                abs_angle = abs_angle * RAD2DEG;
+                if (abs_angle < 0)
+                    abs_angle = abs_angle + 360;
+
+                rel_angle = abs_angle - robot_pose(0,2);
+            }
+
+            // stop head when target is reached
+
+            m_iNav->getNavigationStatus(nav_status);
+            if ((nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached) || nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle)
+                rel_angle = 0;
+
+            // move robot head
+            command[0]=0;
+            command[1]=rel_angle;
+
+            //pos control mode: 7565168 ---- pos direct control mode: 1685286768
+            yarp::conf::vocab32_t VOCAB_CM_POSITION        =   yarp::os::createVocab('p','o','s');
+            yarp::conf::vocab32_t VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab('p','o','s','d');
+
+            if (std::abs(encoders(1)-command(1)) < 3)
+            {
+                icontrolMode->setControlMode(1,VOCAB_CM_POSITION_DIRECT);
+                idirect->setPosition(1,command[1]);
+            }
+            else
+            {
+                icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
+                ipos->positionMove(command.data());
+            }
 
 
 
 #ifdef DEBUG
-            std::cout << m_all_waypoints.toString() << '\n';
+
+            std::cout << "relative position" << '\n';
+            std::cout << rel_waypoints.toString() << '\n';
+            std::cout << "absolute angle: " << abs_angle << '\n';
+            std::cout << "relative angle: " << rel_angle << " from final target? " << short_trajectory << '\n';
+            std::cout << "relative target: " << relative_target_loc.toString() << '\n';
+
+            //std::cout << "INFO - pos control mode value: " << VOCAB_CM_POSITION << '\n';
+            //std::cout << "INFO - pos direct control mode value: " << VOCAB_CM_POSITION_DIRECT << '\n';
+            int actualMode=0;
+            icontrolMode->getControlMode(1, &actualMode);
+            std::cout << "getControlMode: " << actualMode << '\n';
+            if (nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached)
+                std::cout << "INFO - goal reached \n";
+            if (nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle)
+                std::cout << "INFO - idle \n";
+
+
+
+
+            //std::cout << yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached << '\n';
+            //std::cout << nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached  << '\n'
+            //std::cout << nav_status << '\n';
+
 #endif
-
-
         }
-
-
 
         return true;
     }
@@ -162,6 +248,9 @@ class MyModule : public yarp::os::RFModule
     {
         count=0;
         done_run = true;
+        robot_pose.resize(1,3);
+        robot_pose.zero();
+
         if (!handlerPort.open("/myModule"))
             return false;
 
@@ -170,7 +259,7 @@ class MyModule : public yarp::os::RFModule
         // to the respond method
         attach(handlerPort);
 
-        // CONFIGURATION PARAMETERS
+        // CONFIGURATION PARAMETERS (general)
 
         Bottle general_group = rf.findGroup("GENERAL");
         if (general_group.isNull())
@@ -186,20 +275,12 @@ class MyModule : public yarp::os::RFModule
             return 1;
         }
 
-        if (!general_group.check("head_speed"))
+        if (general_group.check("head_speed"))
         {
-            head_speed = 30.0;
-        }
-        else
-        {
-            head_speed=general_group.find("head_speed").asDouble();
+            head_speed=general_group.find("he(i,j)ad_speed").asDouble();;
         }
 
-        if (!general_group.check("rotation_range"))
-        {
-            rotation_range = 25.0;
-        }
-        else
+        if (general_group.check("rotation_range"))
         {
             rotation_range=general_group.find("rotation_range").asDouble();
         }
@@ -213,6 +294,22 @@ class MyModule : public yarp::os::RFModule
         {
             headModeName=general_group.find("head_mode").asString();
         }
+
+        // CONFIGURATION PARAMETERS (head behaviour)
+        Bottle head_group = rf.findGroup("HEAD");
+        if (head_group.isNull())
+        {
+            yWarning() << "Missing HEAD group, default parameters used";
+           // return false;
+        }
+
+        if (head_group.check("circle_range"))
+        {
+            circle_range = head_group.find("circle_range").asDouble();
+        }
+
+
+
 
         std::string robotName=general_group.find("robot").asString();
         std::string remotePorts="/";
@@ -238,8 +335,10 @@ class MyModule : public yarp::os::RFModule
 
 
         bool ok;
-        ok = robotDevice->view(pos);
-        ok = ok && robotDevice->view(encs);
+        ok = robotDevice->view(ipos);
+        ok = ok && robotDevice->view(iencs);
+        ok = ok && robotDevice->view(idirect);
+        ok = ok && robotDevice->view(icontrolMode);
 
         if (!ok) {
             printf("Problems acquiring interfaces\n");
@@ -248,7 +347,7 @@ class MyModule : public yarp::os::RFModule
 
         // get axes
         int nj=0;
-        pos->getAxes(&nj);
+        ipos->getAxes(&nj);
         encoders.resize(nj);
         tmp.resize(nj);
         command.resize(nj);
@@ -258,17 +357,17 @@ class MyModule : public yarp::os::RFModule
         for (i = 0; i < nj; i++) {
              tmp[i] = 50.0;
         }
-        pos->setRefAccelerations(tmp.data());
+        ipos->setRefAccelerations(tmp.data());
 
         for (i = 0; i < nj; i++) {
             tmp[i] = head_speed;
-            pos->setRefSpeed(i, tmp[i]);
+            ipos->setRefSpeed(i, tmp[i]);
         }
 
         //fisrst read all encoders
         //
         printf("waiting for encoders");
-        while(!encs->getEncoders(encoders.data()))
+        while(!iencs->getEncoders(encoders.data()))
         {
             Time::delay(0.1);
             printf(".");
@@ -280,23 +379,26 @@ class MyModule : public yarp::os::RFModule
         //now set the head to a neutral position
         command[0]=0;
         command[1]=0;
-        pos->positionMove(command.data());
+        ipos->positionMove(command.data());
 
         bool done=false;
         while(!done)
         {
-            pos->checkMotionDone(&done);
+            ipos->checkMotionDone(&done);
             Time::delay(0.1);
         }
 
 
-        //open the navigation interface
+
+
         if (headModeName=="trajectory")
         {
+            // parameters for localization and navigation servers
+
             Bottle navigation_group = rf.findGroup("NAVIGATION");
             if (navigation_group.isNull())
             {
-                yWarning() << "Missing NAVIGATION group!";
+                yWarning() << "Missing NAVIGATION group, default parameters used";
                // return false;
             }
 
@@ -317,6 +419,24 @@ class MyModule : public yarp::os::RFModule
                 m_remote_map = navigation_group.find("remote_map").asString();
             }
 
+            //open the localization interface
+            Property loc_options;
+            loc_options.put("device", "localization2DClient");
+            loc_options.put("local", m_local_name_prefix+"/localizationClient");
+            loc_options.put("remote", m_remote_localization);
+            if (m_pLoc.open(loc_options) == false)
+            {
+                yError() << "Unable to open localization driver";
+                return false;
+            }
+            m_pLoc.view(m_iLoc);
+            if (m_pLoc.isValid() == false || m_iLoc == 0)
+            {
+                yError() << "Unable to view localization interface";
+                return false;
+            }
+
+            //open the navigation interface
 
             Property nav_options;
             nav_options.put("device", "navigation2DClient");
@@ -350,6 +470,7 @@ class MyModule : public yarp::os::RFModule
     // Close function, to perform cleanup.
     bool close()
     {
+        icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
         // optional, close port explicitly
         std::cout << "Calling close function\n";
         robotDevice->close();
@@ -362,6 +483,109 @@ class MyModule : public yarp::os::RFModule
 
         return true;
     }
+
+    // head mode sweep
+    bool sweepMode()
+    {
+        if (std::abs(encoders(1)-command(1)) < 1)
+        {
+            done_run = true;
+        }
+        else
+        {
+            done_run = false;
+        }
+
+
+        if (done_run)
+        {
+            com_count ++;
+            if (com_count%2)
+            {
+                command[0]=0;
+                command[1]=rotation_range;
+            }
+            else
+            {
+                command[0]=0;
+                command[1]=-rotation_range;
+            }
+            ipos->positionMove(command.data());
+        }
+        return true;
+    }
+
+    bool getTrajectory()
+    {
+
+        double rel_x =0;
+        double rel_y =0;
+        double rel_t =0;
+        //m_iNav->getRelativeLocationOfCurrentTarget(rel_x, rel_y, rel_t);
+        //relative_target_loc[0] = rel_x;
+        //relative_target_loc[1] = rel_y;
+        //relative_target_loc[2] = rel_t;
+
+        if (m_iNav->getAbsoluteLocationOfCurrentTarget(m_target_data))
+        {
+            relative_target_loc[0] = m_target_data.x;
+            relative_target_loc[1] = m_target_data.y;
+            relative_target_loc[2] = m_target_data.theta;
+            if (relative_target_loc[2]<0)
+                relative_target_loc[2] = relative_target_loc[2] + 360;
+        }
+
+        m_iNav->getAllNavigationWaypoints(m_all_waypoints);
+
+        abs_waypoints.resize(m_all_waypoints.size(),3);
+        rel_waypoints.resize(m_all_waypoints.size(),3);
+
+        for (int i = 0; i < m_all_waypoints.size(); i++)
+        {
+            abs_waypoints(i,0) = m_all_waypoints[i].x;
+            abs_waypoints(i,1) = m_all_waypoints[i].y;
+            abs_waypoints(i,2) = m_all_waypoints[i].theta;
+            if (abs_waypoints(i,2)<0)
+                abs_waypoints(i,2) = abs_waypoints(i,2) + 360;
+        }
+
+#ifdef DEBUG
+        std::cout << "trajectory data" << '\n';
+        //std::cout << m_all_waypoints.toString() << '\n';
+        std::cout << abs_waypoints.toString() << '\n';
+#endif
+
+        return true;
+    }
+      bool getRobotPosition()
+    {
+        bool ret = m_iLoc->getCurrentPosition(m_localization_data);
+        if (ret)
+        {
+            m_loc_timeout_counter = 0;
+            robot_pose(0,0) = m_localization_data.x;
+            robot_pose(0,1) = m_localization_data.y;
+            robot_pose(0,2) = m_localization_data.theta;
+            if (robot_pose(0,2)<0)
+                robot_pose(0,2) = robot_pose(0,2) + 360;
+        }
+        else
+        {
+            m_loc_timeout_counter++;
+            if (m_loc_timeout_counter>TIMEOUT_MAX) m_loc_timeout_counter = TIMEOUT_MAX;
+            yError(" timeout, no localization data received!\n");
+            return false;
+        }
+
+#ifdef DEBUG
+        std::cout << "localization data" << '\n';
+        //std::cout << m_localization_data.toString() << '\n';
+        std::cout << robot_pose.toString() << '\n';
+#endif
+
+        return true;
+    }
+
 };
 
 int main(int argc, char * argv[])
