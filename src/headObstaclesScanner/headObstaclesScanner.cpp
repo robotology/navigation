@@ -11,6 +11,8 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
@@ -24,6 +26,11 @@
 #include <yarp/dev/MapGrid2D.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -45,6 +52,7 @@ using namespace yarp::os;
 class MyModule : public yarp::os::RFModule
 {
     // PARAMETERS
+    // ./headObstaclesScanner --GENERAL::robot R1 --GENERAL::head_mode trajectory
 
     // head behaviour default parameters
     double head_speed = 30.0;
@@ -277,7 +285,7 @@ class MyModule : public yarp::os::RFModule
 
         if (general_group.check("head_speed"))
         {
-            head_speed=general_group.find("he(i,j)ad_speed").asDouble();;
+            head_speed=general_group.find("head_speed").asDouble();;
         }
 
         if (general_group.check("rotation_range"))
