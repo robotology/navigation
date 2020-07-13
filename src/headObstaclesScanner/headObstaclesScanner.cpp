@@ -30,6 +30,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+#include "cornerdetector.h"
+
 
 
 #ifndef M_PI
@@ -87,6 +89,8 @@ class MyModule : public yarp::os::RFModule
     yarp::dev::Nav2D::Map2DLocation        m_target_data;
 
     // SERVICE VARIABLES
+    cornerDetector *cornersMapObj;
+
     yarp::os::Port handlerPort; // a port to handle messages
     int count;
 
@@ -100,10 +104,14 @@ class MyModule : public yarp::os::RFModule
 
     yarp::sig::Matrix abs_waypoints;
     yarp::sig::Matrix rel_waypoints;
+    yarp::sig::Matrix map_corners;
+    yarp::sig::Matrix rel_map_corners;
     yarp::sig::Matrix robot_pose;
     std::vector<double> waypoint_distance;
     Vector relative_target_loc = {0, 0, 0};
     yarp::dev::Nav2D::NavigationStatusEnum  nav_status;
+
+
 
     //int *actualMode;
 
@@ -236,6 +244,38 @@ class MyModule : public yarp::os::RFModule
 #endif
         }
 
+        if (headModeName=="closer_corner")
+        {
+            // get robot position
+            if (!getRobotPosition())
+                return false;
+
+            // get relative position of the corners
+            getRelMapCorners();
+
+            // find closer corner
+            double temp_distance = 1000000;
+            double i_distance;
+            int closer_point_index;
+            for (int i=0; i<rel_map_corners.rows(); i++)
+            {
+                // ATTENTION! DISTANCE IS STILL IN PIXELS
+                i_distance = pow(rel_map_corners(i,0),2) + pow(rel_map_corners(i,1),2);
+                if (i_distance < temp_distance)
+                {
+                    temp_distance = i_distance;
+                    closer_point_index = i;
+                }
+            }
+
+            // calculate the direction
+
+
+
+
+
+        }
+
         return true;
     }
     // Message handler. Just echo all received messages.
@@ -315,9 +355,6 @@ class MyModule : public yarp::os::RFModule
         {
             circle_range = head_group.find("circle_range").asDouble();
         }
-
-
-
 
         std::string robotName=general_group.find("robot").asString();
         std::string remotePorts="/";
@@ -399,7 +436,7 @@ class MyModule : public yarp::os::RFModule
 
 
 
-        if (headModeName=="trajectory")
+        if ((headModeName=="trajectory") || (headModeName=="closer_corner"))
         {
             // parameters for localization and navigation servers
 
@@ -465,6 +502,16 @@ class MyModule : public yarp::os::RFModule
             }
         }
 
+        if (headModeName=="closer_corner")
+        {
+            cornersMapObj = new cornerDetector("/dockersharedfolder/testopencv/test4/squirico_map.png");
+
+            getRelMapCorners();
+
+            std::cout << "corners found:  " << rel_map_corners.rows() << '\n';
+            std::cout << "relative corners: \n " << rel_map_corners.toString() << '\n';
+
+        }
 
 
         return true;
@@ -591,6 +638,20 @@ class MyModule : public yarp::os::RFModule
         std::cout << robot_pose.toString() << '\n';
 #endif
 
+        return true;
+    }
+
+      bool getRelMapCorners()
+    {
+          cornersMapObj->calculateCorners();
+          map_corners = cornersMapObj->yarp_corners;
+          rel_map_corners.resize(map_corners.rows() , map_corners.cols());
+
+          for (int i=0; i<map_corners.rows(); i++)
+          {
+                  rel_map_corners(i,0) = map_corners(i,0) - robot_pose(0,0);
+                  rel_map_corners(i,1) = map_corners(i,1) - robot_pose(0,1);
+          }
         return true;
     }
 
