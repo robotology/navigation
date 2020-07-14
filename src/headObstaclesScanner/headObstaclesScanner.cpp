@@ -32,6 +32,11 @@
 
 #include "cornerdetector.h"
 
+#include <yarp/sig/Image.h>
+#include <yarp/sig/ImageDraw.h>
+#include <yarp/sig/ImageFile.h>
+#include <yarp/cv/Cv.h>
+
 
 
 #ifndef M_PI
@@ -54,7 +59,7 @@ using namespace yarp::os;
 class MyModule : public yarp::os::RFModule
 {
     // PARAMETERS
-    // ./headObstaclesScanner --GENERAL::robot R1 --GENERAL::head_mode trajectory
+    // ./headObstaclesScanner --GENERAL::robot R1 --GENERAL::head_mode closer_corner
 
     // head behaviour default parameters
     double head_speed = 30.0;
@@ -66,8 +71,10 @@ class MyModule : public yarp::os::RFModule
     std::string  m_remote_map = "/mapServer";
     std::string  m_remote_navigation = "/navigationServer";
     std::string  m_local_name_prefix = "/headObstaclesScanner";
-    std::string headModeName;
-
+    std::string  headModeName = "sweep";
+    //std::string  map_name = "/dockersharedfolder/testopencv/test4/squirico_map.png";
+    std::string  map_name = "/dockersharedfolder/testopencv/test4/mymap_isaac3.png";
+    double  map_resolution = 0.02;
 
 
 
@@ -105,11 +112,24 @@ class MyModule : public yarp::os::RFModule
     yarp::sig::Matrix abs_waypoints;
     yarp::sig::Matrix rel_waypoints;
     yarp::sig::Matrix map_corners;
+    vector<Point2f> opencv_corners;
     yarp::sig::Matrix rel_map_corners;
     yarp::sig::Matrix robot_pose;
     std::vector<double> waypoint_distance;
     Vector relative_target_loc = {0, 0, 0};
     yarp::dev::Nav2D::NavigationStatusEnum  nav_status;
+    std::vector<double> looking_point;
+
+    char* source_window = "Image";
+    Mat copy;
+    Mat src, src_gray;
+
+    BufferedPort<ImageOf<PixelRgb> > imagePort;
+
+    int closer_point_index = 0;
+
+    yarp::conf::vocab32_t VOCAB_CM_POSITION        =   yarp::os::createVocab('p','o','s');
+    yarp::conf::vocab32_t VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab('p','o','s','d');
 
 
 
@@ -174,14 +194,20 @@ class MyModule : public yarp::os::RFModule
                     if (waypoint_distance[i] > circle_range)
                     {
                         abs_angle = atan2(rel_waypoints(i,1), rel_waypoints(i,0));
+                        looking_point[0] = rel_waypoints(i,0);
+                        looking_point[1] = rel_waypoints(i,1);
                         short_trajectory = false;
                         break;
                     }
                 }
                 if (short_trajectory)
                 {
+                   looking_point[0] = relative_target_loc(0);
+                   looking_point[1] = relative_target_loc(1);
                    abs_angle = atan2(relative_target_loc(1), relative_target_loc(0));
                 }
+
+
                 abs_angle = abs_angle * RAD2DEG;
                 if (abs_angle < 0)
                     abs_angle = abs_angle + 360;
@@ -200,8 +226,6 @@ class MyModule : public yarp::os::RFModule
             command[1]=rel_angle;
 
             //pos control mode: 7565168 ---- pos direct control mode: 1685286768
-            yarp::conf::vocab32_t VOCAB_CM_POSITION        =   yarp::os::createVocab('p','o','s');
-            yarp::conf::vocab32_t VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab('p','o','s','d');
 
             if (std::abs(encoders(1)-command(1)) < 3)
             {
@@ -213,7 +237,6 @@ class MyModule : public yarp::os::RFModule
                 icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
                 ipos->positionMove(command.data());
             }
-
 
 
 #ifdef DEBUG
@@ -251,25 +274,25 @@ class MyModule : public yarp::os::RFModule
                 return false;
 
             // get relative position of the corners
-            getRelMapCorners();
+            if (!getRelMapCorners())
+                return false;
 
             // find closer corner
             double temp_distance = 1000000;
             double i_distance;
-            int closer_point_index;
             for (int i=0; i<rel_map_corners.rows(); i++)
             {
-                // ATTENTION! DISTANCE IS STILL IN PIXELS
-                i_distance = pow(rel_map_corners(i,0),2) + pow(rel_map_corners(i,1),2);
+                i_distance = sqrt(pow(rel_map_corners(i,0),2) + pow(rel_map_corners(i,1),2));
                 if (i_distance < temp_distance)
                 {
                     temp_distance = i_distance;
                     closer_point_index = i;
                 }
             }
+            cout << "closer_point_index: " << closer_point_index << '\n';
 
             // calculate the direction
-
+        drawImage();
 
 
 
@@ -298,6 +321,10 @@ class MyModule : public yarp::os::RFModule
         done_run = true;
         robot_pose.resize(1,3);
         robot_pose.zero();
+
+        looking_point.resize(2);
+        looking_point[0] = 0;
+        looking_point[1] = 0;
 
         if (!handlerPort.open("/myModule"))
             return false;
@@ -335,8 +362,7 @@ class MyModule : public yarp::os::RFModule
 
         if (!general_group.check("head_mode"))
         {
-            fprintf(stderr, "WARNING parameter head_mode not specified, set default: sweep (other modes: --head_mode sweep, trajectory)\n");
-            headModeName = "sweep";
+            fprintf(stderr, "WARNING parameter head_mode not specified, set default (modes: --head_mode sweep, trajectory, closer_corner)\n");
         }
         else
         {
@@ -504,13 +530,29 @@ class MyModule : public yarp::os::RFModule
 
         if (headModeName=="closer_corner")
         {
-            cornersMapObj = new cornerDetector("/dockersharedfolder/testopencv/test4/squirico_map.png");
+            // read map
+            if (head_group.check("map_name"))
+            {
+                map_name = head_group.find("map_name").asString();
+            }
+            if (head_group.check("map_resolution"))
+            {
+                map_resolution = head_group.find("map_resolution").asDouble();
+            }
 
+            // create corner detector obj
+            cornersMapObj = new cornerDetector(map_name);
+
+            // get corners
             getRelMapCorners();
+
+            // open image port and send image
+            imagePort.open(m_local_name_prefix+"/rgb:o");
+
+            drawImage();
 
             std::cout << "corners found:  " << rel_map_corners.rows() << '\n';
             std::cout << "relative corners: \n " << rel_map_corners.toString() << '\n';
-
         }
 
 
@@ -649,11 +691,86 @@ class MyModule : public yarp::os::RFModule
 
           for (int i=0; i<map_corners.rows(); i++)
           {
-                  rel_map_corners(i,0) = map_corners(i,0) - robot_pose(0,0);
-                  rel_map_corners(i,1) = map_corners(i,1) - robot_pose(0,1);
+                  rel_map_corners(i,0) = map_corners(i,0)*map_resolution - robot_pose(0,0);
+                  rel_map_corners(i,1) = map_corners(i,1)*map_resolution - robot_pose(0,1);
           }
         return true;
     }
+
+      bool drawImage()
+    {
+          // Read image
+          src = cv::imread( map_name, 1 );
+
+          copy = src.clone();
+          cv::RNG rng(12345);
+
+          // Create Window
+          //namedWindow( source_window, CV_WINDOW_AUTOSIZE );
+          //imshow( source_window, src );
+
+          // Draw corners detected
+          opencv_corners = cornersMapObj->corners;
+
+          int r = 4;
+          for( int i = 0; i < opencv_corners.size(); i++ )
+             { circle( copy, opencv_corners[i], r, Scalar(255, 0, 0), -1, 8, 0 ); }
+
+          circle( copy, opencv_corners[closer_point_index], r, Scalar(0, 255, 0), -1, 8, 0 );  // closer corner has a different color
+
+          // Draw robot position
+          Point2f opencv_robot_pos;
+          opencv_robot_pos.x = robot_pose(0,1)/map_resolution;
+          opencv_robot_pos.y = robot_pose(0,0)/map_resolution;
+
+          circle( copy, opencv_robot_pos, r*2, Scalar(0, 0, 255), -1, 8, 0 );
+
+
+          // Send image to the door
+          ImageOf<PixelRgb> &img = imagePort.prepare();
+
+          img = yarp::cv::fromCvMat<yarp::sig::PixelRgb>(copy);
+
+          imagePort.write();
+
+    }
+
+      bool lookPoint()
+      {
+          double abs_angle = 0;
+          double rel_angle;
+
+          abs_angle = atan2(looking_point[1] , looking_point[0]);
+          abs_angle = abs_angle * RAD2DEG;
+          if (abs_angle < 0)
+              abs_angle = abs_angle + 360;
+
+          rel_angle = abs_angle - robot_pose(0,2);
+
+          // stop head when target is reached
+
+          m_iNav->getNavigationStatus(nav_status);
+          if ((nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached) || nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle)
+              rel_angle = 0;
+
+          // move robot head
+          command[0]=0;
+          command[1]=rel_angle;
+
+          //pos control mode: 7565168 ---- pos direct control mode: 1685286768
+
+          if (std::abs(encoders(1)-command(1)) < 3)
+          {
+              icontrolMode->setControlMode(1,VOCAB_CM_POSITION_DIRECT);
+              idirect->setPosition(1,command[1]);
+          }
+          else
+          {
+              icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
+              ipos->positionMove(command.data());
+          }
+
+      }
 
 };
 

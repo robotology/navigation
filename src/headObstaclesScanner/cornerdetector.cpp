@@ -30,8 +30,8 @@ void cornerDetector::calculateCorners()
 
     for( int i = 0; i < corners.size(); i++ )
     {
-        yarp_corners(i,0) = corners[i].x;
-        yarp_corners(i,1) = corners[i].y;
+        yarp_corners(i,1) = corners[i].x;
+        yarp_corners(i,0) = corners[i].y;
     }
 
 
