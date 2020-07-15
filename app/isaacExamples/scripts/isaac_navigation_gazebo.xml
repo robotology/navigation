@@ -1,5 +1,5 @@
 <application>
-<name>isaac EXAMPLE1 Gazebo</name>
+<name>isaac navigation Gazebo</name>
 
 <dependencies>
 </dependencies>
@@ -31,7 +31,7 @@
 
 <module>
    <name>isaac_nav_module</name>
-   <parameters>in ~/isaac/isaac-sdk : bazel run //apps/flatsimYarp_ex1_laserYarp</parameters>
+   <parameters>in ~/isaac/isaac-sdk : bazel run //apps/Yarp_GazeboNavigation:gazebo_navigation</parameters>
    <node>isaac_pc</node>
 </module>
 
@@ -60,11 +60,24 @@
 </module>
 
 <module>
+   <name>yarpdev</name>
+   <parameters>--device Rangefinder2DWrapper --subdevice laserFromPointCloud --from ~/navigation/app/isaacExamples/laserFromPointCloudsimCER.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+<name>yarpdev</name>
+<parameters>
+--device Rangefinder2DWrapper --subdevice laserFromExternalPort --SENSOR::min_angle 0 --SENSOR::max_angle 360 --SENSOR::resolution 0.5 --SENSOR::input_ports_name "(/laserFromPort/las1:i /laserFromPort/las2:i)" --TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient --TRANSFORM_CLIENT::remote /transformServer --TRANSFORMS::src_frames "(/mobile_base_double_lidar /mobile_base_double_lid)" --TRANSFORMS::dst_frame /mobile_base_double_lidar --period 10 --name /augmentedLaser:o
+</parameters>
+<node>console</node>
+</module>
+
+<module>
    <name>ROSmodule</name>
    <parameters>in ~/cer/app/robots/CER02 : roslaunch robotStatePublisher.launch</parameters>
    <node>console</node>
 </module>
-
 
 
 <connection>
@@ -98,8 +111,26 @@
 </connection>
 
 <connection>
+  <from>/RGBDlaser:o</from>
+  <to>/laserFromPort/las1:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
   <from>/R1/laser:o</from>
-  <to>/yarpbridge/laser:i</to>
+  <to>/laserFromPort/las2:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/R1/laser:o</from>
+  <to>/yarpbridge/laser/localization:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/augmentedLaser:o</from>
+  <to>/yarpbridge/laser/navigation:i</to>
   <protocol>tcp</protocol>
 </connection>
 
