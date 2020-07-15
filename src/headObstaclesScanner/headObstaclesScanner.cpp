@@ -58,8 +58,13 @@ using namespace yarp::os;
 
 class MyModule : public yarp::os::RFModule
 {
+    // FAST SETUP:
+        // ./headObstaclesScanner --GENERAL::robot R1 --GENERAL::head_mode closer_corner
+        // to see image debug:
+        // yarpview --name /headObstaclesScanner/debug:i
+        // yarp connect /headObstaclesScanner/rgb:o /headObstaclesScanner/debug:i
+
     // PARAMETERS
-    // ./headObstaclesScanner --GENERAL::robot R1 --GENERAL::head_mode closer_corner
 
     // head behaviour default parameters
     double head_speed = 30.0;
@@ -193,7 +198,7 @@ class MyModule : public yarp::os::RFModule
                     waypoint_distance[i] = sqrt(pow(rel_waypoints(i,0),2) + pow(rel_waypoints(i,1),2));
                     if (waypoint_distance[i] > circle_range)
                     {
-                        abs_angle = atan2(rel_waypoints(i,1), rel_waypoints(i,0));
+                        //abs_angle = atan2(rel_waypoints(i,1), rel_waypoints(i,0));
                         looking_point[0] = rel_waypoints(i,0);
                         looking_point[1] = rel_waypoints(i,1);
                         short_trajectory = false;
@@ -204,39 +209,42 @@ class MyModule : public yarp::os::RFModule
                 {
                    looking_point[0] = relative_target_loc(0);
                    looking_point[1] = relative_target_loc(1);
-                   abs_angle = atan2(relative_target_loc(1), relative_target_loc(0));
+                   //abs_angle = atan2(relative_target_loc(1), relative_target_loc(0));
                 }
 
 
-                abs_angle = abs_angle * RAD2DEG;
-                if (abs_angle < 0)
-                    abs_angle = abs_angle + 360;
+//                abs_angle = abs_angle * RAD2DEG;
+//                if (abs_angle < 0)
+//                    abs_angle = abs_angle + 360;
 
-                rel_angle = abs_angle - robot_pose(0,2);
+//                rel_angle = abs_angle - robot_pose(0,2);
             }
 
-            // stop head when target is reached
+            lookPoint();
 
-            m_iNav->getNavigationStatus(nav_status);
-            if ((nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached) || nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle)
-                rel_angle = 0;
 
-            // move robot head
-            command[0]=0;
-            command[1]=rel_angle;
+//            // stop head when target is reached
 
-            //pos control mode: 7565168 ---- pos direct control mode: 1685286768
+//            m_iNav->getNavigationStatus(nav_status);
+//            if ((nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached) || nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle)
+//                rel_angle = 0;
 
-            if (std::abs(encoders(1)-command(1)) < 3)
-            {
-                icontrolMode->setControlMode(1,VOCAB_CM_POSITION_DIRECT);
-                idirect->setPosition(1,command[1]);
-            }
-            else
-            {
-                icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
-                ipos->positionMove(command.data());
-            }
+//            // move robot head
+//            command[0]=0;
+//            command[1]=rel_angle;
+
+//            //pos control mode: 7565168 ---- pos direct control mode: 1685286768
+
+//            if (std::abs(encoders(1)-command(1)) < 3)
+//            {
+//                icontrolMode->setControlMode(1,VOCAB_CM_POSITION_DIRECT);
+//                idirect->setPosition(1,command[1]);
+//            }
+//            else
+//            {
+//                icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
+//                ipos->positionMove(command.data());
+//            }
 
 
 #ifdef DEBUG
@@ -291,11 +299,14 @@ class MyModule : public yarp::os::RFModule
             }
             cout << "closer_point_index: " << closer_point_index << '\n';
 
-            // calculate the direction
-        drawImage();
+            // show image
+            drawImage();
 
+            // look at the closer corner
 
-
+            looking_point[0] = rel_map_corners(closer_point_index,0);
+            looking_point[1] = rel_map_corners(closer_point_index,1);
+            lookPoint();
 
         }
 
@@ -751,11 +762,15 @@ class MyModule : public yarp::os::RFModule
 
           m_iNav->getNavigationStatus(nav_status);
           if ((nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_goal_reached) || nav_status == yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle)
-              rel_angle = 0;
+              //rel_angle = 0;
 
           // move robot head
           command[0]=0;
-          command[1]=rel_angle;
+
+          if (rel_angle > 180 )
+              command[1]= rel_angle - 360;
+          else
+              command[1]= rel_angle;
 
           //pos control mode: 7565168 ---- pos direct control mode: 1685286768
 
@@ -769,6 +784,15 @@ class MyModule : public yarp::os::RFModule
               icontrolMode->setControlMode(1,VOCAB_CM_POSITION);
               ipos->positionMove(command.data());
           }
+
+#ifdef DEBUG
+            std::cout << "LOOKING POINT:" << '\n';
+            std::cout << "robot position X: " << robot_pose(0,0) << " Y: " << robot_pose(0,1) << " theta: " << robot_pose(0,2) <<'\n';
+            std::cout << "relative looking point X: " << looking_point[0] << " Y: " << looking_point[1] << '\n';
+            std::cout << "point angle in robot reference system: " << abs_angle << '\n';
+            std::cout << "point angle relative to robot head: " << rel_angle << '\n';
+            std::cout << "commanded angle: " << command[1] << '\n';
+#endif
 
       }
 
