@@ -215,8 +215,8 @@ void isaacNavigator::run()
             m_global_plan.push_back(loc);
             if (i==2)
             {
-				m_current_waypoint = loc;
-			}
+                m_current_waypoint = loc;
+            }
         }
     }
 
@@ -442,10 +442,19 @@ bool isaacNavigator::applyVelocityCommand(double x_vel, double y_vel, double the
     return true;
 }
 
-bool isaacNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::Map2DPath& waypoints)
+bool isaacNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    waypoints = m_global_plan;
+    if (trajectory_type==global_trajectory)
+    {
+        waypoints = m_global_plan;
+    }
+    else if (trajectory_type == local_trajectory)
+    {
+        waypoints = m_local_plan;
+    }
+    else return false;
+
     return true;
 }
 

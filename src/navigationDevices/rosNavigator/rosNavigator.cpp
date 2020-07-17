@@ -454,7 +454,7 @@ bool rosNavigator::resumeNavigation()
     return false;
 }
 
-bool rosNavigator::getAllNavigationWaypoints(Map2DPath& waypoints)
+bool rosNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     yDebug() << "Not yet implemented";
     return false;

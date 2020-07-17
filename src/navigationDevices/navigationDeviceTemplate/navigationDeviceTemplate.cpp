@@ -132,7 +132,7 @@ bool navigationDeviceTemplate::getRelativeLocationOfCurrentTarget(double& x, dou
     return true;
 }
 
-bool navigationDeviceTemplate::getAllNavigationWaypoints(Map2DPath& waypoints)
+bool navigationDeviceTemplate::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     //### TO BE IMPLEMENTED BY USER
     return true;
