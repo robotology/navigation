@@ -184,7 +184,7 @@ bool simpleVelocityNavigation::getRelativeLocationOfCurrentTarget(double& x, dou
     return NOT_IMPLEMENTED;
 }
 
-bool simpleVelocityNavigation::getAllNavigationWaypoints(Map2DPath& waypoints)
+bool simpleVelocityNavigation::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     yError() << "getAllNavigationWaypoints() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;

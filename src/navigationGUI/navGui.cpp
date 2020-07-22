@@ -551,17 +551,34 @@ void NavGuiThread::draw_map()
         m_navigation_status != navigation_status_error &&
         m_navigation_status != navigation_status_failing)
         {
-            std::queue <XYCell> all_waypoints_cell;
-            for (int i = 0; i < m_all_waypoints.size(); i++)
+            if (m_enable_draw_global_path)
             {
-                XYWorld curr_waypoint_world(m_all_waypoints[i].x, m_all_waypoints[i].y);
-                XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-                all_waypoints_cell.push(curr_waypoint_cell);
-            }
+                std::queue <XYCell> all_waypoints_cell;
+                for (int i = 0; i < m_global_waypoints.size(); i++)
+                {
+                    XYWorld curr_waypoint_world(m_global_waypoints[i].x, m_global_waypoints[i].y);
+                    XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+                    all_waypoints_cell.push(curr_waypoint_cell);
+                }
 
-            XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
-            XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
-            map_utilites::drawPath(i4_map_with_path, current_position, curr_waypoint_cell, all_waypoints_cell, color3, color2);
+                XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
+                XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+                map_utilites::drawPath(i4_map_with_path, current_position, curr_waypoint_cell, all_waypoints_cell, color3, color2);
+            }
+            if (m_enable_draw_local_path)
+            {
+                std::queue <XYCell> all_waypoints_cell;
+                for (int i = 0; i < m_local_waypoints.size(); i++)
+                {
+                    XYWorld curr_waypoint_world(m_local_waypoints[i].x, m_local_waypoints[i].y);
+                    XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+                    all_waypoints_cell.push(curr_waypoint_cell);
+                }
+
+                XYWorld curr_waypoint_world(m_curr_waypoint.x, m_curr_waypoint.y);
+                XYCell curr_waypoint_cell = m_current_map.world2Cell(curr_waypoint_world);
+                map_utilites::drawPath(i4_map_with_path, current_position, curr_waypoint_cell, all_waypoints_cell, color3, color2);
+            }
         }
 
     //############### finished, send to port
@@ -677,7 +694,8 @@ bool NavGuiThread::readWaypointsAndGoal()
     if (m_iNav)
     {
         m_iNav->getCurrentNavigationWaypoint(m_curr_waypoint);
-        m_iNav->getAllNavigationWaypoints(m_all_waypoints);
+        m_iNav->getAllNavigationWaypoints(yarp::dev::Nav2D::global_trajectory,m_global_waypoints);
+        m_iNav->getAllNavigationWaypoints(yarp::dev::Nav2D::local_trajectory, m_local_waypoints);
         m_iNav->getAbsoluteLocationOfCurrentTarget(m_curr_goal);
     }
     return true;

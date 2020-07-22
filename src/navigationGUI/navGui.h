@@ -102,7 +102,8 @@ class NavGuiThread: public yarp::os::PeriodicThread
     yarp::dev::Nav2D::Map2DLocation        m_localization_data;
     yarp::dev::Nav2D::Map2DLocation        m_curr_goal;
     yarp::dev::Nav2D::Map2DLocation        m_curr_waypoint;
-    yarp::dev::Nav2D::Map2DPath            m_all_waypoints;
+    yarp::dev::Nav2D::Map2DPath            m_global_waypoints;
+    yarp::dev::Nav2D::Map2DPath            m_local_waypoints;
     std::vector<Map2DLocation>             m_locations_list;
     std::vector<Map2DArea>                 m_areas_list;
 
@@ -137,6 +138,8 @@ class NavGuiThread: public yarp::os::PeriodicThread
     bool                m_enable_draw_laser_scans;
     bool                m_enable_draw_enlarged_scans;
     bool                m_enable_draw_infos;
+    bool                m_enable_draw_global_path;
+    bool                m_enable_draw_local_path;
   
     //images to be displayed
     IplImage* i1_map;

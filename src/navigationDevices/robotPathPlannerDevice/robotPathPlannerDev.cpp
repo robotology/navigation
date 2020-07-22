@@ -263,7 +263,7 @@ bool robotPathPlannerDev::resumeNavigation()
      return b;
 }
 
-bool robotPathPlannerDev::getAllNavigationWaypoints(Map2DPath& waypoints)
+bool robotPathPlannerDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     bool b = m_plannerThread->getCurrentPath(waypoints);
     return b;

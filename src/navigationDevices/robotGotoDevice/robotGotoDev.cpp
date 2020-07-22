@@ -287,7 +287,7 @@ bool robotGotoDev::resumeNavigation()
     return b;
 }
 
-bool robotGotoDev::getAllNavigationWaypoints(Map2DPath& waypoints)
+bool robotGotoDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     yError() << "Not yet implemented";
     return false;
