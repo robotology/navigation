@@ -1,0 +1,32 @@
+<application>
+<name>freeFloorViewer</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 1)" "(enable_ros_subscriber 1)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>freeFloorViewer</name>
+   <parameters></parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /floorView:i --out /floorClick:o</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/freeFloorViewer/floorEnhanced:o</from>
+  <to>/floorView:i</to>
+  <protocol>unix_stream</protocol>
+</connection>
+
+
+</application>

@@ -29,6 +29,7 @@ add_subdirectory(follower)
 add_subdirectory(portmonitors)
 add_subdirectory(tests)
 add_subdirectory(tutorials)
+add_subdirectory(freeFloorViewer)
 
 #add_subdirectory(extendedRangefinder2DWrapper)  da mettere???
 
