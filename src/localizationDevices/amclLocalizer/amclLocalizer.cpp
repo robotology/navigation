@@ -36,6 +36,7 @@ using namespace amcl;
 
 #define  LOWLEVEL_DEBUG
 
+YARP_LOG_COMPONENT(AMCL_DEV, "navigation.devices.amclLocalizer")
 
 static double normalize(double z)
 {
@@ -80,19 +81,19 @@ bool   amclLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 
 bool    amclLocalizer::startLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(AMCL_DEV) << "Not yet implemented";
     return false;
 }
 
 bool    amclLocalizer::stopLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(AMCL_DEV) << "Not yet implemented";
     return false;
 }
 
 bool   amclLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yError() << "Not yet implemented";
+    yCError(AMCL_DEV) << "Not yet implemented";
     return false;
 }
 
@@ -369,7 +370,7 @@ void amclLocalizerThread::updateFilter()
             pf_matrix_t pose_cov;
             if (!pf_get_cluster_stats(m_handler_pf, hyp_count, &weight, &pose_mean, &pose_cov))
             {
-                yError("Couldn't get stats on cluster %d", hyp_count);
+                yCError(AMCL_DEV,"Couldn't get stats on cluster %d", hyp_count);
                 break;
             }
 
@@ -620,48 +621,48 @@ bool amclLocalizerThread::threadInit()
     Bottle general_group = m_cfg.findGroup("GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yCError(AMCL_DEV) << "Missing GENERAL group!";
         return false;
     }
 
     Bottle initial_group = m_cfg.findGroup("INITIAL_POS");
     if (initial_group.isNull())
     {
-        yError() << "Missing INITIAL_POS group!";
+        yCError(AMCL_DEV) << "Missing INITIAL_POS group!";
         return false;
     }
 
     Bottle amcl_group = m_cfg.findGroup("AMCL");
     if (amcl_group.isNull())
     {
-        yError() << "Missing AMCL group!";
+        yCError(AMCL_DEV) << "Missing AMCL group!";
         return false;
     }
 
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(AMCL_DEV) << "Missing LOCALIZATION group!";
         return false;
     }
 
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
     {
-        yError() << "Missing TF group!";
+        yCError(AMCL_DEV) << "Missing TF group!";
         return false;
     }
 
     Bottle odometry_group = m_cfg.findGroup("ODOMETRY");
     if (odometry_group.isNull())
     {
-        yError() << "Missing ODOMETRY group!";
+        yCError(AMCL_DEV) << "Missing ODOMETRY group!";
         return false;
     }
     Bottle laser_group = m_cfg.findGroup("LASER");
     if (laser_group.isNull())
     {
-        yError() << "Missing LASER group!";
+        yCError(AMCL_DEV) << "Missing LASER group!";
         return false;
     }
 
@@ -672,7 +673,7 @@ bool amclLocalizerThread::threadInit()
     //laser group
     if (laser_group.check("laser_broadcast_port") == false)
     {
-        yError() << "Missing `laser_broadcast_port` in [LASER] group";
+        yCError(AMCL_DEV) << "Missing `laser_broadcast_port` in [LASER] group";
         return false;
     }
     m_laser_remote_port = laser_group.find("laser_broadcast_port").asString();
@@ -680,7 +681,7 @@ bool amclLocalizerThread::threadInit()
     //odometry group
     if (odometry_group.check("odometry_broadcast_port") == false)
     {
-        yError() << "Missing `odometry_broadcast_port` in [ODOMETRY] group";
+        yCError(AMCL_DEV) << "Missing `odometry_broadcast_port` in [ODOMETRY] group";
         return false;
     }
     m_port_broadcast_odometry_name = odometry_group.find("odometry_broadcast_port").asString();
@@ -697,19 +698,19 @@ bool amclLocalizerThread::threadInit()
     bool b3 = yarp::os::Network::connect(m_port_broadcast_odometry_name.c_str(), odom_portname.c_str());
     if (b1 == false || b2 == false || b3 == false)
     {
-        yError() << "Unable to initialize odometry port connection from " << m_port_broadcast_odometry_name.c_str() << "to:" << odom_portname.c_str();
+        yCError(AMCL_DEV) << "Unable to initialize odometry port connection from " << m_port_broadcast_odometry_name.c_str() << "to:" << odom_portname.c_str();
         return false;
     }
 
     //initial location initialization
     if (initial_group.check("initial_x")) { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
-    else { yError() << "missing initial_x param"; return false; }
+    else { yCError(AMCL_DEV) << "missing initial_x param"; return false; }
     if (initial_group.check("initial_y")) { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
-    else { yError() << "missing initial_y param"; return false; }
+    else { yCError(AMCL_DEV) << "missing initial_y param"; return false; }
     if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
-    else { yError() << "missing initial_theta param"; return false; }
+    else { yCError(AMCL_DEV) << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map")) { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
+    else { yCError(AMCL_DEV) << "missing initial_map param"; return false; }
     
     // Grab params off the param server
     m_use_map_topic = initial_group.check("use_map_topic", Value(false)).asBool();
@@ -803,27 +804,27 @@ bool amclLocalizerThread::threadInit()
     map_options.put("remote", "/mapServer");
     if (m_pMap.open(map_options) == false)
     {
-        yError() << "Unable to open mapClient";
+        yCError(AMCL_DEV) << "Unable to open mapClient";
         return false;
     }
     m_pMap.view(m_iMap);
     if (m_iMap == 0)
     {
-        yError() << "Unable to open map interface";
+        yCError(AMCL_DEV) << "Unable to open map interface";
         return false;
     }
 
     //get the map
-    yInfo() << "Asking for map '" << m_initial_loc.map_id << "'...";
+    yCInfo(AMCL_DEV) << "Asking for map '" << m_initial_loc.map_id << "'...";
     bool b = m_iMap->get_map(m_initial_loc.map_id, m_yarp_map);
     //m_yarp_map.crop(-1, -1, -1, -1); ///@@@@@@@@@@@ do not crop for now!
     if (b)
     {
-        yInfo() << "'"<< m_initial_loc.map_id <<"' received";
+        yCInfo(AMCL_DEV) << "'"<< m_initial_loc.map_id <<"' received";
     }
     else
     {
-        yError() << "'" << m_initial_loc.map_id << "' not found";
+        yCError(AMCL_DEV) << "'" << m_initial_loc.map_id << "' not found";
         return false;
     }
 
@@ -881,18 +882,18 @@ bool amclLocalizerThread::threadInit()
     }
     else if (m_laser_model_type == LASER_MODEL_LIKELIHOOD_FIELD_PROB)
     {
-        yInfo("Initializing likelihood field model; this can take some time on large maps...");
+        yCInfo(AMCL_DEV,"Initializing likelihood field model; this can take some time on large maps...");
         m_handler_laser->SetModelLikelihoodFieldProb(m_config.m_z_hit, m_config.m_z_rand, m_config.m_sigma_hit,
             m_config.m_laser_likelihood_max_dist,
             m_config.m_do_beamskip, m_config.m_beam_skip_distance,
             m_config.m_beam_skip_threshold, m_config.m_beam_skip_error_threshold);
-        yInfo("Done initializing likelihood field model with probabilities.");
+        yCInfo(AMCL_DEV,"Done initializing likelihood field model with probabilities.");
     }
     else if (m_laser_model_type == LASER_MODEL_LIKELIHOOD_FIELD)
     {
-        yInfo("Initializing likelihood field model; this can take some time on large maps...");
+        yCInfo(AMCL_DEV,"Initializing likelihood field model; this can take some time on large maps...");
         m_handler_laser->SetModelLikelihoodField(m_config.m_z_hit, m_config.m_z_rand, m_config.m_sigma_hit, m_config.m_laser_likelihood_max_dist);
-        yInfo("Done initializing likelihood field model.");
+        yCInfo(AMCL_DEV,"Done initializing likelihood field model.");
     }
 
     //opens the laser client and the corresponding interface
@@ -902,31 +903,31 @@ bool amclLocalizerThread::threadInit()
     options.put("remote", m_laser_remote_port);
     if (m_pLas.open(options) == false)
     {
-        yError() << "Unable to open laser driver";
+        yCError(AMCL_DEV) << "Unable to open laser driver";
         return false;
     }
     m_pLas.view(m_iLaser);
     if (m_iLaser == 0)
     {
-        yError() << "Unable to open laser interface";
+        yCError(AMCL_DEV) << "Unable to open laser interface";
         return false;
     }
 
     if (m_iLaser->getScanLimits(m_min_laser_angle, m_max_laser_angle) == false)
     {
-        yError() << "Unable to obtain laser scan limits (angles)";
+        yCError(AMCL_DEV) << "Unable to obtain laser scan limits (angles)";
         return false;
     }
 
     if (m_iLaser->getHorizontalResolution(m_horizontal_resolution) == false)
     {
-        yError() << "Unable to getHorizontalResolution()";
+        yCError(AMCL_DEV) << "Unable to getHorizontalResolution()";
         return false;
     }
 
     if (m_iLaser->getDistanceRange(m_min_laser_distance, m_max_laser_distance) == false)
     {
-        yError() << "Unable to obtain laser scan limits (distance)";
+        yCError(AMCL_DEV) << "Unable to obtain laser scan limits (distance)";
         return false;
     }
 
@@ -1017,7 +1018,7 @@ pf_vector_t amclLocalizerThread::uniformPoseGenerator(void* arg)
 
         if (check_counter > 10000)
         {
-            yError() << "Deadlock detected. Problems in map data: no free cells found";
+            yCError(AMCL_DEV) << "Deadlock detected. Problems in map data: no free cells found";
         }
     }
 #endif
@@ -1126,7 +1127,7 @@ bool amclLocalizer::open(yarp::os::Searchable& config)
     bool ret = rpcPort.open("/"+local_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(AMCL_DEV) << "Unable to open module ports";
         return false;
     }
 

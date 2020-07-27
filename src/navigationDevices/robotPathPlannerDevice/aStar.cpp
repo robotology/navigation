@@ -17,6 +17,8 @@
 */
 
 #include <yarp/os/Os.h>
+#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
 #include <string>
@@ -30,6 +32,8 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace aStar_algorithm;
+
+YARP_LOG_COMPONENT(PATHPLAN_ASTAR, "navigation.devices.robotPathPlanner.aStar")
 
 namespace aStar_algorithm
 {
@@ -165,10 +169,10 @@ aStar_algorithm::node_type aStar_algorithm::ordered_set_type::get_smallest()
 }
 void aStar_algorithm::ordered_set_type::print()
 {
-    yDebug("front (smallest)%f \n", set.front().f_score);
+    yCDebug(PATHPLAN_ASTAR,"front (smallest)%f \n", set.front().f_score);
     for (unsigned int i=0; i<set.size(); i++)
-        yDebug("id%d x%d y%d %f\n", i, set[i].x, set[i].y, set[i].f_score);
-    yDebug("back (biggest) %f \n", set.back().f_score);
+        yCDebug(PATHPLAN_ASTAR, "id%d x%d y%d %f\n", i, set[i].x, set[i].y, set[i].f_score);
+    yCDebug(PATHPLAN_ASTAR, "back (biggest) %f \n", set.back().f_score);
 }
 
 size_t aStar_algorithm::ordered_set_type::size()
@@ -233,7 +237,7 @@ bool aStar_algorithm::find_astar_path(MapGrid2D& map, XYCell start, XYCell goal,
     while (open_set.size()>0)
     {
         iterations++;
-        //yDebug ("%d\n", iterations++);
+        //yCDebug ("%d\n", iterations++);
         //open_set.print();
         node_type curr=open_set.get_smallest();
         
@@ -264,7 +268,7 @@ bool aStar_algorithm::find_astar_path(MapGrid2D& map, XYCell start, XYCell goal,
 
         //computes the list of neighbors of the current node
         list<node_type> neighbors;
-        //yDebug ("%d %d \n", curr.x, curr.y);
+        //yCDebug ("%d %d \n", curr.x, curr.y);
         if (node_map.nodes[curr.x][curr.y + 1].empty)   neighbors.push_back(node_map.nodes[curr.x][curr.y + 1]);
         if (node_map.nodes[curr.x][curr.y - 1].empty)   neighbors.push_back(node_map.nodes[curr.x][curr.y - 1]);
         if (node_map.nodes[curr.x + 1][curr.y].empty)   neighbors.push_back(node_map.nodes[curr.x + 1][curr.y]);

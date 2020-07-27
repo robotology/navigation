@@ -45,6 +45,8 @@ using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace yarp::math;
 
+YARP_LOG_COMPONENT(GOTO_CTRL, "navigation.devices.robotGoto.Ctrl")
+
 std::string getStatusAsString(NavigationStatusEnum status)
 {
     if      (status == navigation_status_idle)             return std::string("navigation_status_idle");
@@ -56,7 +58,7 @@ std::string getStatusAsString(NavigationStatusEnum status)
     else if (status == navigation_status_paused)           return std::string("navigation_status_paused");
     else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
     else if (status == navigation_status_thinking)         return std::string("navigation_thinking");
-    yError("Unknown status of inner controller: '%d'!", status);
+    yCError(GOTO_CTRL,"Unknown status of inner controller: '%d'!", status);
     return std::string("unknown");
 }
 
@@ -106,48 +108,48 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
 
                 if (!m_useGoalFromRosTopic)
                 {
-                    yInfo() << "goal from ROS topic deactivated";
+                    yCInfo(GOTO_CTRL) << "goal from ROS topic deactivated";
                 }
                 else
                 {
 
-                    yInfo() << "activating ROS goal input";
+                    yCInfo(GOTO_CTRL) << "activating ROS goal input";
 
                     if (ros_group.check("goalTopicName"))
                     {
                         if (!m_rosGoalInputPort.topic(ros_group.find("goalTopicName").asString()))
                         {
-                            yError() << "error while opening goal subscriber";
+                            yCError(GOTO_CTRL) << "error while opening goal subscriber";
                             return false;
                         }
                     }
                     else
                     {
-                        yError() << "Initialization failed. Missing goalTopicName parameters in configuration file.";
+                        yCError(GOTO_CTRL) << "Initialization failed. Missing goalTopicName parameters in configuration file.";
                         return false;
                     }
                 }
 
                 if (!m_publishRosStuff)
                 {
-                    yInfo() << "Path and current goal publication deactivated";
+                    yCInfo(GOTO_CTRL) << "Path and current goal publication deactivated";
                 }
                 else
                 {
 
-                    yInfo() << "activating current goal and path publication";
+                    yCInfo(GOTO_CTRL) << "activating current goal and path publication";
 
                     if (ros_group.check("currentGoalTopicName"))
                     {
                         if (!m_rosCurrentGoal.topic(ros_group.find("currentGoalTopicName").asString()))
                         {
-                            yError() << "error while opening current goal publisher";
+                            yCError(GOTO_CTRL) << "error while opening current goal publisher";
                             return false;
                         }
                     }
                     else
                     {
-                        yError() << "Initialization failed. Missing currentGoalTopicName parameters in configuration file. Current goal publication will be deactivated";
+                        yCError(GOTO_CTRL) << "Initialization failed. Missing currentGoalTopicName parameters in configuration file. Current goal publication will be deactivated";
                         return false;
                     }
 
@@ -155,13 +157,13 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
                     {
                         if (!m_localPlan.topic(ros_group.find("localPlanTopicName").asString()))
                         {
-                            yError() << "error while opening local plan publisher";
+                            yCError(GOTO_CTRL) << "error while opening local plan publisher";
                             return false;
                         }
                     }
                     else
                     {
-                        yError() << "Initialization failed. Missing localPlanTopicName parameters in configuration file. Path publication will be deactivated";
+                        yCError(GOTO_CTRL) << "Initialization failed. Missing localPlanTopicName parameters in configuration file. Path publication will be deactivated";
                         return false;
                     }
 
@@ -169,13 +171,13 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
                     {
                         if (!m_globalPlan.topic(ros_group.find("globalPlanTopicName").asString()))
                         {
-                            yError() << "error while opening global plan publisher";
+                            yCError(GOTO_CTRL) << "error while opening global plan publisher";
                             return false;
                         }
                     }
                     else
                     {
-                        yError() << "Initialization failed. Missing localPlanTopicName parameters in configuration file. Path publication will be deactivated";
+                        yCError(GOTO_CTRL) << "Initialization failed. Missing localPlanTopicName parameters in configuration file. Path publication will be deactivated";
                         return false;
                     }
 
@@ -184,7 +186,7 @@ bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
             }
             else
             {
-                yInfo() << "Initialization failed. Missing rosNodeName parameters in configuration file.";
+                yCInfo(GOTO_CTRL) << "Initialization failed. Missing rosNodeName parameters in configuration file.";
                 return false;
             }
 
@@ -212,12 +214,12 @@ bool GotoThread::threadInit()
     m_useGoalFromRosTopic        = false;
     m_publishRosStuff            = false;
     m_obstacle_handler = new obstacles_class(m_cfg);
-    yInfo("Using following parameters: %s", m_cfg.toString().c_str());
+    yCInfo(GOTO_CTRL,"Using following parameters: %s", m_cfg.toString().c_str());
 
     Bottle ros_group = m_cfg.findGroup("ROS");
     if (ros_group.isNull())
     {
-        yInfo() << "Missing ROS group in configuration file. ROS functionality will be deactivated";
+        yCInfo(GOTO_CTRL) << "Missing ROS group in configuration file. ROS functionality will be deactivated";
     }
     else
     {
@@ -230,7 +232,7 @@ bool GotoThread::threadInit()
     Bottle trajectory_group = m_cfg.findGroup("ROBOT_TRAJECTORY");
     if (trajectory_group.isNull())
     {
-        yError() << "Missing ROBOT_TRAJECTORY group!";
+        yCError(GOTO_CTRL) << "Missing ROBOT_TRAJECTORY group!";
         return false;
     }
 
@@ -248,13 +250,13 @@ bool GotoThread::threadInit()
     Bottle geometry_group = m_cfg.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError() << "Missing ROBOT_GEOMETRY group!";
+        yCError(GOTO_CTRL) << "Missing ROBOT_GEOMETRY group!";
         return false;
     }
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(GOTO_CTRL) << "Missing LOCALIZATION group!";
         return false;
     }
 
@@ -273,7 +275,7 @@ bool GotoThread::threadInit()
     }
     else
     {
-        yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
+        yCError(GOTO_CTRL) << "Invalid/missing parameter in ROBOT_GEOMETRY group";
         return false;
     }
 
@@ -302,7 +304,7 @@ bool GotoThread::threadInit()
     Bottle general_group = m_cfg.findGroup("GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yCError(GOTO_CTRL) << "Missing GENERAL group!";
         return false;
     }
     if (general_group.check("name")) localName = general_group.find("name").asString();
@@ -317,7 +319,7 @@ bool GotoThread::threadInit()
     ret &= m_port_gui_output.open((localName + "/gui:o").c_str());
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(GOTO_CTRL) << "Unable to open module ports";
         return false;
     }
 
@@ -329,13 +331,13 @@ bool GotoThread::threadInit()
 
     if (m_pLoc.open(loc_options) == false)
     {
-        yError() << "Unable to open localization driver";
+        yCError(GOTO_CTRL) << "Unable to open localization driver";
         return false;
     }
     m_pLoc.view(m_iLoc);
     if (m_iLoc == 0)
     {
-        yError() << "Unable to open localization interface";
+        yCError(GOTO_CTRL) << "Unable to open localization interface";
         return false;
     }
 
@@ -345,13 +347,13 @@ bool GotoThread::threadInit()
 
     if (laserBottle.isNull())
     {
-        yError("LASER group not found,closing");
+        yCError(GOTO_CTRL,"LASER group not found,closing");
         return false;
     }
 
     if (laserBottle.check("laser_port") == false)
     {
-        yError("laser_port param not found,closing");
+        yCError(GOTO_CTRL,"laser_port param not found,closing");
         return false;
     }
 
@@ -364,19 +366,19 @@ bool GotoThread::threadInit()
     options.put("remote", laser_remote_port);
     if (m_pLas.open(options) == false)
     {
-        yError() << "Unable to open laser driver";
+        yCError(GOTO_CTRL) << "Unable to open laser driver";
         return false;
     }
     m_pLas.view(m_iLaser);
     if (m_iLaser == 0)
     {
-        yError() << "Unable to open laser interface";
+        yCError(GOTO_CTRL) << "Unable to open laser interface";
         return false;
     }
 
     if (m_iLaser->getScanLimits(m_min_laser_angle, m_max_laser_angle) == false)
     {
-        yError() << "Unable to obtain laser scan limits";
+        yCError(GOTO_CTRL) << "Unable to obtain laser scan limits";
         return false;
     }
 
@@ -459,7 +461,7 @@ void GotoThread::evaluateGoalFromTopic()
 
     if (rosGoalData != 0)
     {
-        yInfo() << "received a goal from ROS topic";
+        yCInfo(GOTO_CTRL) << "received a goal from ROS topic";
         yarp::sig::Vector v(3);
         yarp::math::Quaternion q;
 
@@ -613,10 +615,10 @@ double normalize_angle (double angle)
 
 void GotoThread::saturateRobotControls()
 {
-    if (m_min_ang_speed < 0){ yError() << "Invalid m_min_ang_speed value"; m_min_ang_speed = fabs(m_min_ang_speed); }
-    if (m_max_ang_speed < 0){ yError() << "Invalid m_max_ang_speed value"; m_max_ang_speed = fabs(m_max_ang_speed); }
-    if (m_min_lin_speed < 0){ yError() << "Invalid m_min_lin_speed value"; m_min_lin_speed = fabs(m_min_lin_speed); }
-    if (m_max_lin_speed < 0){ yError() << "Invalid m_max_lin_speed value"; m_max_lin_speed = fabs(m_max_lin_speed); }
+    if (m_min_ang_speed < 0){ yCError(GOTO_CTRL) << "Invalid m_min_ang_speed value"; m_min_ang_speed = fabs(m_min_ang_speed); }
+    if (m_max_ang_speed < 0){ yCError(GOTO_CTRL) << "Invalid m_max_ang_speed value"; m_max_ang_speed = fabs(m_max_ang_speed); }
+    if (m_min_lin_speed < 0){ yCError(GOTO_CTRL) << "Invalid m_min_lin_speed value"; m_min_lin_speed = fabs(m_min_lin_speed); }
+    if (m_max_lin_speed < 0){ yCError(GOTO_CTRL) << "Invalid m_max_lin_speed value"; m_max_lin_speed = fabs(m_max_lin_speed); }
 
     //control saturation.
     //Beware! this test should not include the case ==0 to prevent the saturator to override the "do not move" command.
@@ -663,18 +665,18 @@ void GotoThread::run()
         bool err = false;
         if (m_las_timeout_counter>TIMEOUT_MAX)
         {
-            yError(" timeout, no laser data received!");
+            yCError(GOTO_CTRL," timeout, no laser data received!");
             err = true;
         }
         if (m_loc_timeout_counter>TIMEOUT_MAX)
         {
-            yError(" timeout, no localization data receive");
+            yCError(GOTO_CTRL," timeout, no localization data receive");
             err = true;
         }
 
         if (err == false)
         {
-            yInfo() << "robotGoto running, ALL ok, status:" << getStatusAsString(m_status);
+            yCInfo(GOTO_CTRL) << "robotGoto running, ALL ok, status:" << getStatusAsString(m_status);
         }
     }
 
@@ -694,7 +696,7 @@ void GotoThread::run()
 
     //beta is the angle between the current robot position and the target position IN THE WORLD REFERENCE FRAME
     double beta_world = atan2(m_target_data.target.y - m_localization_data.y, m_target_data.target.x - m_localization_data.x) * RAD2DEG;
-    //yDebug() << "beta world:" << beta_world;
+    //yCDebug() << "beta world:" << beta_world;
 
     //distance is the distance between the current robot position and the target position
     double distance = sqrt(pow(m_target_data.target.x - m_localization_data.x, 2) + pow(m_target_data.target.y - m_localization_data.y, 2));
@@ -702,7 +704,7 @@ void GotoThread::run()
     //delta is the angle between the current robot position and the target position IN THE ROBOT REFERENCE FRAME
     double beta_robot = (beta_world - m_localization_data.theta);
     beta_robot = normalize_angle(beta_robot);
-    //yDebug() << "beta robot:" << beta_robot;
+    //yCDebug() << "beta robot:" << beta_robot;
     
     //check for obstacles, always performed
     bool obstacles_in_path = false;
@@ -748,7 +750,7 @@ void GotoThread::run()
                 if (m_target_data.weak_angle)
                 {
                     m_status = navigation_status_goal_reached;
-                    yInfo("Goal reached!");
+                    yCInfo(GOTO_CTRL,"Goal reached!");
                 }
                 else
                 {
@@ -756,7 +758,7 @@ void GotoThread::run()
                     if (fabs(gamma) < m_goal_tolerance_ang)
                     {
                         m_status = navigation_status_goal_reached;
-                        yInfo("Goal reached!");
+                        yCInfo(GOTO_CTRL,"Goal reached!");
                     }
                     //rotate until you are oriented as requested
                     else
@@ -790,7 +792,7 @@ void GotoThread::run()
                         m_control_out.angular_vel = m_gain_ang * beta_robot;
                         //===========================
                     }
-                    //yDebug() << m_control_out.linear_vel;
+                    //yCDebug() << m_control_out.linear_vel;
                 }
                 //do not move forward, just rotate unless you are almost facing the goal
                 else
@@ -806,7 +808,7 @@ void GotoThread::run()
             // check if you have to stop because of an obstacle
             if (m_enable_obstacles_emergency_stop && obstacles_in_path)
             {
-                yInfo ("Obstacles detected, stopping");
+                yCInfo (GOTO_CTRL, "Obstacles detected, stopping");
                 Bottle b, tmp;
 
                 m_status = navigation_status_waiting_obstacle;
@@ -826,7 +828,7 @@ void GotoThread::run()
                 if (fabs(current_time - m_time_of_obstacle_detection) > 1.0)
                 {
 
-                    yInfo ("Obstacles removed, thank you");
+                    yCInfo (GOTO_CTRL,"Obstacles removed, thank you");
                     Bottle b, tmp;
                     m_status = navigation_status_moving;
 
@@ -842,7 +844,7 @@ void GotoThread::run()
             {
                 if (fabs(current_time - m_time_of_obstacle_detection) > m_obstacle_handler->get_max_time_waiting_for_obstacle_removal())
                 {
-                    yError ("Failing to recover from obstacle.");
+                    yCError (GOTO_CTRL,"Failing to recover from obstacle.");
                     m_status = navigation_status_failing;
                 }
             }
@@ -852,7 +854,7 @@ void GotoThread::run()
             //check if pause is expired
             if (current_time - m_pause_start > m_pause_duration)
             {
-                yInfo("pause expired! resuming");
+                yCInfo(GOTO_CTRL, "pause expired! resuming");
                 m_status = navigation_status_moving;
             }
         break;
@@ -866,7 +868,7 @@ void GotoThread::run()
         break;
 
         default:
-            yError("unknown status:%d", m_status);
+            yCError(GOTO_CTRL,"unknown status:%d", m_status);
         break;
     }
 
@@ -883,7 +885,7 @@ void GotoThread::run()
     {
         if (m_control_out.linear_dir != 0.0 || m_control_out.linear_vel != 0.0 || m_control_out.angular_vel != 0.0)
         {
-            yWarning() << "RobotGoto computed a vel!=0 even if its status is not navigation_status_moving`";
+            yCWarning(GOTO_CTRL) << "RobotGoto computed a vel!=0 even if its status is not navigation_status_moving`";
             m_control_out.linear_dir = 0.0;    m_control_out.linear_vel = 0.0;    m_control_out.angular_vel = 0.0;
         }
     }
@@ -976,8 +978,8 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
         m_retreat_duration_time = 0;
     }
 
-    yDebug("current pos: abs(%.3f %.3f %.2f)", m_localization_data.x, m_localization_data.y, m_localization_data.theta);
-    yDebug("received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
+    yCDebug(GOTO_CTRL,"current pos: abs(%.3f %.3f %.2f)", m_localization_data.x, m_localization_data.y, m_localization_data.theta);
+    yCDebug(GOTO_CTRL,"received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
     publishCurrentGoal();
 }
 
@@ -1037,7 +1039,7 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
     {
         m_retreat_duration_time = 0;
     }
-    yInfo("received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
+    yCInfo(GOTO_CTRL,"received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
     publishCurrentGoal();
 }
 
@@ -1056,24 +1058,24 @@ bool GotoThread::pauseMovement(double secs)
     bool ret = true;
     if (m_status == navigation_status_paused)
     {
-        yWarning ( "already in pause!");
+        yCWarning (GOTO_CTRL, "already in pause!");
         ret = false;
     }
     else if (m_status != navigation_status_moving)
     {
-        yWarning( "not moving!");
+        yCWarning(GOTO_CTRL, "not moving!");
         ret = false;
     }
 
     if (secs > 0 && secs!= std::numeric_limits<double>::infinity())
     {
-        yInfo ( "asked to pause for %f ", secs);
+        yCInfo (GOTO_CTRL, "asked to pause for %f ", secs);
         m_pause_duration = secs;
     }
     else
     {
         //infinite pause
-        yInfo( "asked to pause");
+        yCInfo(GOTO_CTRL, "asked to pause");
         m_pause_duration = 1e20; //not really infinite...
     }
     m_status = navigation_status_paused;
@@ -1084,15 +1086,15 @@ bool GotoThread::pauseMovement(double secs)
 bool GotoThread::resumeMovement()
 {
     bool ret = true;
-    yInfo( "asked to resume movement");
+    yCInfo(GOTO_CTRL, "asked to resume movement");
     if (m_status != navigation_status_moving)
     {
         m_status = navigation_status_moving;
-        yInfo ("Navigation resumed");
+        yCInfo (GOTO_CTRL,"Navigation resumed");
     }
     else
     {
-        yWarning ("Already moving!");
+        yCWarning (GOTO_CTRL,"Already moving!");
         ret = false;
     }
     return ret;
@@ -1101,7 +1103,7 @@ bool GotoThread::resumeMovement()
 bool GotoThread::stopMovement()
 {
     bool ret = true;
-    yInfo( "asked to stop");
+    yCInfo(GOTO_CTRL, "asked to stop");
     m_status = navigation_status_idle;
     return ret;
 }
@@ -1118,8 +1120,8 @@ NavigationStatusEnum GotoThread::getNavigationStatusAsInt()
 
 void GotoThread::printStats()
 {
-    yDebug( "* robotGoto thread:");
-    yDebug("loc timeouts: %d", m_loc_timeout_counter);
-    yDebug("las timeouts: %d", m_las_timeout_counter);
-    yDebug("status: %s", getStatusAsString(m_status).c_str());
+    yCDebug(GOTO_CTRL, "* robotGoto thread:");
+    yCDebug(GOTO_CTRL, "loc timeouts: %d", m_loc_timeout_counter);
+    yCDebug(GOTO_CTRL, "las timeouts: %d", m_las_timeout_counter);
+    yCDebug(GOTO_CTRL,"status: %s", getStatusAsString(m_status).c_str());
 }

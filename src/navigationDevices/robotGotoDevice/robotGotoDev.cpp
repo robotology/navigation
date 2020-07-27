@@ -36,6 +36,9 @@
 
 using namespace yarp::dev::Nav2D;
 
+
+YARP_LOG_COMPONENT(GOTO_DEV, "navigation.devices.robotGoto.dev")
+
 void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 {
     this->interface = iface;
@@ -48,7 +51,7 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
 	
 #if 1
 
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    yCDebug(GOTO_DEV) << "config configuration: \n" << config.toString().c_str();
 
     std::string context_name = "robotGoto";
     std::string file_name = "robotGoto_cer.ini";
@@ -64,12 +67,12 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
     Property p;
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
-    yDebug() << "robotGotoDev configuration: \n" << p.toString().c_str();
+    yCDebug(GOTO_DEV) << "robotGotoDev configuration: \n" << p.toString().c_str();
 
     Bottle general_group = p.findGroup("GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yCError(GOTO_DEV) << "Missing GENERAL group!";
         return false;
     }
     if (general_group.check("name")) m_local_name = general_group.find("name").asString();
@@ -89,7 +92,7 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
     bool ret = rpcPort.open(m_local_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(GOTO_DEV) << "Unable to open module ports";
         return false;
     }
 
@@ -265,7 +268,7 @@ bool robotGotoDev::gotoTargetByRelativeLocation(double x, double y)
 
 bool robotGotoDev::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
 {
-    yWarning() << "applyVelocityCommand() currently not implemented";
+    yCWarning(GOTO_DEV) << "applyVelocityCommand() currently not implemented";
     return true;
 }
 
@@ -289,19 +292,19 @@ bool robotGotoDev::resumeNavigation()
 
 bool robotGotoDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
-    yError() << "Not yet implemented";
+    yCError(GOTO_DEV) << "Not yet implemented";
     return false;
 }
 
 bool robotGotoDev::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation& curr_waypoint)
 {
-    yError() << "Not yet implemented";
+    yCError(GOTO_DEV) << "Not yet implemented";
     return false;
 }
 
 bool robotGotoDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
-    yError() << "Not yet implemented";
+    yCError(GOTO_DEV) << "Not yet implemented";
     return false;
 }
 
@@ -340,7 +343,7 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     }
     else
     {
-        yError() << "RobotGotoDev: Received invalid command type on RPC port";
+        yCError(GOTO_DEV) << "RobotGotoDev: Received invalid command type on RPC port";
         reply.addVocab(VOCAB_ERR);
     }
 
@@ -356,7 +359,7 @@ bool robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Nav2D::Map2DLoc
 
 bool robotGotoDev::recomputeCurrentNavigationPath()
 {
-    yWarning() << "robotGotoDev is not a navigation planner. recomputeCurrentNavigationPath() is not implemented.";
+    yCWarning(GOTO_DEV) << "robotGotoDev is not a navigation planner. recomputeCurrentNavigationPath() is not implemented.";
     return false;
 }
 

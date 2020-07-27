@@ -33,6 +33,8 @@ using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace map_utilites;
 
+YARP_LOG_COMPONENT(PATHPLAN_MAP, "navigation.devices.robotPathPlanner.map")
+
 bool map_utilites::simplifyPath(MapGrid2D& map, Map2DPath input_path, Map2DPath& output_path)
 {
     size_t path_size = input_path.size();
@@ -61,7 +63,7 @@ bool map_utilites::simplifyPath(MapGrid2D& map, Map2DPath input_path, Map2DPath&
         {
             old_stop_cell = path.at(j-1);
             stop_cell     = path.at(j);
-            //yDebug ("%d %d -> %d %d\n", start_cell.x, start_cell.y, stop_cell.x, stop_cell.y);
+            //yCDebug ("%d %d -> %d %d\n", start_cell.x, start_cell.y, stop_cell.x, stop_cell.y);
             if (checkStraightLine(map, start_cell, stop_cell))
             {
                 best_old_stop_cell=old_stop_cell;
@@ -91,7 +93,7 @@ void map_utilites::update_obstacles_map(MapGrid2D& map_to_be_updated, const MapG
     if (map_to_be_updated.width() != obstacles_map.width() ||
         map_to_be_updated.height() != map_to_be_updated.height())
     {
-        yError() << "update_obstacles_map: the two maps must have the same size!";
+        yCError(PATHPLAN_MAP) << "update_obstacles_map: the two maps must have the same size!";
         return;
     }
     for (size_t y=0; y<map_to_be_updated.height(); y++)

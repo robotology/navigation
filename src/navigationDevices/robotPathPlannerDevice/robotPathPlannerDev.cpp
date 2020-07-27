@@ -36,6 +36,8 @@
 
 using namespace yarp::dev::Nav2D;
 
+YARP_LOG_COMPONENT(PATHPLAN_DEV, "navigation.devices.robotPathPlanner.dev")
+
 robotPathPlannerDev::robotPathPlannerDev()
 {
     m_plannerThread=NULL;
@@ -47,7 +49,7 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 	m_local_name = "/robotPathPlanner";
 	
 #if 1
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    yCDebug(PATHPLAN_DEV) << "config configuration: \n" << config.toString().c_str();
 
     std::string context_name = " robotPathPlanner";
     std::string file_name = " robotPathPlanner_cer.ini";
@@ -63,12 +65,12 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
     Property p;
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
-    yDebug() << "robotPathPlannerDev configuration: \n" << p.toString().c_str();
+    yCDebug(PATHPLAN_DEV) << "robotPathPlannerDev configuration: \n" << p.toString().c_str();
     
     Bottle general_group = p.findGroup("GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yCError(PATHPLAN_DEV) << "Missing GENERAL group!";
         return false;
     }
     if (general_group.check("name")) m_local_name = general_group.find("name").asString();
@@ -83,7 +85,7 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
     bool ret = m_rpcPort.open(m_local_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(PATHPLAN_DEV) << "Unable to open module ports";
         return false;
     }
 
@@ -114,7 +116,7 @@ bool robotPathPlannerDev::close()
 
 bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
 {
-    yDebug();
+    yCDebug(PATHPLAN_DEV);
     yarp::os::Bottle command;
     yarp::os::Bottle reply;
     bool ok = command.read(connection);
@@ -137,7 +139,7 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
     }
     else
     {
-        yError() << "Invalid command type";
+        yCError(PATHPLAN_DEV) << "Invalid command type";
         reply.addVocab(VOCAB_ERR);
     }
 
@@ -171,22 +173,22 @@ bool robotPathPlannerDev::recomputeCurrentNavigationPath()
 {
     if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_idle)
     {
-        yError() << "Unable to recompute path. Navigation task not assigned yet.";
+        yCError(PATHPLAN_DEV) << "Unable to recompute path. Navigation task not assigned yet.";
         return false;
     }
     if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_paused)
     {
-        yError() << "Unable to recompute path. Navigation task is currently paused.";
+        yCError(PATHPLAN_DEV) << "Unable to recompute path. Navigation task is currently paused.";
         return false;
     }
     if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_goal_reached)
     {
-        yError() << "Unable to recompute path. Navigation Goal has been already reached.";
+        yCError(PATHPLAN_DEV) << "Unable to recompute path. Navigation Goal has been already reached.";
         return false;
     }
     if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_thinking)
     {
-        yError() << "Unable to recompute path. A navigation plan is already under computation.";
+        yCError(PATHPLAN_DEV) << "Unable to recompute path. A navigation plan is already under computation.";
         return false;
     }
 
@@ -201,7 +203,7 @@ bool robotPathPlannerDev::recomputeCurrentNavigationPath()
     b &= m_plannerThread->setNewAbsTarget(loc);
     if (b==false)
     {
-        yError() << "robotPathPlannerDev::recomputeCurrentNavigationPath(). An error occurred while performing the requested operation.";
+        yCError(PATHPLAN_DEV) << "robotPathPlannerDev::recomputeCurrentNavigationPath(). An error occurred while performing the requested operation.";
         return false;
     }
     return true;
@@ -218,7 +220,7 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
 
 bool robotPathPlannerDev::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
 {
-    yWarning() << "applyVelocityCommand() currently not implemented";
+    yCWarning(PATHPLAN_DEV) << "applyVelocityCommand() currently not implemented";
     return true;
 }
 

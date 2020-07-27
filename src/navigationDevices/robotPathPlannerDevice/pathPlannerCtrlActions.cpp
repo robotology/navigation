@@ -23,6 +23,8 @@ using namespace std;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 
+YARP_LOG_COMPONENT(PATHPLAN_ACTIONS, "navigation.devices.robotPathPlanner.actions")
+
 bool PlannerThread::setNewAbsTarget(Map2DLocation target)
 {
     if (m_planner_status != navigation_status_idle &&
@@ -30,7 +32,7 @@ bool PlannerThread::setNewAbsTarget(Map2DLocation target)
         m_planner_status != navigation_status_aborted &&
         m_planner_status != navigation_status_failing)
     {
-        yError ("Not in idle state, send a 'stop' first\n");
+        yCError (PATHPLAN_ACTIONS,"Not in idle state, send a 'stop' first\n");
         return false;
     }
 
@@ -49,13 +51,13 @@ bool PlannerThread::setNewAbsTarget(Map2DLocation target)
         }
         else
         {
-            yError() << "PlannerThread::setNewAbsTarget() Unable to start path";
+            yCError(PATHPLAN_ACTIONS) << "PlannerThread::setNewAbsTarget() Unable to start path";
             return false;
         }
     }
     else
     {
-        yError("Requested goal is not in the current map!\n");
+        yCError(PATHPLAN_ACTIONS, "Requested goal is not in the current map!\n");
         //here I need to:
         //1) find in the location server a connection between target.map_id and m_current_map.m_map_name
         //2) obtain a list of targets, put them in a queue.
@@ -72,7 +74,7 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
 {
     if(target.size() != 2 && target.size() != 3)
     {
-        yError() << "PlannerThread::setNewRelTarget() invalid target vector size";
+        yCError(PATHPLAN_ACTIONS) << "PlannerThread::setNewRelTarget() invalid target vector size";
         return false;
     }
 
@@ -89,13 +91,13 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
         m_planner_status != navigation_status_aborted &&
         m_planner_status != navigation_status_failing)
     {
-        yError ("Not in idle state, send a 'stop' first");
+        yCError (PATHPLAN_ACTIONS, "Not in idle state, send a 'stop' first");
         return false;
     }
-    yDebug() << "received new relative target at:" << target[0] << target[1] << target[2];
+    yCDebug(PATHPLAN_ACTIONS) << "received new relative target at:" << target[0] << target[1] << target[2];
 
     double a = m_localization_data.theta * DEG2RAD;
-    yDebug() << "current position:" << m_localization_data.x << m_localization_data.y << m_localization_data.theta;
+    yCDebug(PATHPLAN_ACTIONS) << "current position:" << m_localization_data.x << m_localization_data.y << m_localization_data.theta;
     //this is the inverse of the transformation matrix from world to robot
     m_final_goal.x = +target[0] * cos(a) - target[1] * sin(a) + m_localization_data.x;
     m_final_goal.y = +target[0] * sin(a) + target[1] * cos(a) + m_localization_data.y;
@@ -110,7 +112,7 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
     }
     else
     {
-        yError() << "PlannerThread::setNewRelTarget() Unable to start path";
+        yCError(PATHPLAN_ACTIONS) << "PlannerThread::setNewRelTarget() Unable to start path";
         return false;
     }
 }
@@ -125,11 +127,11 @@ bool PlannerThread::stopMovement()
     if (m_planner_status != navigation_status_idle)
     {
         m_planner_status = navigation_status_idle;
-        yInfo ("Navigation stopped");
+        yCInfo (PATHPLAN_ACTIONS, "Navigation stopped");
     }
     else
     {
-        yWarning ("Already not moving");
+        yCWarning (PATHPLAN_ACTIONS, "Already not moving");
         ret = false;
     }
     return ret;
@@ -145,11 +147,11 @@ bool PlannerThread::resumeMovement()
     if (m_planner_status != navigation_status_moving)
     {
         m_planner_status = navigation_status_moving;
-        yInfo ("Navigation resumed");
+        yCInfo (PATHPLAN_ACTIONS, "Navigation resumed");
     }
     else
     {
-        yWarning ("Already moving!");
+        yCWarning (PATHPLAN_ACTIONS, "Already moving!");
         ret = false;
     }
    return ret;
@@ -165,11 +167,11 @@ bool PlannerThread::pauseMovement(double d)
     if (m_planner_status != navigation_status_paused)
     {
         m_planner_status = navigation_status_paused;
-        yInfo ("Navigation stopped");
+        yCInfo (PATHPLAN_ACTIONS, "Navigation stopped");
     }
     else
     {
-        yWarning ("Already paused");
+        yCWarning (PATHPLAN_ACTIONS, "Already paused");
         ret = false;
     }
     return ret;

@@ -42,6 +42,8 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::math;
 
+YARP_LOG_COMPONENT(GOTO_OBSTACLES, "navigation.devices.robotGoto.obstacles")
+
 #define DEG2RAD 3.14/180
 obstacles_class::obstacles_class(Searchable &rf)
 {
@@ -60,7 +62,7 @@ obstacles_class::obstacles_class(Searchable &rf)
     Bottle geometry_group = rf.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError() << "Missing ROBOT_GEOMETRY group!";
+        yCError(GOTO_OBSTACLES) << "Missing ROBOT_GEOMETRY group!";
     }
     bool ff;
     ff = geometry_group.check("robot_radius");
@@ -77,14 +79,14 @@ obstacles_class::obstacles_class(Searchable &rf)
     }
     else
     {
-        yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
+        yCError(GOTO_OBSTACLES) << "Invalid/missing parameter in ROBOT_GEOMETRY group";
     }
 
     //////////////
     Bottle obstacles_stop_group = rf.findGroup("OBSTACLES_EMERGENCY_STOP");
     if (obstacles_stop_group.isNull())
     {
-        yError() << "Missing OBSTACLES_EMERGENCY_STOP group!";
+        yCError(GOTO_OBSTACLES) << "Missing OBSTACLES_EMERGENCY_STOP group!";
     }
 
     if (obstacles_stop_group.check("enable_dynamic_max_distance", Value(0)).asInt() == 1)
@@ -98,7 +100,7 @@ obstacles_class::obstacles_class(Searchable &rf)
     Bottle obstacles_avoidance_group = rf.findGroup("OBSTACLES_AVOIDANCE");
     if (obstacles_avoidance_group.isNull())
     {
-        yError() << "Missing OBSTACLES_AVOIDANCE group!";
+        yCError(GOTO_OBSTACLES) << "Missing OBSTACLES_AVOIDANCE group!";
     }
 
     if (obstacles_avoidance_group.check("frontal_blind_angle"))
@@ -160,7 +162,7 @@ bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementDat
     size_t las_size = laser_data.size();
     if (las_size == 0)
     {
-        yError() << "Internal error, invalid laser data struct!";
+        yCError(GOTO_OBSTACLES) << "Internal error, invalid laser data struct!";
         return false;
     }
 
@@ -233,7 +235,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
 
     if (las_size == 0)
     {
-        yError() << "Internal error, invalid laser data struct!";
+        yCError(GOTO_OBSTACLES) << "Internal error, invalid laser data struct!";
         return false;
     }
 
@@ -248,7 +250,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
             laser_obstacles++;
             if (yarp::os::Time::now() - last_time_error_message > 0.3)
             {
-                yError("obstacles on the platform");
+                yCError(GOTO_OBSTACLES,"obstacles on the platform");
                 last_time_error_message = yarp::os::Time::now();
             }
             continue;
@@ -263,12 +265,12 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
             if (d < goal_distance)
             {
                 laser_obstacles++;
-                //yError("obstacles on the path");
+                //yCError("obstacles on the path");
                 continue;
             }
             else
             {
-                //yError("obstacles on the path, but goal is near");
+                //yCError("obstacles on the path, but goal is near");
                 continue;
             }
         }
@@ -279,7 +281,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     {
         if (yarp::os::Time::now() - m_last_print_time > 1.0)
         {
-            yWarning("obstacles detected");
+            yCWarning(GOTO_OBSTACLES,"obstacles detected");
             m_last_print_time = yarp::os::Time::now();
         }
         return true;

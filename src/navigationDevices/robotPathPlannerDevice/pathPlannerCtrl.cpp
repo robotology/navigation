@@ -48,6 +48,8 @@ using namespace yarp::dev::Nav2D;
 #define DEG2RAD M_PI/180
 #endif
 
+YARP_LOG_COMPONENT(PATHPLAN_CTRL, "navigation.devices.robotPathPlanner.ctrl")
+
 bool  PlannerThread::readLocalizationData()
 {
     bool ret = m_iLoc->getCurrentPosition(m_localization_data);
@@ -67,25 +69,25 @@ bool  PlannerThread::readLocalizationData()
     {
         if (m_force_map_reload)
         {
-            yInfo() << "m_force_map_reload requested";
+            yCInfo(PATHPLAN_CTRL) << "m_force_map_reload requested";
         }
         m_force_map_reload = false;
-        yWarning() << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
-        yInfo() << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
+        yCWarning(PATHPLAN_CTRL) << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
+        yCInfo(PATHPLAN_CTRL) << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
         bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
         if (map_get_succesfull)
         {
             m_temporary_obstacles_map_mutex.lock();
             m_temporary_obstacles_map = m_current_map;
             m_temporary_obstacles_map_mutex.unlock();
-            yInfo() << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
+            yCInfo(PATHPLAN_CTRL) << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
             m_current_map.enlargeObstacles(m_robot_radius);
             m_augmented_map = m_current_map;
-            yDebug() << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
+            yCDebug(PATHPLAN_CTRL,) << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
         }
         else
         {
-            yError() << "Unable to get map '" << m_localization_data.map_id << "' from map server";
+            yCError(PATHPLAN_CTRL) << "Unable to get map '" << m_localization_data.map_id << "' from map server";
             std::vector<string> names_vector;
             m_iMap->get_map_names(names_vector);
             string names = "Known maps are:" ;
@@ -93,7 +95,7 @@ bool  PlannerThread::readLocalizationData()
             {
                 names = names + " " + (*it);
             }
-            yInfo() << names;
+            yCInfo(PATHPLAN_CTRL) << names;
             yarp::os::Time::delay(1.0);
             return true; //consider changing this to false
         }
@@ -127,7 +129,7 @@ bool  PlannerThread::readInnerNavigationStatus()
     {
         if (yarp::os::Time::now() - last_print_time > 1.0)
         {
-            yError() << "Inner status = error"; 
+            yCError(PATHPLAN_CTRL) << "Inner status = error"; 
             yarp::os::Time::delay(1.0);
             last_print_time = yarp::os::Time::now();
         }
@@ -191,7 +193,7 @@ bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_im
 {
     if (template_image == 0)
     {
-        yError() << "PlannerThread::draw_map cannot copy an empty image!";
+        yCError(PATHPLAN_CTRL) << "PlannerThread::draw_map cannot copy an empty image!";
         return false;
     }
     if (image_to_be_prepared == 0) 
@@ -220,21 +222,21 @@ void PlannerThread::run()
         bool err = false;
         if (m_laser_timeout_counter > TIMEOUT_MAX)
         {
-            yError("timeout, no laser data received!\n");
+            yCError(PATHPLAN_CTRL,"timeout, no laser data received!\n");
             err = true;
         }
         if (m_loc_timeout_counter > TIMEOUT_MAX)
         {
-            yError(" timeout, no localization data received!\n");
+            yCError(PATHPLAN_CTRL, " timeout, no localization data received!\n");
             err = true;
         }
         if (m_inner_status_timeout_counter > TIMEOUT_MAX)
         {
-            yError("timeout, no status info received!\n");
+            yCError(PATHPLAN_CTRL, "timeout, no status info received!\n");
             err = true;
         }
         if (err == false)
-            yInfo() << "robotPathPlanner running, ALL ok. Navigation status:" << this->getNavigationStatusAsString();
+            yCInfo(PATHPLAN_CTRL) << "robotPathPlanner running, ALL ok. Navigation status:" << this->getNavigationStatusAsString();
     }
     
     m_mutex.wait();
@@ -242,11 +244,11 @@ void PlannerThread::run()
     readLocalizationData();
     readLaserData();
     //double check2 = yarp::os::Time::now();
-    //yDebug() << check2-check1;
+    //yCDebug() << check2-check1;
     if (readInnerNavigationStatus() == false)
     {
         m_planner_status = navigation_status_error;
-        //yError() << "Error status";
+        //yCError(PATHPLAN_CTRL) << "Error status";
         //yarp::os::Time::delay(1.0);
         //return;
     }
@@ -263,19 +265,19 @@ void PlannerThread::run()
                 if (m_current_path_iterator == m_current_path->end())
                 {
                     //navigation is complete
-                    yInfo("goal reached, navigation complete");
+                    yCInfo(PATHPLAN_CTRL, "goal reached, navigation complete");
                     m_planner_status = navigation_status_goal_reached;
                     m_final_goal_reached_at_timeX = yarp::os::Time::now();
                 }
                 else if (m_current_path_iterator == m_current_path->end()-1)
                 {
-                    yInfo("waypoint reached");
+                    yCInfo(PATHPLAN_CTRL, "waypoint reached");
                     //remove the current waypoint, just reached
                     m_current_path_iterator++;
                     m_remaining_path.pop_front();
 
                     //send the final waypoint
-                    yInfo("sending the last waypoint (final goal)");
+                    yCInfo(PATHPLAN_CTRL, "sending the last waypoint (final goal)");
                     {
                         //send the tolerance to the inner controller
                         Bottle cmd, ans;
@@ -337,13 +339,13 @@ void PlannerThread::run()
                 }
                 else
                 {
-                    yInfo("waypoint reached");
+                    yCInfo(PATHPLAN_CTRL, "waypoint reached");
                     //remove the current waypoint, just reached
                     m_current_path_iterator++;
                     m_remaining_path.pop_front();
 
                     //send the next waypoint
-                    yInfo("sending the next waypoint");
+                    yCInfo(PATHPLAN_CTRL, "sending the next waypoint");
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
@@ -406,7 +408,7 @@ void PlannerThread::run()
                 if (m_enable_try_recovery)
                 {
                     //try to avoid obstacles
-                    yError("unable to reach next waypoint, trying new solution");
+                    yCError(PATHPLAN_CTRL, "unable to reach next waypoint, trying new solution");
 
                     Bottle cmd, ans;
                     cmd.addString("stop");
@@ -421,26 +423,26 @@ void PlannerThread::run()
                     cmd.addString("stop");
                     m_port_commands_output.write(cmd, ans);
                     m_planner_status = navigation_status_aborted;
-                    yError("unable to reach next waypoint, aborting navigation");
+                    yCError(PATHPLAN_CTRL, "unable to reach next waypoint, aborting navigation");
                 }
             }
             else if (m_inner_status == navigation_status_aborted)
             {
                 //terminate navigation
                 m_planner_status = navigation_status_aborted;
-                yError("unable to reach next waypoint, aborting navigation");
+                yCError(PATHPLAN_CTRL, "unable to reach next waypoint, aborting navigation");
                 //current_path.clear();
             }
             else if (m_inner_status == navigation_status_error)
             {
-                yError("PathPlanner in error status");
+                yCError(PATHPLAN_CTRL, "PathPlanner in error status");
                 m_planner_status = navigation_status_error;
             }
             else if (m_inner_status == navigation_status_idle)
             {
                 //send the first waypoint
                 m_current_path_iterator = m_current_path->begin();
-                yInfo("sending the first waypoint");
+                yCInfo(PATHPLAN_CTRL, "sending the first waypoint");
 
                 //send the tolerance to the inner controller
                 {
@@ -503,7 +505,7 @@ void PlannerThread::run()
             }
             else
             {
-                yError("unrecognized inner status: %d", m_inner_status);
+                yCError(PATHPLAN_CTRL, "unrecognized inner status: %d", m_inner_status);
             }
         }
         break;
@@ -513,7 +515,7 @@ void PlannerThread::run()
             const double goal_reached_timeout = 1.0;
             if (yarp::os::Time::now() - m_navigation_started_at_timeX > goal_reached_timeout)
             {
-                yInfo() << "Goal was reached "<< goal_reached_timeout<<" second(s) ago. On timeout expiration, navigation status was set idle";
+                yCInfo(PATHPLAN_CTRL) << "Goal was reached "<< goal_reached_timeout<<" second(s) ago. On timeout expiration, navigation status was set idle";
                 m_planner_status = navigation_status_idle;
             }
         }
@@ -565,7 +567,7 @@ void PlannerThread::run()
         default:
         {
             //unknown status
-            yError("m_planner_status: unknown status:%d", m_planner_status);
+            yCError(PATHPLAN_CTRL, "m_planner_status: unknown status:%d", m_planner_status);
             m_planner_status = navigation_status_error;
         }
         break;
@@ -652,7 +654,7 @@ void PlannerThread::sendWaypoint()
     size_t path_size = m_current_path->size();
     if (path_size==0)
     {
-        yWarning ("Path queue is empty!");
+        yCWarning (PATHPLAN_CTRL, "Path queue is empty!");
         m_planner_status = navigation_status_idle;
         return;
     }
@@ -660,7 +662,7 @@ void PlannerThread::sendWaypoint()
     XYCell current_waypoint;
     if (getCurrentWaypoint(current_waypoint)==false)
     {
-        yError("getCurrentWaypoint failed!");
+        yCError(PATHPLAN_CTRL, "getCurrentWaypoint failed!");
         m_planner_status = navigation_status_idle;
         return;
     }
@@ -676,7 +678,7 @@ void PlannerThread::sendWaypoint()
         //add the orientation to the last waypoint
         loc.theta = m_final_goal.theta;
     }
-    yDebug("sending command: %s", loc.toString().c_str());
+    yCDebug(PATHPLAN_CTRL, "sending command: %s", loc.toString().c_str());
     m_iInnerNav_target->gotoTargetByAbsoluteLocation(loc);
 
     //get inner navigation status
@@ -690,9 +692,9 @@ void PlannerThread::sendFinalGoal()
     if (std::isnan(m_final_goal.theta) == false)
     {
         //add the orientation to the last waypoint
-        yDebug();
+        yCDebug(PATHPLAN_CTRL, );
     }
-    yDebug("sending command: %s", m_final_goal.toString().c_str());
+    yCDebug(PATHPLAN_CTRL, "sending command: %s", m_final_goal.toString().c_str());
     m_iInnerNav_target->gotoTargetByAbsoluteLocation(m_final_goal);
 
     //get inner navigation status
@@ -711,12 +713,12 @@ bool PlannerThread::startPath()
     goal_vec.y = m_sequence_of_goals.front().y;
     if (m_current_map.isInsideMap(start_vec) == false)
     {
-        yError() << "PlannerThread::startPath() current robot location (" << start_vec.toString() << ")is not inside map" << m_current_map.getMapName();
+        yCError(PATHPLAN_CTRL) << "PlannerThread::startPath() current robot location (" << start_vec.toString() << ")is not inside map" << m_current_map.getMapName();
         return false;
     }
     if (m_current_map.isInsideMap(goal_vec) == false)
     {
-        yError() << "PlannerThread::startPath() requested goal (" << goal_vec.toString() << ") is not inside map" << m_current_map.getMapName();
+        yCError(PATHPLAN_CTRL) << "PlannerThread::startPath() requested goal (" << goal_vec.toString() << ") is not inside map" << m_current_map.getMapName();
         return false;
     }
     XYCell goal = m_current_map.world2Cell(goal_vec);
@@ -735,7 +737,7 @@ bool PlannerThread::startPath()
     bool b = map_utilites::findPath(m_current_map, start, goal, m_computed_path);
     if (!b)
     {
-        yError ("path not found");
+        yCError (PATHPLAN_CTRL, "path not found");
         m_planner_status = navigation_status_aborted;
         return false;
     }
@@ -743,7 +745,7 @@ bool PlannerThread::startPath()
 
     //search for an simpler path (waypoint optimization)
     map_utilites::simplifyPath(m_current_map, m_computed_path, m_computed_simplified_path);
-    yInfo("path size:%d simplified path size:%d time: %.2f", (int)m_computed_path.size(), (int)m_computed_simplified_path.size(), t2 - t1);
+    yCInfo(PATHPLAN_CTRL, "path size:%d simplified path size:%d time: %.2f", (int)m_computed_path.size(), (int)m_computed_simplified_path.size(), t2 - t1);
 
     //choose the path to use
     if (m_use_optimized_path)
@@ -761,12 +763,12 @@ bool PlannerThread::startPath()
         double threshold = 1.0; //deg
         if (fabs(m_localization_data.theta - m_sequence_of_goals.front().theta) > threshold)
         {
-           yWarning() << "Requested path has zero length. Adding waypoint with final orientation";
+           yCWarning(PATHPLAN_CTRL) << "Requested path has zero length. Adding waypoint with final orientation";
            m_current_path->push_back(m_sequence_of_goals.front());
         }
         else
         {
-            yWarning() << "Requested path has zero length. Aborting;";
+            yCWarning(PATHPLAN_CTRL) << "Requested path has zero length. Aborting;";
             m_planner_status = navigation_status_goal_reached;
             return true;
         }
@@ -778,9 +780,9 @@ bool PlannerThread::startPath()
     //debug print
     if (1)
     {
-        yDebug() << "Current pos" << " x:" << start_vec.x << " y:" << start_vec.y;
-        yDebug() << m_current_path->toString();
-        yDebug() << "Final goal" << " x:" << goal_vec.x << " y:" << goal_vec.y << " t:" << m_sequence_of_goals.front().theta;
+        yCDebug(PATHPLAN_CTRL) << "Current pos" << " x:" << start_vec.x << " y:" << start_vec.y;
+        yCDebug(PATHPLAN_CTRL) << m_current_path->toString();
+        yCDebug(PATHPLAN_CTRL) << "Final goal" << " x:" << goal_vec.x << " y:" << goal_vec.y << " t:" << m_sequence_of_goals.front().theta;
     }
 
     //just set the status to moving, do not set position commands.

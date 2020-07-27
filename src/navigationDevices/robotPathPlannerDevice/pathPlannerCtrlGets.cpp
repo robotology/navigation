@@ -23,6 +23,8 @@ using namespace std;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 
+YARP_LOG_COMPONENT(PATHPLAN_GETS, "navigation.devices.robotPathPlanner.gets")
+
 bool PlannerThread::getFinalAbsTarget(Map2DLocation& target)
 {
     Map2DLocation m;
@@ -53,7 +55,7 @@ bool PlannerThread::getCurrentAbsTarget(Map2DLocation& target)
     if (m_sequence_of_goals.size()==0)
     {
         target.map_id="invalid";
-        yError() << "No valid target has been set yet.";
+        yCError(PATHPLAN_GETS) << "No valid target has been set yet.";
         return false;
     }
     m.map_id = m_sequence_of_goals.front().map_id;
@@ -70,7 +72,7 @@ bool PlannerThread::getCurrentRelTarget(Map2DLocation& target)
     if (m_sequence_of_goals.size()==0)
     {
         target.map_id="invalid";
-        yError() << "No valid target has been set yet.";
+        yCError(PATHPLAN_GETS) << "No valid target has been set yet.";
         return false;
     }
     m.map_id = m_sequence_of_goals.front().map_id;
