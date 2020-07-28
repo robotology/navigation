@@ -32,6 +32,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IRGBDSensor.h>
 #include <yarp/dev/IFrameTransform.h>
+#include <yarp/dev/INavigation2D.h>
 #include <yarp/sig/IntrinsicParams.h>
 #include <yarp/sig/PointCloud.h>
 #include <yarp/sig/PointCloudUtils.h>
@@ -44,43 +45,59 @@
 #include <yarp/os/Port.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <math.h>
+#include <mutex>
+#include <algorithm>
+
+
+/*
+ *   local          |      -         | string  | -              |   -           | Yes          | Full port name opened by the Navigation2DClient device.                             |       |
+ * | navigation_server    |     -    | string  | -              |   -           | Yes          | Full port name of the port remotely opened by the Navigation server, to which the Navigation2DClient connects to.           |  |
+ * | map_locations_server |     -    | string  | -              |   -           | Yes          | Full port name of the port remotely opened by the Map2DServer, to which the Navigation2DClient connects to.           |  |
+ * | localization_server
+*/
+
 
 typedef unsigned char byte;
 
-class FreeFloorThread : public yarp::os::PeriodicThread
+class FreeFloorThread : public yarp::os::PeriodicThread, public yarp::os::TypedReaderCallback<yarp::os::Bottle>
 {
 protected:
     //Devices related attributes
-    yarp::dev::PolyDriver       m_rgbdPoly;
-    yarp::dev::IRGBDSensor*     m_iRgbd = nullptr;
-    yarp::dev::PolyDriver       m_tcPoly;
-    yarp::dev::IFrameTransform* m_iTc = nullptr;
+    yarp::dev::PolyDriver            m_rgbdPoly;
+    yarp::dev::IRGBDSensor*          m_iRgbd{nullptr};
+    yarp::dev::PolyDriver            m_tcPoly;
+    yarp::dev::IFrameTransform*      m_iTc{nullptr};
+    yarp::dev::PolyDriver            m_nav2D;
+    yarp::dev::Nav2D::INavigation2D* m_iNav2D{nullptr};
 
     //Computation related attributes
     bool   m_publish_ros_pc;
-    bool printed;
     int m_depth_width;
     int m_depth_height;
     double m_floor_height;
-    double m_pointcloud_max_distance;
+    double m_ceiling_height;
     size_t m_pc_stepx;
     size_t m_pc_stepy;
     std::string m_ground_frame_id;
     std::string m_camera_frame_id;
+    std::vector<std::pair<size_t,size_t>> m_okPixels;
     yarp::os::Property m_propIntrinsics;
     yarp::sig::IntrinsicParams m_intrinsics;
     yarp::sig::ImageOf<float> m_depth_image;
     yarp::sig::FlexImage m_rgbImage;
     yarp::sig::utils::PCL_ROI m_pc_roi;
     yarp::sig::Matrix m_transform_mtrx;
+    yarp::sig::PointCloud<yarp::sig::DataXYZ> m_pc;
 
     //Ports
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::FlexImage>> m_imgOutSandro; // FAKE REMOVE!!!
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelBgra>> m_imgOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_targetOutPort;
     std::string m_imgOutPortName;
+    std::string m_targetOutPortName;
 
     //Others
     yarp::os::ResourceFinder &m_rf;
+    std::mutex pixelLocker;
 
 public:
     //Public attributes
@@ -96,6 +113,10 @@ public:
     virtual void run() override;
     virtual bool threadInit() override;
     virtual void threadRelease() override;
+
+    //Port callback
+    using TypedReaderCallback<yarp::os::Bottle>::onRead;
+    void onRead(yarp::os::Bottle& b) override;
 };
 
 #endif

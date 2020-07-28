@@ -43,6 +43,7 @@ class FreeFloorViewer : public yarp::os::RFModule
 protected:
 
     yarp::os::Port     m_rpcPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_posInputPort;
     FreeFloorThread*   m_innerThread;
 
 public:

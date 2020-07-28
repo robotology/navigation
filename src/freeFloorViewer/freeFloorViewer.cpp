@@ -59,6 +59,16 @@ bool FreeFloorViewer::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    std::string posName = "/freeFloorViewer/clicked_pos:i";
+    if(rf.check("clicked_pos_port")){posName = rf.find("clicked_pos_port").asString();}
+    m_posInputPort.useCallback(*m_innerThread);
+    ret = m_posInputPort.open(posName);
+    if (ret == false)
+    {
+        yCError(FREE_FLOOR_VIEWER, "Unable to open module ports");
+        return false;
+    }
+
     return true;
 }
 
@@ -73,6 +83,7 @@ bool FreeFloorViewer::close()
 {
     m_rpcPort.interrupt();
     m_rpcPort.close();
+    m_posInputPort.close();
 
     m_innerThread->stop();
     delete m_innerThread;
@@ -99,7 +110,7 @@ bool FreeFloorViewer::updateModule()
 
 bool FreeFloorViewer::respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply)
 {
-    std::lock_guard<std::mutex> lock(m_innerThread->m_floorMutex);
+    //std::lock_guard<std::mutex> lock(m_innerThread->m_floorMutex);
     if (m_rpcPort.isOpen() == false) return false;
 
     reply.clear();
