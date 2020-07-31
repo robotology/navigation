@@ -49,16 +49,6 @@
 #include <algorithm>
 
 
-/*
- *   local          |      -         | string  | -              |   -           | Yes          | Full port name opened by the Navigation2DClient device.                             |       |
- * | navigation_server    |     -    | string  | -              |   -           | Yes          | Full port name of the port remotely opened by the Navigation server, to which the Navigation2DClient connects to.           |  |
- * | map_locations_server |     -    | string  | -              |   -           | Yes          | Full port name of the port remotely opened by the Map2DServer, to which the Navigation2DClient connects to.           |  |
- * | localization_server
-*/
-
-
-typedef unsigned char byte;
-
 class FreeFloorThread : public yarp::os::PeriodicThread, public yarp::os::TypedReaderCallback<yarp::os::Bottle>
 {
 protected:
@@ -67,7 +57,7 @@ protected:
     yarp::dev::IRGBDSensor*          m_iRgbd{nullptr};
     yarp::dev::PolyDriver            m_tcPoly;
     yarp::dev::IFrameTransform*      m_iTc{nullptr};
-    yarp::dev::PolyDriver            m_nav2D;
+    yarp::dev::PolyDriver            m_nav2DPoly;
     yarp::dev::Nav2D::INavigation2D* m_iNav2D{nullptr};
 
     //Computation related attributes
@@ -113,6 +103,10 @@ public:
     virtual void run() override;
     virtual bool threadInit() override;
     virtual void threadRelease() override;
+
+    //Internal methods
+    void reachSpot(yarp::os::Bottle& b);
+    void rotate(yarp::os::Bottle& b);
 
     //Port callback
     using TypedReaderCallback<yarp::os::Bottle>::onRead;

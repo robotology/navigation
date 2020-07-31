@@ -42,7 +42,8 @@ void rotateAndCheck(yarp::sig::PointCloud<yarp::sig::DataXYZ>& inputPc,
     goodPixels.clear();
     for (size_t r=0; r<inputPc.height(); r++)
     {
-        for(size_t c=0; c<inputPc.width();c++){
+        for(size_t c=0; c<inputPc.width();c++)
+        {
             auto v1 = inputPc(c,r).toVector4();
             auto v2 = m*v1;
             inputPc(c,r).x=v2(0);
@@ -51,14 +52,19 @@ void rotateAndCheck(yarp::sig::PointCloud<yarp::sig::DataXYZ>& inputPc,
             int xC = (int)(v2(0)*scaler);
             int yC = (int)(v2(1)*scaler);
             std::pair<int,int> tempKey(xC,yC);
-            if(columns.count(tempKey)==0){
+            if(columns.count(tempKey)==0)
+            {
                 columns[tempKey] = (v2(2)>=threshold_low && v2(2)<=threshold_high) || v2(2)<0;
             }
-            if(v2(2)<threshold_low && v2(2)>=0 && !columns[tempKey]){
+            if(v2(2)<threshold_low && v2(2)>=0 && !columns[tempKey])
+            {
                 std::pair<size_t,size_t> tempPair;
                 tempPair.first = c;
                 tempPair.second = r;
                 goodPixels.push_back(tempPair);
+                pOk.r = output.pixel(c,r).r;
+                pOk.b = output.pixel(c,r).b;
+                pOk.g = output.pixel(c,r).g/2+255/2;
                 output.pixel(c,r) = pOk;
             }
         }
@@ -95,7 +101,8 @@ bool FreeFloorThread::threadInit()
 
     // --------- Z related props -------- //
     bool okZClipRf = m_rf.check("Z_CLIPPING_PLANES");
-    if(okZClipRf){
+    if(okZClipRf)
+    {
         yarp::os::Searchable& pointcloud_clip_config = m_rf.findGroup("Z_CLIPPING_PLANES");
         if (pointcloud_clip_config.check("floor_height"))   {m_floor_height = pointcloud_clip_config.find("floor_height").asFloat64();}
         if (pointcloud_clip_config.check("ceiling_height"))   {m_ceiling_height = pointcloud_clip_config.find("ceiling_height").asFloat64();}
@@ -105,7 +112,8 @@ bool FreeFloorThread::threadInit()
 
     // --------- RGBDSensor config --------- //
     bool okRgbdRf = m_rf.check("RGBD_SENSOR_CLIENT");
-    if(!okRgbdRf){
+    if(!okRgbdRf)
+    {
         yCError(FREE_FLOOR_THREAD,"RGBD_SENSOR_CLIENT section missing in ini file");
 
         return false;
@@ -113,12 +121,14 @@ bool FreeFloorThread::threadInit()
     yarp::os::Property rgbdProp;
     rgbdProp.fromString(m_rf.findGroup("RGBD_SENSOR_CLIENT").toString());
     m_rgbdPoly.open(rgbdProp);
-    if(!m_rgbdPoly.isValid()){
+    if(!m_rgbdPoly.isValid())
+    {
         yCError(FREE_FLOOR_THREAD,"Error opening PolyDriver check parameters");
         return false;
     }
     m_rgbdPoly.view(m_iRgbd);
-    if(!m_iRgbd){
+    if(!m_iRgbd)
+    {
         yCError(FREE_FLOOR_THREAD,"Error opening iRGBD interface. Device not available");
         return false;
     }
@@ -127,7 +137,8 @@ bool FreeFloorThread::threadInit()
 
     // --------- TransformClient config --------- //
     bool okTransformRf = m_rf.check("TRANSFORM_CLIENT");
-    if(!okTransformRf){
+    if(!okTransformRf)
+    {
         yCError(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT section missing in ini file");
 
         return false;
@@ -135,15 +146,40 @@ bool FreeFloorThread::threadInit()
     yarp::os::Property tcProp;
     tcProp.fromString(m_rf.findGroup("TRANSFORM_CLIENT").toString());
     m_tcPoly.open(tcProp);
-    if(!m_tcPoly.isValid()){
+    if(!m_tcPoly.isValid())
+    {
         yCError(FREE_FLOOR_THREAD,"Error opening PolyDriver check parameters");
         return false;
     }
     m_tcPoly.view(m_iTc);
-    if(!m_iTc){
+    if(!m_iTc)
+    {
         yCError(FREE_FLOOR_THREAD,"Error opening iFrameTransform interface. Device not available");
         return false;
     }
+
+    // --------- Navigation2DClient config --------- //
+    bool okNavigation2DRf = m_rf.check("NAVIGATION_CLIENT");
+    if(!okNavigation2DRf)
+    {
+        yCError(FREE_FLOOR_THREAD,"NAVIGATION_CLIENT section missing in ini file");
+
+        return false;
+    }
+    yarp::os::Property nav2DProp;
+    nav2DProp.fromString(m_rf.findGroup("NAVIGATION_CLIENT").toString());
+    m_nav2DPoly.open(nav2DProp);
+    if(!m_nav2DPoly.isValid())
+    {
+        yCError(FREE_FLOOR_THREAD,"Error opening PolyDriver check parameters");
+        return false;
+    }
+    m_nav2DPoly.view(m_iNav2D);
+    if(!m_iNav2D){
+        yCError(FREE_FLOOR_THREAD,"Error opening iFrameTransform interface. Device not available");
+        return false;
+    }
+
     //Verify if this is needed
     yarp::os::Time::delay(0.1);
 
@@ -223,22 +259,61 @@ void FreeFloorThread::run()
     m_imgOutPort.write();
 }
 
-void FreeFloorThread::onRead(yarp::os::Bottle &b){
+void FreeFloorThread::onRead(yarp::os::Bottle &b)
+{
+    if(m_nav2DPoly.isValid())
+    {
+        yarp::dev::Nav2D::NavigationStatusEnum currentStatus;
+        if(m_iNav2D->getNavigationStatus(currentStatus))
+        {
+            if(currentStatus == yarp::dev::Nav2D::navigation_status_moving)
+            {
+                m_iNav2D->stopNavigation();
+                return;
+            }
+        }
+        else
+        {
+            yCError(FREE_FLOOR_THREAD,"An error occurred while retrieving the navigation status");
+        }
+    }
+    if(b.size() == 2)
+    {
+        reachSpot(b);
+    }
+    else if(b.size() == 4)
+    {
+        rotate(b);
+    }
+    else{
+        yCError(FREE_FLOOR_THREAD,"The input bottle has the wrong number of elements");
+    }
+}
+
+void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
+{
     std::pair<size_t,size_t> gotPos;
     size_t u = b.get(0).asInt();
-    if(u >= m_rgbImage.width() or u<0){
+    if(u >= m_rgbImage.width() or u<0)
+    {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
     }
     size_t v = b.get(1).asInt();
-    if(v >= m_rgbImage.height() or v<0){
+    if(v >= m_rgbImage.height() or v<0)
+    {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
     }
-    gotPos.first = (size_t)u;
-    gotPos.second = (size_t)v;
+    gotPos.first = u;
+    gotPos.second = v;
     m_floorMutex.lock();
     bool pixelOk = std::find(m_okPixels.begin(), m_okPixels.end(), gotPos) != m_okPixels.end();
 
-    if(pixelOk){
+    if(pixelOk)
+    {
+        if(m_nav2DPoly.isValid())
+        {
+            m_iNav2D->gotoTargetByRelativeLocation(m_pc(u,v).x,m_pc(u,v).y);
+        }
         yarp::os::Bottle& toSend = m_targetOutPort.prepare();
         toSend.clear();
         toSend.addFloat32(m_pc(u,v).x);
@@ -246,6 +321,29 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b){
         m_targetOutPort.write();
     }
     m_floorMutex.unlock();
+}
+
+void FreeFloorThread::rotate(yarp::os::Bottle &b)
+{
+    yCInfo(FREE_FLOOR_THREAD,"The bottle: [%d, %d, %d, %d]",b.get(0).asInt(),b.get(1).asInt(),
+           b.get(2).asInt(),b.get(3).asInt());
+
+    double notNeeded, horizFOV;
+    bool fovGot = m_iRgbd->getRgbFOV(horizFOV,notNeeded);
+    if(!fovGot)
+    {
+        yCError(FREE_FLOOR_THREAD,"An error occurred while retrieving the rgb camera FOV");
+    }
+
+    yCInfo(FREE_FLOOR_THREAD,"FOV: [%f, %f]",horizFOV,notNeeded);
+
+    int deltaPx = (b.get(0).asInt()-b.get(2).asInt());
+    double rotation = (double)deltaPx * horizFOV/m_depth_width;
+    //int sign = (b.get(0).asInt()-b.get(2).asInt())/(abs(b.get(0).asInt()-b.get(2).asInt())>0?abs(b.get(0).asInt()-b.get(2).asInt()):1);
+    if(m_nav2DPoly.isValid())
+    {
+        m_iNav2D->gotoTargetByRelativeLocation(0.0,0.0,rotation);
+    }
 }
 
 void FreeFloorThread::threadRelease()
@@ -259,6 +357,8 @@ void FreeFloorThread::threadRelease()
 
     if(m_tcPoly.isValid())
         m_tcPoly.close();
+    if(m_nav2DPoly.isValid())
+        m_nav2DPoly.close();
     if(!m_imgOutPort.isClosed()){
         m_imgOutPort.close();
     }
