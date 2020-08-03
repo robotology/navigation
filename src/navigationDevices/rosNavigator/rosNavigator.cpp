@@ -305,16 +305,16 @@ void rosNavigator::run()
     {
         switch (feedback->status.status)
         {
-           case feedback->status.PENDING: {} break;
-           case feedback->status.ACTIVE: {m_navigation_status = navigation_status_moving; } break;
-           case feedback->status.PREEMPTED: {} break;
-           case feedback->status.SUCCEEDED: {m_navigation_status = navigation_status_goal_reached; } break;
-           case feedback->status.ABORTED: {m_navigation_status = navigation_status_aborted; } break;
-           case feedback->status.REJECTED: {} break;
-           case feedback->status.PREEMPTING: {} break;
-           case feedback->status.RECALLING: {} break;
-           case feedback->status.RECALLED: {} break;
-           case feedback->status.LOST: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE: {m_navigation_status = navigation_status_moving; } break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED: {m_navigation_status = navigation_status_goal_reached; } break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED: {m_navigation_status = navigation_status_aborted; } break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED: {} break;
+           case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST: {} break;
            default: {} break;
         }
     }
