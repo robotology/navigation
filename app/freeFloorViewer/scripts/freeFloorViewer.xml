@@ -11,6 +11,36 @@
 </module>
 
 <module>
+   <name>gazebo</name>
+   <parameters></parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>baseControl</name>
+   <parameters>--context baseControl_SIM --from baseCtrl_cer_sim.ini --skip_robot_interface_check</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice gazeboLocalizer --context freeFloorViewer --from gazeboLocalizer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context freeFloorViewer --from robotPathPlanner_sim_cer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
    <name>freeFloorViewer</name>
    <parameters></parameters>
    <node>console</node>
@@ -28,5 +58,22 @@
   <protocol>unix_stream</protocol>
 </connection>
 
+<connection>
+  <from>/floorClick:o</from>
+  <to>/freeFloorViewer/clicked_pos:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/baseControl/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/robotPathPlanner/commands:o</from>
+  <to>/robotGoto/rpc</to>
+  <protocol>tcp</protocol>
+</connection>
 
 </application>

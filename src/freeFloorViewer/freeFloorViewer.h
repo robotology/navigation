@@ -31,29 +31,25 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IRGBDSensor.h>
 #include <yarp/dev/IFrameTransform.h>
-
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+
 #include <math.h>
 #include "freeFloorThread.h"
 
 class FreeFloorViewer : public yarp::os::RFModule
 {
 protected:
-
-    yarp::os::Port     m_rpcPort;
     yarp::os::BufferedPort<yarp::os::Bottle> m_posInputPort;
     FreeFloorThread*   m_innerThread;
 
 public:
     FreeFloorViewer();
     virtual bool configure(yarp::os::ResourceFinder &rf);
-    virtual bool interruptModule();
     virtual bool close();
     virtual double getPeriod();
     virtual bool updateModule();
-    virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply);
 };
 
 #endif

@@ -24,52 +24,6 @@
 YARP_LOG_COMPONENT(FREE_FLOOR_THREAD, "navigation.freeFloorViewer.freeFloorThread")
 bool print{true};
 
-void rotateAndCheck(yarp::sig::PointCloud<yarp::sig::DataXYZ>& inputPc,
-                    const yarp::sig::Matrix& m,
-                    const yarp::sig::FlexImage& inputCanvas,
-                    yarp::sig::ImageOf<yarp::sig::PixelBgra> &output,
-                    std::vector<std::pair<size_t,size_t>>& goodPixels,
-                    double threshold_low,double threshold_high)
-{
-    output.resize(inputPc.width(),inputPc.height());
-    yarp::sig::PixelBgra pOk(0,255,0,0.6);
-    yarp::sig::PixelBgra pKo(0,0,255,1.0);
-    std::map<std::pair<int,int>,bool> columns;
-    int scaler = 10;
-
-    output.copy(inputCanvas);
-
-    goodPixels.clear();
-    for (size_t r=0; r<inputPc.height(); r++)
-    {
-        for(size_t c=0; c<inputPc.width();c++)
-        {
-            auto v1 = inputPc(c,r).toVector4();
-            auto v2 = m*v1;
-            inputPc(c,r).x=v2(0);
-            inputPc(c,r).y=v2(1);
-            inputPc(c,r).z=v2(2);
-            int xC = (int)(v2(0)*scaler);
-            int yC = (int)(v2(1)*scaler);
-            std::pair<int,int> tempKey(xC,yC);
-            if(columns.count(tempKey)==0)
-            {
-                columns[tempKey] = (v2(2)>=threshold_low && v2(2)<=threshold_high) || v2(2)<0;
-            }
-            if(v2(2)<threshold_low && v2(2)>=0 && !columns[tempKey])
-            {
-                std::pair<size_t,size_t> tempPair;
-                tempPair.first = c;
-                tempPair.second = r;
-                goodPixels.push_back(tempPair);
-                pOk.r = output.pixel(c,r).r;
-                pOk.b = output.pixel(c,r).b;
-                pOk.g = output.pixel(c,r).g/2+255/2;
-                output.pixel(c,r) = pOk;
-            }
-        }
-    }
-}
 
 
 FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
@@ -253,11 +207,57 @@ void FreeFloorThread::run()
     m_floorMutex.lock();
     //compute the point cloud
     m_pc = yarp::sig::utils::depthToPC(m_depth_image, m_intrinsics,m_pc_roi,m_pc_stepx,m_pc_stepy);
-    rotateAndCheck(m_pc, m_transform_mtrx,m_rgbImage,imgOut,m_okPixels,m_floor_height,m_ceiling_height);
+    rotateAndCheck(imgOut);
     m_floorMutex.unlock();
 
     m_imgOutPort.write();
 }
+
+void FreeFloorThread::rotateAndCheck(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output)
+{
+    output.resize(m_pc.width(),m_pc.height());
+    yarp::sig::PixelBgra pOk(0,0,0,0.6);
+    std::map<std::pair<int,int>,bool> columns;
+    int scaler = 10;
+    double arScaler = 0.5;
+    yarp::dev::Nav2D::NavigationStatusEnum currentStatus;
+    m_iNav2D->getNavigationStatus(currentStatus);
+    bool moving = currentStatus == yarp::dev::Nav2D::navigation_status_moving;
+    //rotateAndCheck(m_pc, m_transform_mtrx,m_rgbImage,imgOut,m_okPixels,m_floor_height,m_ceiling_height);
+    output.copy(m_rgbImage);
+
+    m_okPixels.clear();
+    for (size_t r=0; r<m_pc.height(); r++)
+    {
+        for(size_t c=0; c<m_pc.width();c++)
+        {
+            auto v1 = m_pc(c,r).toVector4();
+            auto v2 = m_transform_mtrx*v1;
+            m_pc(c,r).x=v2(0);
+            m_pc(c,r).y=v2(1);
+            m_pc(c,r).z=v2(2);
+            int xC = (int)(v2(0)*scaler);
+            int yC = (int)(v2(1)*scaler);
+            std::pair<int,int> tempKey(xC,yC);
+            if(columns.count(tempKey)==0)
+            {
+                columns[tempKey] = (v2(2)>=m_floor_height && v2(2)<=m_ceiling_height) || v2(2)<0;
+            }
+            if(v2(2)<m_floor_height && v2(2)>=0 && !columns[tempKey])
+            {
+                std::pair<size_t,size_t> tempPair;
+                tempPair.first = c;
+                tempPair.second = r;
+                m_okPixels.push_back(tempPair);
+                pOk.r = moving ? output.pixel(c,r).r*arScaler+255*(1-arScaler) : output.pixel(c,r).r;
+                pOk.b = output.pixel(c,r).b;
+                pOk.g = moving ? output.pixel(c,r).g : output.pixel(c,r).g*arScaler+255*(1-arScaler);
+                output.pixel(c,r) = pOk;
+            }
+        }
+    }
+}
+
 
 void FreeFloorThread::onRead(yarp::os::Bottle &b)
 {

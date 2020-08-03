@@ -36,14 +36,11 @@
 #include <yarp/sig/IntrinsicParams.h>
 #include <yarp/sig/PointCloud.h>
 #include <yarp/sig/PointCloudUtils.h>
-#include <yarp/rosmsg/sensor_msgs/PointCloud2.h>
-#include <yarp/os/Node.h>
-#include <yarp/os/Publisher.h>
 #include <yarp/math/Math.h>
-
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+
 #include <math.h>
 #include <mutex>
 #include <algorithm>
@@ -107,6 +104,7 @@ public:
     //Internal methods
     void reachSpot(yarp::os::Bottle& b);
     void rotate(yarp::os::Bottle& b);
+    void rotateAndCheck(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output);
 
     //Port callback
     using TypedReaderCallback<yarp::os::Bottle>::onRead;
