@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: focal
 language: cpp
 
 os: 
@@ -16,9 +16,10 @@ matrix:
   
 before_script:
   #ubuntu dependencies
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo sh -c 'echo "deb http://www.icub.org/ubuntu trusty contrib/science" > /etc/apt/sources.list.d/icub.list'; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo sh -c 'echo "deb http://www.icub.org/ubuntu focal contrib/science" > /etc/apt/sources.list.d/icub.list'; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get --assume-yes --force-yes install cmake libeigen3-dev icub-common libv4lconvert0 libv4l-dev; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get --assume-yes --force-yes install cmake ycm-cmake-modules libeigen3-dev icub-common libv4lconvert0 libv4l-dev; fi
 
   #OS X dependencies
   #- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew tap robotology/cask; fi

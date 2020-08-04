@@ -30,7 +30,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED 11)
 
 #### Find YARP, require that YARP version is at least ICUB_REQYARP_VERSION
-find_package(YARP 3.3.101 COMPONENTS os sig dev math gsl rosmsg idl_tools REQUIRED)
+find_package(YCM REQUIRED)
+find_package(YARP 3.4 COMPONENTS os sig dev math gsl rosmsg idl_tools REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
 
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
@@ -47,4 +48,5 @@ find_package(SDL)
 add_subdirectory(src)
 add_subdirectory(app)
 
-#icubcontrib_add_uninstall_target()
+include(AddUninstallTarget)
+
