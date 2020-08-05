@@ -7,6 +7,7 @@
 # add_subdirectory(deprecated)
 
 add_subdirectory(robotGoto)
+add_subdirectory(freeFloorViewer)
 add_subdirectory(robotPathPlanner)
 add_subdirectory(robotGotoExamples)
 add_subdirectory(robotPathPlannerExamples)
