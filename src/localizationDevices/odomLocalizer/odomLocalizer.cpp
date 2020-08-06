@@ -44,6 +44,10 @@ using namespace yarp::dev::Nav2D;
 #define RAD2DEG 180/M_PI
 #define DEG2RAD M_PI/180
 
+
+YARP_LOG_COMPONENT(ODOMLOC, "navigation.devices.odomLocalizer")
+#define DISPLAY_PERIOD 1.0
+
 void odomLocalizerRPCHandler::setInterface(odomLocalizer* iface)
 {
     this->interface = iface;
@@ -101,7 +105,7 @@ bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 
 bool  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    yError() << " odomLocalizer::getEstimatedOdometry is not yet implemented";
+    yCErrorThrottle(ODOMLOC, DISPLAY_PERIOD) << " odomLocalizer::getEstimatedOdometry is not yet implemented";
     return false;
 }
 
@@ -157,13 +161,13 @@ void odomLocalizerThread::run()
     }
     if (current_time - m_last_odometry_data_received > 0.1)
     {
-        yWarning() << "No localization data received for more than 0.1s!";
+        yCWarningThrottle(ODOMLOC,DISPLAY_PERIOD) << "No localization data received for more than 0.1s!";
     }
 }
 
 bool odomLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
-    yInfo() << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
+    yCInfo(ODOMLOC) << "OdomLocalizer: Localization init request: (" << loc.map_id << ")";
     lock_guard<std::mutex> lock(m_mutex);
     m_initial_loc.map_id = loc.map_id;
     m_initial_loc.x = loc.x;
@@ -175,7 +179,7 @@ bool odomLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 
     if (m_current_loc.map_id != m_initial_loc.map_id)
     {
-        yInfo() << "Map changed from: " << m_current_loc.map_id << " to: " << m_initial_loc.map_id;
+        yCInfo(ODOMLOC) << "Map changed from: " << m_current_loc.map_id << " to: " << m_initial_loc.map_id;
         m_current_loc.map_id = m_initial_loc.map_id;
         //@@@TO BE COMPLETED
         m_current_loc.x = 0+m_initial_loc.x;
@@ -198,35 +202,35 @@ bool odomLocalizerThread::threadInit()
     Bottle general_group = m_cfg.findGroup("GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yCError(ODOMLOC) << "Missing GENERAL group!";
         return false;
     }
 
     Bottle initial_group = m_cfg.findGroup("INITIAL_POS");
     if (initial_group.isNull())
     {
-        yError() << "Missing INITIAL_POS group!";
+        yCError(ODOMLOC) << "Missing INITIAL_POS group!";
         return false;
     }
 
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(ODOMLOC) << "Missing LOCALIZATION group!";
         return false;
     }
 
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
     {
-        yError() << "Missing TF group!";
+        yCError(ODOMLOC) << "Missing TF group!";
         return false;
     }
 
     Bottle odometry_group = m_cfg.findGroup("ODOMETRY");
     if (odometry_group.isNull())
     {
-        yError() << "Missing ODOMETRY group!";
+        yCError(ODOMLOC) << "Missing ODOMETRY group!";
         return false;
     }
 
@@ -237,7 +241,7 @@ bool odomLocalizerThread::threadInit()
     //odometry group
     if (odometry_group.check("odometry_broadcast_port") == false)
     {
-        yError() << "Missing `odometry_port` in [ODOMETRY] group";
+        yCError(ODOMLOC) << "Missing `odometry_port` in [ODOMETRY] group";
         return false;
     }
     m_port_broadcast_odometry_name = odometry_group.find("odometry_broadcast_port").asString();
@@ -249,20 +253,20 @@ bool odomLocalizerThread::threadInit()
     bool b3 = yarp::os::Network::connect(m_port_broadcast_odometry_name.c_str(), odom_portname.c_str());
     if (b1 == false || b2 == false || b3 == false)
     {
-        yError() << "Unable to initialize odometry port connection from " << m_port_broadcast_odometry_name.c_str() << "to:" << odom_portname.c_str();
+        yCError(ODOMLOC) << "Unable to initialize odometry port connection from " << m_port_broadcast_odometry_name.c_str() << "to:" << odom_portname.c_str();
         return false;
     }
 
     //initial location initialization
     Map2DLocation tmp_loc;
     if (initial_group.check("initial_x")) { tmp_loc.x = initial_group.find("initial_x").asDouble(); }
-    else { yError() << "missing initial_x param"; return false; }
+    else { yCError(ODOMLOC) << "missing initial_x param"; return false; }
     if (initial_group.check("initial_y")) { tmp_loc.y = initial_group.find("initial_y").asDouble(); }
-    else { yError() << "missing initial_y param"; return false; }
+    else { yCError(ODOMLOC) << "missing initial_y param"; return false; }
     if (initial_group.check("initial_theta")) { tmp_loc.theta = initial_group.find("initial_theta").asDouble(); }
-    else { yError() << "missing initial_theta param"; return false; }
+    else { yCError(ODOMLOC) << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
+    else { yCError(ODOMLOC) << "missing initial_map param"; return false; }
     this->initializeLocalization(tmp_loc);
 
    return true;
@@ -276,7 +280,7 @@ void odomLocalizerThread::threadRelease()
 
 bool odomLocalizer::open(yarp::os::Searchable& config)
 {
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    yCDebug(ODOMLOC) << "config configuration: \n" << config.toString().c_str();
 
     std::string context_name = "odomLocalizer";
     std::string file_name = "odomLocalizer.ini";
@@ -292,7 +296,7 @@ bool odomLocalizer::open(yarp::os::Searchable& config)
     Property p;
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
-    yDebug() << "odomLocalizer configuration: \n" << p.toString().c_str();
+    yCDebug(ODOMLOC) << "odomLocalizer configuration: \n" << p.toString().c_str();
 
     thread = new odomLocalizerThread(0.010, p);
 
@@ -312,7 +316,7 @@ bool odomLocalizer::open(yarp::os::Searchable& config)
     bool ret = rpcPort.open("/"+local_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(ODOMLOC) << "Unable to open module ports";
         return false;
     }
 
@@ -345,26 +349,26 @@ bool odomLocalizer::close()
  
 bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by odomLocalizer";
+    yCWarning(ODOMLOC) << "Covariance matrix is not currently handled by odomLocalizer";
     thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   odomLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by odomLocalizer";
+    yCWarning(ODOMLOC) << "Covariance matrix is not currently handled by odomLocalizer";
     thread->initializeLocalization(loc);
     return true;
 }
 
 bool    odomLocalizer::startLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(ODOMLOC) << "Not yet implemented";
     return false;
 }
 
 bool    odomLocalizer::stopLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(ODOMLOC) << "Not yet implemented";
     return false;
 }
