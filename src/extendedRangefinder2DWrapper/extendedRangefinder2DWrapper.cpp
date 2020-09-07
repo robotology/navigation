@@ -890,22 +890,26 @@ void extendedRangefinder2DWrapper::run()
 
 
             // publish standard laser port
-            yarp::os::Bottle& b = streamingPort.prepare();
-            b.clear();
-            Bottle& bl = b.addList();
-
-            bl.read(ranges);
-            b.addInt32(status);
+            yarp::dev::LaserScan2D& b = streamingPort.prepare();
+            //b.clear();
+            b.scans=ranges;
+            b.angle_min= minAngle;
+            b.angle_max= maxAngle;
+            b.range_min= minDistance;
+            b.range_max= maxDistance;
+            b.status=status;
             streamingPort.setEnvelope(lastStateStamp);
             streamingPort.write();
 
             // publish modified laser port
-            yarp::os::Bottle& bMod = streamingPortMod.prepare();
-            bMod.clear();
-            Bottle& blMod = bMod.addList();
-
-            blMod.read(rangesMod);
-            bMod.addInt32(status);
+            yarp::dev::LaserScan2D& bMod = streamingPortMod.prepare();
+            //bMod.clear();
+            bMod.scans=rangesMod;
+            bMod.angle_min= minAngle;
+            bMod.angle_max= maxAngle;
+            bMod.range_min= minDistance;
+            bMod.range_max= maxDistance;
+            bMod.status=status;
             streamingPortMod.setEnvelope(lastStateStamp);
             streamingPortMod.write();
 
@@ -916,11 +920,9 @@ void extendedRangefinder2DWrapper::run()
             {
                 bd.addDouble(debVect[i]);
             }
-
-            //bd.addInt32(status);
+            
             streamingPortDebug.setEnvelope(lastStateStamp);
             streamingPortDebug.write();
-
 
             // publish ROS topic if required
             if (useROS != ROS_disabled)
