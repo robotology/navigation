@@ -573,6 +573,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
         aux_angular_speed = b->vel_theta;
         aux_pwm_gain = 100;
         auxiliary_received = 100;
+        wdt_aux_cmd = Time::now();
     }
     
     //- - - read ROS commands - - -
