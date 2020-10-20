@@ -17,8 +17,6 @@ yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
                                  DOC "devices plugins")
 add_subdirectory(localizationDevices)
 add_subdirectory(navigationDevices)
-add_subdirectory(extendedRangefinder2DWrapper)
-#add_subdirectory(headObstaclesScanner)
 yarp_end_plugin_library(navmod)
 
 add_subdirectory(map2Gazebo)
