@@ -294,12 +294,12 @@ void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
 {
     std::pair<size_t,size_t> gotPos;
     size_t u = b.get(0).asInt();
-    if(u >= m_rgbImage.width() or u<0)
+    if(u >= m_rgbImage.width() || u<0)
     {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
     }
     size_t v = b.get(1).asInt();
-    if(v >= m_rgbImage.height() or v<0)
+    if(v >= m_rgbImage.height() || v<0)
     {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
     }
