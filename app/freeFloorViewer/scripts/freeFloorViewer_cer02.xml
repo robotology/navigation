@@ -1,30 +1,24 @@
 <application>
-<name>freeFloorViewer</name>
+<name>freeFloorViewer_cer02</name>
 
 <dependencies>
 </dependencies>
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
-   <node>console</node>
-</module>
-
-<module>
-   <name>gazebo</name>
-   <parameters></parameters>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 1)" "(enable_ros_subscriber 1)"</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarprobotstatepublisher</name>
-   <parameters>--model /home/elandini/.local/share/YARP/rosLaunch/cer_sim.urdf</parameters>
+   <parameters>--model /home/elandini/.local/share/YARP/rosLaunch/cer.urdf</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>baseControl</name>
-   <parameters>--context baseControl_SIM --from baseCtrl_cer_sim.ini --skip_robot_interface_check</parameters>
+   <parameters>--context baseControl --from baseCtrl_cer.ini --skip_robot_interface_check</parameters>
    <node>console</node>
 </module>
 
@@ -36,19 +30,19 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device localization2DServer --subdevice gazeboLocalizer --context freeFloorViewer --from gazeboLocalizer.ini</parameters>
+   <parameters>--device localization2DServer --subdevice odomLocalizer --context freeFloorViewer --from odomLocalizer_cer02.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context freeFloorViewer --from robotPathPlanner_sim_cer.ini</parameters>
+   <parameters>--device navigation2DServer --subdevice robotPathPlannerDev --context freeFloorViewer --from robotPathPlanner_cer02.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>freeFloorViewer</name>
-   <parameters></parameters>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_cer02.ini</parameters>
    <node>console</node>
 </module>
 

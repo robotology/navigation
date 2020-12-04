@@ -21,14 +21,17 @@
 
 YARP_LOG_COMPONENT(FREE_FLOOR_VIEWER, "navigation.freeFloorViewer")
 
-FreeFloorViewer::FreeFloorViewer()
+FreeFloorViewer::FreeFloorViewer() :
+    m_period(1.0)
 {
 }
 
 bool FreeFloorViewer::configure(yarp::os::ResourceFinder &rf)
 {
+    if(rf.check("period")){m_period = rf.find("period").asFloat32();}
+
     double threadPeriod = 0.02;
-    if(rf.check("period")){threadPeriod = rf.find("period").asFloat32();}
+    if(rf.check("thread_period")){threadPeriod = rf.find("thread_period").asFloat32();}
 
     m_innerThread = new FreeFloorThread(threadPeriod,rf);
     bool threadOk = m_innerThread->start();
@@ -60,7 +63,7 @@ bool FreeFloorViewer::close()
 
 double FreeFloorViewer::getPeriod()
 {
-    return 3.0;
+    return m_period;
 }
 
 bool FreeFloorViewer::updateModule()
