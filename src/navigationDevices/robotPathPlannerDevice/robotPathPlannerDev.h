@@ -29,14 +29,16 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-
+#include <recovery_behaviors.h>
+#include <stuck_detection.h>
 #include "pathPlannerCtrl.h"
 #include <math.h>
 
 class robotPathPlannerDev : public yarp::dev::DeviceDriver,
                             public yarp::dev::Nav2D::INavigation2DTargetActions,
                             public yarp::dev::Nav2D::INavigation2DControlActions,
-                            public yarp::os::PortReader
+                            public yarp::os::PortReader,
+                            public navigation_with_stuck_detection
 {
 public:
     PlannerThread*                 m_plannerThread;

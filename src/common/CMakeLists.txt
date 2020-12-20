@@ -10,13 +10,15 @@ set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 set(${LIBRARY_TARGET_NAME}_SRC
         movable_localization_device/movable_localization_device.cpp
         odometry_estimation/localization_device_with_estimated_odometry.cpp
-        recovery_behaviors/recovery_behaviors.cpp)
+        recovery_behaviors/recovery_behaviors.cpp
+        recovery_behaviors/stuck_detection.cpp)
 
 
 set(${LIBRARY_TARGET_NAME}_HDR
         movable_localization_device/movable_localization_device.h
         odometry_estimation/localization_device_with_estimated_odometry.h
         recovery_behaviors/recovery_behaviors.h
+        recovery_behaviors/stuck_detection.h
         include/navigation_defines.h)
 
 add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC} ${${LIBRARY_TARGET_NAME}_HDR})
