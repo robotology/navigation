@@ -20,7 +20,6 @@ target_link_libraries(rosLocalizer YARP::YARP_os
                                    YARP::YARP_dev
                                    YARP::YARP_math
                                    YARP::YARP_rosmsg
-                                   ctrlLib
                                    navigation_lib)
 
 

@@ -37,13 +37,13 @@ yarp_add_plugin(amclLocalizer amclLocalizer.h amclLocalizer.cpp
                 amcl/map/map_store.c
                 amcl/map/map.h)
 
+include_directories (include)
+
 target_link_libraries(amclLocalizer YARP::YARP_OS
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   ctrlLib
                                    navigation_lib)
-
 
 yarp_install(TARGETS amclLocalizer
            EXPORT YARP_${YARP_PLUGIN_MASTER}

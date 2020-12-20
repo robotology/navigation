@@ -40,7 +40,7 @@
 #include <mutex>
 #include <math.h>
 
-#include <iCub/ctrl/adaptWinPolyEstimator.h>
+#include <localization_device_with_estimated_odometry.h>
 
 
 using namespace yarp::os;
@@ -114,7 +114,8 @@ public:
     bool   stopLocalizationService() override;
 };
 
-class rosLocalizerThread : public yarp::os::PeriodicThread
+class rosLocalizerThread : public yarp::os::PeriodicThread,
+                           public localization_device_with_estimated_odometry
 {
 protected:
     //general
@@ -126,13 +127,6 @@ protected:
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_local_name;
-
-    //velocity estimation
-    yarp::sig::Vector            m_odom_vel;
-    yarp::sig::Vector            m_robot_vel;
-    iCub::ctrl::AWLinEstimator*  m_estimator;
-    yarp::dev::OdometryData      m_current_odom;
-    std::mutex                   m_current_odom_mutex;
 
     //configuration options
     bool                         m_ros_enabled;
@@ -173,7 +167,6 @@ public:
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
-    bool getCurrentOdom(yarp::dev::OdometryData& odom);
     bool getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses);
     bool startLoc();
     bool stopLoc();

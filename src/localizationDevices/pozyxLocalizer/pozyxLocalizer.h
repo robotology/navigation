@@ -31,6 +31,7 @@
 #include <mutex>
 #include <math.h>
 #include <yarp/dev/IMap2D.h>
+#include <localization_device_with_estimated_odometry.h>
 
 #ifndef POZYX_LOCALIZER_H
 #define POZYX_LOCALIZER_H
@@ -80,7 +81,8 @@ public:
     bool   stopLocalizationService() override;
 };
 
-class pozyxLocalizerThread : public yarp::os::PeriodicThread
+class pozyxLocalizerThread : public yarp::os::PeriodicThread,
+                             public localization_device_with_estimated_odometry
 {
 protected:
     //general

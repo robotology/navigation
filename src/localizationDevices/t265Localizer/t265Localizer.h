@@ -24,6 +24,7 @@
 #include <yarp/dev/IMap2D.h>
 #include <movable_localization_device.h>
 #include <iCub/ctrl/adaptWinPolyEstimator.h>
+#include <localization_device_with_estimated_odometry.h>
 
 #include <yarp/dev/IFrameTransform.h>
 
@@ -94,7 +95,8 @@ public:
 };
 
 class t265LocalizerThread : public yarp::os::PeriodicThread,
-                                   movable_localization_device
+                            public movable_localization_device,
+                            public localization_device_with_estimated_odometry
 {
 protected:
     //general
@@ -110,11 +112,6 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_current_loc;
     yarp::dev::OdometryData             m_current_odom;
     yarp::dev::Nav2D::Map2DLocation     m_current_device_data;
-
-    //velocity estimation
-    yarp::sig::Vector            m_odom_vel;
-    yarp::sig::Vector            m_robot_vel;
-    iCub::ctrl::AWLinEstimator*  m_estimator;
 
     //map server
     std::string                  m_remote_map;
@@ -145,8 +142,6 @@ public:
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
-    bool getCurrentOdom(yarp::dev::OdometryData& odom);
-    void odometry_update();
 };
 
 #endif

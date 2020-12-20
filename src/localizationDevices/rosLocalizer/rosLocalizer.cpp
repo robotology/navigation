@@ -83,40 +83,40 @@ bool   rosLocalizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocati
 
 bool   rosLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
 {
-	if (thread)
-	{
-		return thread->getCurrentLoc(loc);
-	}
-	yError() << "rosLocalizer thread not running";
+    if (thread)
+    {
+        return thread->getCurrentLoc(loc);
+    }
+    yError() << "rosLocalizer thread not running";
     return false;
 }
 
 bool  rosLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    thread->getCurrentOdom(odom);
+    odom = thread->getOdometry();
     return true;
 }
 
 bool   rosLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
 {
-	if (thread)
-	{
-		yarp::sig::Matrix cov6x6(6,6);
-	    cov6x6.zero();
-	    cov6x6[0][0]=m_default_covariance_3x3[0][0];
-	    cov6x6[1][0]=m_default_covariance_3x3[1][0];
-	    cov6x6[5][0]=m_default_covariance_3x3[2][0];
-	    
-	    cov6x6[0][1]=m_default_covariance_3x3[0][1];
-	    cov6x6[1][1]=m_default_covariance_3x3[1][1];
-	    cov6x6[5][1]=m_default_covariance_3x3[2][1];
-	    
-	    cov6x6[0][5]=m_default_covariance_3x3[0][2];
-	    cov6x6[1][5]=m_default_covariance_3x3[1][2];
-	    cov6x6[5][5]=m_default_covariance_3x3[2][2];
-		return thread->initializeLocalization(loc, cov6x6);
-	}
-	yError() << "rosLocalizer thread not running";
+    if (thread)
+    {
+        yarp::sig::Matrix cov6x6(6,6);
+        cov6x6.zero();
+        cov6x6[0][0]=m_default_covariance_3x3[0][0];
+        cov6x6[1][0]=m_default_covariance_3x3[1][0];
+        cov6x6[5][0]=m_default_covariance_3x3[2][0];
+        
+        cov6x6[0][1]=m_default_covariance_3x3[0][1];
+        cov6x6[1][1]=m_default_covariance_3x3[1][1];
+        cov6x6[5][1]=m_default_covariance_3x3[2][1];
+        
+        cov6x6[0][5]=m_default_covariance_3x3[0][2];
+        cov6x6[1][5]=m_default_covariance_3x3[1][2];
+        cov6x6[5][5]=m_default_covariance_3x3[2][2];
+        return thread->initializeLocalization(loc, cov6x6);
+    }
+    yError() << "rosLocalizer thread not running";
     return false;
 }
 
@@ -139,8 +139,6 @@ rosLocalizerThread::rosLocalizerThread(double _period, yarp::os::Searchable& _cf
       
     m_seq_counter=0;
     m_rosTime = yarp::os::Time::now();
-
-    m_estimator = new iCub::ctrl::AWLinEstimator(3,3);
 }
 
 
@@ -206,35 +204,7 @@ void rosLocalizerThread::run()
         m_localization_data.theta = pose[5] * RAD2DEG;
 
         //velocity estimation block
-        if (1)
-        {
-            m_current_odom_mutex.lock();
-            //m_current_loc is in the world reference frame.
-            // hence this velocity is estimated in the world reference frame.
-            iCub::ctrl::AWPolyElement el;
-            el.data = yarp::sig::Vector(3);
-            el.data[0]=  m_current_odom.odom_x = m_localization_data.x;
-            el.data[1] = m_current_odom.odom_y = m_localization_data.y;
-            el.data[2] = m_current_odom.odom_theta = m_localization_data.theta;
-            el.time = Time::now();
-            m_odom_vel.resize(3,0.0);
-            m_odom_vel = m_estimator->estimate(el);
-            m_current_odom.odom_vel_x = m_odom_vel[0];
-            m_current_odom.odom_vel_y = m_odom_vel[1];
-            m_current_odom.odom_vel_theta = m_odom_vel[2];
-
-            //this is the velocity in robot reference frame.
-            //NB: for a non-holonomic robot robot_vel[1] ~= 0
-            m_robot_vel.resize(3, 0.0);
-            m_robot_vel[0] = m_odom_vel[0] * cos(m_localization_data.theta * DEG2RAD) - m_odom_vel[0] * sin(m_localization_data.theta * DEG2RAD);
-            m_robot_vel[1] = m_odom_vel[1] * sin(m_localization_data.theta * DEG2RAD) + m_odom_vel[1] * cos(m_localization_data.theta * DEG2RAD);
-            m_robot_vel[2] = m_odom_vel[2];
-            m_current_odom.base_vel_x = m_robot_vel[0];
-            m_current_odom.base_vel_y = m_robot_vel[1];
-            m_current_odom.base_vel_theta = m_robot_vel[2];
-
-            m_current_odom_mutex.unlock();
-        }
+        if (1) { estimateOdometry(m_localization_data); }
 
     }
     if (current_time - m_tf_data_received > 0.1)
@@ -266,7 +236,7 @@ bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLoc
         }
         else
         {
-			publish_map();
+            publish_map();
         }
     }
 
@@ -358,13 +328,6 @@ bool rosLocalizerThread::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLo
     //data not available. Returning true to prevent message flooding.
     poses.clear();
     return true; 
-}
-
-bool rosLocalizerThread::getCurrentOdom(OdometryData& odom)
-{
-    std::lock_guard<std::mutex> lock(m_current_odom_mutex);
-    odom = m_current_odom;
-    return true;
 }
 
 bool rosLocalizerThread::threadInit()
