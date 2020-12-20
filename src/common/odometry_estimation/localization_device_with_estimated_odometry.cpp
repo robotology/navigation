@@ -67,5 +67,6 @@ yarp::dev::OdometryData localization_device_with_estimated_odometry::estimateOdo
 
 yarp::dev::OdometryData localization_device_with_estimated_odometry::getOdometry()
 {
+    const std::lock_guard<std::mutex> lock(m_current_odom_mutex);
     return m_current_odom;
 }

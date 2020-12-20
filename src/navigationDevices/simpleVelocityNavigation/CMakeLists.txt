@@ -25,4 +25,4 @@ yarp_install(TARGETS simpleVelocityNavigation
 
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET simpleVelocityNavigation PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET simpleVelocityNavigation PROPERTY FOLDER "Plugins/Navigation Devices")

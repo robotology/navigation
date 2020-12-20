@@ -30,5 +30,5 @@ yarp_install(TARGETS pozyxLocalizer
         
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET pozyxLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET pozyxLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 

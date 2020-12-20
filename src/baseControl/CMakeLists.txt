@@ -20,5 +20,7 @@ add_executable(${PROJECTNAME} ${folder_source} ${folder_header})
 
 target_link_libraries(${PROJECTNAME} ctrlLib ${GSL_LIBRARIES} ${YARP_LIBRARIES} YARP::YARP_rosmsg navigation_lib)
 
+set_property(TARGET ${PROJECTNAME} PROPERTY FOLDER "Modules")
+
 install(TARGETS ${PROJECTNAME} DESTINATION bin)
 

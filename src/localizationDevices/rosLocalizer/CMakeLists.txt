@@ -34,5 +34,5 @@ yarp_install(TARGETS rosLocalizer
            
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET rosLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET rosLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 

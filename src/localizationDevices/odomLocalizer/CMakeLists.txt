@@ -31,5 +31,5 @@ yarp_install(TARGETS odomLocalizer
            
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET odomLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET odomLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 

@@ -62,6 +62,8 @@ find_package(SDL)
 add_subdirectory(src)
 add_subdirectory(app)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS 1)
+
 include(InstallBasicPackageFiles)
 install_basic_package_files(${PROJECT_NAME}
                             VERSION ${${PROJECT_NAME}_VERSION}

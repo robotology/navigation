@@ -33,5 +33,5 @@ yarp_install(TARGETS gazeboLocalizer
 
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET gazeboLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET gazeboLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 
