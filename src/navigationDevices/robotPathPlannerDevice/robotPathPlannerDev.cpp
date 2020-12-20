@@ -45,9 +45,9 @@ robotPathPlannerDev::robotPathPlannerDev()
 
 bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 {
-	//default values
-	m_local_name = "/robotPathPlanner";
-	
+    //default values
+    m_local_name = "/robotPathPlanner";
+
 #if 1
     yCDebug(PATHPLAN_DEV) << "config configuration: \n" << config.toString().c_str();
 
@@ -79,6 +79,8 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
     Property p;
     p.fromString(config.toString());
 #endif
+
+    if (initialize_recovery(config) == false) return false;
 
     m_plannerThread = new PlannerThread(0.020,p);
 
