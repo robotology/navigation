@@ -13,12 +13,15 @@ yarp_prepare_plugin(pozyxLocalizer
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(pozyxLocalizer pozyxLocalizer.h pozyxLocalizer.cpp)
-                              
+
+include_directories (include)
+
 target_link_libraries(pozyxLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   YARP::YARP_rosmsg)
+                                   YARP::YARP_rosmsg
+                                   navigation_lib)
 
 
 yarp_install(TARGETS pozyxLocalizer
@@ -30,5 +33,5 @@ yarp_install(TARGETS pozyxLocalizer
         
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET pozyxLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET pozyxLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 

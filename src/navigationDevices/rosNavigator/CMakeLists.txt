@@ -39,4 +39,4 @@ yarp_install(TARGETS rosNavigator
            
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET rosNavigator PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET rosNavigator PROPERTY FOLDER "Plugins/Navigation Devices")

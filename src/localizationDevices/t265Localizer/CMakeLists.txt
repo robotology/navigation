@@ -26,7 +26,6 @@ if(ENABLE_navmod_t265Localizer)
                                        YARP::YARP_sig
                                        YARP::YARP_dev
                                        YARP::YARP_math
-                                       ctrlLib
                                        navigation_lib
                                        ${realsense2_LIBRARY})
 
@@ -39,6 +38,6 @@ if(ENABLE_navmod_t265Localizer)
 
     set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-    set_property(TARGET t265Localizer PROPERTY FOLDER "Plugins/Device")
+    set_property(TARGET t265Localizer PROPERTY FOLDER "Plugins/Localization Devices")
 
 endif()

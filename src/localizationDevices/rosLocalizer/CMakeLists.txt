@@ -20,7 +20,6 @@ target_link_libraries(rosLocalizer YARP::YARP_os
                                    YARP::YARP_dev
                                    YARP::YARP_math
                                    YARP::YARP_rosmsg
-                                   ctrlLib
                                    navigation_lib)
 
 
@@ -34,5 +33,5 @@ yarp_install(TARGETS rosLocalizer
            
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET rosLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET rosLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 

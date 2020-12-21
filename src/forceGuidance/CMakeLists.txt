@@ -19,4 +19,6 @@ add_executable(${PROJECTNAME} ${folder_source})
 
 target_link_libraries(${PROJECTNAME} ${GSL_LIBRARIES} ${YARP_LIBRARIES})
 
+set_property(TARGET ${PROJECTNAME} PROPERTY FOLDER "Modules")
+
 install(TARGETS ${PROJECTNAME} DESTINATION bin)

@@ -31,6 +31,7 @@
 #include <yarp/os/PeriodicThread.h>
 #include <mutex>
 #include <math.h>
+#include <localization_device_with_estimated_odometry.h>
 
 using namespace yarp::os;
 
@@ -92,7 +93,8 @@ public:
     bool   stopLocalizationService() override;
 };
 
-class odomLocalizerThread : public yarp::os::PeriodicThread
+class odomLocalizerThread : public yarp::os::PeriodicThread,
+                            public localization_device_with_estimated_odometry
 {
 protected:
     //general

@@ -34,7 +34,7 @@ localization_device_with_estimated_odometry::~localization_device_with_estimated
     m_estimator=nullptr;
 }
 
-yarp::dev::OdometryData localization_device_with_estimated_odometry::estimate(const yarp::dev::Nav2D::Map2DLocation& m_localization_data)
+yarp::dev::OdometryData localization_device_with_estimated_odometry::estimateOdometry(const yarp::dev::Nav2D::Map2DLocation& m_localization_data)
 {
     m_current_odom_mutex.lock();
     //m_current_loc is in the world reference frame.
@@ -67,5 +67,6 @@ yarp::dev::OdometryData localization_device_with_estimated_odometry::estimate(co
 
 yarp::dev::OdometryData localization_device_with_estimated_odometry::getOdometry()
 {
+    const std::lock_guard<std::mutex> lock(m_current_odom_mutex);
     return m_current_odom;
 }

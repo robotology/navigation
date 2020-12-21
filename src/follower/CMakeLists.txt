@@ -89,4 +89,6 @@ if(AssistiveRehab_FOUND)
     target_link_libraries(follower ${AssistiveRehab_LIBRARIES})
 endif()
 
+set_property(TARGET follower PROPERTY FOLDER "Modules")
+
 install(TARGETS follower DESTINATION bin)

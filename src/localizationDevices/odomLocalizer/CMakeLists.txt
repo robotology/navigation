@@ -14,12 +14,15 @@ yarp_prepare_plugin(odomLocalizer
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(odomLocalizer odomLocalizer.h odomLocalizer.cpp)
-                              
+
+include_directories (include)
+
 target_link_libraries(odomLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   YARP::YARP_rosmsg)
+                                   YARP::YARP_rosmsg
+                                   navigation_lib)
 
 
 yarp_install(TARGETS odomLocalizer
@@ -31,5 +34,5 @@ yarp_install(TARGETS odomLocalizer
            
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET odomLocalizer PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET odomLocalizer PROPERTY FOLDER "Plugins/Localization Devices")
 

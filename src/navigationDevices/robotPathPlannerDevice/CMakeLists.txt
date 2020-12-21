@@ -37,5 +37,5 @@ yarp_install(TARGETS robotPathPlannerDev
            
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-set_property(TARGET robotPathPlannerDev PROPERTY FOLDER "Plugins/Device")
+set_property(TARGET robotPathPlannerDev PROPERTY FOLDER "Plugins/Navigation Devices")
 

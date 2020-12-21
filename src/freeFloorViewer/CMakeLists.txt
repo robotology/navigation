@@ -16,5 +16,6 @@ find_package(YARP REQUIRED COMPONENTS sig cv dev os math rosmsg)
 include_directories(${OpenCV_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES})
+set_property(TARGET freeFloorViewer PROPERTY FOLDER "Modules")
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

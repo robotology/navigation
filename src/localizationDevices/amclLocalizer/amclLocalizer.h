@@ -27,7 +27,7 @@
 #include "./amcl/pf/pf.h"
 #include "./amcl/sensors/amcl_odom.h"
 #include "./amcl/sensors/amcl_laser.h"
-#include <iCub/ctrl/adaptWinPolyEstimator.h>
+#include <localization_device_with_estimated_odometry.h>
 
 
 using namespace yarp::os;
@@ -91,7 +91,8 @@ public:
 
 };
 
-class amclLocalizerThread : public yarp::os::PeriodicThread
+class amclLocalizerThread : public yarp::os::PeriodicThread,
+                            public localization_device_with_estimated_odometry
 {
 protected:
     //general
@@ -106,13 +107,6 @@ protected:
     std::string                  m_port_broadcast_odometry_name;
     yarp::os::BufferedPort<yarp::dev::OdometryData>  m_port_odometry_input;
     double                       m_last_odometry_data_received;
-
-    //velocity estimation
-    yarp::sig::Vector            m_odom_vel;
-    yarp::sig::Vector            m_robot_vel;
-    iCub::ctrl::AWLinEstimator*  m_estimator;
-    yarp::dev::OdometryData      m_current_odom;
-    std::mutex                   m_current_odom_mutex;
 
 #ifdef DEBUG_DATA
     yarp::os::BufferedPort<yarp::dev::OdometryData> m_port_odometry_debug_out;
@@ -213,7 +207,6 @@ public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
-    bool getCurrentOdom(yarp::dev::OdometryData& odom);
     bool getPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses);
 
 private:

@@ -80,8 +80,8 @@ bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc)
 
 bool  gazeboLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    yError() << " gazeboLocalizer::getEstimatedOdometry is not yet implemented";
-    return false;
+    odom = thread->getOdometry();
+    return true;
 }
 
 bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc)
@@ -147,6 +147,8 @@ void gazeboLocalizerThread::run()
     m_localization_data.theta = m_gazebo_data.theta*RAD2DEG + m_map_to_gazebo_transform.theta;
     if      (m_localization_data.theta >= +360) m_localization_data.theta -= 360;
     else if (m_localization_data.theta <= -360) m_localization_data.theta += 360;
+
+    estimateOdometry(m_localization_data);
 }
 
 bool gazeboLocalizerThread::initializeLocalization(const Map2DLocation& loc)
