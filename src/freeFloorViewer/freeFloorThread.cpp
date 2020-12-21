@@ -20,10 +20,10 @@
 #define _USE_MATH_DEFINES
 
 #include "freeFloorThread.h"
+#include <chrono>
 
 YARP_LOG_COMPONENT(FREE_FLOOR_THREAD, "navigation.freeFloorViewer.freeFloorThread")
 bool print{true};
-
 
 
 FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
@@ -35,6 +35,7 @@ FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
     m_depth_height = 0;
     m_pc_stepx = 1;
     m_pc_stepy = 1;
+    m_col_granularity = 10;
     m_floor_height = 0.1;
     m_ceiling_height = 3.0;
     m_ground_frame_id = "/ground_frame";
@@ -62,6 +63,16 @@ bool FreeFloorThread::threadInit()
         if (pointcloud_clip_config.check("ceiling_height"))   {m_ceiling_height = pointcloud_clip_config.find("ceiling_height").asFloat64();}
         if (pointcloud_clip_config.check("ground_frame_id")) {m_ground_frame_id = pointcloud_clip_config.find("ground_frame_id").asString();}
         if (pointcloud_clip_config.check("camera_frame_id")) {m_camera_frame_id = pointcloud_clip_config.find("camera_frame_id").asString();}
+        if (pointcloud_clip_config.check("column_granularity")) {m_col_granularity = pointcloud_clip_config.find("column_granularity").asInt();}
+    }
+
+    // --------- Point cloud quality -------- //
+    bool okPCQuality = m_rf.check("POINTCLOUD_QUALITY");
+    if(okPCQuality)
+    {
+        yarp::os::Searchable& pointcloud_qual_config = m_rf.findGroup("POINTCLOUD_QUALITY");
+        if (pointcloud_qual_config.check("x_step"))   {m_pc_stepx = pointcloud_qual_config.find("x_step").asInt();}
+        if (pointcloud_qual_config.check("y_step"))   {m_pc_stepy = pointcloud_qual_config.find("y_step").asInt();}
     }
 
     // --------- RGBDSensor config --------- //
@@ -206,20 +217,74 @@ void FreeFloorThread::run()
 
     m_floorMutex.lock();
     //compute the point cloud
-    m_pc = yarp::sig::utils::depthToPC(m_depth_image, m_intrinsics,m_pc_roi,m_pc_stepx,m_pc_stepy);
-    rotateAndCheck(imgOut);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    depthToFilteredPc();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    freeFloorDraw(imgOut);
+    auto t3 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t3 - t2 ).count();
+    yCInfo(FREE_FLOOR_THREAD) << "The durations are: " << duration << " " << duration2;
+
     m_floorMutex.unlock();
 
     m_imgOutPort.write();
 }
 
-void FreeFloorThread::rotateAndCheck(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output)
+void FreeFloorThread::depthToFilteredPc()
+{
+    size_t max_x = m_pc_roi.max_x == 0 ? m_depth_image.width() : std::min(m_pc_roi.max_x,m_depth_image.width());
+    size_t max_y = m_pc_roi.max_y == 0 ? m_depth_image.height() : std::min(m_pc_roi.max_y,m_depth_image.height());
+    size_t min_x = std::min(m_pc_roi.min_x,max_x);
+    size_t min_y = std::min(m_pc_roi.min_y,max_y);
+    m_pc_stepx = std::max<size_t>(std::min(m_pc_stepx, max_x - min_x), 1);
+    m_pc_stepy = std::max<size_t>(std::min(m_pc_stepy, max_y - min_y), 1);
+    yCInfo(FREE_FLOOR_THREAD, "Steps: x%d y%d",m_pc_stepx,m_pc_stepy);
+
+    size_t size_x = (max_x-min_x)/m_pc_stepx;
+    size_t size_y = (max_y-min_y)/m_pc_stepy;
+    yarp::sig::Vector tempPoint(4,1.0);
+    m_pc.clear();
+    m_pc.resize(size_x,size_y);
+    m_okPixels_pre.clear();
+    m_obstacle_columns.clear();
+
+    for (size_t u = m_pc_roi.min_x, i=0; u < max_x; u += m_pc_stepx, i++)
+    {
+        for (size_t v = m_pc_roi.min_y, j=0; v < max_y; v += m_pc_stepy, j++)
+        {
+            tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * m_depth_image.pixel(u, v);
+            tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * m_depth_image.pixel(u, v);
+            tempPoint[2] = m_depth_image.pixel(u, v);
+            yarp::sig::Vector v2 = m_transform_mtrx*tempPoint;
+            m_pc(i,j).x=v2(0);
+            m_pc(i,j).y=v2(1);
+            m_pc(i,j).z=v2(2);
+            int xC = (int)(v2(0)*m_col_granularity);
+            int yC = (int)(v2(1)*m_col_granularity);
+            std::pair<int,int> tempKey(xC,yC);
+            if(m_obstacle_columns.find(tempKey)==m_obstacle_columns.end())
+            {
+                m_obstacle_columns[tempKey] = (v2(2)>=m_floor_height && v2(2)<=m_ceiling_height) || v2(2)<0;
+            }
+            else
+            {
+                m_obstacle_columns[tempKey] = m_obstacle_columns[tempKey] || (v2(2)>=m_floor_height && v2(2)<=m_ceiling_height) || v2(2)<0;
+            }
+            if(v2(2)<m_floor_height && v2(2)>=0 && !m_obstacle_columns[tempKey])
+            {
+                std::pair<size_t,size_t> tempPair(u,v);
+                m_okPixels_pre[tempPair] = tempKey;
+            }
+        }
+    }
+}
+
+void FreeFloorThread::freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output)
 {
     output.resize(m_pc.width(),m_pc.height());
     yarp::sig::PixelBgra pOk(0,0,0,0.6);
-    std::map<std::pair<int,int>,bool> columns;
-    int scaler = 10;
-    double arScaler = 0.5;
+    double arScaler = 0.2;
     yarp::dev::Nav2D::NavigationStatusEnum currentStatus;
     m_iNav2D->getNavigationStatus(currentStatus);
     bool moving = currentStatus == yarp::dev::Nav2D::navigation_status_moving;
@@ -227,37 +292,18 @@ void FreeFloorThread::rotateAndCheck(yarp::sig::ImageOf<yarp::sig::PixelBgra> &o
     output.copy(m_rgbImage);
 
     m_okPixels.clear();
-    for (size_t r=0; r<m_pc.height(); r++)
-    {
-        for(size_t c=0; c<m_pc.width();c++)
-        {
-            auto v1 = m_pc(c,r).toVector4();
-            auto v2 = m_transform_mtrx*v1;
-            m_pc(c,r).x=v2(0);
-            m_pc(c,r).y=v2(1);
-            m_pc(c,r).z=v2(2);
-            int xC = (int)(v2(0)*scaler);
-            int yC = (int)(v2(1)*scaler);
-            std::pair<int,int> tempKey(xC,yC);
-            if(columns.count(tempKey)==0)
-            {
-                columns[tempKey] = (v2(2)>=m_floor_height && v2(2)<=m_ceiling_height) || v2(2)<0;
-            }
-            if(v2(2)<m_floor_height && v2(2)>=0 && !columns[tempKey])
-            {
-                std::pair<size_t,size_t> tempPair;
-                tempPair.first = c;
-                tempPair.second = r;
-                m_okPixels.push_back(tempPair);
-                pOk.r = moving ? output.pixel(c,r).r*arScaler+255*(1-arScaler) : output.pixel(c,r).r;
-                pOk.b = output.pixel(c,r).b;
-                pOk.g = moving ? output.pixel(c,r).g : output.pixel(c,r).g*arScaler+255*(1-arScaler);
-                output.pixel(c,r) = pOk;
-            }
+    for(auto const& blob : m_okPixels_pre){
+        if(!m_obstacle_columns[blob.second]){
+            int u = blob.first.first;
+            int v = blob.first.second;
+            m_okPixels.push_back(blob.first);
+            pOk.r = moving ? output.pixel(u,v).r*arScaler+255*(1-arScaler) : output.pixel(u,v).r*arScaler;
+            pOk.b = output.pixel(u,v).b*arScaler;
+            pOk.g = moving ? output.pixel(u,v).g*arScaler : output.pixel(u,v).g*arScaler+255*(1-arScaler);
+            output.pixel(u,v) = pOk;
         }
     }
 }
-
 
 void FreeFloorThread::onRead(yarp::os::Bottle &b)
 {
@@ -292,7 +338,6 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
 
 void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
 {
-    std::pair<size_t,size_t> gotPos;
     size_t u = b.get(0).asInt();
     if(u >= m_rgbImage.width() || u<0)
     {
@@ -303,21 +348,23 @@ void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
     {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
     }
-    gotPos.first = u;
-    gotPos.second = v;
     m_floorMutex.lock();
-    bool pixelOk = std::find(m_okPixels.begin(), m_okPixels.end(), gotPos) != m_okPixels.end();
+    auto tempPC = yarp::sig::utils::depthToPC(m_depth_image, m_intrinsics,m_pc_roi,1,1);
+    auto pixel = m_transform_mtrx*tempPC(u,v).toVector4();
+    int xC = (int)(pixel(0)*m_col_granularity);
+    int yC = (int)(pixel(1)*m_col_granularity);
+    std::pair<int,int> tempCol(xC,yC);
 
-    if(pixelOk)
+    if(pixel(2)<m_floor_height && pixel(2)>=0 && !m_obstacle_columns[tempCol])
     {
         if(m_nav2DPoly.isValid())
         {
-            m_iNav2D->gotoTargetByRelativeLocation(m_pc(u,v).x,m_pc(u,v).y);
+            m_iNav2D->gotoTargetByRelativeLocation(pixel(0),pixel(1));
         }
         yarp::os::Bottle& toSend = m_targetOutPort.prepare();
         toSend.clear();
-        toSend.addFloat32(m_pc(u,v).x);
-        toSend.addFloat32(m_pc(u,v).y);
+        toSend.addFloat32(pixel(0));
+        toSend.addFloat32(pixel(1));
         m_targetOutPort.write();
     }
     m_floorMutex.unlock();

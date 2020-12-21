@@ -56,6 +56,7 @@ protected:
     bool   m_publish_ros_pc;
     int m_depth_width;
     int m_depth_height;
+    int m_col_granularity;
     double m_floor_height;
     double m_ceiling_height;
     size_t m_pc_stepx;
@@ -63,6 +64,8 @@ protected:
     std::string m_ground_frame_id;
     std::string m_camera_frame_id;
     std::vector<std::pair<size_t,size_t>> m_okPixels;
+    std::map<std::pair<size_t,size_t>,std::pair<int,int>> m_okPixels_pre;
+    std::map<std::pair<int,int>,bool> m_obstacle_columns;
     yarp::os::Property m_propIntrinsics;
     yarp::sig::IntrinsicParams m_intrinsics;
     yarp::sig::ImageOf<float> m_depth_image;
@@ -99,7 +102,8 @@ public:
     //Internal methods
     void reachSpot(yarp::os::Bottle& b);
     void rotate(yarp::os::Bottle& b);
-    void rotateAndCheck(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output);
+    void freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output);
+    void depthToFilteredPc();
 
     //Port callback
     using TypedReaderCallback<yarp::os::Bottle>::onRead;
