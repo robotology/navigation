@@ -301,6 +301,7 @@ void FreeFloorThread::freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &ou
             pOk.b = output.pixel(u,v).b*arScaler;
             pOk.g = moving ? output.pixel(u,v).g*arScaler : output.pixel(u,v).g*arScaler+255*(1-arScaler);
             output.pixel(u,v) = pOk;
+
         }
     }
 }
@@ -372,17 +373,12 @@ void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
 
 void FreeFloorThread::rotate(yarp::os::Bottle &b)
 {
-    yCInfo(FREE_FLOOR_THREAD,"The bottle: [%d, %d, %d, %d]",b.get(0).asInt(),b.get(1).asInt(),
-           b.get(2).asInt(),b.get(3).asInt());
-
     double notNeeded, horizFOV;
     bool fovGot = m_iRgbd->getRgbFOV(horizFOV,notNeeded);
     if(!fovGot)
     {
         yCError(FREE_FLOOR_THREAD,"An error occurred while retrieving the rgb camera FOV");
     }
-
-    yCInfo(FREE_FLOOR_THREAD,"FOV: [%f, %f]",horizFOV,notNeeded);
 
     int deltaPx = (b.get(0).asInt()-b.get(2).asInt());
     double rotation = (double)deltaPx * horizFOV/m_depth_width;
