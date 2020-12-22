@@ -54,8 +54,8 @@ yarp::dev::OdometryData localization_device_with_estimated_odometry::estimateOdo
     //this is the velocity in robot reference frame.
     //NB: for a non-holonomic robot robot_vel[1] ~= 0
     m_robot_vel.resize(3, 0.0);
-    m_robot_vel[0] = m_odom_vel[0] * cos(m_localization_data.theta * DEG2RAD) - m_odom_vel[0] * sin(m_localization_data.theta * DEG2RAD);
-    m_robot_vel[1] = m_odom_vel[1] * sin(m_localization_data.theta * DEG2RAD) + m_odom_vel[1] * cos(m_localization_data.theta * DEG2RAD);
+    m_robot_vel[0] = m_odom_vel[0] * cos(m_localization_data.theta * DEG2RAD) + m_odom_vel[1] * sin(m_localization_data.theta * DEG2RAD);
+    m_robot_vel[1] = - m_odom_vel[0] * sin(m_localization_data.theta * DEG2RAD) + m_odom_vel[1] * cos(m_localization_data.theta * DEG2RAD);
     m_robot_vel[2] = m_odom_vel[2];
     m_current_odom.base_vel_x = m_robot_vel[0];
     m_current_odom.base_vel_y = m_robot_vel[1];
