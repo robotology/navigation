@@ -42,8 +42,8 @@
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/ILocalization2D.h>
 #include <yarp/dev/INavigation2D.h>
+#include <limits>
 #include <string>
-#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 
 #include "map.h"
 
@@ -68,14 +68,14 @@ class NavGuiThread: public yarp::os::PeriodicThread
 
     protected:
     //configuration parameters: robot geometric properties
-    double    m_robot_radius;        //m
-    double    m_robot_laser_x;       //m
-    double    m_robot_laser_y;       //m
-    double    m_robot_laser_t;       //deg
-    double    m_min_laser_angle;
-    double    m_max_laser_angle;
-    double    m_laser_angle_of_view;
-    double    m_imagemap_refresh_period;
+    double    m_robot_radius = 0;        //m
+    double    m_robot_laser_x = 0;       //m
+    double    m_robot_laser_y = 0;       //m
+    double    m_robot_laser_t = 0;       //deg
+    double    m_min_laser_angle = 0;
+    double    m_max_laser_angle = 0;
+    double    m_laser_angle_of_view = 0;
+    double    m_imagemap_draw_and_send_period = 0.033; //s
 
     //yarp device drivers and interfaces
     PolyDriver                                             m_ptf;
@@ -83,10 +83,10 @@ class NavGuiThread: public yarp::os::PeriodicThread
     PolyDriver                                             m_pLas;
     PolyDriver                                             m_pMap;
     PolyDriver                                             m_pNav;
-    IRangefinder2D*                                        m_iLaser;
-    IMap2D*                                                m_iMap;
-    ILocalization2D*                                       m_iLoc;
-    INavigation2D*                                         m_iNav;
+    IRangefinder2D*                                        m_iLaser = nullptr;
+    IMap2D*                                                m_iMap = nullptr;
+    ILocalization2D*                                       m_iLoc = nullptr;
+    INavigation2D*                                         m_iNav = nullptr;
 
     //yarp ports
     std::string                                            m_local_name_prefix;
@@ -121,31 +121,32 @@ class NavGuiThread: public yarp::os::PeriodicThread
 
     //timeout counters (watchdog on the communication with external modules)
     protected:
-    int                 m_loc_timeout_counter;
-    int                 m_laser_timeout_counter;
-    int                 m_nav_status_timeout_counter;
+    int                 m_loc_timeout_counter = 0;
+    int                 m_laser_timeout_counter = 0;
+    int                 m_nav_status_timeout_counter = 0;
     
     //refresh periods
-    double              m_period_draw_laser;
-    double              m_period_draw_enalarged_obstacles;
-    double              m_period_draw_estimated_poses;
-    double              m_period_draw_map_locations;
+    double              m_period_update_laser_data = 0.3;
+    double              m_period_update_enlarged_obstacles = 1.0;
+    double              m_period_update_estimated_poses = 1.0;
+    double              m_period_update_map_locations = 5.0;
+    double              m_period_update_global_map = std::numeric_limits<double>::infinity();
 
     //drawing flags: enable/disable drawing of particular objects on the GUI
     public:
-    int                 m_enable_estimated_particles; //this sets a max number on the particles drawn
-    bool                m_enable_draw_all_locations;
-    bool                m_enable_draw_laser_scans;
-    bool                m_enable_draw_enlarged_scans;
-    bool                m_enable_draw_infos;
-    bool                m_enable_draw_global_path;
-    bool                m_enable_draw_local_path;
+    int                 m_enable_estimated_particles = 50; //this sets a max number on the particles drawn
+    bool                m_enable_draw_all_locations = true;
+    bool                m_enable_draw_laser_scans = true;
+    bool                m_enable_draw_enlarged_scans = true;
+    bool                m_enable_draw_infos = true;
+    bool                m_enable_draw_global_path = true;
+    bool                m_enable_draw_local_path = true;
   
     //images to be displayed
-    IplImage* i1_map;
-    IplImage* i2_map_menu;
-    IplImage* i3_map_menu_scan;
-    IplImage* i4_map_with_path;
+    IplImage* i1_map = nullptr;
+    IplImage* i2_map_menu = nullptr;
+    IplImage* i3_map_menu_scan = nullptr;
+    IplImage* i4_map_with_path = nullptr;
 
     //buttons
     size_t button1_l;
@@ -200,7 +201,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     void          readLaserData();
     bool          readWaypointsAndGoal();
     bool          readNavigationStatus(bool& changed);
-    void          draw_map();
+    void          draw_and_send();
     bool          updateLocations();
     bool          updateAreas();
     bool          click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p);

@@ -407,7 +407,7 @@ void NavGuiThread::addMenu(CvFont& font)
     cvPutText(i2_map_menu, txt, cvPoint(button3_l + 5, button3_t + 12), &font, cvScalar(0, 0, 0));
 }
 
-void NavGuiThread::draw_map()
+void NavGuiThread::draw_and_send()
 {
     CvFont font;
     cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.28, 0.28);
@@ -590,99 +590,82 @@ void NavGuiThread::run()
     std::lock_guard<std::mutex> lock(m_guithread_mutex);
     //double check1 = yarp::os::Time::now();
 
-    bool changed = false;
-    readNavigationStatus(changed);
-
-
+    bool navstatus_changed = false;
+    readNavigationStatus(navstatus_changed);
     readTargetFromYarpView();
     readLocalizationData();
 
     static double last_drawn_laser = yarp::os::Time::now();
-    if (yarp::os::Time::now() - last_drawn_laser > m_period_draw_laser)
+    if (yarp::os::Time::now() - last_drawn_laser > m_period_update_laser_data)
     {
         readLaserData();
         last_drawn_laser = yarp::os::Time::now();
     }
 
-    static double last_drawn_enlarged_obstacles = yarp::os::Time::now();
-    if (yarp::os::Time::now() - last_drawn_enlarged_obstacles > m_period_draw_enalarged_obstacles)
+    static double last_updated_enlarged_obstacles = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_updated_enlarged_obstacles > m_period_update_enlarged_obstacles)
     {
         m_iNav->getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapTypeEnum::local_map, m_temporary_obstacles_map);
-        last_drawn_enlarged_obstacles = yarp::os::Time::now();
+        last_updated_enlarged_obstacles = yarp::os::Time::now();
     }
 
-    static double last_drawn_estimated_poses = yarp::os::Time::now();
-    if (yarp::os::Time::now() - last_drawn_estimated_poses > m_period_draw_estimated_poses)
+    static double last_updated_global_map = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_updated_global_map > m_period_update_global_map)
+    {
+        //@@@check this, untested
+        m_iNav->getCurrentNavigationMap(yarp::dev::Nav2D::NavigationMapTypeEnum::global_map, m_current_map);
+        last_updated_global_map = yarp::os::Time::now();
+    }
+
+    static double last_updated_estimated_poses = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_updated_estimated_poses > m_period_update_estimated_poses)
     {
         m_iNav->getEstimatedPoses(m_estimated_poses);
-        last_drawn_estimated_poses = yarp::os::Time::now();
+        last_updated_estimated_poses = yarp::os::Time::now();
     }
-    
 
-    static double last_drawn_map_locations = yarp::os::Time::now();
-    if (yarp::os::Time::now() - last_drawn_map_locations > m_period_draw_map_locations)
+    static double last_updated_map_locations = yarp::os::Time::now();
+    if (yarp::os::Time::now() - last_updated_map_locations > m_period_update_map_locations)
     {
         updateLocations();
         updateAreas();
-        last_drawn_map_locations = yarp::os::Time::now();
+        last_updated_map_locations = yarp::os::Time::now();
     }
 
     //double check2 = yarp::os::Time::now();
     //yDebug() << check2-check1;
 
-    if (m_navigation_status == navigation_status_moving)
+    switch (m_navigation_status)
     {
-        readWaypointsAndGoal();
+        case navigation_status_moving:
+             readWaypointsAndGoal();
+        break;
+
+        case navigation_status_goal_reached:
+        case navigation_status_idle:
+        case navigation_status_thinking:
+        case navigation_status_aborted:
+        case navigation_status_failing:
+        case navigation_status_error:
+        case navigation_status_paused:
+        case navigation_status_waiting_obstacle:
+        case navigation_status_preparing_before_move:
+            //do nothing, just wait
+        break;
+
+        default:
+              //unknown status
+              yError("unknown status:%d", m_navigation_status);
+              m_navigation_status = navigation_status_error;
+        break;
     }
-    else if (m_navigation_status == navigation_status_goal_reached)
-    {
-        //do nothing, just wait
-    }
-    else if (m_navigation_status == navigation_status_idle)
-    {
-        //do nothing, just wait
-    }
-    else if (m_navigation_status == navigation_status_thinking)
-    {
-        //do nothing, just wait
-    }
-    else if (m_navigation_status == navigation_status_aborted)
-    {
-        //do nothing, just wait
-    }
-    else if (m_navigation_status == navigation_status_failing)
-    {
-        //do nothing, just wait.
-    }
-    else if (m_navigation_status == navigation_status_error)
-    {
-        //do nothing, just wait.
-    }
-    else if (m_navigation_status == navigation_status_paused)
-    {
-        //do nothing, just wait.
-    }
-    else if (m_navigation_status == navigation_status_waiting_obstacle)
-    {
-        //do nothing, just wait.
-    }
-    else if (m_navigation_status == navigation_status_preparing_before_move)
-    {
-        //do nothing, just wait.
-    }
-    else
-    {
-        //unknown status
-        yError("unknown status:%d", m_navigation_status);
-        m_navigation_status = navigation_status_error;
-    }
-    
+
     static double last_drawn = yarp::os::Time::now();
     double elapsed_time = yarp::os::Time::now() - last_drawn;
-    if ( elapsed_time > m_imagemap_refresh_period)
+    if ( elapsed_time > m_imagemap_draw_and_send_period)
     {
         //double check3 = yarp::os::Time::now();
-        draw_map();
+        draw_and_send();
         //double check4 = yarp::os::Time::now();
         //yDebug() << check4-check3;
         last_drawn = yarp::os::Time::now();
