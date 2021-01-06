@@ -173,36 +173,7 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
 
 bool robotPathPlannerDev::recomputeCurrentNavigationPath()
 {
-    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_idle)
-    {
-        yCError(PATHPLAN_DEV) << "Unable to recompute path. Navigation task not assigned yet.";
-        return false;
-    }
-    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_paused)
-    {
-        yCError(PATHPLAN_DEV) << "Unable to recompute path. Navigation task is currently paused.";
-        return false;
-    }
-    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_goal_reached)
-    {
-        yCError(PATHPLAN_DEV) << "Unable to recompute path. Navigation Goal has been already reached.";
-        return false;
-    }
-    if (m_plannerThread->getNavigationStatusAsInt() == navigation_status_thinking)
-    {
-        yCError(PATHPLAN_DEV) << "Unable to recompute path. A navigation plan is already under computation.";
-        return false;
-    }
-
-    Map2DLocation loc;
-    bool b = true;
-    b &= m_plannerThread->getCurrentAbsTarget(loc);
-    //@@@ check timing here
-    yarp::os::Time::delay(0.2);
-    b &= m_plannerThread->stopMovement();
-    //@@@ check timing here
-    yarp::os::Time::delay(0.2);
-    b &= m_plannerThread->setNewAbsTarget(loc);
+    bool b= m_plannerThread->recomputePath();
     if (b==false)
     {
         yCError(PATHPLAN_DEV) << "robotPathPlannerDev::recomputeCurrentNavigationPath(). An error occurred while performing the requested operation.";

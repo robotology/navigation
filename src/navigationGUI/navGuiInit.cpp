@@ -27,27 +27,7 @@ NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
 {
     m_navigation_status          = navigation_status_idle;
     m_previous_navigation_status = navigation_status_idle;
-    m_loc_timeout_counter = 0;
-    m_laser_timeout_counter = 0;
-    m_nav_status_timeout_counter = 0;
-    m_iLaser = 0;
-    m_iLoc = 0;
-    m_iNav = 0;
-    m_min_laser_angle = 0;
-    m_max_laser_angle = 0;
-    m_robot_radius = 0;
-    m_robot_laser_x = 0;
-    m_robot_laser_y = 0;
-    m_robot_laser_t = 0;
-    m_imagemap_refresh_period = 0.033;
-    m_enable_draw_all_locations=true;
-    m_enable_draw_enlarged_scans=true;
-    m_enable_draw_laser_scans=true;
-    m_enable_draw_infos = true;
-    m_enable_draw_global_path = true;
-    m_enable_draw_local_path = true;
 
-    m_enable_estimated_particles = 50;
     m_local_name_prefix = "/navigationGui";
     m_remote_localization = "/localizationServer";
     m_remote_map = "/mapServer";
@@ -104,9 +84,19 @@ bool NavGuiThread::threadInit()
         return false;
     }
 
-//    if (general_group.check("publish_map_image_Hz"))       { m_imagemap_refresh_period = 1/general_group.find("publish_map_image_Hz").asDouble(); }
-    if (general_group.check("publish_estimated_poses_Hz")) { m_period_draw_estimated_poses = 1/general_group.find("publish_estimated_poses_Hz").asDouble(); }
+    Bottle update_data_group = m_rf.findGroup("UPDATE_DATA");
+    if (update_data_group.isNull())
+    {
+        yError() << "Missing UPDATE_DATA group!";
+        return false;
+    }
 
+    Bottle drawing_group = m_rf.findGroup("DRAWING");
+    if (drawing_group.isNull())
+    {
+        yError() << "Missing DRAWING group!";
+        return false;
+    }
 /*
     Bottle geometry_group = m_rf.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
@@ -163,6 +153,70 @@ bool NavGuiThread::threadInit()
         yError() << "Unable to open module ports";
         return false;
     }
+
+    //update_data_group
+    if (update_data_group.check("period_laser_data"))
+    {
+        m_period_update_laser_data = update_data_group.find("period_laser_data").asFloat64();
+    }
+    else {}
+    if (update_data_group.check("period_enalarged_obstacles"))
+    {
+        m_period_update_enlarged_obstacles = update_data_group.find("period_enalarged_obstacles").asFloat64();
+    }
+    else {}
+    if (update_data_group.check("period_estimated_poses"))
+    {
+        m_period_update_estimated_poses = update_data_group.find("period_estimated_poses").asFloat64();
+    }
+    else {}
+    if (update_data_group.check("period_map_locations"))
+    {
+        m_period_update_map_locations = update_data_group.find("period_map_locations").asFloat64();
+    }
+    else {}
+    if (update_data_group.check("period_global_map"))
+    {
+        m_period_update_global_map = update_data_group.find("period_global_map").asFloat64();
+    }
+    else {}
+
+    //drawing_group
+    if (drawing_group.check("enable_draw_all_locations"))
+    {
+        m_enable_draw_all_locations = drawing_group.find("enable_draw_all_locations").asBool();
+    }
+    else {}
+    if (drawing_group.check("enable_draw_enlarged_scans"))
+    {
+        m_enable_draw_enlarged_scans = drawing_group.find("enable_draw_enlarged_scans").asBool();
+    }
+    else {}
+    if (drawing_group.check("enable_draw_laser_scans"))
+    {
+        m_enable_draw_laser_scans = drawing_group.find("enable_draw_laser_scans").asBool();
+    }
+    else {}
+    if (drawing_group.check("enable_draw_infos"))
+    {
+        m_enable_draw_infos = drawing_group.find("enable_draw_infos").asBool();
+    }
+    else {}
+    if (drawing_group.check("enable_draw_global_path"))
+    {
+        m_enable_draw_global_path = drawing_group.find("enable_draw_global_path").asBool();
+    }
+    else {}
+    if (drawing_group.check("enable_draw_local_path"))
+    {
+        m_enable_draw_local_path = drawing_group.find("enable_draw_local_path").asBool();
+    }
+    else {}
+    if (drawing_group.check("enable_draw_particles_number"))
+    {
+        m_enable_estimated_particles = drawing_group.find("enable_draw_particles_number").asInt16();
+    }
+    else {}
 
     //localization
     Property loc_options;
@@ -260,12 +314,6 @@ bool NavGuiThread::threadInit()
     {
         yError() << "Error while reading maps";
     }
-
-    //update
-    m_period_draw_laser = 0.3; //seconds;
-    m_period_draw_enalarged_obstacles = 1.0; //seconds
-    m_period_draw_estimated_poses = 1.0; //seconds
-    m_period_draw_map_locations = 5.0; //seconds
 
     return true;
 }
