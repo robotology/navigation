@@ -407,23 +407,34 @@ void PlannerThread::run()
             {
                 if (m_enable_try_recovery)
                 {
-                    //try to avoid obstacles
-                    yCError(PATHPLAN_CTRL, "unable to reach next waypoint, trying new solution");
+                    if (m_recovery_attempt < m_max_recovery_attempts)
+                    {
+                        //try to avoid obstacles
+                        m_recovery_attempt++;
+                        yCWarning(PATHPLAN_CTRL, "unable to reach next waypoint, trying new solution.");
+                        yCInfo   (PATHPLAN_CTRL, "This is recovery_attempt: %d/%d", m_recovery_attempt, m_max_recovery_attempts);
 
-                    Bottle cmd, ans;
-                    cmd.addString("stop");
-                    m_port_commands_output.write(cmd, ans);
-                    map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
-                    sendWaypoint();
+                        Bottle cmd, ans;
+                        cmd.addString("stop");
+                        m_port_commands_output.write(cmd, ans);
+                        map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
+                        if (!recomputePath())
+                        {
+                            yCInfo(PATHPLAN_CTRL, "Unable to recompute the path, aborting navigation");
+                            abortNavigation();
+                        }
+                    }
+                    else
+                    {
+                        yCInfo(PATHPLAN_CTRL, "Recovery_attempt: %d/%d, unable to find a solution, aborting navigation. ", m_recovery_attempt, m_max_recovery_attempts);
+                        abortNavigation();
+                    }
                 }
                 else
                 {
                     //terminate navigation
-                    Bottle cmd, ans;
-                    cmd.addString("stop");
-                    m_port_commands_output.write(cmd, ans);
-                    m_planner_status = navigation_status_aborted;
                     yCError(PATHPLAN_CTRL, "unable to reach next waypoint, aborting navigation");
+                    abortNavigation();
                 }
             }
             else if (m_inner_status == navigation_status_aborted)
@@ -792,3 +803,46 @@ bool PlannerThread::startPath()
     return true;
 }
 
+bool PlannerThread::recomputePath()
+{
+    if (getNavigationStatusAsInt() == navigation_status_idle)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. Navigation task not assigned yet.";
+        return false;
+    }
+    if (getNavigationStatusAsInt() == navigation_status_paused)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. Navigation task is currently paused.";
+        return false;
+    }
+    if (getNavigationStatusAsInt() == navigation_status_goal_reached)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. Navigation Goal has been already reached.";
+        return false;
+    }
+    if (getNavigationStatusAsInt() == navigation_status_thinking)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. A navigation plan is already under computation.";
+        return false;
+    }
+
+    Map2DLocation loc;
+    bool b = true;
+    b &= getCurrentAbsTarget(loc);
+    //@@@ check timing here
+    yarp::os::Time::delay(0.2);
+    b &= stopMovement();
+    //@@@ check timing here
+    yarp::os::Time::delay(0.2);
+    b &= setNewAbsTarget(loc);
+
+    return b;
+}
+
+void PlannerThread::abortNavigation()
+{
+    Bottle cmd, ans;
+    cmd.addString("stop");
+    m_port_commands_output.write(cmd, ans);
+    m_planner_status = navigation_status_aborted;
+}

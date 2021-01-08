@@ -97,7 +97,11 @@ class PlannerThread: public yarp::os::PeriodicThread
     double    m_laser_angle_of_view;
     string    m_frame_robot_id;
     string    m_frame_map_id;
+
+    //recovery
     bool      m_enable_try_recovery;
+    size_t    m_recovery_attempt;
+    size_t    m_max_recovery_attempts;
 
     //storage for the environment map
     yarp::dev::Nav2D::MapGrid2D m_current_map;
@@ -218,7 +222,13 @@ class PlannerThread: public yarp::os::PeriodicThread
     * @return the map name
     */
     string        getCurrentMapId();
-    
+
+    /**
+    * Recomputes the path to current goal.
+    * @return true if the a path was found, false otherwise
+    */
+    bool          recomputePath();
+
     /**
     * Retrieves the final target, expressed in absolute (map) reference frame.
     * This target is the one provided by the user with setNewAbsTarget()
@@ -277,6 +287,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     void          readLaserData();
     bool          readInnerNavigationStatus();
     bool          getCurrentWaypoint(yarp::dev::Nav2D::XYCell &c) const;
+    void          abortNavigation();
 
     public:
     /**

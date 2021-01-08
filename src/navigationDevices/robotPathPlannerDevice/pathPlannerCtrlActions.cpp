@@ -36,7 +36,9 @@ bool PlannerThread::setNewAbsTarget(Map2DLocation target)
         return false;
     }
 
+    yCInfo(PATHPLAN_ACTIONS) << "Received a new target:" << target.toString();
     m_final_goal = target;
+    m_recovery_attempt=0;
 
     if (target.map_id == m_current_map.getMapName())
     {
@@ -57,7 +59,7 @@ bool PlannerThread::setNewAbsTarget(Map2DLocation target)
     }
     else
     {
-        yCError(PATHPLAN_ACTIONS, "Requested goal is not in the current map!\n");
+        yCWarning(PATHPLAN_ACTIONS, "Requested goal is not in the current map!\n");
         //here I need to:
         //1) find in the location server a connection between target.map_id and m_current_map.m_map_name
         //2) obtain a list of targets, put them in a queue.
@@ -94,7 +96,9 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
         yCError (PATHPLAN_ACTIONS, "Not in idle state, send a 'stop' first");
         return false;
     }
-    yCDebug(PATHPLAN_ACTIONS) << "received new relative target at:" << target[0] << target[1] << target[2];
+
+    yCInfo(PATHPLAN_ACTIONS) << "received new relative target at:" << target[0] << target[1] << target[2];
+    m_recovery_attempt = 0;
 
     double a = m_localization_data.theta * DEG2RAD;
     yCDebug(PATHPLAN_ACTIONS) << "current position:" << m_localization_data.x << m_localization_data.y << m_localization_data.theta;
