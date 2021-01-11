@@ -23,24 +23,6 @@
 #define RAD2DEG 180.0/M_PI
 #define DEG2RAD M_PI/180.0
 
-inline yarp::rosmsg::TickTime normalizeSecNSec(double yarpTimeStamp)
-{
-    uint64_t time = (uint64_t)(yarpTimeStamp * 1000000000UL);
-    uint64_t nsec_part = (time % 1000000000UL);
-    uint64_t sec_part = (time / 1000000000UL);
-    yarp::rosmsg::TickTime ret;
-
-    if (sec_part > std::numeric_limits<unsigned int>::max())
-    {
-        yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
-        sec_part = 0;
-    }
-
-    ret.sec = (yarp::os::NetUint32) sec_part;
-    ret.nsec = (yarp::os::NetUint32) nsec_part;
-    return ret;
-}
-
 OdometryHandler::~OdometryHandler()
 {
     close();
@@ -63,7 +45,6 @@ OdometryHandler::OdometryHandler(PolyDriver* _driver)
     base_vel_theta       = 0;
     traveled_distance    = 0;
     traveled_angle       = 0;
-    rosMsgCounter        = 0;
 }
 
 bool OdometryHandler::open(const Property &options)
@@ -211,8 +192,8 @@ void OdometryHandler::broadcast()
     if (enable_ROS)
     {
         yarp::rosmsg::nav_msgs::Odometry &rosData = rosPublisherPort_odometry.prepare();
-        rosData.header.seq = rosMsgCounter;
-        rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+        rosData.header.seq = timeStamp.getCount();
+        rosData.header.stamp = timeStamp.getTime();
         rosData.header.frame_id = odometry_frame_id;
         rosData.child_frame_id = child_frame_id;
 
@@ -242,8 +223,8 @@ void OdometryHandler::broadcast()
     {
         yarp::rosmsg::geometry_msgs::PolygonStamped &rosData = rosPublisherPort_footprint.prepare();
         rosData = footprint;
-        rosData.header.seq = rosMsgCounter;
-        rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+        rosData.header.seq = timeStamp.getCount();
+        rosData.header.stamp = timeStamp.getTime();
         rosData.header.frame_id = footprint_frame_id;
         rosPublisherPort_footprint.write();
     }
@@ -254,8 +235,8 @@ void OdometryHandler::broadcast()
         yarp::rosmsg::geometry_msgs::TransformStamped transform;
         transform.child_frame_id = child_frame_id;
         transform.header.frame_id = odometry_frame_id;
-        transform.header.seq = rosMsgCounter;
-        transform.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+        transform.header.seq = timeStamp.getCount();
+        transform.header.stamp = timeStamp.getTime();
         double halfYaw = odom_theta * DEG2RAD * 0.5;
         double cosYaw = cos(halfYaw);
         double sinYaw = sin(halfYaw);
@@ -278,8 +259,6 @@ void OdometryHandler::broadcast()
 
         rosPublisherPort_tf.write();
     }
-
-    rosMsgCounter++;
 
     mutex.post();
 }

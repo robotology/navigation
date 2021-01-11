@@ -71,7 +71,6 @@ CER_Odometry::CER_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
     encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
     enc.resize(2);
     encv.resize(2);
-    rosMsgCounter=0;
     geom_r = 0;
     geom_L = 0;
 }
