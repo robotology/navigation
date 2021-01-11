@@ -74,7 +74,6 @@ protected:
     std::string                                     odometry_frame_id;
     std::string                                     child_frame_id;
     std::string                                     rosTopicName_odometry;
-    yarp::os::NetUint32                             rosMsgCounter;
 
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PolygonStamped>          rosPublisherPort_footprint;
     double                                                     footprint_diameter;
