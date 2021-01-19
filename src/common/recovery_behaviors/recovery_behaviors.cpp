@@ -56,6 +56,18 @@ bool recovery_behavior::is_status_completed()
     return status_completed;
 }
 
+bool recovery_behavior::start_recovery_behavior()
+{
+    this->start();
+    return true;
+}
+
+bool recovery_behavior::stop_recovery_behavior()
+{
+    this->askToStop();
+    return true;
+}
+
 bool recovery_behavior::threadInit()
 {
     start_time =yarp::os::Time::now();

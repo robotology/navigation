@@ -6,6 +6,9 @@
 •   GPL-2+ license. See the accompanying LICENSE file for details.
 */
 
+#ifndef NAVIGATION_RECOVERY_BEHAVIOR_H
+#define NAVIGATION_RECOVERY_BEHAVIOR_H
+
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
@@ -35,11 +38,15 @@ class generic_recovery_behaviour
 
     protected:
     bool status_completed;
+
+    public:
     virtual bool is_status_completed() = 0;
+    virtual bool start_recovery_behavior() = 0;
+    virtual bool stop_recovery_behavior() = 0;
 };
 
 class recovery_behavior : 
-    protected generic_recovery_behaviour,
+    public generic_recovery_behaviour,
     public yarp::os::PeriodicThread 
 {
 private:
@@ -61,4 +68,8 @@ public:
     virtual ~recovery_behavior() {};
 
     bool is_status_completed() override;
+    bool start_recovery_behavior() override;
+    bool stop_recovery_behavior() override;
 };
+
+#endif

@@ -710,7 +710,7 @@ void GotoThread::run()
     bool obstacles_in_path = false;
     if (m_las_timeout_counter < 300)
     {
-        obstacles_in_path = m_obstacle_handler->check_obstacles_in_path(m_laser_data);
+        obstacles_in_path = m_obstacle_handler->check_obstacles_in_path(m_laser_data, beta_robot);
         if (m_enable_obstacles_avoidance)  m_obstacle_handler->compute_obstacle_avoidance(m_laser_data);
     }
 

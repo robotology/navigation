@@ -189,23 +189,26 @@ bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementDat
     return true;
 }
 
-bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data)
+bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data, double beta)
 {
     static double last_time_error_message = 0;
     int laser_obstacles  = 0;
     double goal_distance = 1000; //TO BE COMPLETED
 
     //compute the polygon
+    double vx[4];
+    double vy[4];
     double vertx[4];
     double verty[4];
-    double theta              = 0.0;
-    //the following 90 degrees rotation is needed to perform the following reference frame rotation.
-    //the reference frame of the robot is the one shown on the right.
-    //      Y                 X
-    //      |       -->       |
-    //      O--X           Y--O
-    double ctheta             = cos(theta-1.5707);
-    double stheta             = sin(theta-1.5707);
+
+    //on the left the map reference frame, on the right the robot reference frame.
+    //laser data is expressed in the robot reference frame
+    //beta is expressed in the robot reference frame
+    //      Y                  X
+    //      |       <-->       |
+    //      O--X            Y--O
+    double cbeta             = cos(beta * DEG2RAD);
+    double sbeta             = sin(beta * DEG2RAD);
     double detection_distance = m_min_detection_distance;
 
     if (m_enable_dynamic_max_distance)
@@ -222,14 +225,35 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     if (detection_distance<m_min_detection_distance)
         detection_distance = m_min_detection_distance;
 
-    vertx[0] = (-m_robot_radius) * ctheta + detection_distance * (-stheta);
-    verty[0] = (-m_robot_radius) * stheta + detection_distance * ctheta;
-    vertx[1] = (+m_robot_radius) * ctheta + detection_distance * (-stheta);
-    verty[1] = (+m_robot_radius) * stheta + detection_distance * ctheta;
-    vertx[2] = +m_robot_radius  * ctheta;
-    verty[2] = +m_robot_radius  * stheta;
-    vertx[3] = -m_robot_radius  * ctheta;
-    verty[3] = -m_robot_radius  * stheta;
+    //these coordinates are in the robot reference frame
+#if 1
+    vx[0] = 0; vy[0] = +m_robot_radius;
+    vx[1] = 0; vy[1] = -m_robot_radius;
+    vx[2] = detection_distance; vy[2] = -m_robot_radius;
+    vx[3] = detection_distance; vy[3] = +m_robot_radius;
+#else
+    vx[0] = m_robot_radius; vy[0] = +m_robot_radius;
+    vx[1] = m_robot_radius; vy[1] = -m_robot_radius;
+    vx[2] = detection_distance; vy[2] = -m_robot_radius;
+    vx[3] = detection_distance; vy[3] = +m_robot_radius;
+#endif
+
+    //rotate the detection area according to the desired robot trajectory
+    vertx[0] = vx[0] * cbeta + vy[0] * (-sbeta);
+    verty[0] = vx[0] * sbeta + vy[0] * cbeta;
+    vertx[1] = vx[1] * cbeta + vy[1] * (-sbeta);
+    verty[1] = vx[1] * sbeta + vy[1] * cbeta;
+    vertx[2] = vx[2] * cbeta + vy[2] * (-sbeta);
+    verty[2] = vx[2] * sbeta + vy[2] * cbeta;
+    vertx[3] = vx[3] * cbeta + vy[3] * (-sbeta);
+    verty[3] = vx[3] * sbeta + vy[3] * cbeta;
+
+#if 0
+    yDebug() << beta << "(" << vertx[0] << verty[0] << ")"
+    << "(" << vertx[1] << verty[1] << ")"
+    << "(" << vertx[2] << verty[2] << ")"
+    << "(" << vertx[3] << verty[3] << ")";
+#endif
 
     size_t las_size = laser_data.size();
 
@@ -238,6 +262,16 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
         yCError(GOTO_OBSTACLES) << "Internal error, invalid laser data struct!";
         return false;
     }
+
+    /*
+    //this piece of code checks that laser is expressed in the same robot reference frame
+    laser_data.clear();
+    LaserMeasurementData m;
+    m.set_polar(1, 1.5707);
+    double xx, yy;
+    m.get_cartesian(xx, yy); yDebug() << xx << yy;
+    laser_data.push_back(m);
+    */
 
     for (size_t i = 0; i < las_size; i++)
     {
@@ -258,8 +292,9 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
 
         double px = 0;
         double py = 0;
+        //laser scans are in the robot reference frame
         laser_data[i].get_cartesian(px, py);
-
+        //vertx and verty  are in the robot reference frame
         if (pnpoly(4,vertx,verty,px,py)>0)
         {
             if (d < goal_distance)

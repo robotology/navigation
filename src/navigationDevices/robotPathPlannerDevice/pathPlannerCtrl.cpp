@@ -74,30 +74,11 @@ bool  PlannerThread::readLocalizationData()
         m_force_map_reload = false;
         yCWarning(PATHPLAN_CTRL) << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
         yCInfo(PATHPLAN_CTRL) << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
-        bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
-        if (map_get_succesfull)
-        {
-            m_temporary_obstacles_map_mutex.lock();
-            m_temporary_obstacles_map = m_current_map;
-            m_temporary_obstacles_map_mutex.unlock();
-            yCInfo(PATHPLAN_CTRL) << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
-            m_current_map.enlargeObstacles(m_robot_radius);
-            m_augmented_map = m_current_map;
-            yCDebug(PATHPLAN_CTRL,) << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
-        }
-        else
-        {
-            yCError(PATHPLAN_CTRL) << "Unable to get map '" << m_localization_data.map_id << "' from map server";
-            std::vector<string> names_vector;
-            m_iMap->get_map_names(names_vector);
-            string names = "Known maps are:" ;
-            for (auto it = names_vector.begin(); it != names_vector.end(); it++)
-            {
-                names = names + " " + (*it);
-            }
-            yCInfo(PATHPLAN_CTRL) << names;
-            yarp::os::Time::delay(1.0);
-            return true; //consider changing this to false
+        bool b = reloadCurrentMap();
+    
+        yarp::os::Time::delay(1.0);
+        if (b){return true;}
+        else  { return true; //consider changing this to false
         }
     }
 
@@ -175,15 +156,18 @@ void  PlannerThread::readLaserData()
     m_temporary_obstacles_map_mutex.lock();
     MapGrid2D temp_map = m_temporary_obstacles_map;
     m_temporary_obstacles_map_mutex.unlock();
+    //here I am cleaning temp map from everything.
     for (size_t y=0; y< temp_map.height(); y++)
-        for (size_t x=0; x< temp_map.width(); x++)
+       for (size_t x=0; x< temp_map.width(); x++)
             temp_map.setMapFlag(XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
+    //Fill the temp map with laser scans
     for (size_t i=0; i< m_laser_map_cells.size(); i++)
     {
         temp_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
     }
-    //enlarge the laser scanner data
+    //enlarge the laser scans
     temp_map.enlargeObstacles(m_robot_radius);
+    //m_temporary_obstacles_map is now filled only with MAP_CELL_FREE,MAP_CELL_TEMPORARY_OBSTACLE and MAP_CELL_ENLARGED_OBSTACLE
     m_temporary_obstacles_map_mutex.lock();
     m_temporary_obstacles_map = temp_map;
     m_temporary_obstacles_map_mutex.unlock();
@@ -407,23 +391,39 @@ void PlannerThread::run()
             {
                 if (m_enable_try_recovery)
                 {
-                    //try to avoid obstacles
-                    yCError(PATHPLAN_CTRL, "unable to reach next waypoint, trying new solution");
+                    if (m_recovery_attempt < m_max_recovery_attempts)
+                    {
+                        //try to avoid obstacles
+                        m_recovery_attempt++;
+                        yCWarning(PATHPLAN_CTRL, "unable to reach next waypoint, trying new solution.");
+                        yCInfo   (PATHPLAN_CTRL, "This is recovery_attempt: %d/%d", m_recovery_attempt, m_max_recovery_attempts);
 
-                    Bottle cmd, ans;
-                    cmd.addString("stop");
-                    m_port_commands_output.write(cmd, ans);
-                    map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
-                    sendWaypoint();
+                        Bottle cmd, ans;
+                        cmd.addString("stop");
+                        m_port_commands_output.write(cmd, ans);
+
+                        //update the map with the new obstacles
+                        map_utilites::update_obstacles_map(m_current_map, m_temporary_obstacles_map);
+                        //the following enlargement is done in order to take away the robot from the obstacles where it is stuck
+                        m_temporary_obstacles_map.enlargeObstacles(0.1);
+                        //search for a new path
+                        if (!recomputePath())
+                        {
+                            yCInfo(PATHPLAN_CTRL, "Unable to recompute the path, aborting navigation");
+                            abortNavigation();
+                        }
+                    }
+                    else
+                    {
+                        yCInfo(PATHPLAN_CTRL, "Recovery_attempt: %d/%d, unable to find a solution, aborting navigation. ", m_recovery_attempt, m_max_recovery_attempts);
+                        abortNavigation();
+                    }
                 }
                 else
                 {
                     //terminate navigation
-                    Bottle cmd, ans;
-                    cmd.addString("stop");
-                    m_port_commands_output.write(cmd, ans);
-                    m_planner_status = navigation_status_aborted;
                     yCError(PATHPLAN_CTRL, "unable to reach next waypoint, aborting navigation");
+                    abortNavigation();
                 }
             }
             else if (m_inner_status == navigation_status_aborted)
@@ -617,6 +617,35 @@ bool PlannerThread::getCurrentMap(MapGrid2D& map) const
     return true;
 }
 
+bool PlannerThread::reloadCurrentMap()
+{
+    yCDebug(PATHPLAN_CTRL, "Reloading map %f from server", m_current_map);
+    bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
+    if (map_get_succesfull)
+    {
+        m_temporary_obstacles_map_mutex.lock();
+        m_temporary_obstacles_map = m_current_map;
+        m_temporary_obstacles_map_mutex.unlock();
+        yCInfo(PATHPLAN_CTRL) << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
+        m_current_map.enlargeObstacles(m_robot_radius);
+        m_augmented_map = m_current_map;
+        yCDebug(PATHPLAN_CTRL, ) << "Obstacles enlargement performed (" << m_robot_radius << "m)";
+    }
+    else
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to get map '" << m_localization_data.map_id << "' from map server";
+        std::vector<string> names_vector;
+        m_iMap->get_map_names(names_vector);
+        string names = "Known maps are:";
+        for (auto it = names_vector.begin(); it != names_vector.end(); it++)
+        {
+            names = names + " " + (*it);
+        }
+        yCInfo(PATHPLAN_CTRL) << names;
+        return false;
+    }
+}
+
 bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const
 {
     if (m_current_path != nullptr)
@@ -792,3 +821,46 @@ bool PlannerThread::startPath()
     return true;
 }
 
+bool PlannerThread::recomputePath()
+{
+    if (getNavigationStatusAsInt() == navigation_status_idle)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. Navigation task not assigned yet.";
+        return false;
+    }
+    if (getNavigationStatusAsInt() == navigation_status_paused)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. Navigation task is currently paused.";
+        return false;
+    }
+    if (getNavigationStatusAsInt() == navigation_status_goal_reached)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. Navigation Goal has been already reached.";
+        return false;
+    }
+    if (getNavigationStatusAsInt() == navigation_status_thinking)
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to recompute path. A navigation plan is already under computation.";
+        return false;
+    }
+
+    Map2DLocation loc;
+    bool b = true;
+    b &= getCurrentAbsTarget(loc);
+    //@@@ check timing here
+    yarp::os::Time::delay(0.2);
+    b &= stopMovement();
+    //@@@ check timing here
+    yarp::os::Time::delay(0.2);
+    b &= setNewAbsTarget(loc);
+
+    return b;
+}
+
+void PlannerThread::abortNavigation()
+{
+    Bottle cmd, ans;
+    cmd.addString("stop");
+    m_port_commands_output.write(cmd, ans);
+    m_planner_status = navigation_status_aborted;
+}
