@@ -84,7 +84,8 @@ public:
 
 public:
     obstacles_class(Searchable  &rf);
-    bool check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data);
+    //beta is the direction (in degrees) in which the robot wants to move, in the robot reference frame
+    bool check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data, double beta);
     bool compute_obstacle_avoidance(std::vector<LaserMeasurementData>& laser_data);
     double get_max_time_waiting_for_obstacle_removal();
     void set_safety_coeff(double val);
