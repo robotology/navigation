@@ -402,8 +402,11 @@ void PlannerThread::run()
                         cmd.addString("stop");
                         m_port_commands_output.write(cmd, ans);
 
-//prima c'era augmented map....
+                        //update the map with the new obstacles
                         map_utilites::update_obstacles_map(m_current_map, m_temporary_obstacles_map);
+                        //the following enlargement is done in order to take away the robot from the obstacles where it is stuck
+                        m_temporary_obstacles_map.enlargeObstacles(0.1);
+                        //search for a new path
                         if (!recomputePath())
                         {
                             yCInfo(PATHPLAN_CTRL, "Unable to recompute the path, aborting navigation");
