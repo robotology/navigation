@@ -206,7 +206,8 @@ bool  NavGuiThread::updateLocations()
     for (size_t i=0; i<all_locations.size(); i++)
     {
         m_iMap->getLocation(all_locations[i],tmp_loc);
-        m_locations_list.push_back(tmp_loc);
+        if (tmp_loc.map_id == m_current_map.m_map_name)
+            {m_locations_list.push_back(tmp_loc);}
     }
     return true;
 }
@@ -220,7 +221,8 @@ bool  NavGuiThread::updateAreas()
     for (size_t i = 0; i<all_areas.size(); i++)
     {
         m_iMap->getArea(all_areas[i], tmp_area);
-        m_areas_list.push_back(tmp_area);
+        if (tmp_area.map_id == m_current_map.m_map_name)
+            {m_areas_list.push_back(tmp_area);}
     }
     return true;
 }
