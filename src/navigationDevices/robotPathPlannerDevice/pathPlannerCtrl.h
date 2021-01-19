@@ -100,7 +100,7 @@ class PlannerThread: public yarp::os::PeriodicThread
 
     //recovery
     bool      m_enable_try_recovery;
-    size_t    m_recovery_attempt;
+    size_t    m_recovery_attempt=0;
     size_t    m_max_recovery_attempts=5;
 
     //storage for the environment map
@@ -279,6 +279,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     bool          getOstaclesMap(yarp::dev::Nav2D::MapGrid2D& obstacles_map);
     bool          setRobotRadius(double size);
     bool          getRobotRadius(double& size);
+    void          resetAttemptCounter();
 
     private:
     bool          startPath();

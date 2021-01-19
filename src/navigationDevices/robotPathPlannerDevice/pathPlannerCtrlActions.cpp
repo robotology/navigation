@@ -25,6 +25,11 @@ using namespace yarp::dev::Nav2D;
 
 YARP_LOG_COMPONENT(PATHPLAN_ACTIONS, "navigation.devices.robotPathPlanner.actions")
 
+void PlannerThread::resetAttemptCounter()
+{
+    m_recovery_attempt=0;
+}
+
 bool PlannerThread::setNewAbsTarget(Map2DLocation target)
 {
     if (m_planner_status != navigation_status_idle &&
@@ -36,9 +41,8 @@ bool PlannerThread::setNewAbsTarget(Map2DLocation target)
         return false;
     }
 
-    yCInfo(PATHPLAN_ACTIONS) << "Received a new target:" << target.toString();
+    yCInfo(PATHPLAN_ACTIONS) << "Received a new target:" << target.toString() << ", attempt:" << m_recovery_attempt;
     m_final_goal = target;
-    m_recovery_attempt=0;
 
     if (target.map_id == m_current_map.getMapName())
     {
@@ -97,8 +101,7 @@ bool PlannerThread::setNewRelTarget(yarp::sig::Vector target)
         return false;
     }
 
-    yCInfo(PATHPLAN_ACTIONS) << "received new relative target at:" << target[0] << target[1] << target[2];
-    m_recovery_attempt = 0;
+    yCInfo(PATHPLAN_ACTIONS) << "received new relative target at:" << target[0] << target[1] << target[2] << ", attempt:" << m_recovery_attempt;
 
     double a = m_localization_data.theta * DEG2RAD;
     yCDebug(PATHPLAN_ACTIONS) << "current position:" << m_localization_data.x << m_localization_data.y << m_localization_data.theta;

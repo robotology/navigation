@@ -74,30 +74,11 @@ bool  PlannerThread::readLocalizationData()
         m_force_map_reload = false;
         yCWarning(PATHPLAN_CTRL) << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
         yCInfo(PATHPLAN_CTRL) << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
-        bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
-        if (map_get_succesfull)
-        {
-            m_temporary_obstacles_map_mutex.lock();
-            m_temporary_obstacles_map = m_current_map;
-            m_temporary_obstacles_map_mutex.unlock();
-            yCInfo(PATHPLAN_CTRL) << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
-            m_current_map.enlargeObstacles(m_robot_radius);
-            m_augmented_map = m_current_map;
-            yCDebug(PATHPLAN_CTRL,) << "Obstacles enlargement performed ("<<m_robot_radius<<"m)";
-        }
-        else
-        {
-            yCError(PATHPLAN_CTRL) << "Unable to get map '" << m_localization_data.map_id << "' from map server";
-            std::vector<string> names_vector;
-            m_iMap->get_map_names(names_vector);
-            string names = "Known maps are:" ;
-            for (auto it = names_vector.begin(); it != names_vector.end(); it++)
-            {
-                names = names + " " + (*it);
-            }
-            yCInfo(PATHPLAN_CTRL) << names;
-            yarp::os::Time::delay(1.0);
-            return true; //consider changing this to false
+        bool b = reloadCurrentMap();
+    
+        yarp::os::Time::delay(1.0);
+        if (b){return true;}
+        else  { return true; //consider changing this to false
         }
     }
 
@@ -636,8 +617,30 @@ bool PlannerThread::getCurrentMap(MapGrid2D& map) const
 bool PlannerThread::reloadCurrentMap()
 {
     yCDebug(PATHPLAN_CTRL, "Reloading map %f from server", m_current_map);
-    bool b = m_iMap->get_map(m_localization_data.map_id, m_current_map);
-    return b;
+    bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
+    if (map_get_succesfull)
+    {
+        m_temporary_obstacles_map_mutex.lock();
+        m_temporary_obstacles_map = m_current_map;
+        m_temporary_obstacles_map_mutex.unlock();
+        yCInfo(PATHPLAN_CTRL) << "Map '" << m_localization_data.map_id << "' successfully obtained from server";
+        m_current_map.enlargeObstacles(m_robot_radius);
+        m_augmented_map = m_current_map;
+        yCDebug(PATHPLAN_CTRL, ) << "Obstacles enlargement performed (" << m_robot_radius << "m)";
+    }
+    else
+    {
+        yCError(PATHPLAN_CTRL) << "Unable to get map '" << m_localization_data.map_id << "' from map server";
+        std::vector<string> names_vector;
+        m_iMap->get_map_names(names_vector);
+        string names = "Known maps are:";
+        for (auto it = names_vector.begin(); it != names_vector.end(); it++)
+        {
+            names = names + " " + (*it);
+        }
+        yCInfo(PATHPLAN_CTRL) << names;
+        return false;
+    }
 }
 
 bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const

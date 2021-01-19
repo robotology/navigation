@@ -160,6 +160,7 @@ bool robotPathPlannerDev::gotoTargetByAbsoluteLocation(Map2DLocation loc)
     bool b = true;
     b &= m_plannerThread->reloadCurrentMap();
     b &= m_plannerThread->setNewAbsTarget(loc);
+    m_plannerThread->resetAttemptCounter();
     return b;
 }
 
@@ -169,7 +170,10 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
     v.push_back(x);
     v.push_back(y);
     v.push_back(theta);
-    bool b = m_plannerThread->setNewRelTarget(v);
+    bool b = true;
+    b &= m_plannerThread->reloadCurrentMap();
+    b &= m_plannerThread->setNewRelTarget(v);
+    m_plannerThread->resetAttemptCounter();
     return b;
 }
 
@@ -189,7 +193,10 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
     yarp::sig::Vector v;
     v.push_back(x);
     v.push_back(y);
-    bool b = m_plannerThread->setNewRelTarget(v);
+    bool b = true;
+    b &= m_plannerThread->reloadCurrentMap();
+    b &= m_plannerThread->setNewRelTarget(v);
+    m_plannerThread->resetAttemptCounter();
     return b;
 }
 
