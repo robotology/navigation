@@ -175,15 +175,18 @@ void  PlannerThread::readLaserData()
     m_temporary_obstacles_map_mutex.lock();
     MapGrid2D temp_map = m_temporary_obstacles_map;
     m_temporary_obstacles_map_mutex.unlock();
+    //here I am cleaning temp map from everything.
     for (size_t y=0; y< temp_map.height(); y++)
-        for (size_t x=0; x< temp_map.width(); x++)
+       for (size_t x=0; x< temp_map.width(); x++)
             temp_map.setMapFlag(XYCell(x,y),MapGrid2D::MAP_CELL_FREE);
+    //Fill the temp map with laser scans
     for (size_t i=0; i< m_laser_map_cells.size(); i++)
     {
         temp_map.setMapFlag(m_laser_map_cells[i],MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE);
     }
-    //enlarge the laser scanner data
+    //enlarge the laser scans
     temp_map.enlargeObstacles(m_robot_radius);
+    //m_temporary_obstacles_map is now filled only with MAP_CELL_FREE,MAP_CELL_TEMPORARY_OBSTACLE and MAP_CELL_ENLARGED_OBSTACLE
     m_temporary_obstacles_map_mutex.lock();
     m_temporary_obstacles_map = temp_map;
     m_temporary_obstacles_map_mutex.unlock();
@@ -417,7 +420,9 @@ void PlannerThread::run()
                         Bottle cmd, ans;
                         cmd.addString("stop");
                         m_port_commands_output.write(cmd, ans);
-                        map_utilites::update_obstacles_map(m_current_map, m_augmented_map);
+
+//prima c'era augmented map....
+                        map_utilites::update_obstacles_map(m_current_map, m_temporary_obstacles_map);
                         if (!recomputePath())
                         {
                             yCInfo(PATHPLAN_CTRL, "Unable to recompute the path, aborting navigation");
@@ -626,6 +631,13 @@ bool PlannerThread::getCurrentMap(MapGrid2D& map) const
 {
     map = m_current_map;
     return true;
+}
+
+bool PlannerThread::reloadCurrentMap()
+{
+    yCDebug(PATHPLAN_CTRL, "Reloading map %f from server", m_current_map);
+    bool b = m_iMap->get_map(m_localization_data.map_id, m_current_map);
+    return b;
 }
 
 bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const

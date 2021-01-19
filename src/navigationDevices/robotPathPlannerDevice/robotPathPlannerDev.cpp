@@ -157,7 +157,9 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
 
 bool robotPathPlannerDev::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
-    bool b = m_plannerThread->setNewAbsTarget(loc);
+    bool b = true;
+    b &= m_plannerThread->reloadCurrentMap();
+    b &= m_plannerThread->setNewAbsTarget(loc);
     return b;
 }
 

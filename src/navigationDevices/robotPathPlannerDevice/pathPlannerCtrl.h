@@ -101,7 +101,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     //recovery
     bool      m_enable_try_recovery;
     size_t    m_recovery_attempt;
-    size_t    m_max_recovery_attempts;
+    size_t    m_max_recovery_attempts=5;
 
     //storage for the environment map
     yarp::dev::Nav2D::MapGrid2D m_current_map;
@@ -272,6 +272,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     */
     void          getTimeouts(int& localiz, int& laser, int& inner_status);
 
+    bool          reloadCurrentMap();
     bool          getCurrentWaypoint(yarp::dev::Nav2D::Map2DLocation &loc) const;
     bool          getCurrentMap(yarp::dev::Nav2D::MapGrid2D& current_map) const;
     bool          getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const;

@@ -106,9 +106,13 @@ void map_utilites::update_obstacles_map(MapGrid2D& map_to_be_updated, const MapG
             if (flag_dst==MapGrid2D::MAP_CELL_FREE)
             {
                 if      (flag_src==MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE)
-                { flag_dst=MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE; }
+                { 
+                    map_to_be_updated.setMapFlag(XYCell(x, y),MapGrid2D::MAP_CELL_KEEP_OUT);
+                }
                 else if (flag_src==MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE)
-                { flag_dst=MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE; }
+                {
+                    map_to_be_updated.setMapFlag(XYCell(x, y), MapGrid2D::MAP_CELL_KEEP_OUT);
+                }
             }
         }
 }
