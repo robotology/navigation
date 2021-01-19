@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+<device xmlns:xi="http://www.w3.org/2001/XInclude" name="laserDev" type="fakeLaser">
+    <param name="period"> 10                         </param>
+    <param name="test">   use_mapfile                </param>
+    <param name="map_file">  C:\\software\\yarp_software\\navigation\\app\\mapsExample\\map_test.map                      </param>
+    <param name="localization_client"> 1                         </param> 
+</device>
