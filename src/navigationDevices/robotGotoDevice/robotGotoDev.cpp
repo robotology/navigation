@@ -46,29 +46,12 @@ void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 
 bool robotGotoDev :: open(yarp::os::Searchable& config)
 {
-	//default values
-	m_local_name = "/robotGoto";
-	
-#if 1
+    //default values
+    m_local_name = "/robotGoto";
+    Property p; p.fromString(config.toString());
 
-    yCDebug(GOTO_DEV) << "config configuration: \n" << config.toString().c_str();
-
-    std::string context_name = "robotGoto";
-    std::string file_name = "robotGoto_cer.ini";
-    
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name    = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
-    yCDebug(GOTO_DEV) << "robotGotoDev configuration: \n" << p.toString().c_str();
-
+    //dangerous stuff!!!
+    //GENERAL group may be confused with GENERAL group of the wrapper
     Bottle general_group = p.findGroup("GENERAL");
     if (general_group.isNull())
     {
@@ -76,13 +59,10 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
         return false;
     }
     if (general_group.check("name")) m_local_name = general_group.find("name").asString();
-    
-#else
-    Property p;
-    p.fromString(config.toString());
-#endif
+
+    //the control thread
     gotoThread = new GotoThread(0.010, p);
-    
+
     if (!gotoThread->start())
     {
         delete gotoThread;

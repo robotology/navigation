@@ -260,22 +260,9 @@ void gazeboLocalizerThread::threadRelease()
 
 bool gazeboLocalizer::open(yarp::os::Searchable& config)
 {
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    string cfg_temp = config.toString();
+    Property p; p.fromString(cfg_temp);
 
-    std::string context_name = "gazeboLocalizer";
-    std::string file_name = "gazeboLocalizer.ini";
-
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "gazeboLocalizer configuration: \n" << p.toString().c_str();
 
     std::string local_name = "gazeboLocalizer";
