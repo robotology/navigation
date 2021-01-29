@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+<robot name="map2D" portprefix="map2D" xmlns:xi="http://www.w3.org/2001/XInclude">      
+    <devices>
+    <xi:include href="./map2D_device.xml" />  
+    <xi:include href="./map2D_nws_yarp.xml" /> 
+    <xi:include href="./map2D_nws_ros.xml" /> 
+    </devices>
+</robot> 

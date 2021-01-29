@@ -3,7 +3,7 @@
 
 <robot name="test" portprefix="test" xmlns:xi="http://www.w3.org/2001/XInclude">      
     <devices>
-    <xi:include href="./lidarDevice.xml" />  
+    <xi:include href="./lidar_device.xml" />  
     <xi:include href="./lidar_nws_yarp.xml" /> 
     <xi:include href="./lidar_nws_ros.xml" /> 
     </devices>
