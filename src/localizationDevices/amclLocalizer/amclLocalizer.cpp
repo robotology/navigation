@@ -100,38 +100,38 @@ bool   amclLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, y
 
 bool   amclLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    odom = thread->getOdometry();
+    odom = m_thread->getOdometry();
     return true;
 }
 
 bool   amclLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
-    thread->getPoses(poses);
+    m_thread->getPoses(poses);
     return true;
 }
 
 bool   amclLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   amclLocalizer::setInitialPose(const Map2DLocation& loc)
 {
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 
 bool   amclLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    thread->initializeLocalization(loc,cov);
+    m_thread->initializeLocalization(loc,cov);
     return true;
 }
 
 //////////////////////////
 
-amclLocalizerThread::amclLocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
+amclLocalizerThread::amclLocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name (_name), m_cfg(_cfg)
 {
     m_handler_odom = nullptr;
     m_handler_pf = nullptr;
@@ -219,7 +219,7 @@ void amclLocalizerThread::updateFilter()
     if (m_pf_initialized==false)
     {
 #ifdef LOWLEVEL_DEBUG
-        yDebug() << "m_pf_initialized=false, intialiazing...";
+        yDebug() << "m_pf_initialized=false, initialiazing...";
 #endif
         // Pose at last filter update
         m_pf_odom_pose = pose;
@@ -582,10 +582,10 @@ bool amclLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 bool amclLocalizerThread::threadInit()
 {
     //configuration file checking
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("AMCLLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yCError(AMCL_DEV) << "Missing GENERAL group!";
+        yCError(AMCL_DEV) << "Missing AMCLLOCALIZER_GENERAL group!";
         return false;
     }
 
@@ -630,10 +630,6 @@ bool amclLocalizerThread::threadInit()
         return false;
     }
 
-    //general group
-    m_local_name = "amclLocalizer";
-    if (general_group.check("name")) { m_local_name = general_group.find("name").asString(); }
-
     //laser group
     if (laser_group.check("laser_broadcast_port") == false)
     {
@@ -656,7 +652,7 @@ bool amclLocalizerThread::threadInit()
 #endif
 
     //opens a YARP port to receive odometry data
-    std::string odom_portname = "/" + m_local_name + "/odometry:i";
+    std::string odom_portname = m_name + "/odometry:i";
     bool b1 = m_port_odometry_input.open(odom_portname.c_str());
     bool b2 = yarp::os::Network::sync(odom_portname.c_str(), false);
     bool b3 = yarp::os::Network::connect(m_port_broadcast_odometry_name.c_str(), odom_portname.c_str());
@@ -764,7 +760,7 @@ bool amclLocalizerThread::threadInit()
     //get the map from the map_server
     Property map_options;
     map_options.put("device", "map2DClient");
-    map_options.put("local", "/" + m_local_name); //This is just a prefix. map2DClient will complete the port name.
+    map_options.put("local", m_name); //This is just a prefix. map2DClient will complete the port name.
     map_options.put("remote", "/mapServer");
     if (m_pMap.open(map_options) == false)
     {
@@ -863,7 +859,7 @@ bool amclLocalizerThread::threadInit()
     //opens the laser client and the corresponding interface
     Property options;
     options.put("device", "Rangefinder2DClient");
-    options.put("local", m_local_name + "/laser:i");
+    options.put("local", m_name + "/laser:i");
     options.put("remote", m_laser_remote_port);
     if (m_pLas.open(options) == false)
     {
@@ -1055,57 +1051,56 @@ bool amclLocalizer::open(yarp::os::Searchable& config)
 
     yDebug() << "amclLocalizer configuration: \n" << p.toString().c_str();
 
-    double amclThreadPeriod = 0.010; //10 ms
-    if (p.check("period"))
-    {
-        amclThreadPeriod = p.find("period").asDouble();
-    }
-    thread = new amclLocalizerThread(amclThreadPeriod, p);
-
-    if (!thread->start())
-    {
-        delete thread;
-        thread = nullptr;
-        return false;
-    }
-
-    std::string local_name = "amclLocalizer";
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("AMCLLOCALIZER_GENERAL");
     if (general_group.isNull()==false)
     {
-        if (general_group.check("name")) { local_name = general_group.find("name").asString(); }
+        if (general_group.check("name")) { m_name = general_group.find("name").asString(); }
     }
-    bool ret = rpcPort.open("/"+local_name+"/rpc");
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yCError(AMCL_DEV) << "Unable to open module ports";
         return false;
     }
 
-    rpcPortHandler.setInterface(this);
-    rpcPort.setReader(rpcPortHandler);
+    double amclThreadPeriod = 0.010; //10 ms
+    if (p.check("period"))
+    {
+        amclThreadPeriod = p.find("period").asDouble();
+    }
+    m_thread = new amclLocalizerThread(amclThreadPeriod, m_name, p);
+
+    if (!m_thread->start())
+    {
+        delete m_thread;
+        m_thread = nullptr;
+        return false;
+    }
+
+    m_rpcPortHandler.setInterface(this);
+    m_rpcPort.setReader(m_rpcPortHandler);
 
     return true;
 }
 
 amclLocalizer::amclLocalizer()
 {
-    thread = nullptr;
+    m_thread = nullptr;
 }
 
 amclLocalizer::~amclLocalizer()
 {
-    if (thread)
+    if (m_thread)
     {
-        delete thread;
-        thread = nullptr;
+        delete m_thread;
+        m_thread = nullptr;
     }
 }
 
 bool amclLocalizer::close()
 {
-    rpcPort.interrupt();
-    rpcPort.close();
+    m_rpcPort.interrupt();
+    m_rpcPort.close();
     return true;
 }
  

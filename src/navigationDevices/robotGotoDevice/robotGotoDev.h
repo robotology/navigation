@@ -54,7 +54,7 @@ public:
     GotoThread          *gotoThread;
     robotGotoRPCHandler rpcPortHandler;
     yarp::os::Port      rpcPort;
-    std::string         m_local_name; 
+    std::string         m_name; 
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;

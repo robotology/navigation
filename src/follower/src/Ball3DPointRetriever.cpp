@@ -62,10 +62,10 @@ bool Ball3DPointRetriever::init(yarp::os::ResourceFinder &rf)
 
     // 2) read name of input port from config file and open it
     std::string inputPortName="targets";
-    Bottle config_group = rf.findGroup("GENERAL");
+    Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if (config_group.isNull())
     {
-        yError() << "Missing GENERAL group! the module uses default value!";
+        yError() << "Missing FOLLOWER_GENERAL group! the module uses default value!";
     }
     else
     {

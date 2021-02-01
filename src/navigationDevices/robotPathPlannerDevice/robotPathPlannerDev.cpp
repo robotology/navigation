@@ -46,18 +46,15 @@ robotPathPlannerDev::robotPathPlannerDev()
 bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 {
     //default values
-    m_local_name = "/robotPathPlanner";
     Property p; p.fromString(config.toString());
 
-    //dangerous stuff!!!
-    //GENERAL group may be confused with GENERAL group of the wrapper
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("PATHPLANNER_GENERAL");
     if (general_group.isNull())
     {
-        yCError(PATHPLAN_DEV) << "Missing GENERAL group!";
+        yCError(PATHPLAN_DEV) << "Missing PATHPLANNER_GENERAL group!";
         return false;
     }
-    if (general_group.check("name")) m_local_name = general_group.find("name").asString();
+    if (general_group.check("name")) m_name = general_group.find("name").asString();
 
     //Call the parse of `navigation_with_stuck_detection`
     if (initialize_recovery(config) == false) return false;
@@ -65,7 +62,7 @@ bool robotPathPlannerDev::open(yarp::os::Searchable& config)
     //the control thread
     m_plannerThread = new PlannerThread(0.020,p);
 
-    bool ret = m_rpcPort.open(m_local_name+"/rpc");
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yCError(PATHPLAN_DEV) << "Unable to open module ports";

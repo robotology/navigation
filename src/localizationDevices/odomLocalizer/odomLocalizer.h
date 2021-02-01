@@ -42,7 +42,7 @@ using namespace yarp::os;
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value      | Required     | Description                                                       | Notes |
  * |:--------------:|:--------------:|:-------:|:--------------:|:------------------:|:-----------: |:-----------------------------------------------------------------:|:-----:|
- * | GENERAL        |  module_name   | string  | -              | localizationServer | Yes          | The name of the module use to open ports                          |       |
+ * | ODOMLOCALIZER_GENERAL  |  name  | string  | -              | localizationServer | Yes          | The name of the module use to open ports                          |       |
  * | INITIAL_POS    |  initial_x     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
  * | INITIAL_POS    |  initial_y     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
  * | INITIAL_POS    |  initial_theta | double  | deg            | 0.0                | Yes          | Initial estimation of robot position                              | -     |
@@ -68,9 +68,10 @@ class odomLocalizer : public yarp::dev::DeviceDriver,
                      public yarp::dev::Nav2D::ILocalization2D
 {
 public:
-    odomLocalizerThread*    thread;
-    odomLocalizerRPCHandler rpcPortHandler;
-    yarp::os::Port          rpcPort;
+    odomLocalizerThread*    m_thread;
+    odomLocalizerRPCHandler m_rpcPortHandler;
+    yarp::os::Port          m_rpcPort;
+    std::string             m_name = "/odomLocalizer";
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;
@@ -105,7 +106,7 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_current_odom;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
-    std::string                  m_local_name;
+    std::string                  m_name;
 
     //odometry port
     std::string                  m_port_broadcast_odometry_name;
@@ -113,7 +114,7 @@ protected:
     double                       m_last_odometry_data_received;
 
 public:
-    odomLocalizerThread(const double _period, yarp::os::Searchable& _cfg);
+    odomLocalizerThread(const double _period, std::string _name, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;

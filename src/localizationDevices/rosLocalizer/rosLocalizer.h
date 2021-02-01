@@ -52,8 +52,8 @@ using namespace yarp::os;
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value      | Required     | Description                                                       | Notes |
  * |:--------------:|:--------------:|:-------:|:--------------:|:------------------:|:-----------: |:-----------------------------------------------------------------:|:-----:|
- * | GENERAL        |  module_name   | string  | -              | localizationServer | Yes          | The name of the module use to open ports                          |       |
- * | GENERAL        |  enable_ros    | int     | 0/1            | -                  | Yes          | If set to 1, the module will open the ROS topic specified by ROS::initialpose_topic parameter     |       |
+ * | ROSLOCALIZER_GENERAL |  name   | string  | -              | localizationServer | Yes          | The name of the module use to open ports                          |       |
+ * | ROSLOCALIZER_GENERAL |  enable_ros    | int     | 0/1            | -                  | Yes          | If set to 1, the module will open the ROS topic specified by ROS::initialpose_topic parameter     |       |
  * | INITIAL_POS    |  initial_x     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
  * | INITIAL_POS    |  initial_y     | double  | m              | 0.0                | Yes          | Initial estimation of robot position                              | -     |
  * | INITIAL_POS    |  initial_theta | double  | deg            | 0.0                | Yes          | Initial estimation of robot position                              | -     |
@@ -87,7 +87,8 @@ class rosLocalizer : public yarp::dev::DeviceDriver,
 private:
     yarp::sig::Matrix                m_default_covariance_3x3;
     yarp::dev::Nav2D::Map2DLocation  m_initial_loc;
-    	
+    std::string                      m_name= "/rosLocalizer";
+
 public:
     rosLocalizerThread*    thread;
     rosLocalizerRPCHandler rpcPortHandler;
@@ -119,14 +120,13 @@ class rosLocalizerThread : public yarp::os::PeriodicThread,
 {
 protected:
     //general
-    std::string                  m_module_name;
+    std::string                  m_name;
     double                       m_last_statistics_printed;
     double                       m_last_published_map;
     yarp::dev::Nav2D::MapGrid2D         m_current_map;
     yarp::dev::Nav2D::Map2DLocation     m_localization_data;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
-    std::string                  m_local_name;
 
     //configuration options
     bool                         m_ros_enabled;
@@ -158,7 +158,7 @@ protected:
     yarp::rosmsg::geometry_msgs::PoseArray m_last_received_particles;
 
 public:
-    rosLocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    rosLocalizerThread(double _period, std::string _name, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;

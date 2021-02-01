@@ -43,7 +43,7 @@ class robotPathPlannerDev : public yarp::dev::DeviceDriver,
 public:
     PlannerThread*                 m_plannerThread;
     yarp::os::Port                 m_rpcPort;
-    std::string                    m_local_name; 
+    std::string                    m_name = "/robotPathPlanner";
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;

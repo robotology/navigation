@@ -47,18 +47,15 @@ void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 bool robotGotoDev :: open(yarp::os::Searchable& config)
 {
     //default values
-    m_local_name = "/robotGoto";
     Property p; p.fromString(config.toString());
 
-    //dangerous stuff!!!
-    //GENERAL group may be confused with GENERAL group of the wrapper
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("ROBOTGOTO_GENERAL");
     if (general_group.isNull())
     {
-        yCError(GOTO_DEV) << "Missing GENERAL group!";
+        yCError(GOTO_DEV) << "Missing ROBOTGOTO_GENERAL group!";
         return false;
     }
-    if (general_group.check("name")) m_local_name = general_group.find("name").asString();
+    if (general_group.check("name")) m_name = general_group.find("name").asString();
 
     //the control thread
     gotoThread = new GotoThread(0.010, p);
@@ -69,7 +66,7 @@ bool robotGotoDev :: open(yarp::os::Searchable& config)
         return false;
     }
 
-    bool ret = rpcPort.open(m_local_name+"/rpc");
+    bool ret = rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yCError(GOTO_DEV) << "Unable to open module ports";

@@ -58,7 +58,7 @@ protected:
 
     yarp::dev::Nav2D::NavigationStatusEnum  m_navigation_status;
     std::string                             m_abs_frame_id;
-    std::string                             m_local_name_prefix;
+    std::string                             m_name;
     std::string                             m_remote_localization;
     yarp::dev::Nav2D::Map2DLocation         m_current_position;
     yarp::dev::Nav2D::Map2DLocation         m_current_goal;

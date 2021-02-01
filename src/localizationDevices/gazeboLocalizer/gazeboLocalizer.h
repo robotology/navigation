@@ -60,6 +60,7 @@ public:
     gazeboLocalizerThread*    thread;
     gazeboLocalizerRPCHandler rpcPortHandler;
     yarp::os::Port            rpcPort;
+    std::string               m_name = "/gazeboLocalizer";
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;
@@ -93,18 +94,18 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_gazebo_data;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
-    std::string                  m_local_name_prefix;
     std::string                  m_local_gazebo_port_name;
     std::string                  m_remote_gazebo_port_name;
     std::string                  m_object_name;
     yarp::os::RpcClient          m_port_gazebo_comm;
+    std::string                  m_name;
 
 
 private:
     bool open_gazebo();
 
 public:
-    gazeboLocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    gazeboLocalizerThread(double _period, std::string _name, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;

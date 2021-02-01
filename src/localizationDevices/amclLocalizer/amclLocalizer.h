@@ -65,9 +65,10 @@ class amclLocalizer : public yarp::dev::DeviceDriver,
                      public yarp::dev::Nav2D::ILocalization2D
 {
 public:
-    amclLocalizerThread*    thread;
-    amclLocalizerRPCHandler rpcPortHandler;
-    yarp::os::Port          rpcPort;
+    amclLocalizerThread*    m_thread;
+    amclLocalizerRPCHandler m_rpcPortHandler;
+    yarp::os::Port          m_rpcPort;
+    std::string             m_name = "/amclLocalizer";
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;
@@ -101,7 +102,7 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_odometry_data;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
-    std::string                  m_local_name;
+    std::string                  m_name = "/amclLocalizer";
 
     //odometry port
     std::string                  m_port_broadcast_odometry_name;
@@ -198,7 +199,7 @@ protected:
 
     yarp::sig::Matrix    m_initial_covariance_msg;
 public:
-    amclLocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    amclLocalizerThread(double _period, std::string _name, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;

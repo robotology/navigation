@@ -89,7 +89,7 @@ class NavGuiThread: public yarp::os::PeriodicThread
     INavigation2D*                                         m_iNav = nullptr;
 
     //yarp ports
-    std::string                                            m_local_name_prefix;
+    std::string                                            m_name = "/navigationGui";
     std::string                                            m_remote_localization;
     std::string                                            m_remote_map;
     std::string                                            m_remote_laser;

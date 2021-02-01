@@ -187,10 +187,10 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
 
     // 2) read period and input port of this module from config file
     std::string inputPortName;
-    Bottle config_group = rf.findGroup("GENERAL");
+    Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if (config_group.isNull())
     {
-        yError() << "Missing GENERAL group! the module uses default value!";
+        yError() << "Missing FOLLOWER_GENERAL group! the module uses default value!";
     }
     else
     {

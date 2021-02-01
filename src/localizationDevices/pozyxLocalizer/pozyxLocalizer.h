@@ -56,9 +56,10 @@ class pozyxLocalizer : public yarp::dev::DeviceDriver,
                      public yarp::dev::Nav2D::ILocalization2D
 {
 public:
-    pozyxLocalizerThread*    thread;
-    pozyxLocalizerRPCHandler rpcPortHandler;
-    yarp::os::Port          rpcPort;
+    pozyxLocalizerThread*    m_thread;
+    pozyxLocalizerRPCHandler m_rpcPortHandler;
+    yarp::os::Port           m_rpcPort;
+    std::string              m_name = "/pozyxLocalizer";
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;
@@ -93,14 +94,13 @@ protected:
     std::vector<yarp::dev::Nav2D::Map2DLocation> m_anchors_pos;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
-    std::string                  m_local_name;
-    std::string                  m_local_name_prefix;
 
     //publish anchors onto map as locations
     bool                         m_publish_anchors_as_map_locations;
     std::string                  m_remote_map;
     yarp::dev::PolyDriver        m_pMap;
     yarp::dev::Nav2D::IMap2D*    m_iMap;
+    std::string                  m_name = "/pozyxLocalizer";
 
 private:
     bool publish_anchors_location();
@@ -108,7 +108,7 @@ private:
     bool open_pozyx();
 
 public:
-    pozyxLocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    pozyxLocalizerThread(double _period, std::string _name, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;

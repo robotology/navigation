@@ -301,10 +301,10 @@ bool GotoThread::threadInit()
     string localName = "/robotGoto";
     string localizationServer_name = "/localizationServer";
     
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("ROBOTGOTO_GENERAL");
     if (general_group.isNull())
     {
-        yCError(GOTO_CTRL) << "Missing GENERAL group!";
+        yCError(GOTO_CTRL) << "Missing ROBOTGOTO_GENERAL group!";
         return false;
     }
     if (general_group.check("name")) localName = general_group.find("name").asString();

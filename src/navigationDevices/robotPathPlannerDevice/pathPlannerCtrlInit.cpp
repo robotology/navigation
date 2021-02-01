@@ -120,10 +120,10 @@ bool PlannerThread::threadInit()
     if (navigation_group.check("enable_try_recovery")) { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt() == 1); }
     else { yCError(PATHPLAN_INIT) << "Missing enable_try_recovery parameter"; return false; }
 
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("PATHPLANNER_GENERAL");
     if (general_group.isNull())
     {
-        yCError(PATHPLAN_INIT) << "Missing GENERAL group!";
+        yCError(PATHPLAN_INIT) << "Missing PATHPLANNER_GENERAL group!";
         return false;
     }
 
