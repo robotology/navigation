@@ -31,7 +31,7 @@
 #include <iomanip>
 #include <string>
 
-#include "baseControl.h"
+#include "controlThread.h"
 
 /**
  * \section baseControl
@@ -44,37 +44,23 @@
  * A detailed description of configuration parameters available for the module is provided in the README.md file.
  */
 
-/////////////////////////////////////////////////////////////////
-int main(int argc, char *argv[])
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::dev;
+using namespace yarp::math;
+
+class CtrlModule: public RFModule
 {
-    //Initialize Yarp network
-    Network yarp;
+protected:
+    ControlThread  *control_thr=nullptr;
+    Port            rpcPort;
+    bool            verbose_print=true;
 
-    if (!yarp.checkNetwork())
-    {
-        std::cerr << "Sorry YARP network does not seem to be available, is the yarp server available?\n";
-        return -1;
-    }
-
-    ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext("navigation");
-    rf.setDefaultConfigFile("baseCtrl.ini");
-    rf.configure(argc,argv);
-
-    if (rf.check("help"))
-    {
-        yInfo("Possible options: ");
-        yInfo("'rate <r>' sets the threads rate (default 20ms).");
-        yInfo("'no_filter' disables command filtering.");
-        yInfo("'no_motors' motor interface will not be opened.");
-        yInfo("'no_start' do not automatically enables pwm.");
-        yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
-        yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
-        return 0;
-    }
-
-    //Starts the control module
-    CtrlModule mod;
-    return mod.runModule(rf);
-}
+public:
+    CtrlModule() {};
+    bool   configure(ResourceFinder &rf) override;
+    bool   respond(const Bottle& command, Bottle& reply);
+    bool   close();
+    double getPeriod();
+    bool   updateModule();
+};
