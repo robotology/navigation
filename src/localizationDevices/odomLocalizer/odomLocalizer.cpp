@@ -73,7 +73,7 @@ bool   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
     Map2DLocation loc;
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     poses.push_back(loc);
 #if 0
     //The following block is used only for development and debug purposes.
@@ -99,7 +99,7 @@ bool   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 
 bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
@@ -111,13 +111,13 @@ bool  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 
 bool   odomLocalizer::setInitialPose(const Map2DLocation& loc)
 {
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 
 //////////////////////////
 
-odomLocalizerThread::odomLocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
+odomLocalizerThread::odomLocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name (_name), m_cfg(_cfg)
 {
     m_last_odometry_data_received = -1;
     m_last_statistics_printed = -1;
@@ -199,10 +199,10 @@ bool odomLocalizerThread::getCurrentLoc(Map2DLocation& loc)
 bool odomLocalizerThread::threadInit()
 {
     //configuration file checking
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("ODOMLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yCError(ODOMLOC) << "Missing GENERAL group!";
+        yCError(ODOMLOC) << "Missing ODOMLOCALIZER_GENERAL group!";
         return false;
     }
 
@@ -235,8 +235,7 @@ bool odomLocalizerThread::threadInit()
     }
 
     //general group
-    m_local_name = "odomLocalizer";
-    if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString();}
+    if (general_group.check("local_name")) { m_name = general_group.find("local_name").asString();}
 
     //odometry group
     if (odometry_group.check("odometry_broadcast_port") == false)
@@ -247,7 +246,7 @@ bool odomLocalizerThread::threadInit()
     m_port_broadcast_odometry_name = odometry_group.find("odometry_broadcast_port").asString();
 
     //opens a YARP port to receive odometry data
-    std::string odom_portname = "/" + m_local_name + "/odometry:i";
+    std::string odom_portname = m_name + "/odometry:i";
     bool b1 = m_port_odometry_input.open(odom_portname.c_str());
     bool b2 = yarp::os::Network::sync(odom_portname.c_str(), false);
     bool b3 = yarp::os::Network::connect(m_port_broadcast_odometry_name.c_str(), odom_portname.c_str());
@@ -280,84 +279,70 @@ void odomLocalizerThread::threadRelease()
 
 bool odomLocalizer::open(yarp::os::Searchable& config)
 {
-    yCDebug(ODOMLOC) << "config configuration: \n" << config.toString().c_str();
+    string cfg_temp = config.toString();
+    Property p; p.fromString(cfg_temp);
 
-    std::string context_name = "odomLocalizer";
-    std::string file_name = "odomLocalizer.ini";
-
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
     yCDebug(ODOMLOC) << "odomLocalizer configuration: \n" << p.toString().c_str();
 
-    thread = new odomLocalizerThread(0.010, p);
-
-    if (!thread->start())
-    {
-        delete thread;
-        thread = NULL;
-        return false;
-    }
-
-    std::string local_name = "odomLocalizer";
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("ODOMLOCALIZER_GENERAL");
     if (general_group.isNull()==false)
     {
-        if (general_group.check("local_name")) { local_name = general_group.find("local_name").asString(); }
+        if (general_group.check("local_name")) { m_name = general_group.find("local_name").asString(); }
     }
-    bool ret = rpcPort.open("/"+local_name+"/rpc");
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yCError(ODOMLOC) << "Unable to open module ports";
         return false;
     }
 
-    rpcPortHandler.setInterface(this);
-    rpcPort.setReader(rpcPortHandler);
+    m_thread = new odomLocalizerThread(0.010, m_name, p);
+
+    if (!m_thread->start())
+    {
+        delete m_thread;
+        m_thread = NULL;
+        return false;
+    }
+
+    m_rpcPortHandler.setInterface(this);
+    m_rpcPort.setReader(m_rpcPortHandler);
 
     return true;
 }
 
 odomLocalizer::odomLocalizer()
 {
-    thread = NULL;
+    m_thread = NULL;
 }
 
 odomLocalizer::~odomLocalizer()
 {
-    if (thread)
+    if (m_thread)
     {
-        delete thread;
-        thread = NULL;
+        delete m_thread;
+        m_thread = NULL;
     }
 }
 
 bool odomLocalizer::close()
 {
-    rpcPort.interrupt();
-    rpcPort.close();
+    m_rpcPort.interrupt();
+    m_rpcPort.close();
     return true;
 }
  
 bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yCWarning(ODOMLOC) << "Covariance matrix is not currently handled by odomLocalizer";
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   odomLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     yCWarning(ODOMLOC) << "Covariance matrix is not currently handled by odomLocalizer";
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 

@@ -781,10 +781,10 @@ bool Follower::transformPointInHeadFrame(std::string frame_src, yarp::sig::Vecto
 
 bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
 {
-    Bottle config_group = rf.findGroup("GENERAL");
+    Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if (config_group.isNull())
     {
-        yWarning() << "Missing GENERAL group! the module uses default value!";
+        yWarning() << "Missing FOLLOWER_GENERAL group! the module uses default value!";
     }
     else
     {

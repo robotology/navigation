@@ -30,7 +30,7 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
     Property        navClientCfg, pLocationServer_cfg;
     string          navServerRoot;
 
-    Bottle config_group = rf.findGroup("GENERAL");
+    Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if(!config_group.isNull())
     {
         if(config_group.check("autonomousNavEnabled"))

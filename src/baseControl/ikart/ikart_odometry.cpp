@@ -116,10 +116,10 @@ bool iKart_Odometry::open(const Property &_options)
     }
 
     //yDebug() <<ctrl_options.toString();
-    Bottle general_group = ctrl_options.findGroup("GENERAL");
+    Bottle general_group = ctrl_options.findGroup("BASECTRL_GENERAL");
     if (general_group.isNull())
     {
-        yError("iKart_Odometry::open Unable to find GENERAL group!");
+        yError("iKart_Odometry::open Unable to find BASECTRL_GENERAL group!");
         return false;
     }
 

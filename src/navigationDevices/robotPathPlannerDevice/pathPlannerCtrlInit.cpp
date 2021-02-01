@@ -120,10 +120,10 @@ bool PlannerThread::threadInit()
     if (navigation_group.check("enable_try_recovery")) { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt() == 1); }
     else { yCError(PATHPLAN_INIT) << "Missing enable_try_recovery parameter"; return false; }
 
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("PATHPLANNER_GENERAL");
     if (general_group.isNull())
     {
-        yCError(PATHPLAN_INIT) << "Missing GENERAL group!";
+        yCError(PATHPLAN_INIT) << "Missing PATHPLANNER_GENERAL group!";
         return false;
     }
 
@@ -271,10 +271,18 @@ bool PlannerThread::threadInit()
         std::string inner_ctex = innerNavigation_group.find("context").asString();
         std::string inner_file = innerNavigation_group.find("from").asString();
 
+        yarp::os::ResourceFinder rf;
+        rf.setDefaultConfigFile(inner_file);
+        rf.setDefaultContext(inner_ctex);
+        rf.configure(0, nullptr);
+
         Property innerNav_options;
-        innerNav_options.put("from", inner_file);
-        innerNav_options.put("context", inner_ctex);
+        string tmp = rf.toString();
+        innerNav_options.fromString(tmp);
         innerNav_options.put("device", m_localNavigatorPlugin_name);
+        yDebug() << "Opening local navigator" << m_localNavigatorPlugin_name << "with params: "<< " --context" << inner_ctex << " --from" << inner_file;
+        yDebug() << "Full configuration:" << innerNav_options.toString();
+
         if (m_pInnerNav.open(innerNav_options) == false)
         {
             yCError(PATHPLAN_INIT) << "Unable to open local Navigator plugin:" << m_localNavigatorPlugin_name;

@@ -46,45 +46,23 @@ robotPathPlannerDev::robotPathPlannerDev()
 bool robotPathPlannerDev::open(yarp::os::Searchable& config)
 {
     //default values
-    m_local_name = "/robotPathPlanner";
+    Property p; p.fromString(config.toString());
 
-#if 1
-    yCDebug(PATHPLAN_DEV) << "config configuration: \n" << config.toString().c_str();
-
-    std::string context_name = " robotPathPlanner";
-    std::string file_name = " robotPathPlanner_cer.ini";
-
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
-    yCDebug(PATHPLAN_DEV) << "robotPathPlannerDev configuration: \n" << p.toString().c_str();
-    
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("PATHPLANNER_GENERAL");
     if (general_group.isNull())
     {
-        yCError(PATHPLAN_DEV) << "Missing GENERAL group!";
+        yCError(PATHPLAN_DEV) << "Missing PATHPLANNER_GENERAL group!";
         return false;
     }
-    if (general_group.check("name")) m_local_name = general_group.find("name").asString();
-    
-#else
-    Property p;
-    p.fromString(config.toString());
-#endif
+    if (general_group.check("name")) m_name = general_group.find("name").asString();
 
+    //Call the parse of `navigation_with_stuck_detection`
     if (initialize_recovery(config) == false) return false;
 
+    //the control thread
     m_plannerThread = new PlannerThread(0.020,p);
 
-    bool ret = m_rpcPort.open(m_local_name+"/rpc");
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yCError(PATHPLAN_DEV) << "Unable to open module ports";

@@ -28,7 +28,6 @@ NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
     m_navigation_status          = navigation_status_idle;
     m_previous_navigation_status = navigation_status_idle;
 
-    m_local_name_prefix = "/navigationGui";
     m_remote_localization = "/localizationServer";
     m_remote_map = "/mapServer";
     m_remote_laser = "/ikart/laser:o";
@@ -70,10 +69,10 @@ bool NavGuiThread::threadInit()
     //read configuration parameters
     std::string debug_rf = m_rf.toString();
 
-    Bottle general_group = m_rf.findGroup("GENERAL");
+    Bottle general_group = m_rf.findGroup("NAVIGATIONGUI_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yError() << "Missing NAVIGATIONGUI_GENERAL group!";
         return false;
     }
 
@@ -128,7 +127,7 @@ bool NavGuiThread::threadInit()
     bool ret = true;
     if (general_group.check("local"))
     {
-        m_local_name_prefix = general_group.find("local").asString();
+        m_name = general_group.find("local").asString();
     }
     if (general_group.check("remote_localization"))
     {
@@ -146,8 +145,8 @@ bool NavGuiThread::threadInit()
     {
         m_remote_laser = laser_group.find("remote_laser").asString();
     }
-    ret &= m_port_map_output.open((m_local_name_prefix + "/map:o").c_str());
-    ret &= m_port_yarpview_target_input.open((m_local_name_prefix + "/yarpviewTarget:i").c_str());
+    ret &= m_port_map_output.open((m_name + "/map:o").c_str());
+    ret &= m_port_yarpview_target_input.open((m_name + "/yarpviewTarget:i").c_str());
     if (ret == false)
     {
         yError() << "Unable to open module ports";
@@ -221,7 +220,7 @@ bool NavGuiThread::threadInit()
     //localization
     Property loc_options;
     loc_options.put("device", "localization2DClient");
-    loc_options.put("local", m_local_name_prefix+"/localizationClient");
+    loc_options.put("local", m_name+"/localizationClient");
     loc_options.put("remote", m_remote_localization);
     if (m_pLoc.open(loc_options) == false)
     {
@@ -238,7 +237,7 @@ bool NavGuiThread::threadInit()
     //open the map interface
     Property map_options;
     map_options.put("device", "map2DClient");
-    map_options.put("local", m_local_name_prefix+"/map2DClient");
+    map_options.put("local", m_name+"/map2DClient");
     map_options.put("remote", m_remote_map);
     if (m_pMap.open(map_options) == false)
     {
@@ -255,7 +254,7 @@ bool NavGuiThread::threadInit()
     //open the navigation interface
     Property nav_options;
     nav_options.put("device", "navigation2DClient");
-    nav_options.put("local", m_local_name_prefix + "/navigation2DClient");
+    nav_options.put("local", m_name + "/navigation2DClient");
     nav_options.put("navigation_server", m_remote_navigation);
     nav_options.put("map_locations_server", m_remote_map);
     nav_options.put("localization_server", m_remote_localization);
@@ -287,7 +286,7 @@ bool NavGuiThread::threadInit()
 
     Property las_options;
     las_options.put("device", "Rangefinder2DClient");
-    las_options.put("local", m_local_name_prefix+"/laser2DClient");
+    las_options.put("local", m_name+"/laser2DClient");
     las_options.put("remote", m_remote_laser);
     if (m_pLas.open(las_options) == false)
     {

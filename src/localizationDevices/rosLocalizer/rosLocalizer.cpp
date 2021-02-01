@@ -122,13 +122,12 @@ bool   rosLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
 
 //////////////////////////
 
-rosLocalizerThread::rosLocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
+rosLocalizerThread::rosLocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name (_name), m_cfg(_cfg)
 {
     m_iMap = 0;
     m_iTf = 0;
     m_rosNode = 0;
     m_ros_enabled = false;
-    m_module_name = "localizationServer";
     m_tf_data_received = -1;
     m_last_statistics_printed = -1;
 
@@ -333,10 +332,10 @@ bool rosLocalizerThread::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLo
 bool rosLocalizerThread::threadInit()
 { 
     //configuration file checking
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("ROSLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yError() << "Missing ROSLOCALIZER_GENERAL group!";
         return false;
     }
 
@@ -364,16 +363,7 @@ bool rosLocalizerThread::threadInit()
     }
     yDebug() << map_group.toString();
 
-    //general group
-    if (general_group.check("module_name") == false)
-    {
-        yError() << "Missing `module_name` in [GENERAL] group";
-        return false;
-    }
-    m_module_name = general_group.find("module_name").asString();
-
-
-    m_rosNode = new yarp::os::Node("/"+m_module_name);
+    m_rosNode = new yarp::os::Node(m_name);
     
     //initialize an occupancy grid publisher (every time the localization is re-initialized, the map is published too)
     if (ros_group.check ("occupancygrid_topic"))
@@ -454,7 +444,7 @@ bool rosLocalizerThread::threadInit()
     //opens a client to receive localization data from transformServer
     Property options;
     options.put("device", "transformClient");
-    options.put("local", "/"+m_module_name + "/TfClient");
+    options.put("local", m_name + "/TfClient");
     options.put("remote", "/transformServer");
     if (m_ptf.open(options) == false)
     {
@@ -473,7 +463,7 @@ bool rosLocalizerThread::threadInit()
         //opens a client to send/received data from mapServer
         Property map_options;
         map_options.put("device", "map2DClient");
-        map_options.put("local", "/" +m_module_name); //This is just a prefix. map2DClient will complete the port name.
+        map_options.put("local", m_name); //This is just a prefix. map2DClient will complete the port name.
         map_options.put("remote", "/mapServer");
         if (m_pmap.open(map_options) == false)
         {
@@ -529,26 +519,19 @@ void rosLocalizerThread::threadRelease()
 
 bool rosLocalizer::open(yarp::os::Searchable& config)
 {
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    string cfg_temp = config.toString();
+    Property p; p.fromString(cfg_temp);
 
-    std::string context_name = "rosLocalizer";
-    std::string file_name = "rosLocalizer.ini";
-
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "rosLocalizer configuration: \n" << p.toString().c_str();
 
+    Bottle general_group = p.findGroup("ROSLOCALIZER_GENERAL");
+    if (general_group.isNull()==false)
+    {
+        if (general_group.check("name")) {m_name = general_group.find("name").asString(); }
+    }
+    
     //create the thread
-    thread = new rosLocalizerThread(0.010, p);
+    thread = new rosLocalizerThread(0.010, m_name, p);
 
     //initial location initialization
     Bottle initial_group = p.findGroup("INITIAL_POS");
@@ -578,14 +561,8 @@ bool rosLocalizer::open(yarp::os::Searchable& config)
         delete thread;
         return false;
     }
-    
-    std::string local_name = "rosLocalizer";
-    Bottle general_group = p.findGroup("GENERAL");
-    if (general_group.isNull()==false)
-    {
-        if (general_group.check("local_name")) { local_name = general_group.find("local_name").asString(); }
-    }
-    bool ret = rpcPort.open("/"+local_name+"/rpc");
+
+    bool ret = rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";

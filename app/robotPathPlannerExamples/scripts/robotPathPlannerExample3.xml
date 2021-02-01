@@ -1,5 +1,5 @@
 <application>
-<name>robotPathPlanner EXAMPLE5 (POZYX)</name>
+<name>robotPathPlanner EXAMPLE3 (AMCL)</name>
 
 <dependencies>
 </dependencies>
@@ -36,7 +36,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device localization2DServer --subdevice pozyxLocalizer --context robotPathPlannerExamples --from pozyxLocalizer.ini</parameters>
+   <parameters>--device localization2DServer --subdevice amclLocalizer --context robotPathPlannerExamples --from amclLocalizer.ini</parameters>
    <node>console</node>
 </module>
 

@@ -55,9 +55,10 @@ class t265Localizer : public yarp::dev::DeviceDriver,
                       public yarp::dev::Nav2D::ILocalization2D
 {
 public:
-    t265LocalizerThread*    thread;
-    t265LocalizerRPCHandler rpcPortHandler;
-    yarp::os::Port          rpcPort;
+    t265LocalizerThread*    m_thread;
+    t265LocalizerRPCHandler m_rpcPortHandler;
+    yarp::os::Port          m_rpcPort;
+    std::string             m_name = "/t265Localizer";
 
 public:
     virtual bool open(yarp::os::Searchable& config) override;
@@ -104,14 +105,13 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_map_to_device_transform;
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
-    std::string                  m_local_name;
-    std::string                  m_local_name_prefix;
 
     yarp::dev::Nav2D::Map2DLocation     m_initial_loc;
     yarp::dev::Nav2D::Map2DLocation     m_initial_device_data;
     yarp::dev::Nav2D::Map2DLocation     m_current_loc;
     yarp::dev::OdometryData             m_current_odom;
     yarp::dev::Nav2D::Map2DLocation     m_current_device_data;
+    std::string                         m_name;
 
     //map server
     std::string                  m_remote_map;
@@ -133,7 +133,7 @@ private:
 
 
 public:
-    t265LocalizerThread(double _period, yarp::os::Searchable& _cfg);
+    t265LocalizerThread(double _period, std::string m_name, yarp::os::Searchable& _cfg);
     ~t265LocalizerThread();
     virtual bool threadInit() override;
     virtual void threadRelease() override;

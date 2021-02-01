@@ -92,7 +92,7 @@ bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc)
 
 //////////////////////////
 
-gazeboLocalizerThread::gazeboLocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
+gazeboLocalizerThread::gazeboLocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name(_name), m_cfg(_cfg)
 {
     m_last_statistics_printed = -1;
 
@@ -100,8 +100,6 @@ gazeboLocalizerThread::gazeboLocalizerThread(double _period, yarp::os::Searchabl
     m_localization_data.x = 0;
     m_localization_data.y = 0;
     m_localization_data.theta = 0;
-
-    m_local_name_prefix = "/gazeboLocalizer";
 }
 
 void gazeboLocalizerThread::run()
@@ -190,10 +188,10 @@ bool gazeboLocalizerThread::open_gazebo()
 bool gazeboLocalizerThread::threadInit()
 {
     //configuration file checking
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("GAZEBOLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yError() << "Missing GAZEBOLOCALIZER_GENERAL group!";
         return false;
     }
 
@@ -211,17 +209,7 @@ bool gazeboLocalizerThread::threadInit()
         return false;
     }
 
-    //general group
-    m_local_name_prefix = "/gazeboLocalizer";
-    if (general_group.check("local_name"))
-    {
-        m_local_name_prefix = general_group.find("local_name").asString();
-    }
-    else
-    {
-        yInfo() << "local_name parameter not set. Using:" << m_local_name_prefix;
-    }
-    m_local_gazebo_port_name = m_local_name_prefix + "/gazebo_rpc";
+    m_local_gazebo_port_name = m_name + "/gazebo_rpc";
 
     if (general_group.check("robot_name")) { m_object_name = general_group.find("robot_name").asString(); }
     else { yError() << "missing robot_name param"; yError() << "I need the name of the object to be localized!"; return false; }
@@ -260,34 +248,20 @@ void gazeboLocalizerThread::threadRelease()
 
 bool gazeboLocalizer::open(yarp::os::Searchable& config)
 {
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    string cfg_temp = config.toString();
+    Property p; p.fromString(cfg_temp);
 
-    std::string context_name = "gazeboLocalizer";
-    std::string file_name = "gazeboLocalizer.ini";
-
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "gazeboLocalizer configuration: \n" << p.toString().c_str();
 
-    std::string local_name = "gazeboLocalizer";
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("GAZEBOLOCALIZER_GENERAL");
     double period = 0.010;
     if (general_group.isNull() == false)
     {
-        if (general_group.check("local_name")) { local_name = general_group.find("local_name").asString(); }
+        if (general_group.check("name")) { m_name = general_group.find("local_name").asString(); }
         if (general_group.check("period")) { period = general_group.find("period").asDouble(); }
     }
 
-    thread = new gazeboLocalizerThread(period, p);
+    thread = new gazeboLocalizerThread(period, m_name, p);
 
     if (!thread->start())
     {
@@ -296,7 +270,7 @@ bool gazeboLocalizer::open(yarp::os::Searchable& config)
         return false;
     }
 
-    bool ret = rpcPort.open("/"+local_name+"/rpc");
+    bool ret = rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";

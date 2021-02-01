@@ -36,7 +36,7 @@
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /robot_2wheels/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_client</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /robot_2wheels/laser:o --test use_mapfile --map_context mapsExample --map_file map_test.map --localization_client</parameters>
    <node>console</node>
 </module>
 

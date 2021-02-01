@@ -56,12 +56,12 @@ bool CER_MotorControl::open(const Property &_options)
         return false;
     }
 
-    if (!ctrl_options.check("GENERAL"))
+    if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [GENERAL] section";
+        yError() << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
-    yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
+    yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
 
     //get robot geometry
     Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");

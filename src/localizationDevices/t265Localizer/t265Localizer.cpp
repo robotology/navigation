@@ -61,40 +61,40 @@ bool   t265Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocat
 {
     poses.clear();
     yarp::dev::Nav2D::Map2DLocation loc;
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     poses.push_back(loc);
     return true;
 }
 
 bool  t265Localizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    odom = thread->getOdometry();
+    odom = m_thread->getOdometry();
     return true;
 }
 
 bool   t265Localizer::getCurrentPosition(Map2DLocation& loc)
 {
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   t265Localizer::setInitialPose(const Map2DLocation& loc)
 {
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 
 bool   t265Localizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yWarning() << "Covariance matrix is not currently handled by t265Localizer";
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   t265Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     yWarning() << "Covariance matrix is not currently handled by t265Localizer";
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 
@@ -121,7 +121,7 @@ odometry_handler::odometry_handler(const rs2::device& dev) : m_rs_odometry_handl
 
 void odometry_handler::onRead(yarp::dev::OdometryData& b)
 {
-    //the following lines perform a reference frame tranformation
+    //the following lines perform a reference frame transformation
     m_linear_velocity.x = b.odom_y;
     m_linear_velocity.y = 0;
     m_linear_velocity.z = b.odom_x;
@@ -131,14 +131,13 @@ void odometry_handler::onRead(yarp::dev::OdometryData& b)
 }
 
 //////////////////////////
-t265LocalizerThread::t265LocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
+t265LocalizerThread::t265LocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name (_name), m_cfg(_cfg)
 {
     m_odometry_handler = nullptr;
     m_last_statistics_printed = -1;
 
     m_iMap = 0;
     m_remote_map = "/mapServer";
-    m_local_name = "/t265Localizer";
 
     m_current_loc.map_id = m_current_device_data.map_id = m_initial_device_data.map_id = m_initial_loc.map_id = "unknown";
     m_current_loc.x = m_current_device_data.x = m_initial_device_data.x = m_initial_loc.x = 0;
@@ -314,10 +313,10 @@ bool t265LocalizerThread::open_device()
 bool t265LocalizerThread::threadInit()
 {
     //configuration file checking
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("T265LOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yError() << "Missing T265LOCALIZER_GENERAL group!";
         return false;
     }
 
@@ -349,12 +348,6 @@ bool t265LocalizerThread::threadInit()
         return false;
     }
 
-
-
-
-    //general group
-    if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString(); }
-
     //initialize the device relocation system on the robot
     movable_localization_device::init(m_cfg);
 
@@ -377,15 +370,6 @@ bool t265LocalizerThread::threadInit()
     else { yError() << "missing initial_map param"; return false; }
     this->initializeLocalization(tmp_loc);
 
-    if (general_group.check("local_name"))
-    {
-        m_local_name_prefix = general_group.find("local_name").asString();
-    }
-    else
-    {
-        yInfo() << "local_name parameter not set. Using:" << m_local_name_prefix;
-    }
-
     if (general_group.check("remote_mapServer"))
     {
         m_remote_map = general_group.find("remote_mapServer").asString();
@@ -401,7 +385,7 @@ bool t265LocalizerThread::threadInit()
         //open the map interface
         Property map_options;
         map_options.put("device", "map2DClient");
-        map_options.put("local", m_local_name_prefix + "/map2DClient");
+        map_options.put("local", m_name + "/map2DClient");
         map_options.put("remote", m_remote_map);
         if (m_pMap.open(map_options) == false)
         {
@@ -421,7 +405,7 @@ bool t265LocalizerThread::threadInit()
     {
         m_odometry_handler = new odometry_handler(m_realsense_pipe.get_active_profile().get_device());
         m_odometry_handler->useCallback();  // input should go to onRead() callback
-        string odometry_port_name = m_local_name + "/odometry:i";
+        string odometry_port_name = m_name + "/odometry:i";
         if (m_odometry_handler->open(odometry_port_name) == false)
         {
             yError() << "Unable to open odometry port" << odometry_port_name;
@@ -520,52 +504,51 @@ bool t265Localizer::open(yarp::os::Searchable& config)
     if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "t265Localizer configuration: \n" << p.toString().c_str();
 
-    thread = new t265LocalizerThread(0.010, p);
-
-    if (!thread->start())
-    {
-        delete thread;
-        thread = NULL;
-        return false;
-    }
-
-    std::string local_name = "t265Localizer";
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("T265LOCALIZER_GENERAL");
     if (general_group.isNull()==false)
     {
-        if (general_group.check("local_name")) { local_name = general_group.find("local_name").asString(); }
+        if (general_group.check("name")) { m_name = general_group.find("name").asString(); }
     }
-    bool ret = rpcPort.open("/"+local_name+"/rpc");
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";
         return false;
     }
 
-    rpcPortHandler.setInterface(this);
-    rpcPort.setReader(rpcPortHandler);
+    m_thread = new t265LocalizerThread(0.010, m_name, p);
+
+    if (!m_thread->start())
+    {
+        delete m_thread;
+        m_thread = NULL;
+        return false;
+    }
+
+    m_rpcPortHandler.setInterface(this);
+    m_rpcPort.setReader(m_rpcPortHandler);
 
     return true;
 }
 
 t265Localizer::t265Localizer()
 {
-    thread = NULL;
+    m_thread = NULL;
 }
 
 t265Localizer::~t265Localizer()
 {
-    if (thread)
+    if (m_thread)
     {
-        delete thread;
-        thread = NULL;
+        delete m_thread;
+        m_thread = NULL;
     }
 }
 
 bool t265Localizer::close()
 {
-    rpcPort.interrupt();
-    rpcPort.close();
+    m_rpcPort.interrupt();
+    m_rpcPort.close();
     return true;
 }
  

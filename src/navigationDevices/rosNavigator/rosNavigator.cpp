@@ -48,7 +48,6 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_rosTopicName_status = "/move_base/status";
     m_rosTopicName_result = "/move_base/result";
     m_navigation_status = navigation_status_idle;
-    m_local_name_prefix = "/rosNavigator";
     m_remote_localization = "/localizationServer";
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
@@ -153,7 +152,7 @@ bool rosNavigator::threadInit()
     //localization
     Property loc_options;
     loc_options.put("device", "localization2DClient");
-    loc_options.put("local", m_local_name_prefix + "/localizationClient");
+    loc_options.put("local", m_name + "/localizationClient");
     loc_options.put("remote", m_remote_localization);
     if (m_pLoc.open(loc_options) == false)
     {

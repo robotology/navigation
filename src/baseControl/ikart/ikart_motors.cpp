@@ -81,12 +81,12 @@ bool iKart_MotorControl::open(const Property &_options)
     geom_L = geometry_group.find("geom_L").asDouble();
     g_angle = geometry_group.find("g_angle").asDouble();
 
-    if (!ctrl_options.check("GENERAL"))
+    if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [GENERAL] section";
+        yError() << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
-    yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
+    yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
 
     localName = ctrl_options.find("local").asString();
 

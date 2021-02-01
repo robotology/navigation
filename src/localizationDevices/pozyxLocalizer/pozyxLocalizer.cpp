@@ -69,14 +69,14 @@ bool   pozyxLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
     Map2DLocation loc;
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     poses.push_back(loc);
     return true;
 }
 
 bool   pozyxLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
@@ -88,13 +88,13 @@ bool  pozyxLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 
 bool   pozyxLocalizer::setInitialPose(const Map2DLocation& loc)
 {
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 
 //////////////////////////
 
-pozyxLocalizerThread::pozyxLocalizerThread(double _period, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_cfg(_cfg)
+pozyxLocalizerThread::pozyxLocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name(_name), m_cfg(_cfg)
 {
     m_last_statistics_printed = -1;
 
@@ -106,7 +106,6 @@ pozyxLocalizerThread::pozyxLocalizerThread(double _period, yarp::os::Searchable&
     m_iMap = 0;
     m_publish_anchors_as_map_locations = false;
     m_remote_map = "/mapServer";
-    m_local_name = "/pozyxLocalizer";
 }
 
 void pozyxLocalizerThread::run()
@@ -241,10 +240,10 @@ bool pozyxLocalizerThread::publish_anchors_location()
 bool pozyxLocalizerThread::threadInit()
 {
     //configuration file checking
-    Bottle general_group = m_cfg.findGroup("GENERAL");
+    Bottle general_group = m_cfg.findGroup("POZYXLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GENERAL group!";
+        yError() << "Missing POZYXLOCALIZER_GENERAL group!";
         return false;
     }
 
@@ -270,8 +269,7 @@ bool pozyxLocalizerThread::threadInit()
     }
 
     //general group
-    m_local_name = "pozyxLocalizer";
-    if (general_group.check("local_name")) { m_local_name = general_group.find("local_name").asString();}
+    if (general_group.check("name")) { m_name = general_group.find("name").asString();}
 
     //opens the pozyx device communication
     //@@@@ TO BE IMPLEMENTED
@@ -304,11 +302,11 @@ bool pozyxLocalizerThread::threadInit()
 
     if (general_group.check("local_name"))
     {
-        m_local_name_prefix = general_group.find("local_name").asString();
+        m_name = general_group.find("name").asString();
     }
     else
     {
-        yInfo() << "local_name parameter not set. Using:" << m_local_name_prefix;
+        yInfo() << "local_name parameter not set. Using:" << m_name;
     }
 
     if (general_group.check("remote_mapServer"))
@@ -326,7 +324,7 @@ bool pozyxLocalizerThread::threadInit()
         //open the map interface
         Property map_options;
         map_options.put("device", "map2DClient");
-        map_options.put("local", m_local_name_prefix + "/map2DClient");
+        map_options.put("local", m_name + "/map2DClient");
         map_options.put("remote", m_remote_map);
         if (m_pMap.open(map_options) == false)
         {
@@ -354,70 +352,56 @@ void pozyxLocalizerThread::threadRelease()
 
 bool pozyxLocalizer::open(yarp::os::Searchable& config)
 {
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    string cfg_temp = config.toString();
+    Property p; p.fromString(cfg_temp);
 
-    std::string context_name = "pozyxLocalizer";
-    std::string file_name = "pozyxLocalizer.ini";
-
-    if (config.check("context"))   context_name = config.find("context").asString();
-    if (config.check("from")) file_name = config.find("from").asString();
-
-    yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
-    rf.setDefaultContext(context_name.c_str());
-    rf.setDefaultConfigFile(file_name.c_str());
-
-    Property p;
-    std::string configFile = rf.findFile("from");
-    if (configFile != "") p.fromConfigFile(configFile.c_str());
     yDebug() << "pozyxLocalizer configuration: \n" << p.toString().c_str();
 
-    thread = new pozyxLocalizerThread(0.010, p);
-
-    if (!thread->start())
-    {
-        delete thread;
-        thread = NULL;
-        return false;
-    }
-
-    std::string local_name = "pozyxLocalizer";
-    Bottle general_group = p.findGroup("GENERAL");
+    Bottle general_group = p.findGroup("POZYXLOCALIZER_GENERAL");
     if (general_group.isNull()==false)
     {
-        if (general_group.check("local_name")) { local_name = general_group.find("local_name").asString(); }
+        if (general_group.check("name")) { m_name = general_group.find("name").asString(); }
     }
-    bool ret = rpcPort.open("/"+local_name+"/rpc");
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
         yError() << "Unable to open module ports";
         return false;
     }
 
-    rpcPortHandler.setInterface(this);
-    rpcPort.setReader(rpcPortHandler);
+    m_thread = new pozyxLocalizerThread(0.010, m_name, p);
+
+    if (!m_thread->start())
+    {
+        delete m_thread;
+        m_thread = NULL;
+        return false;
+    }
+
+    m_rpcPortHandler.setInterface(this);
+    m_rpcPort.setReader(m_rpcPortHandler);
 
     return true;
 }
 
 pozyxLocalizer::pozyxLocalizer()
 {
-    thread = NULL;
+    m_thread = NULL;
 }
 
 pozyxLocalizer::~pozyxLocalizer()
 {
-    if (thread)
+    if (m_thread)
     {
-        delete thread;
-        thread = NULL;
+        delete m_thread;
+        m_thread = NULL;
     }
 }
 
 bool pozyxLocalizer::close()
 {
-    rpcPort.interrupt();
-    rpcPort.close();
+    m_rpcPort.interrupt();
+    m_rpcPort.close();
     return true;
 }
  
@@ -425,14 +409,14 @@ bool pozyxLocalizer::close()
 bool pozyxLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yWarning() << "Covariance matrix is not currently handled by pozyxLocalizer";
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool pozyxLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     yWarning() << "Covariance matrix is not currently handled by pozyxLocalizer";
-    thread->initializeLocalization(loc);
+    m_thread->initializeLocalization(loc);
     return true;
 }
 

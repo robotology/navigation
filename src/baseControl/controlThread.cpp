@@ -407,12 +407,12 @@ control_type_enum ControlThread::get_control_type ()
 
 bool ControlThread::threadInit()
 {
-    if (!ctrl_options.check("GENERAL"))
+    if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [GENERAL] section";
+        yError() << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
-    yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
+    yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
     if (general_options.check("control_mode") == false) { yError() << "Missing 'control_mode' param"; return false; }
     if (general_options.check("ratio_limiter_enabled") == false) { yError() << "Missing 'ratio_limiter_enabled' param"; return false; }
     if (general_options.check("input_filter_enabled") == false) { yError() << "Missing 'input_filter_enabled' param"; return false; }
