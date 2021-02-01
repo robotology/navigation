@@ -1,0 +1,13 @@
+<application>
+<name>odomLocalizer_test</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>---device localization2DServer --subdevice odomLocalizer --context localizationServer --from odomLocalizer.ini</parameters>
+   <node>console</node>
+</module>
+
+</application>
