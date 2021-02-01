@@ -46,7 +46,8 @@ void robotGotoRPCHandler::setInterface(robotGotoDev* iface)
 
 bool robotGotoDev :: open(yarp::os::Searchable& config)
 {
-    //default values
+    string tmp_gt= config.toString();
+    yDebug() << "RobotGoto configuration:" << tmp_gt;
     Property p; p.fromString(config.toString());
 
     Bottle general_group = p.findGroup("ROBOTGOTO_GENERAL");

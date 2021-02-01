@@ -271,10 +271,18 @@ bool PlannerThread::threadInit()
         std::string inner_ctex = innerNavigation_group.find("context").asString();
         std::string inner_file = innerNavigation_group.find("from").asString();
 
+        yarp::os::ResourceFinder rf;
+        rf.setDefaultConfigFile(inner_file);
+        rf.setDefaultContext(inner_ctex);
+        rf.configure(0, nullptr);
+
         Property innerNav_options;
-        innerNav_options.put("from", inner_file);
-        innerNav_options.put("context", inner_ctex);
+        string tmp = rf.toString();
+        innerNav_options.fromString(tmp);
         innerNav_options.put("device", m_localNavigatorPlugin_name);
+        yDebug() << "Opening local navigator" << m_localNavigatorPlugin_name << "with params: "<< " --context" << inner_ctex << " --from" << inner_file;
+        yDebug() << "Full configuration:" << innerNav_options.toString();
+
         if (m_pInnerNav.open(innerNav_options) == false)
         {
             yCError(PATHPLAN_INIT) << "Unable to open local Navigator plugin:" << m_localNavigatorPlugin_name;
