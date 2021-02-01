@@ -99,9 +99,9 @@ bool MotorControl::open(const Property &_options)
         return false;
     }
 
-    if (ctrl_options.check("GENERAL"))
+    if (ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yarp::os::Bottle g_group = ctrl_options.findGroup("GENERAL");
+        yarp::os::Bottle g_group = ctrl_options.findGroup("BASECTRL_GENERAL");
         enable_ROS = (g_group.find("use_ROS").asBool() == true);
         if (enable_ROS) yInfo() << "ROS enabled";
         else
@@ -109,7 +109,7 @@ bool MotorControl::open(const Property &_options)
     }
     else
     {
-        yError() << "Missing [GENERAL] section";
+        yError() << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
 
