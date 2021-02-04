@@ -6,7 +6,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 yarp_prepare_plugin(joy2vel TYPE Joy2vel
                                  INCLUDE joystick2velocityCommand.h
-                                 CATEGORY portmonitor)
+                                 CATEGORY portmonitor
+                                 INTERNAL)
 
 yarp_add_plugin(portmonitor_joy2vel
               joystick2velocityCommand.cpp

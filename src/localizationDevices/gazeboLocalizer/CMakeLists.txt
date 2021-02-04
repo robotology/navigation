@@ -6,7 +6,8 @@
 yarp_prepare_plugin(gazeboLocalizer
                     CATEGORY device
                     TYPE gazeboLocalizer
-                    INCLUDE gazeboLocalizer.h)
+                    INCLUDE gazeboLocalizer.h
+                    INTERNAL)
 
 
                                             
