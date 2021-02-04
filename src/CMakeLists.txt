@@ -17,6 +17,7 @@ yarp_begin_plugin_library(navmod OPTION NAV_COMPILE_DEVICE_PLUGINS
                                  DOC "devices plugins")
 add_subdirectory(localizationDevices)
 add_subdirectory(navigationDevices)
+add_subdirectory(portmonitors)
 yarp_end_plugin_library(navmod)
 
 add_subdirectory(map2Gazebo)
@@ -24,7 +25,6 @@ add_subdirectory(map2Gazebo)
 
 add_subdirectory(follower)
 
-add_subdirectory(portmonitors)
 add_subdirectory(tests)
 add_subdirectory(tutorials)
 add_subdirectory(freeFloorViewer)
