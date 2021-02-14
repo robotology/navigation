@@ -122,6 +122,8 @@ public:
     MotorControl* const  get_motor_handler()    { return m_motor_handler;}
     Input* const         get_input_handler()    { return m_input_handler; }
     void                 enable_debug(bool b);
+    void                 set_max_ang_vel(double val) { max_angular_vel = val;}
+    void                 set_max_lin_vel(double val) { max_linear_vel = val; }
 
 public:
     /**

@@ -201,18 +201,8 @@ bool Input::open(Property &_options)
     yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
     yarp::os::Bottle& joystick_options = ctrl_options.findGroup("JOYSTICK");
 
-    if (!general_options.check("max_linear_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_linear_vel parameter, section BASECTRL_GENERAL");
-        return false;
-    }
-    if (!general_options.check("max_angular_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_angular_vel parameter, section BASECTRL_GENERAL");
-        return false;
-    }
+    //ROS section
     useRos = general_options.check("use_ROS", Value(false), "enable ROS communication").asBool();
-
     if (useRos)
     {
         if (ctrl_options.check("ROS_INPUT"))

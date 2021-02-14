@@ -222,10 +222,22 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
         reply.addString("reset_odometry");
         reply.addString("set_prefilter 0/1/2/4/8");
         reply.addString("set_motors_filter 0/1/2/4/8");
+        reply.addString("set_max_lin_vel <value>");
+        reply.addString("set_max_ang_vel <value>");
         reply.addString("change_pid <identif> <kp> <ki> <kd>");
         reply.addString("change_ctrl_mode <type_string>");
         reply.addString("set_debug_mode 0/1");
         return true;
+    }
+    else if (command.get(0).asString() == "set_max_lin_vel")
+    {
+        double val =command.get(1).asFloat64();
+        control_thr->set_max_lin_vel(val);
+    }
+    else if (command.get(0).asString() == "set_max_ang_vel")
+    {
+        double val = command.get(1).asFloat64();
+        control_thr->set_max_ang_vel(val);
     }
     else if (command.get(0).asString()=="set_debug_mode")
     {
