@@ -92,11 +92,13 @@ private:
     bool                 ratio_limiter_enabled;
     int                  input_filter_enabled;
     bool                 debug_enabled;
-    double               max_angular_vel;
-    double               max_linear_vel;
-    double               max_angular_acc;
-    double               max_linear_acc;
-    
+    double               max_angular_vel=0;
+    double               max_linear_vel=0;
+    double               max_angular_acc_pos = 0;
+    double               max_angular_acc_neg = 0;
+    double               max_linear_acc_pos = 0;
+    double               max_linear_acc_neg = 0;
+
     //ROS node
     yarp::os::Node*     rosNode;
 

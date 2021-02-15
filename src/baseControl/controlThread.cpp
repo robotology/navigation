@@ -86,10 +86,6 @@ ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property opti
     angular_speed_pid        = 0;
     linear_ol_pid            = 0;
     angular_ol_pid           = 0;
-    max_linear_vel           = 0;
-    max_angular_vel          = 0;
-    max_angular_acc          = 0;
-    max_linear_acc           = 0;
     remoteName               = ctrl_options.find("remote").asString();
     localName                = ctrl_options.find("local").asString();
     m_odometry_handler       = 0;
@@ -132,7 +128,7 @@ void ControlThread::apply_ratio_limiter (double max, double& linear_speed, doubl
 void ControlThread::apply_acceleration_limiter(double& linear_speed, double& angular_speed, double& desired_direction)
 {
     double period = this->getPeriod();
-    angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc*period);
+    angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc_pos*period, max_angular_acc_neg * period);
 #if 0
     linear_speed = control_filters::ratelim_filter_0(linear_speed, 8, max_linear_acc*period);
     //the following line is not numerically correct because of max_linear_acc, but it prevents jerky motions
@@ -140,8 +136,8 @@ void ControlThread::apply_acceleration_limiter(double& linear_speed, double& ang
 #else
     double xcomp = linear_speed * sin(desired_direction*DEG2RAD);
     double ycomp = linear_speed * cos(desired_direction*DEG2RAD);
-    xcomp = control_filters::ratelim_filter_0(xcomp, 8, max_linear_acc*period);
-    ycomp = control_filters::ratelim_filter_0(ycomp, 9, max_linear_acc*period);
+    xcomp = control_filters::ratelim_filter_0(xcomp, 8, max_linear_acc_pos*period, max_linear_acc_neg * period);
+    ycomp = control_filters::ratelim_filter_0(ycomp, 9, max_linear_acc_pos*period, max_linear_acc_neg * period);
     linear_speed = sqrt(xcomp * xcomp+ ycomp * ycomp);
     desired_direction = atan2(xcomp, ycomp) * RAD2DEG;
 #endif
@@ -432,20 +428,46 @@ bool ControlThread::threadInit()
     lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
     robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
     useRos                = general_options.check("use_ROS",              Value(false),  "enable ROS communications").asBool();
+
+    //max velocities
+    {
+        double tmp = 0;
+        tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
+        if (tmp >= 0) { max_angular_vel = tmp; }
+        else { yError() << "Invalid max_angular_vel"; return false; }
+
+        tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
+        if (tmp >= 0) { max_linear_vel = tmp; }
+        else { yError() << "Invalid max_linear_vel"; return false; }
+    }
+
+    //max angular/linear acc
+    {
+        double tmp=0;
+        tmp = (general_options.check("max_angular_acc", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+        if (tmp >= 0) { max_angular_acc_pos = max_angular_acc_neg = tmp; }
+        else { yError() << "Invalid max_angular_acc"; return false; }
+
+        tmp = (general_options.check("max_linear_acc", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+        if (tmp >= 0) { max_linear_acc_pos = max_linear_acc_neg = tmp; }
+        else { yError() << "Invalid max_linear_acc"; return false; }
+    }
+
+    //max angular/linear acc pos/neg
+    {
+        double tmp = 0;
+        tmp = (general_options.check("max_angular_acc_pos", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+        if (tmp >= 0) { max_angular_acc_pos = tmp; }
     
-    double tmp = 0;
-    tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
-    if (tmp >= 0) { max_angular_vel = tmp; }
-    else { yError() << "Invalid max_angular_vel"; return false; }
-    tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
-    if (tmp >= 0) { max_linear_vel = tmp; }
-    else { yError() << "Invalid max_linear_vel"; return false; }
-    tmp = (general_options.check("max_angular_acc", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
-    if (tmp >= 0) { max_angular_acc = tmp; }
-    else { yError() << "Invalid max_angular_acc"; return false; }
-    tmp = (general_options.check("max_linear_acc", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
-    if (tmp >= 0) { max_linear_acc = tmp; }
-    else { yError() << "Invalid max_linear_acc"; return false; }
+        tmp = (general_options.check("max_linear_acc_pos", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+        if (tmp >= 0) { max_linear_acc_pos = tmp; }
+    
+        tmp = (general_options.check("max_angular_acc_neg", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+        if (tmp >= 0) { max_angular_acc_neg = tmp; }
+    
+        tmp = (general_options.check("max_linear_acc_neg", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+        if (tmp >= 0) { max_linear_acc_neg = tmp; }
+    }
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");

@@ -78,12 +78,20 @@ double control_filters::lp_filter_0_5Hz(double input, int i)
     return yv[1][i];
 }
 
-double control_filters::ratelim_filter_0(double input, int i, double rate)
+double control_filters::ratelim_filter_0(double input, int i, double rate_pos, double rate_neg)
 {
     //This is a rate limiter filter. 
     static double prev[10];
-    if      (input>prev[i]+rate) prev[i]=prev[i]+rate;
-    else if (input<prev[i]-rate) prev[i]=prev[i]-rate;
-    else     prev[i]=input;
-    return prev[i];
+    if (input > 0)
+    {
+        if (fabs(input - prev[i]) > rate_pos) prev[i] = prev[i] + rate_pos;
+        else     prev[i] = input;
+        return prev[i];
+    }
+    else
+    {
+        if (fabs(input - prev[i]) > rate_neg) prev[i] = prev[i] - rate_neg;
+        else     prev[i] = input;
+        return prev[i];
+    }
 }
