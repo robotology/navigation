@@ -98,9 +98,11 @@ private:
     double              joy_angular_speed[2];
     double              joy_desired_direction[2];
     double              joy_pwm_gain[2];
+public:
     double              linear_vel_at_100_joy;
     double              angular_vel_at_100_joy;
 
+private:
     //standard input via YARP port
     double              cmd_linear_speed;
     double              cmd_angular_speed;

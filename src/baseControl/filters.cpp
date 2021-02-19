@@ -17,6 +17,8 @@
 */
 
 #include "filters.h"
+#include "yarp/os/Log.h"
+#include "yarp/os/LogStream.h"
 
 double control_filters::lp_filter_8Hz(double input, int i)
 {
@@ -82,16 +84,72 @@ double control_filters::ratelim_filter_0(double input, int i, double rate_pos, d
 {
     //This is a rate limiter filter. 
     static double prev[10];
-    if (input > 0)
+
+//    if (i==9) {yDebug() << "9>>>" << input << rate_pos << rate_neg << prev[9];} //print lin vel along x axis
+    
+    if (input*prev[i]>=0)
     {
-        if (fabs(input - prev[i]) > rate_pos) prev[i] = prev[i] + rate_pos;
-        else     prev[i] = input;
-        return prev[i];
+        if (input > 0)
+        {
+            if (abs(input) > abs(prev[i]))
+            {
+                if (abs(input - prev[i]) > rate_pos) prev[i] = prev[i] + rate_pos;
+                else     prev[i] = input;
+                return prev[i];
+            }
+            else
+            {
+                if (abs(input - prev[i]) > rate_neg) prev[i] = prev[i] - rate_neg;
+                else     prev[i] = input;
+                return prev[i];
+            }
+        }
+        if (input < 0)
+        {
+        
+            if (abs(input) > abs(prev[i]))
+            {
+                if (abs(input - prev[i]) > rate_pos) prev[i] = prev[i] - rate_pos;
+                else     prev[i] = input;
+                return prev[i];
+            }
+            else
+            {
+                if (abs(input - prev[i]) > rate_neg) prev[i] = prev[i] + rate_neg;
+                else     prev[i] = input;
+                return prev[i];
+            }
+        }
+        if (input == 0)
+        {
+            if (prev[i]>0)
+            {
+                if (abs(input - prev[i]) > rate_neg) prev[i] = prev[i] - rate_neg;
+                else     prev[i] = input;
+                return prev[i];
+            }
+            else
+            {
+                if (abs(input - prev[i]) > rate_neg) prev[i] = prev[i] + rate_neg;
+                else     prev[i] = input;
+                return prev[i];
+            }
+        }
     }
     else
     {
-        if (fabs(input - prev[i]) > rate_neg) prev[i] = prev[i] - rate_neg;
-        else     prev[i] = input;
-        return prev[i];
+        if (input > 0)
+        {
+
+            if (abs(input - prev[i]) > rate_pos) prev[i] = prev[i] + rate_pos;
+            else     prev[i] = input;
+            return prev[i];
+        }
+        else
+        {
+            if (abs(input - prev[i]) > rate_neg) prev[i] = prev[i] - rate_neg;
+            else     prev[i] = input;
+            return prev[i];
+        }
     }
 }

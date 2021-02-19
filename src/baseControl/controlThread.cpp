@@ -416,8 +416,6 @@ bool ControlThread::threadInit()
     if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
     if (general_options.check("max_linear_vel") == false)  { yError() << "Missing 'max_linear_vel' param";  return false; }
     if (general_options.check("max_angular_vel") == false)   { yError() << "Missing 'max_angular_vel' param";   return false; }
-    if (general_options.check("max_linear_acc") == false)  { yError() << "Missing 'max_linear_acc' param";  return false; }
-    if (general_options.check("max_angular_acc") == false)   { yError() << "Missing 'max_angular_acc' param";   return false; }
 
     string control_type, robot_type_s;
     bool useRos;
@@ -434,41 +432,54 @@ bool ControlThread::threadInit()
         double tmp = 0;
         tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
         if (tmp >= 0) { max_angular_vel = tmp; }
-        else { yError() << "Invalid max_angular_vel"; return false; }
-
+        
         tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
         if (tmp >= 0) { max_linear_vel = tmp; }
-        else { yError() << "Invalid max_linear_vel"; return false; }
     }
 
     //max angular/linear acc
     {
         double tmp=0;
         tmp = (general_options.check("max_angular_acc", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
-        if (tmp >= 0) { max_angular_acc_pos = max_angular_acc_neg = tmp; }
-        else { yError() << "Invalid max_angular_acc"; return false; }
+        if (tmp > 0) { max_angular_acc_pos = max_angular_acc_neg = tmp; }
 
         tmp = (general_options.check("max_linear_acc", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
-        if (tmp >= 0) { max_linear_acc_pos = max_linear_acc_neg = tmp; }
-        else { yError() << "Invalid max_linear_acc"; return false; }
+        if (tmp > 0) { max_linear_acc_pos = max_linear_acc_neg = tmp; }
     }
 
     //max angular/linear acc pos/neg
     {
         double tmp = 0;
         tmp = (general_options.check("max_angular_acc_pos", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
-        if (tmp >= 0) { max_angular_acc_pos = tmp; }
+        if (tmp > 0) { max_angular_acc_pos = tmp; }
     
         tmp = (general_options.check("max_linear_acc_pos", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
-        if (tmp >= 0) { max_linear_acc_pos = tmp; }
+        if (tmp > 0) { max_linear_acc_pos = tmp; }
     
         tmp = (general_options.check("max_angular_acc_neg", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
-        if (tmp >= 0) { max_angular_acc_neg = tmp; }
+        if (tmp > 0) { max_angular_acc_neg = tmp; }
     
         tmp = (general_options.check("max_linear_acc_neg", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
-        if (tmp >= 0) { max_linear_acc_neg = tmp; }
+        if (tmp > 0) { max_linear_acc_neg = tmp; }
     }
 
+    if (max_angular_acc_pos<=0)
+    {
+       yError() << "Invalid max_angular_acc_pos"; return false; 
+    }
+    if (max_angular_acc_neg<=0)
+    {
+       yError() << "Invalid max_angular_acc_neg"; return false; 
+    }
+    if (max_linear_acc_pos<=0)
+    {
+       yError() << "Invalid max_linear_acc_pos"; return false; 
+    }
+    if (max_linear_acc_neg<=0)
+    {
+       yError() << "Invalid max_linear_acc_neg"; return false; 
+    }
+    
     // open the control board driver
     yInfo("Opening the motors interface...\n");
 
