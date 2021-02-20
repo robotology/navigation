@@ -21,6 +21,8 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
+YARP_LOG_COMPONENT(MOTOR_CTRL, "navigation.baseControl.MotorControl")
+
 void MotorControl::close()
 {
     if (enable_ROS && enable_ROS_OUTPUT_GROUP)
@@ -95,7 +97,7 @@ bool MotorControl::open(const Property &_options)
     ok = ok & control_board_driver->view(icmd);
     if(!ok)
     {
-        yError("One or more devices has not been viewed, returning\n");
+        yCError(MOTOR_CTRL,"One or more devices has not been viewed, returning\n");
         return false;
     }
 
@@ -103,38 +105,38 @@ bool MotorControl::open(const Property &_options)
     {
         yarp::os::Bottle g_group = ctrl_options.findGroup("BASECTRL_GENERAL");
         enable_ROS = (g_group.find("use_ROS").asBool() == true);
-        if (enable_ROS) yInfo() << "ROS enabled";
+        if (enable_ROS) yCInfo(MOTOR_CTRL) << "ROS enabled";
         else
-            yInfo() << "ROS not enabled";
+            yCInfo(MOTOR_CTRL) << "ROS not enabled";
     }
     else
     {
-        yError() << "Missing [BASECTRL_GENERAL] section";
+        yCError(MOTOR_CTRL) << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
 
     if (!ctrl_options.check("MOTORS"))
     {
-        yError() << "Missing [MOTORS] section";
+        yCError(MOTOR_CTRL) << "Missing [MOTORS] section";
         return false;
     }
     yarp::os::Bottle& motors_options = ctrl_options.findGroup("MOTORS");
 
     if (motors_options.check("motors_filter_enabled") == false)
     {
-        yError() << "Missing param motors_filter_enabled";
+        yCError(MOTOR_CTRL) << "Missing param motors_filter_enabled";
         return false;
     }
     
     if (motors_options.check("max_motor_pwm") == false)
     {
-        yError() << "Missing param max_motor_pwm";
+        yCError(MOTOR_CTRL) << "Missing param max_motor_pwm";
         return false;
     }
 
     if (motors_options.check("max_motor_vel") == false)
     {
-        yError() << "Missing param max_motor_vel";
+        yCError(MOTOR_CTRL) << "Missing param max_motor_vel";
         return false;
     }
 
@@ -154,7 +156,7 @@ bool MotorControl::open(const Property &_options)
         if (ctrl_options.check("ROS_OUTPUT"))
         {
             yarp::os::Bottle rout_group = ctrl_options.findGroup("ROS_OUTPUT");
-            if (rout_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
+            if (rout_group.check("topic_name") == false)  { yCError(MOTOR_CTRL) << "Missing topic_name parameter"; return false; }
             rosTopicName_cmd_twist = rout_group.find("topic_name").asString();
             enable_ROS_OUTPUT_GROUP = true;
         }
@@ -165,16 +167,16 @@ bool MotorControl::open(const Property &_options)
 
         if (!rosPublisherPort_cmd_twist.topic(rosTopicName_cmd_twist))
         {
-            yError() << " opening " << rosTopicName_cmd_twist << " Topic, check your yarp-ROS network configuration\n";
+            yCError(MOTOR_CTRL) << " opening " << rosTopicName_cmd_twist << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
-        yInfo () << "ROS_OUTPUT param found. Enabling topic "<<rosTopicName_cmd_twist;
+        yCInfo (MOTOR_CTRL) << "ROS_OUTPUT param found. Enabling topic "<<rosTopicName_cmd_twist;
     }
 
     bool ret = port_status.open((localName+"/motors_status:o").c_str());
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(MOTOR_CTRL) << "Unable to open module ports";
         return false;
     }
 
@@ -193,17 +195,17 @@ MotorControl::MotorControl(PolyDriver* _driver)
 
 void MotorControl::printStats()
 {
-    yInfo( "* Motor thread:\n");
-    yInfo( "timeouts: %d\n", thread_timeout_counter);
+    yCInfo(MOTOR_CTRL,"* Motor thread:\n");
+    yCInfo(MOTOR_CTRL, "timeouts: %d\n", thread_timeout_counter);
 
     double val = 0;
     for (int i=0; i<motors_num; i++)
     {
         val=F[i];
         if (board_control_modes[i]==VOCAB_CM_IDLE)
-            yInfo( "F%d: IDLE\n", i);
+            yCInfo(MOTOR_CTRL,"F%d: IDLE\n", i);
         else
-            yInfo( "F%d: %+.1f\n", i, val);
+            yCInfo(MOTOR_CTRL, "F%d: %+.1f\n", i, val);
     }
 
     if (port_status.getOutputCount()>0)
@@ -222,7 +224,7 @@ void MotorControl::printStats()
 
 bool MotorControl::set_control_openloop()
 {
-    yInfo ("Setting openloop mode");
+    yCInfo (MOTOR_CTRL,"Setting openloop mode");
     for (int i=0; i<motors_num; i++)
     {
         icmd->setControlMode(i, VOCAB_CM_PWM);
@@ -233,7 +235,7 @@ bool MotorControl::set_control_openloop()
 
 bool MotorControl::set_control_velocity()
 {
-    yInfo ("Setting velocity mode");
+    yCInfo (MOTOR_CTRL,"Setting velocity mode");
     for (int i=0; i<motors_num; i++)
     {
         icmd->setControlMode(i, VOCAB_CM_VELOCITY);
@@ -245,12 +247,12 @@ bool MotorControl::set_control_velocity()
 
 bool MotorControl::set_control_idle()
 {
-    yInfo ("Setting idle mode");
+    yCInfo (MOTOR_CTRL,"Setting idle mode");
     for (int i=0; i<motors_num; i++)
     {
         icmd->setControlMode(i, VOCAB_CM_FORCE_IDLE);
     }
-    yInfo("Motors now off");
+    yCInfo(MOTOR_CTRL,"Motors now off");
     return true;
 }
 
@@ -268,12 +270,12 @@ bool MotorControl::check_motors_on()
 
     if (status_not_idle)
     {
-        yInfo("Motors now on\n");
+        yCInfo(MOTOR_CTRL,"Motors now on\n");
         return true;
     }
     else
     {
-        yInfo("Unable to turn motors on! fault pressed?\n");
+        yCInfo(MOTOR_CTRL,"Unable to turn motors on! fault pressed?\n");
         return false;
     }
 }
@@ -287,7 +289,7 @@ void MotorControl::updateControlMode()
         icmd->getControlMode(i, &board_control_modes[i]);
         if (board_control_modes[i] == VOCAB_CM_HW_FAULT && board_control_modes_last[i] != VOCAB_CM_HW_FAULT)
         {
-            yWarning("One motor is in fault status. Turning off control.");
+            yCWarning(MOTOR_CTRL,"One motor is in fault status. Turning off control.");
             set_control_idle();
             break;
         }

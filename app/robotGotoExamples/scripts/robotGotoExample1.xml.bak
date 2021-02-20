@@ -1,0 +1,61 @@
+<application>
+<name>robotGoto EXAMPLE1</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 0)"</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device fakeMotionControl --name /robot_2wheels/mobile_base --GENERAL::Joints 2</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>baseControl</name>
+   <parameters>--context baseControl_SIM --from robot_2wheels.ini --skip_robot_interface_check</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device localization2DServer --subdevice odomLocalizer --context robotGotoExamples --from localizationServer.ini</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_context mapsExample --map_file map_test.map</parameters>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device navigation2DServer --subdevice robotGotoDev --context robotGotoExamples --from robotGoto_robot_2wheels.ini</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/robotGoto/control:o</from>
+  <to>/baseControl/control:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/baseControl/odometry:o</from>
+  <to>/fakeLaser/location:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>

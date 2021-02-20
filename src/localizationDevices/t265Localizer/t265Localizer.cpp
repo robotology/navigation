@@ -36,6 +36,8 @@ using namespace std;
 
 //#define SIMULATE_T265
 
+YARP_LOG_COMPONENT(T265_LOC, "navigation.t265Localizer")
+
 void t265LocalizerRPCHandler::setInterface(t265Localizer* iface)
 {
     this->interface = iface;
@@ -86,27 +88,27 @@ bool   t265Localizer::setInitialPose(const Map2DLocation& loc)
 
 bool   t265Localizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by t265Localizer";
+    yCWarning(T265_LOC) << "Covariance matrix is not currently handled by t265Localizer";
     m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   t265Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by t265Localizer";
+    yCWarning(T265_LOC) << "Covariance matrix is not currently handled by t265Localizer";
     m_thread->initializeLocalization(loc);
     return true;
 }
 
 bool    t265Localizer::startLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(T265_LOC) << "Not yet implemented";
     return false;
 }
 
 bool    t265Localizer::stopLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(T265_LOC) << "Not yet implemented";
     return false;
 }
 
@@ -215,9 +217,9 @@ void t265LocalizerThread::run()
 
         m_current_device_data.theta = v[0] * RAD2DEG;
 
-        //yDebug() << "transformMat" << transformMat.toString();
-        //yDebug() << "Mat" << m.toString();
-        //yDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+        //yCDebug() << "transformMat" << transformMat.toString();
+        //yCDebug() << "Mat" << m.toString();
+        //yCDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
 
     }
     else
@@ -226,21 +228,21 @@ void t265LocalizerThread::run()
         m_current_device_data.y = -pose_data.translation.x;
         // yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
         yarp::math::Quaternion q (pose_data.rotation.x, pose_data.rotation.y, pose_data.rotation.z, pose_data.rotation.w);
-        //yDebug() << "quat" << q.toString();
+        //yCDebug() << "quat" << q.toString();
         auto m = q.toRotationMatrix3x3();
-        //yDebug() << "Mat" << m.toString();
+        //yCDebug() << "Mat" << m.toString();
         //auto v = yarp::math::dcm2euler(m);
-        //yDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+        //yCDebug() << "A1" << yarp::math::dcm2euler(m).toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
         auto v = yarp::math::dcm2rpy(m);
-        //yDebug() << "A2" << v.toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
+        //yCDebug() << "A2" << v.toString() << v[0] *RAD2DEG  << v[1] *RAD2DEG << v[2] *RAD2DEG;
         // m_current_device_data.theta =  v[1]*RAD2DEG; // no, give only rotation around y between -90 and +90
         m_current_device_data.theta = atan2(m(0,2),m(0,0))*RAD2DEG;
     }
-    //yDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
+    //yCDebug() << "device pose (x y t) before relocation:" << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //relocate data in robot frame
     relocate_data(m_current_device_data);
-    //yDebug() << "device pose (x y t) after relocation: " << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
+    //yCDebug() << "device pose (x y t) after relocation: " << m_current_device_data.x << m_current_device_data.y << m_current_device_data.theta;
 
     //compute data localization
     double c = cos((-m_initial_device_data.theta + m_initial_loc.theta)*DEG2RAD);
@@ -261,7 +263,7 @@ void t265LocalizerThread::run()
 
 bool t265LocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
-    yInfo() << "t265LocalizerThread: Localization init request: (" << loc.map_id << ")";
+    yCInfo(T265_LOC) << "t265LocalizerThread: Localization init request: (" << loc.map_id << ")";
     lock_guard<std::mutex> lock(m_mutex);
     m_initial_loc.map_id = loc.map_id;
     m_initial_loc.x = loc.x;
@@ -273,7 +275,7 @@ bool t265LocalizerThread::initializeLocalization(const Map2DLocation& loc)
 
     if (m_current_loc.map_id != m_initial_loc.map_id)
     {
-        yInfo() << "Map changed from: " << m_current_loc.map_id << " to: " << m_initial_loc.map_id;
+        yCInfo(T265_LOC) << "Map changed from: " << m_current_loc.map_id << " to: " << m_initial_loc.map_id;
         m_current_loc.map_id = m_initial_loc.map_id;
         //@@@TO BE COMPLETED
         m_current_loc.x = 0 + m_initial_loc.x;
@@ -303,7 +305,7 @@ bool t265LocalizerThread::open_device()
     }
     catch (const rs2::error & e)
     {
-        yError() << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what();
+        yCError(T265_LOC) << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what();
         return false;
     }
     return true;
@@ -316,35 +318,35 @@ bool t265LocalizerThread::threadInit()
     Bottle general_group = m_cfg.findGroup("T265LOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing T265LOCALIZER_GENERAL group!";
+        yCError(T265_LOC) << "Missing T265LOCALIZER_GENERAL group!";
         return false;
     }
 
     Bottle initial_group = m_cfg.findGroup("INITIAL_POS");
     if (initial_group.isNull())
     {
-        yError() << "Missing INITIAL_POS group!";
+        yCError(T265_LOC) << "Missing INITIAL_POS group!";
         return false;
     }
 
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(T265_LOC) << "Missing LOCALIZATION group!";
         return false;
     }
 
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
     {
-        yError() << "Missing TF group!";
+        yCError(T265_LOC) << "Missing TF group!";
         return false;
     }
 
     Bottle tfC_group = m_cfg.findGroup("TF_CLIENT");
     if (tfC_group.isNull())
     {
-        yError() << "Missing TF_CLIENT group!";
+        yCError(T265_LOC) << "Missing TF_CLIENT group!";
         return false;
     }
 
@@ -354,20 +356,20 @@ bool t265LocalizerThread::threadInit()
     //opens the device communication
     if (!open_device())
     {
-        yError() << "Unable to open t265 device";
+        yCError(T265_LOC) << "Unable to open t265 device";
         return false;
     }
 
     //initial location initialization
     Map2DLocation tmp_loc;
     if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asDouble(); }
-    else { yError() << "missing map_transform_x param"; return false; }
+    else { yCError(T265_LOC) << "missing map_transform_x param"; return false; }
     if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asDouble(); }
-    else { yError() << "missing map_transform_y param"; return false; }
+    else { yCError(T265_LOC) << "missing map_transform_y param"; return false; }
     if (initial_group.check("map_transform_t")) { tmp_loc.theta = initial_group.find("map_transform_t").asDouble(); }
-    else { yError() << "missing map_transform_t param"; return false; }
+    else { yCError(T265_LOC) << "missing map_transform_t param"; return false; }
     if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
+    else { yCError(T265_LOC) << "missing initial_map param"; return false; }
     this->initializeLocalization(tmp_loc);
 
     if (general_group.check("remote_mapServer"))
@@ -376,7 +378,7 @@ bool t265LocalizerThread::threadInit()
     }
     else
     {
-        yInfo() << "remote_mapServer parameter not set. Using:" << m_remote_map;
+        yCInfo(T265_LOC) << "remote_mapServer parameter not set. Using:" << m_remote_map;
     }
 
     //the optional map client
@@ -389,13 +391,13 @@ bool t265LocalizerThread::threadInit()
         map_options.put("remote", m_remote_map);
         if (m_pMap.open(map_options) == false)
         {
-            yError() << "Unable to open map2DClient";
+            yCError(T265_LOC) << "Unable to open map2DClient";
             return false;
         }
         m_pMap.view(m_iMap);
         if (m_iMap == 0)
         {
-            yError() << "Unable to open map interface";
+            yCError(T265_LOC) << "Unable to open map interface";
             return false;
         }
     }
@@ -408,13 +410,13 @@ bool t265LocalizerThread::threadInit()
         string odometry_port_name = m_name + "/odometry:i";
         if (m_odometry_handler->open(odometry_port_name) == false)
         {
-            yError() << "Unable to open odometry port" << odometry_port_name;
+            yCError(T265_LOC) << "Unable to open odometry port" << odometry_port_name;
             return false;
         }
     }
     else
     {
-       yError() << "m_odometry_handler not initialized"; 
+       yCError(T265_LOC) << "m_odometry_handler not initialized";
        return false;
     }
 
@@ -428,7 +430,7 @@ bool t265LocalizerThread::threadInit()
         pTC.put("local",tfC_group.find("localTC").asString());
     else
     {
-       yError() << "localTC not initialized";
+       yCError(T265_LOC) << "localTC not initialized";
        return false;
     }
 
@@ -436,7 +438,7 @@ bool t265LocalizerThread::threadInit()
         pTC.put("remote",tfC_group.find("remoteTC").asString());
     else
     {
-       yError() << "remoteTC not initialized";
+       yCError(T265_LOC) << "remoteTC not initialized";
        return false;
     }
 
@@ -444,7 +446,7 @@ bool t265LocalizerThread::threadInit()
         pTC.put("period",tfC_group.find("period").asString());
     else
     {
-       yError() << "period not initialized";
+       yCError(T265_LOC) << "period not initialized";
        return false;
     }
 
@@ -457,7 +459,7 @@ bool t265LocalizerThread::threadInit()
     else
         baseFrame = "mobile_base_body_link";
 
-    yDebug() << baseFrame;
+    yCDebug(T265_LOC) << baseFrame;
 
 
     transformClientDriver.open(pTC);
@@ -465,11 +467,11 @@ bool t265LocalizerThread::threadInit()
     transformClientDriver.view(transformClientInt);
     if (transformClientInt == nullptr)
     {
-        yError() << "Unable to open Transform Client interface";
+        yCError(T265_LOC) << "Unable to open Transform Client interface";
         return false;
     }
 
-    yInfo() << "tranformClient successfully open";
+    yCInfo(T265_LOC) << "tranformClient successfully open";
 
     return true;
 }
@@ -486,7 +488,7 @@ void t265LocalizerThread::threadRelease()
 
 bool t265Localizer::open(yarp::os::Searchable& config)
 {
-    yDebug() << "config configuration: \n" << config.toString().c_str();
+    yCDebug(T265_LOC) << "config configuration: \n" << config.toString().c_str();
 
     std::string context_name = "t265Localizer";
     std::string file_name = "t265Localizer.ini";
@@ -502,7 +504,7 @@ bool t265Localizer::open(yarp::os::Searchable& config)
     Property p;
     std::string configFile = rf.findFile("from");
     if (configFile != "") p.fromConfigFile(configFile.c_str());
-    yDebug() << "t265Localizer configuration: \n" << p.toString().c_str();
+    yCDebug(T265_LOC) << "t265Localizer configuration: \n" << p.toString().c_str();
 
     Bottle general_group = p.findGroup("T265LOCALIZER_GENERAL");
     if (general_group.isNull()==false)
@@ -512,7 +514,7 @@ bool t265Localizer::open(yarp::os::Searchable& config)
     bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(T265_LOC) << "Unable to open module ports";
         return false;
     }
 

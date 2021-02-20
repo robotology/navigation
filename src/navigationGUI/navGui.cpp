@@ -47,6 +47,8 @@ using namespace yarp::dev::Nav2D;
 #define DEG2RAD M_PI/180
 #endif
 
+YARP_LOG_COMPONENT(NAVIGATION_GUI, "navigation.navigationGui")
+
 NavGuiThread::~NavGuiThread()
 {
   /* { m_ptf.close(); };
@@ -61,7 +63,7 @@ NavGuiThread::~NavGuiThread()
    m_estimated_poses->push_back(Map2DLocation());
    m_estimated_poses->clear();
    delete m_estimated_poses;
-   yDebug() << "";*/
+   yCDebug() << "";*/
 }
 
 bool NavGuiThread::click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<int>& click_p)
@@ -138,7 +140,7 @@ void NavGuiThread::readTargetFromYarpView()
             c_end_gui.x = (*gui_targ).get(0).asInt();
             c_end_gui.y = (*gui_targ).get(1).asInt();
             yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_end_gui));
-            yInfo("selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
+            yCInfo(NAVIGATION_GUI,"selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
             Map2DLocation loc;
             loc.map_id = m_localization_data.map_id;
             loc.x = v[0];
@@ -154,7 +156,7 @@ void NavGuiThread::readTargetFromYarpView()
             }
             else
             {
-                yError() << "Invalid button state";
+                yCError(NAVIGATION_GUI) << "Invalid button state";
             }
         }
         else if (gui_targ->size() == 4)
@@ -171,7 +173,7 @@ void NavGuiThread::readTargetFromYarpView()
             c_end_world = (m_current_map.cell2World(c_end_gui));
             double angle = atan2(c_end_world.y - c_start_world.y, c_end_world.x - c_start_world.x) * 180.0 / M_PI;
             yarp::sig::Vector v = static_cast<yarp::sig::Vector>(c_start_world);
-            yInfo("selected point is located at (%6.3f, %6.3f), angle: %6.3f", v[0], v[1], angle);
+            yCInfo(NAVIGATION_GUI,"selected point is located at (%6.3f, %6.3f), angle: %6.3f", v[0], v[1], angle);
             Map2DLocation loc;
             loc.map_id = m_localization_data.map_id;
             loc.x = v[0];
@@ -187,12 +189,12 @@ void NavGuiThread::readTargetFromYarpView()
             }
             else
             {
-                yError() << "Invalid button state";
+                yCError(NAVIGATION_GUI) << "Invalid button state";
             }
         }
         else
         {
-            yError() << "Received data with an invalid format.";
+            yCError(NAVIGATION_GUI) << "Received data with an invalid format.";
         }
     }
 }
@@ -272,7 +274,7 @@ bool  NavGuiThread::readNavigationStatus(bool& changed)
     {
         if (yarp::os::Time::now() - last_print_time > 1.0)
         {
-            yError() << "Navigation status = error"; 
+            yCError(NAVIGATION_GUI) << "Navigation status = error";
             last_print_time = yarp::os::Time::now();
         }
         return false;
@@ -316,7 +318,7 @@ bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_im
 {
     if (template_image == 0)
     {
-        yError() << "PlannerThread::draw_map cannot copy an empty image!";
+        yCError(NAVIGATION_GUI) << "PlannerThread::draw_map cannot copy an empty image!";
         return false;
     }
     if (image_to_be_prepared == 0) 
@@ -635,7 +637,7 @@ void NavGuiThread::run()
     }
 
     //double check2 = yarp::os::Time::now();
-    //yDebug() << check2-check1;
+    //yCDebug() << check2-check1;
 
     switch (m_navigation_status)
     {
@@ -657,7 +659,7 @@ void NavGuiThread::run()
 
         default:
               //unknown status
-              yError("unknown status:%d", m_navigation_status);
+              yCError(NAVIGATION_GUI,"unknown status:%d", m_navigation_status);
               m_navigation_status = navigation_status_error;
         break;
     }
@@ -669,7 +671,7 @@ void NavGuiThread::run()
         //double check3 = yarp::os::Time::now();
         draw_and_send();
         //double check4 = yarp::os::Time::now();
-        //yDebug() << check4-check3;
+        //yCDebug() << check4-check3;
         last_drawn = yarp::os::Time::now();
     }
 }

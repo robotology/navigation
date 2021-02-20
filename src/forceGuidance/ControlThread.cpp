@@ -91,6 +91,8 @@ using namespace yarp::dev;
 
 #include "ControlThread.h"
 
+YARP_LOG_COMPONENT(FORCE_GUID, "navigation.forceGuidance")
+
 CtrlThread::CtrlThread(unsigned int _period, ResourceFinder &_rf) :  PeriodicThread(_period), rf(_rf)
 {
     control_board_driver=0;
@@ -124,9 +126,9 @@ bool CtrlThread::threadInit()
 void CtrlThread::afterStart(bool s)
 {
     if (s)
-        yInfo("Thread started successfully");
+        yCInfo(FORCE_GUID,"Thread started successfully");
     else
-        yError("Thread did not start");
+        yCError(FORCE_GUID,"Thread did not start");
 }
 
 double CtrlThread::lp_filter_1Hz(double input, int i)
@@ -197,7 +199,7 @@ void CtrlThread::run()
     angular_speed= (angular_speed > +100) ? +100:angular_speed;
     angular_speed= (angular_speed < -100) ? -100:angular_speed;
         
-    yDebug ("(%+8.2f %+8.2f)(%+8.2f %+8.2f)      %+9.1f %+9.1f %+9.1f %+8.0f\n",lx,ly,rx,ry,desired_direction,linear_speed,angular_speed,pwm_gain);
+    yCDebug (FORCE_GUID,"(%+8.2f %+8.2f)(%+8.2f %+8.2f)      %+9.1f %+9.1f %+9.1f %+8.0f\n",lx,ly,rx,ry,desired_direction,linear_speed,angular_speed,pwm_gain);
 
     //send data to yarp output port (to baseControl)
     Bottle bot; 

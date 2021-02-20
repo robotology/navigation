@@ -28,6 +28,8 @@
 
 using namespace yarp::dev::Nav2D;
 
+YARP_LOG_COMPONENT(NAVIGATOR_TEMPLATE, "navigation.NavigatonDeviceTemplate")
+
 navigationDeviceTemplate::navigationDeviceTemplate() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
     m_navigation_status = navigation_status_idle;
@@ -69,7 +71,7 @@ bool navigationDeviceTemplate::gotoTargetByAbsoluteLocation(Map2DLocation loc)
         //### TO BE IMPLEMENTED BY USER
         return true;
     }
-    yError() << "A navigation task is already running. Stop it first";
+    yCError(NAVIGATOR_TEMPLATE) << "A navigation task is already running. Stop it first";
     return false;
 }
 
@@ -80,7 +82,7 @@ bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y)
         //### TO BE IMPLEMENTED BY USER
         return true;
     }
-    yError() << "A navigation task is already running. Stop it first";
+    yCError(NAVIGATOR_TEMPLATE) << "A navigation task is already running. Stop it first";
     return false;
 
 }
@@ -91,7 +93,7 @@ bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y, 
         //### TO BE IMPLEMENTED BY USER
         return true;
     }
-    yError() << "A navigation task is already running. Stop it first";
+    yCError(NAVIGATOR_TEMPLATE) << "A navigation task is already running. Stop it first";
     return false;
 }
 
@@ -152,7 +154,7 @@ bool navigationDeviceTemplate::suspendNavigation(double time)
         m_navigation_status = navigation_status_paused;
         return true;
     }
-    yError() << "Unable to pause current navigation task";
+    yCError(NAVIGATOR_TEMPLATE) << "Unable to pause current navigation task";
     return false;
 }
 
@@ -163,7 +165,7 @@ bool navigationDeviceTemplate::resumeNavigation()
         //### TO BE IMPLEMENTED BY USER
         return true;
     }
-    yError() << "Unable to resume any paused navigation task";
+    yCError(NAVIGATOR_TEMPLATE) << "Unable to resume any paused navigation task";
     return false;
 }
 
@@ -174,7 +176,7 @@ bool navigationDeviceTemplate::recomputeCurrentNavigationPath()
         //### TO BE IMPLEMENTED BY USER
         return true;
     }
-    yError() << "Unable to recompute path. Navigation task not assigned yet.";
+    yCError(NAVIGATOR_TEMPLATE) << "Unable to recompute path. Navigation task not assigned yet.";
     return false;
 }
 

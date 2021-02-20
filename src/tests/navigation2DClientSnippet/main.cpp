@@ -9,6 +9,8 @@ using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace std;
 
+YARP_LOG_COMPONENT(NAV_CLIENT_SNIPPET, "navigation.navigation2DClientSnippet")
+
 int main(int argc, char *argv[])
 {
     Network yarp;
@@ -26,7 +28,7 @@ int main(int argc, char *argv[])
     bool okView               = ddNavClient.view(iNav);
     if(!okClient || !okView)
     {
-        yError("Error opening INavigation2D interface");
+        yCError(NAV_CLIENT_SNIPPET,"Error opening INavigation2D interface");
         return false;
     }
 
@@ -41,7 +43,7 @@ int main(int argc, char *argv[])
     okView               = ddMapClient.view(iMap);
     if(!okClient || !okView)
     {
-        yError("Error opening IMap2D interface");
+        yCError(NAV_CLIENT_SNIPPET, "Error opening IMap2D interface");
         return false;
     }
 
@@ -68,25 +70,25 @@ int main(int argc, char *argv[])
         //gets the current position of the robot and displays it
         Map2DLocation current_position;
         iNav->getCurrentPosition(current_position);
-        yInfo() << "Current robot position is: " << current_position.toString();
+        yCInfo(NAV_CLIENT_SNIPPET) << "Current robot position is: " << current_position.toString();
 
         //gets the navigation status
         iNav->getNavigationStatus(status);
         if(!iNav->getNavigationStatus(status))
         {
-            yError() << "Unable to get navigation status";
+            yCError(NAV_CLIENT_SNIPPET) << "Unable to get navigation status";
             break;
         }
 
         //continue navigation until the goal is reached (or the timeout is expired)
         if (status == navigation_status_goal_reached)
         {
-            yInfo() << "Goal reached!";
+            yCInfo(NAV_CLIENT_SNIPPET) << "Goal reached!";
             break;
         }
         else if(Time::now() - init_time >= TIMEOUT)
         {
-            yError() << "Timeout while heading towards current waypoint";
+            yCError(NAV_CLIENT_SNIPPET) << "Timeout while heading towards current waypoint";
             break;
         }
 

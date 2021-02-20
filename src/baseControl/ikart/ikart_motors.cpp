@@ -21,6 +21,8 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
+YARP_LOG_COMPONENT(IKART_MOT, "navigation.baseControl.ikartMotorControl")
+
 void iKart_MotorControl::close()
 {
 }
@@ -38,7 +40,7 @@ bool iKart_MotorControl::open(const Property &_options)
     //the base class open
     if (!MotorControl::open(_options))
     {
-        yError() << "Error in MotorControl::open()"; return false;
+        yCError(IKART_MOT) << "Error in MotorControl::open()"; return false;
     }
 
     // open the interfaces for the control boards
@@ -51,7 +53,7 @@ bool iKart_MotorControl::open(const Property &_options)
     ok = ok & control_board_driver->view(icmd);
     if(!ok)
     {
-        yError("One or more devices has not been viewed, returning\n");
+        yCError(IKART_MOT,"One or more devices has not been viewed, returning\n");
         return false;
     }
 
@@ -59,22 +61,22 @@ bool iKart_MotorControl::open(const Property &_options)
     Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        yCError(IKART_MOT,"iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
         return false;
     }
     if (!geometry_group.check("geom_r"))
     {
-        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        yCError(IKART_MOT,"Missing param geom_r in [ROBOT_GEOMETRY] group");
         return false;
     }
     if (!geometry_group.check("geom_L"))
     {
-        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        yCError(IKART_MOT,"Missing param geom_L in [ROBOT_GEOMETRY] group");
         return false;
     }
     if (!geometry_group.check("g_angle"))
     {
-        yError("Missing param g_angle in [ROBOT_GEOMETRY] group");
+        yCError(IKART_MOT,"Missing param g_angle in [ROBOT_GEOMETRY] group");
         return false;
     }
     geom_r = geometry_group.find("geom_r").asDouble();
@@ -83,7 +85,7 @@ bool iKart_MotorControl::open(const Property &_options)
 
     if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [BASECTRL_GENERAL] section";
+        yCError(IKART_MOT) << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");

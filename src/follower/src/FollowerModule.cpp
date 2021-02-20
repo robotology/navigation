@@ -39,6 +39,8 @@ using namespace std;
 using namespace yarp::os;
 using namespace FollowerTarget;
 
+YARP_LOG_COMPONENT(FOLLOWER_MOD, "navigation.followerModule")
+
 //------------------------ buffer helper test ---------------------
 
 double FollowerModule::getPeriod()
@@ -63,7 +65,7 @@ bool FollowerModule::updateModule()
         m_statInfo.addVal(diff);
         if(m_statInfo.countMaxReached())
         {
-            yDebug() << "-----DURATION STAT INFO: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax() << "-----";
+            yCDebug(FOLLOWER_MOD) << "-----DURATION STAT INFO: avg="<<m_statInfo.calculateAvg() <<"min="<<m_statInfo.getMin()<< "max=" <<m_statInfo.getMax() << "-----";
             m_statInfo.reset();
         }
     }
@@ -179,7 +181,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     // 1) configure the follower
     if(!m_follower.configure(rf))
     {
-        yError() << "Error reading configuration file";
+        yCError(FOLLOWER_MOD) << "Error reading configuration file";
         return false;
     }
 
@@ -190,7 +192,7 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if (config_group.isNull())
     {
-        yError() << "Missing FOLLOWER_GENERAL group! the module uses default value!";
+        yCError(FOLLOWER_MOD) << "Missing FOLLOWER_GENERAL group! the module uses default value!";
     }
     else
     {
@@ -233,14 +235,14 @@ bool FollowerModule::configure(yarp::os::ResourceFinder &rf)
     }
     else
     {
-        yError() << "m_targetType not available!";
+        yCError(FOLLOWER_MOD) << "m_targetType not available!";
         return false;
     }
 
 
     if(! m_pointRetriever_ptr->init(rf))
     {
-        yError() << "Error in initializing the Target Retriever";
+        yCError(FOLLOWER_MOD) << "Error in initializing the Target Retriever";
         return false;
     }
 
@@ -340,7 +342,7 @@ void FollowerModule::processTransition(FollowerSMTransition t)
 
     if(oldst==newst)
     {return;} //no transition happened
-//    yError() << "PROCESS-TRANS oldst=" << m_follower.runStMachineState_2_string(oldst) << "newst=" << m_follower.runStMachineState_2_string(newst) << "evt=" << static_cast<int>(evt);
+//    yCError() << "PROCESS-TRANS oldst=" << m_follower.runStMachineState_2_string(oldst) << "newst=" << m_follower.runStMachineState_2_string(newst) << "evt=" << static_cast<int>(evt);
     //since in some case is sufficient the event to identify the transition, so I start to check it
     if(SMEvents::lookupFinished == evt) // transition 5
     {

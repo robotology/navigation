@@ -30,26 +30,28 @@ using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace FollowerTarget;
 
+YARP_LOG_COMPONENT(FOLLOWER, "navigation.follower")
+
 void FollowerConfig::print(void)
 {
-    yInfo() << "The follower module has been configure with following values";
-    yInfo() << "inputPortName="       << inputPortName;
-    yInfo() << "factorDist2Vel="      << outputPortName;
-    yInfo() << "targetType="          << targetType;
-    yInfo() << "invalidTargetMax="    << invalidTargetMax;
-    yInfo() << "startWithoutCommand=" << startWithoutCommand;
-    yInfo() << "onSimulator="         << onSimulator;
-    yInfo() << "NAVIGATION.factorDist2Vel="    << navigation.factorDist2Vel;
-    yInfo() << "NAVIGATION.factorAng2Vel="     << navigation.factorAng2Vel;
-    yInfo() << "NAVIGATION.distanceThreshold=" << navigation.distanceThreshold;
-    yInfo() << "NAVIGATION.angleThreshold="    << navigation.angleThreshold;
-    yInfo() << "NAVIGATION.angularVelLimit="   << navigation.velocityLimits.angular;
-    yInfo() << "NAVIGATION.linearVelLimit="    << navigation.velocityLimits.linear;
-    yInfo() << "NAVIGATION.angleLimitsVelReduction.min="<< navigation.angleLimitsVelReduction.min;
-    yInfo() << "NAVIGATION.angleLimitsVelReduction.max="<< navigation.angleLimitsVelReduction.max;
-    yInfo() << "DEBUG.enabled="        << debug.enabled;
-    yInfo() << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
-    yInfo() << "DEBUG.printPeriod=" << debug.period;
+    yCInfo(FOLLOWER) << "The follower module has been configure with following values";
+    yCInfo(FOLLOWER) << "inputPortName="       << inputPortName;
+    yCInfo(FOLLOWER) << "factorDist2Vel="      << outputPortName;
+    yCInfo(FOLLOWER) << "targetType="          << targetType;
+    yCInfo(FOLLOWER) << "invalidTargetMax="    << invalidTargetMax;
+    yCInfo(FOLLOWER) << "startWithoutCommand=" << startWithoutCommand;
+    yCInfo(FOLLOWER) << "onSimulator="         << onSimulator;
+    yCInfo(FOLLOWER) << "NAVIGATION.factorDist2Vel="    << navigation.factorDist2Vel;
+    yCInfo(FOLLOWER) << "NAVIGATION.factorAng2Vel="     << navigation.factorAng2Vel;
+    yCInfo(FOLLOWER) << "NAVIGATION.distanceThreshold=" << navigation.distanceThreshold;
+    yCInfo(FOLLOWER) << "NAVIGATION.angleThreshold="    << navigation.angleThreshold;
+    yCInfo(FOLLOWER) << "NAVIGATION.angularVelLimit="   << navigation.velocityLimits.angular;
+    yCInfo(FOLLOWER) << "NAVIGATION.linearVelLimit="    << navigation.velocityLimits.linear;
+    yCInfo(FOLLOWER) << "NAVIGATION.angleLimitsVelReduction.min="<< navigation.angleLimitsVelReduction.min;
+    yCInfo(FOLLOWER) << "NAVIGATION.angleLimitsVelReduction.max="<< navigation.angleLimitsVelReduction.max;
+    yCInfo(FOLLOWER) << "DEBUG.enabled="        << debug.enabled;
+    yCInfo(FOLLOWER) << "DEBUG.paintGazeFrame=" << debug.paintGazeFrame;
+    yCInfo(FOLLOWER) << "DEBUG.printPeriod=" << debug.period;
 }
 Follower::Follower(): m_targetType(TargetType_t::person), m_simmanager_ptr(nullptr), m_stateMachine_st(StateMachine::none), m_runStMachine_st(RunningSubStMachine::unknown),  m_autoNavAlreadyDone(false), m_debugTimePrints(0.0), m_lastValidTargetOnBaseFrame(ReferenceFrameOfTarget_t::mobile_base_body_link)
 {
@@ -122,41 +124,41 @@ void Follower::printDebugInfo(Target_t &currenttarget)
 
 
     string str;
-    yDebug() << "****************************************************************";
-    yDebug() << "**** Target Type is "<< m_cfg.targetType;
-    yDebug() << "****"<< currenttarget.toString();
+    yCDebug(FOLLOWER) << "****************************************************************";
+    yCDebug(FOLLOWER) << "**** Target Type is "<< m_cfg.targetType;
+    yCDebug(FOLLOWER) << "****"<< currenttarget.toString();
 
-    yDebug()<< "**** Main State Machine is in " << stateMachineState_2_string(m_stateMachine_st);
+    yCDebug(FOLLOWER)<< "**** Main State Machine is in " << stateMachineState_2_string(m_stateMachine_st);
 
     if(m_stateMachine_st == StateMachine::configured)
     {
-        yDebug()<< "****    I'm waiting the start command";
+        yCDebug(FOLLOWER)<< "****    I'm waiting the start command";
     }
     else
     {
-        yDebug()<< "**** Running State Machine is in" << runStMachineState_2_string(m_runStMachine_st);
+        yCDebug(FOLLOWER)<< "**** Running State Machine is in" << runStMachineState_2_string(m_runStMachine_st);
         if(m_obsVer.isRunning())
         {
             if(m_obsVerResult.resultIsValid)
             {
                 if(m_obsVerResult.result)
-                    yDebug() << "**** ObstacleCheck: I detected an OBSTACLE on my path";
+                    yCDebug(FOLLOWER) << "**** ObstacleCheck: I detected an OBSTACLE on my path";
                 else
-                    yDebug() << "**** ObstacleCheck: No obstacle on my path";
+                    yCDebug(FOLLOWER) << "**** ObstacleCheck: No obstacle on my path";
             }
             else
-                yError() << "**** ObstacleCheck: an error occured";
+                yCError(FOLLOWER) << "**** ObstacleCheck: an error occured";
         }
         else
-            yDebug() << "**** ObstacleCheck: not configured! Attention!!!";
+            yCDebug(FOLLOWER) << "**** ObstacleCheck: not configured! Attention!!!";
 
         if(m_runStMachine_st == RunningSubStMachine::lostTarget_lookup)
         {
-            yDebug() << "**** GazeController is in " << m_gazeCtrl.stausToStrig();
+            yCDebug(FOLLOWER) << "**** GazeController is in " << m_gazeCtrl.stausToStrig();
         }
-        yDebug()<< "**** Target is REACHED " << m_targetReached;
+        yCDebug(FOLLOWER)<< "**** Target is REACHED " << m_targetReached;
     }
-    yDebug() << "****************************************************************";
+    yCDebug(FOLLOWER) << "****************************************************************";
 
     m_debugTimePrints=yarp::os::Time::now();
 }
@@ -224,7 +226,7 @@ Result_t Follower::followTarget(Target_t &target)
                     evt=SMEvents::lookupFinished;
                     m_gazeCtrl.resetLookupstateMachine();
                     if(m_cfg.debug.enabled)
-                        yDebug() << "I looked around but I cannot find the target!";
+                        yCDebug(FOLLOWER) << "I looked around but I cannot find the target!";
 
                     if((m_autoNavAlreadyDone) || (!m_navCtrl.isConfigured()))
                     {
@@ -250,7 +252,7 @@ Result_t Follower::followTarget(Target_t &target)
                 {
                     m_runStMachine_st= RunningSubStMachine::needHelp;
                     if(m_cfg.debug.enabled)
-                        yDebug() << "I can't start to auto nav because the last target is not valid";
+                        yCDebug(FOLLOWER) << "I can't start to auto nav because the last target is not valid";
                     res = Result_t::failed;
                 }
                 else
@@ -258,7 +260,7 @@ Result_t Follower::followTarget(Target_t &target)
                     if(!m_targetReached)
                     {
                         if(m_cfg.debug.enabled)
-                            yDebug() << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.point3D[0] << m_lastValidTargetOnBaseFrame.point3D[1];
+                            yCDebug(FOLLOWER) << "I lost the target. START AUTONOMOUS NAVIGATION toward the last target="<< m_lastValidTargetOnBaseFrame.point3D[0] << m_lastValidTargetOnBaseFrame.point3D[1];
 
                         bool resNav = m_navCtrl.startAutonomousNav(m_lastValidTargetOnBaseFrame.point3D[0], m_lastValidTargetOnBaseFrame.point3D[1], 0);
 
@@ -273,7 +275,7 @@ Result_t Follower::followTarget(Target_t &target)
                         else
                         {
                             m_runStMachine_st= RunningSubStMachine::needHelp;
-                            yError() << "Error starting autonomous navigation. I need help";
+                            yCError(FOLLOWER) << "Error starting autonomous navigation. I need help";
                             res = Result_t::error;
                         }
                     }
@@ -283,7 +285,7 @@ Result_t Follower::followTarget(Target_t &target)
                         //from now the last target is not more valid
                         m_lastValidTargetOnBaseFrame.isValid=false;
                         if(m_cfg.debug.enabled)
-                            yDebug() << "Target REACHED!!!!!";
+                            yCDebug(FOLLOWER) << "Target REACHED!!!!!";
                         res = Result_t::ok;
                     }
                 }
@@ -312,7 +314,7 @@ Result_t Follower::followTarget(Target_t &target)
                         m_runStMachine_st= RunningSubStMachine::needHelp;
                         m_autoNavAlreadyDone=true;
                         if(m_cfg.debug.enabled)
-                            yDebug() << "I reached the last valid target with autonomous navigation";
+                            yCDebug(FOLLOWER) << "I reached the last valid target with autonomous navigation";
                         evt=SMEvents::invalidTargetRec;
                         res = Result_t::autoNavigation;
                     }break;
@@ -322,7 +324,7 @@ Result_t Follower::followTarget(Target_t &target)
                     {
                         m_runStMachine_st= RunningSubStMachine::needHelp;
                         if(m_cfg.debug.enabled)
-                            yDebug() << "Autonomous navigation has been aborted or paused. I need help";
+                            yCDebug(FOLLOWER) << "Autonomous navigation has been aborted or paused. I need help";
                         res = Result_t::needHelp;
                         evt=SMEvents::invalidTargetRec;
                     }break;
@@ -333,7 +335,7 @@ Result_t Follower::followTarget(Target_t &target)
                     {
                         m_runStMachine_st= RunningSubStMachine::needHelp;
                         if(m_cfg.debug.enabled)
-                            yDebug() << "Autonomous navigation ended with error. I need help";
+                            yCDebug(FOLLOWER) << "Autonomous navigation ended with error. I need help";
                         res = Result_t::error;
                     }break;
                 };
@@ -343,7 +345,7 @@ Result_t Follower::followTarget(Target_t &target)
             {
                 /*Nothing to do*/
                 //if(m_cfg.debug.enabled)
-                //    yDebug() << "I need help";
+                //    yCDebug() << "I need help";
 
                 res = Result_t::needHelp;
             }break;
@@ -365,7 +367,7 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
 
     if(!readConfig(rf, m_cfg))
     {
-        yError() << "Error reading configuration file";
+        yCError(FOLLOWER) << "Error reading configuration file";
         return false;
     }
 
@@ -388,7 +390,7 @@ bool Follower::configure(yarp::os::ResourceFinder &rf)
 
     if(!m_outputPort2baseCtr.open("/follower/" + m_cfg.outputPortName + ":o"))
     {
-        yError() << "Error opening output port for base control";
+        yCError(FOLLOWER) << "Error opening output port for base control";
         return false;
     }
 
@@ -572,18 +574,18 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         {
             if(m_obsVerResult.result)
             {
-                //yInfo() << "+++++++++++++++++++++++++++++++ OBSTACLE"; //continue
+                //yCInfo() << "+++++++++++++++++++++++++++++++ OBSTACLE"; //continue
                  res=Result_t::needHelp;
             }
             else
             {
-                //yInfo() << "No obstacle found"; //continue
+                //yCInfo() << "No obstacle found"; //continue
             }
 
         }
         else
         {
-            yError() << "error reading laser";
+            yCError(FOLLOWER) << "error reading laser";
             return Result_t::error;
         }
 
@@ -614,7 +616,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         else
         {
 //             if(m_cfg.debug.enabled)
-//                 yDebug() <<  "the distance is under threshold!! ";
+//                 yCDebug() <<  "the distance is under threshold!! ";
             d_in_thr = true;
         }
 
@@ -626,7 +628,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         else
         {
 //             if(m_cfg.debug.enabled)
-//                 yDebug() <<  "the angle is under threshold!! ";
+//                 yCDebug() <<  "the angle is under threshold!! ";
             a_in_thr=true;
         }
 
@@ -634,7 +636,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
         {
             m_targetReached = true;
 //             if(m_cfg.debug.enabled)
-//                 yDebug() << "_______________________________________________Target REACHED!!!";
+//                 yCDebug() << "_______________________________________________Target REACHED!!!";
         }
         else
             m_targetReached = false;
@@ -663,7 +665,7 @@ Result_t Follower::processTarget_core(Target_t &targetOnBaseFrame)
             lin_vel = -m_cfg.navigation.velocityLimits.linear;
 
 //         if(m_cfg.debug.enabled)
-//             yDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel << "max_lin="<< m_cfg.navigation.velocityLimits.linear << "max_ang=" << m_cfg.navigation.velocityLimits.angular;
+//             yCDebug() << "sendCommand2BaseControl linvel=" << lin_vel <<"ang_vel" <<ang_vel << "max_lin="<< m_cfg.navigation.velocityLimits.linear << "max_ang=" << m_cfg.navigation.velocityLimits.angular;
     }
 
     sendCommand2BaseControl(0.0, lin_vel, ang_vel );
@@ -727,11 +729,11 @@ bool Follower::transformPointInBaseFrame(Target_t &validTarget, yarp::sig::Vecto
         bool res = m_transformData.transformClient->transformPoint( ReferenceFrameOfTarget2String(validTarget.refFrame) , m_transformData.baseFrameId, validTarget.point3D, pointOutput);
         if(res)
         {
-            //        yDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
+            //        yCDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
         }
         else
         {
-            yError() << "FOLLOWER: error in transformPointInBaseFrame()";
+            yCError(FOLLOWER) << "FOLLOWER: error in transformPointInBaseFrame()";
         }
         return res;
     }
@@ -750,11 +752,11 @@ bool Follower::transformPointInCamFrame(Target_t &validTarget, yarp::sig::Vector
         bool res = m_transformData.transformClient->transformPoint( ReferenceFrameOfTarget2String(validTarget.refFrame) , "depth_rgb", validTarget.point3D, pointOutput);
         if(res)
         {
-            //        yDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
+            //        yCDebug() << "point (" << pointInput.toString() << ") has been transformed in (" << pointOutput.toString() << ")";
         }
         else
         {
-            yError() << "FOLLOWER: error in transformPointInCamFrame()";
+            yCError(FOLLOWER) << "FOLLOWER: error in transformPointInCamFrame()";
         }
         return res;
     }
@@ -767,11 +769,11 @@ bool Follower::transformPointInHeadFrame(std::string frame_src, yarp::sig::Vecto
     bool res = m_transformData.transformClient->transformPoint(frame_src, "head_link", pointInput, pointOutput);
     if(res)
     {
-        //        yDebug() << "point (" << pointBallInput.toString() << ") has been transformed in (" << pointBallOutput.toString() << ")";
+        //        yCDebug() << "point (" << pointBallInput.toString() << ") has been transformed in (" << pointBallOutput.toString() << ")";
     }
     else
     {
-        yError() << "Error in getting transform point from " << frame_src <<" to head_link";
+        yCError(FOLLOWER) << "Error in getting transform point from " << frame_src <<" to head_link";
     }
 
     return res;
@@ -784,7 +786,7 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if (config_group.isNull())
     {
-        yWarning() << "Missing FOLLOWER_GENERAL group! the module uses default value!";
+        yCWarning(FOLLOWER) << "Missing FOLLOWER_GENERAL group! the module uses default value!";
     }
     else
     {
@@ -800,7 +802,7 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     config_group = rf.findGroup("NAVIGATION");
     if (config_group.isNull())
     {
-        yWarning() << "Missing TRAJECTORY group! the module uses default value!";
+        yCWarning(FOLLOWER) << "Missing TRAJECTORY group! the module uses default value!";
     }
     else
     {
@@ -821,7 +823,7 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     config_group = rf.findGroup("DEBUG");
     if (config_group.isNull())
     {
-        yWarning() << "Missing DEBUG group! the module uses default value!";
+        yCWarning(FOLLOWER) << "Missing DEBUG group! the module uses default value!";
     }
     else
     {
@@ -847,7 +849,7 @@ bool Follower::initTransformClient(void)
     bool ok_open = m_transformData.driver.open(propTfClient);
     if (!ok_open)
     {
-        yError() << "Unable to open the FrameTransformClient driver.";
+        yCError(FOLLOWER) << "Unable to open the FrameTransformClient driver.";
         return false;
     }
 
@@ -855,7 +857,7 @@ bool Follower::initTransformClient(void)
     bool ok_view = m_transformData.driver.view(m_transformData.transformClient);
     if (!ok_view || m_transformData.transformClient == 0)
     {
-        yError() << "Unable to retrieve the FrameTransformClient view.";
+        yCError(FOLLOWER) << "Unable to retrieve the FrameTransformClient view.";
         return false;
     }
 
@@ -952,7 +954,7 @@ bool Follower::sendCommand2BaseControl(double linearDirection, double linearVelo
 //     p.put("target-location",target.get(0));
 //
 //     if(m_cfg.debug.enabled)
-//         yDebug() << "Command to gazectrl: " << p.toString();
+//         yCDebug() << "Command to gazectrl: " << p.toString();
 //
 //     m_outputPort2gazeCtr.write();
 //
@@ -1058,13 +1060,13 @@ bool Follower::getMatrix(yarp::sig::Matrix &transform)
     bool res = m_transformData.transformClient->getTransform (m_transformData.targetFrameId, m_transformData.baseFrameId, transform);
     if(res)
     {
-        //         yDebug() << "FOLLOWER: i get the transform matrix:"; // << transform.toString();
+        //         yCDebug() << "FOLLOWER: i get the transform matrix:"; // << transform.toString();
         //
         //         std::cout << transform.toString() << std::endl << std::endl;
     }
     else
     {
-        yError() << "FOLLOWER: error in getting transform matrix";
+        yCError(FOLLOWER) << "FOLLOWER: error in getting transform matrix";
     }
 
     return res;

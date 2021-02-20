@@ -35,6 +35,8 @@ using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace std;
 
+YARP_LOG_COMPONENT(ROBOTGOTO_EXAMPLE, "navigation.robotGotoExample")
+
 void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
 {
     Map2DLocation pos;
@@ -47,7 +49,7 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
         iNav->getNavigationStatus(status);
         if (status == navigation_status_idle) break;
 
-        yInfo() << "Current navigation status:" << yarp::os::Vocab::decode(status) << "Waiting for navigation_status_idle";
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Current navigation status:" << yarp::os::Vocab::decode(status) << "Waiting for navigation_status_idle";
         yarp::os::Time::delay(0.1);
     } while (1);
 
@@ -64,17 +66,17 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
         if (status == navigation_status_aborted) break;
         if (status == navigation_status_failing) break;
 
-        yInfo() << "Current navigation status:" << yarp::os::Vocab::decode(status);
-        yInfo() << "Current position:" << pos.toString();
-        yInfo() << "Current goal:" << goal.toString();
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Current navigation status:" << yarp::os::Vocab::decode(status);
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Current position:" << pos.toString();
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Current goal:" << goal.toString();
 
         if (goal.map_id == pos.map_id)
         {
-            yInfo() << "Distance from goal:" << sqrt(pow((pos.x - goal.x), 2) + pow((pos.y - goal.y), 2));
+            yCInfo(ROBOTGOTO_EXAMPLE) << "Distance from goal:" << sqrt(pow((pos.x - goal.x), 2) + pow((pos.y - goal.y), 2));
         }
         else
         {
-            yError() << "Your current position is not in the same map of the current goal. Unable to reach goal.";
+            yCError(ROBOTGOTO_EXAMPLE) << "Your current position is not in the same map of the current goal. Unable to reach goal.";
         }
         yarp::os::Time::delay(1.0);
     }
@@ -82,15 +84,15 @@ void gotoLoc(Map2DLocation goal, INavigation2D* iNav)
 
     if (status == navigation_status_goal_reached)
     {
-        yInfo() << "goal reached!";
+        yCInfo(ROBOTGOTO_EXAMPLE) << "goal reached!";
     }
     else if (status == navigation_status_aborted)
     {
-        yInfo() << "Unable to reach goal: navigation_status_aborted";
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Unable to reach goal: navigation_status_aborted";
     }
     else if (status == navigation_status_failing)
     {
-        yInfo() << "Unable to reach goal: navigation_status_failing";
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Unable to reach goal: navigation_status_failing";
     }
 
     //Terminates the navigation task.
@@ -108,7 +110,7 @@ int main(int argc, char* argv[])
 
     if (rf.check("help"))
     {
-        yInfo("No help message");
+        yCInfo(ROBOTGOTO_EXAMPLE,"No help message");
         return 0;
     }
 
@@ -116,7 +118,7 @@ int main(int argc, char* argv[])
     Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError("Sorry YARP network does not seem to be available, is the yarp server available?\n");
+        yCError(ROBOTGOTO_EXAMPLE,"Sorry YARP network does not seem to be available, is the yarp server available?\n");
         return -1;
     }
 
@@ -137,7 +139,7 @@ int main(int argc, char* argv[])
     bool ok = ddNavClient.open(navTestCfg);
     if (!ok)
     {
-        yError() << "Unable to open navigation2DClient device driver";
+        yCError(ROBOTGOTO_EXAMPLE) << "Unable to open navigation2DClient device driver";
         return -1;
     }
 
@@ -146,7 +148,7 @@ int main(int argc, char* argv[])
     ok = ddNavClient.view(iNav);
     if (!ok)
     {
-        yError() << "Unable to open INavigation2D interface";
+        yCError(ROBOTGOTO_EXAMPLE) << "Unable to open INavigation2D interface";
         return -1;
     }
 
@@ -170,16 +172,16 @@ int main(int argc, char* argv[])
     for (int i = 0; i < 5; i++)
     {
         //move the robot until goal1 location is reached.
-        yInfo() << "Now moving towards location:" << goal1.toString();
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Now moving towards location:" << goal1.toString();
         gotoLoc(goal1, iNav);
 
         //move the robot until goal2 location reached.
-        yInfo() << "Now moving towards location:" << goal2.toString();
+        yCInfo(ROBOTGOTO_EXAMPLE) << "Now moving towards location:" << goal2.toString();
         gotoLoc(goal2, iNav);
     }
 
     //Closes the navigation2DClient
-    yInfo() << "RobotGotoPlannerExample complete";
+    yCInfo(ROBOTGOTO_EXAMPLE) << "RobotGotoPlannerExample complete";
     yarp::os::Time::delay(1.0);
     ddNavClient.close();
     return 0;

@@ -9,8 +9,11 @@
 #include "joystick2velocityCommand.h"
 
 #include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/Bottle.h>
+
+YARP_LOG_COMPONENT(JOY2VEL, "navigation.Joy2Vel")
 
 Joy2vel::Joy2vel()
 {
@@ -21,11 +24,11 @@ bool Joy2vel::accept(yarp::os::Things& thing)
 {
     yarp::os::Bottle *bot = thing.cast_as<yarp::os::Bottle>();
     if (bot == NULL) {
-        yWarning("Joy2vel: expected type Bottle but got wrong data type!");
+        yCWarning(JOY2VEL,"expected type Bottle but got wrong data type!");
         return false;
     }
     if (bot->size() != 5) {
-        yWarning("Joy2vel: expected Bottle of size 5 but got wrong size (%zd)!", bot->size());
+        yCWarning(JOY2VEL,"expected Bottle of size 5 but got wrong size (%zd)!", bot->size());
         return false;
     }
     return true;
@@ -43,7 +46,7 @@ bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
     { 
         return true;
     }
-    yError("Invalid bottle format");
+    yCError(JOY2VEL,"Invalid bottle format");
     return false;
 }
 

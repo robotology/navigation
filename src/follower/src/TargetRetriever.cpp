@@ -19,13 +19,15 @@
 using namespace yarp::os;
 using namespace FollowerTarget;
 
+YARP_LOG_COMPONENT(FOLLOWER_TARGETRET, "navigation.follower.targerRetriever")
+
 TargetRetriever::TargetRetriever(): m_debugOn(false){;}
 
 bool TargetRetriever::initInputPort(std::string inputPortName)
 {
     if(! m_inputPort.open(inputPortName))
     {
-        yError() << "TargetPointRetriever:Error opening input port";
+        yCError(FOLLOWER_TARGETRET) << "TargetPointRetriever:Error opening input port";
         return false;
     }
     return true;

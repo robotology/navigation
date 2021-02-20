@@ -249,7 +249,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     verty[3] = vx[3] * sbeta + vy[3] * cbeta;
 
 #if 0
-    yDebug() << beta << "(" << vertx[0] << verty[0] << ")"
+    yCDebug() << beta << "(" << vertx[0] << verty[0] << ")"
     << "(" << vertx[1] << verty[1] << ")"
     << "(" << vertx[2] << verty[2] << ")"
     << "(" << vertx[3] << verty[3] << ")";
@@ -269,7 +269,7 @@ bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>&
     LaserMeasurementData m;
     m.set_polar(1, 1.5707);
     double xx, yy;
-    m.get_cartesian(xx, yy); yDebug() << xx << yy;
+    m.get_cartesian(xx, yy); yCDebug() << xx << yy;
     laser_data.push_back(m);
     */
 

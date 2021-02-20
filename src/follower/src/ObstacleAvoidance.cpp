@@ -20,6 +20,8 @@
 
 #include "ObstacleAvoidance.h"
 
+YARP_LOG_COMPONENT(FOLLOWER_OBS, "navigation.follower.obstacleAvoidance")
+
 using namespace FollowerTarget;
 using namespace FollowerTarget::Obstacle;
 using namespace yarp::os;
@@ -36,7 +38,7 @@ bool ObstacleVerifier::configure(yarp::os::ResourceFinder &rf)
     Bottle config_group = rf.findGroup("OBSTACLE_AVOIDANCE");
     if (config_group.isNull())
     {
-        yError() << "Missing OBSTACLE_AVOIDANCE group! the module will not use OBSTACLE_AVOIDANCE fetures!";
+        yCError(FOLLOWER_OBS) << "Missing OBSTACLE_AVOIDANCE group! the module will not use OBSTACLE_AVOIDANCE fetures!";
     }
     else
     {
@@ -54,7 +56,7 @@ bool ObstacleVerifier::configure(yarp::os::ResourceFinder &rf)
     m_isRunning = true;
 
     if(m_debugOn)
-        yInfo () << "OBSTACLE_AVOIDANCE has been configured!";
+        yCInfo (FOLLOWER_OBS) << "OBSTACLE_AVOIDANCE has been configured!";
     return true;
 }
 
@@ -71,7 +73,7 @@ bool ObstacleVerifier::initLaserClient(yarp::os::ResourceFinder &rf)
     bool ok_open = m_driver.open(prop);
     if (!ok_open)
     {
-        yError() << "Unable to open the Rangefinder2DClient driver.";
+        yCError(FOLLOWER_OBS) << "Unable to open the Rangefinder2DClient driver.";
         return false;
     }
 
@@ -79,12 +81,12 @@ bool ObstacleVerifier::initLaserClient(yarp::os::ResourceFinder &rf)
     bool ok_view = m_driver.view(m_laser);
     if (!ok_view || m_laser == 0)
     {
-        yError() << "Unable to retrieve the Rangefinder2DClient view.";
+        yCError(FOLLOWER_OBS) << "Unable to retrieve the Rangefinder2DClient view.";
         return false;
     }
 
     if(m_debugOn)
-        yInfo () << "OBSTACLE_AVOIDANCE: Rangefinder2DClient driver has been initialized correctly !";
+        yCInfo (FOLLOWER_OBS) << "OBSTACLE_AVOIDANCE: Rangefinder2DClient driver has been initialized correctly !";
 
     //from now I can use m_laser
     return true;
@@ -107,14 +109,14 @@ Result ObstacleVerifier::checkObstaclesInPath()
     Result result;
     if(!ret)
     {
-        yError() << "Error getting laser measurements";
+        yCError(FOLLOWER_OBS) << "Error getting laser measurements";
         result.resultIsValid=false;
         return result;
     }
 
     if(m_laser_data.size()<=0)
     {
-        yError() << "No laser data available. (size=0)";
+        yCError(FOLLOWER_OBS) << "No laser data available. (size=0)";
         result.resultIsValid=false;
         return result;
     }
@@ -191,7 +193,7 @@ bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementD
             //We only want to notify the user. VALE: now removed TODO. add info in result
 //             if (yarp::os::Time::now() - last_time_error_message > 0.3)
 //             {
-//                 yError("obstacles on the platform");
+//                 yCError("obstacles on the platform");
 //                 last_time_error_message = yarp::os::Time::now();
 //             }
             continue;
@@ -211,7 +213,7 @@ bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementD
             else
             {
                 if(m_debugOn)
-                    yInfo("OBSTACLE_AVOIDANCE: obstacles on the path, but goal is near");
+                    yCInfo(FOLLOWER_OBS,"obstacles on the path, but goal is near");
                 continue;
             }
         }
@@ -222,7 +224,7 @@ bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementD
     {
 //         if (yarp::os::Time::now() - m_last_print_time > 1.0)
 //         {
-//             yWarning("obstacles detected");
+//             yCWarning("obstacles detected");
 //             m_last_print_time = yarp::os::Time::now();
 //         }
         return true;

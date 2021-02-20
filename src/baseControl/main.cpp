@@ -44,6 +44,8 @@
  * A detailed description of configuration parameters available for the module is provided in the README.md file.
  */
 
+YARP_LOG_COMPONENT(BASECONTROL_MAIN, "navigation.baseControl.main")
+
 /////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
@@ -64,13 +66,13 @@ int main(int argc, char *argv[])
 
     if (rf.check("help"))
     {
-        yInfo("Possible options: ");
-        yInfo("'rate <r>' sets the threads rate (default 20ms).");
-        yInfo("'no_filter' disables command filtering.");
-        yInfo("'no_motors' motor interface will not be opened.");
-        yInfo("'no_start' do not automatically enables pwm.");
-        yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
-        yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
+        yCInfo(BASECONTROL_MAIN,"Possible options: ");
+        yCInfo(BASECONTROL_MAIN, "'rate <r>' sets the threads rate (default 20ms).");
+        yCInfo(BASECONTROL_MAIN, "'no_filter' disables command filtering.");
+        yCInfo(BASECONTROL_MAIN, "'no_motors' motor interface will not be opened.");
+        yCInfo(BASECONTROL_MAIN, "'no_start' do not automatically enables pwm.");
+        yCInfo(BASECONTROL_MAIN, "'joystick_connect' tries to automatically connect to the joystickCtrl output.");
+        yCInfo(BASECONTROL_MAIN, "'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
         return 0;
     }
 

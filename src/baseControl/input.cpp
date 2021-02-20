@@ -29,22 +29,24 @@
 #define RAD2DEG 180.0/M_PI
 #endif 
 
+YARP_LOG_COMPONENT(INPUT_HND, "navigation.baseControl.input")
+
 void Input::printStats()
 {
-    yInfo( "* Input thread:\n");
+    yCInfo(INPUT_HND, "* Input thread:\n");
     if (rosInputEnabled)
     {
-       yInfo( "timeouts: %d joy1: %d joy2: %d aux: %d cmd: %d ros: %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter, ros_timeout_counter);
+       yCInfo(INPUT_HND, "timeouts: %d joy1: %d joy2: %d aux: %d cmd: %d ros: %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter, ros_timeout_counter);
     }
     else
     {
-	   yInfo( "timeouts: %d joy1: %d joy2: %d aux: %d cmd: %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter);
+        yCInfo(INPUT_HND, "timeouts: %d joy1: %d joy2: %d aux: %d cmd: %d\n", thread_timeout_counter, joy_timeout_counter[0], joy_timeout_counter[1], aux_timeout_counter, mov_timeout_counter);
     }
 
     if (joystick_received[0]>0) 
-        yInfo( "Under joystick1 control (%d)\n", joystick_received[0]);
+        yCInfo(INPUT_HND, "Under joystick1 control (%d)\n", joystick_received[0]);
     if (joystick_received[1]>0) 
-        yInfo( "Under joystick2 control (%d)\n", joystick_received[1]);
+        yCInfo(INPUT_HND, "Under joystick2 control (%d)\n", joystick_received[1]);
 }
 
 void Input::close()
@@ -81,19 +83,19 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
         Value joydevicename = joypad_group.find("JoypadDevice");
         if (!joydevicename.isString())
         {
-            yError() << "baseControl: JoypadDevice param is not a string";
+            yCError(INPUT_HND) << "baseControl: JoypadDevice param is not a string";
             return false;
         }
         Value joylocal = joypad_group.find("local");
         if (!joylocal.isString())
         {
-            yError() << "baseControl: JoypadDevice param is not a string";
+            yCError(INPUT_HND) << "baseControl: JoypadDevice param is not a string";
             return false;
         }
         Value joyremote = joypad_group.find("remote");
         if (!joyremote.isString())
         {
-            yError() << "baseControl: JoypadDevice param is not a string";
+            yCError(INPUT_HND) << "baseControl: JoypadDevice param is not a string";
             return false;
         }
 
@@ -131,13 +133,13 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
 
             if(!idFound)
             {
-                yError() << "baseControl: param" << std::get<0>(p)+Error+"_id" << "not found or not a int in configuration file";
+                yCError(INPUT_HND) << "baseControl: param" << std::get<0>(p)+Error+"_id" << "not found or not a int in configuration file";
                 return false;
             }
 
             if(!facFound)
             {
-                yError() << "baseControl: param" << std::get<0>(p)+Error+"_factor" << "not found or not a int in configuration file";
+                yCError(INPUT_HND) << "baseControl: param" << std::get<0>(p)+Error+"_factor" << "not found or not a int in configuration file";
                 return false;
             }
 
@@ -146,7 +148,7 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
                         std::get<0>(p) == "y" ||
                         std::get<0>(p) == "t"))
             {
-                yError() << "at the moment xAxis, yAxis and tAxis cannot be mapped to buttons";
+                yCError(INPUT_HND) << "at the moment xAxis, yAxis and tAxis cannot be mapped to buttons";
                 return false;
             }
 
@@ -155,7 +157,7 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
             *std::get<3>(p) = joypad_group.find(factorPar).asDouble();
         }
 
-        yInfo() << "opening" << joydevicename.asString() << "device";
+        yCInfo(INPUT_HND) << "opening" << joydevicename.asString() << "device";
         Property joycfg;
         joycfg.put("device", joydevicename.asString());
         joycfg.put("local", joylocal.toString());
@@ -163,21 +165,21 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
 
         if (!joyPolyDriver[n].open(joycfg))
         {
-            yError() << "baseControl: could not open the joypad device";
+            yCError(INPUT_HND) << "baseControl: could not open the joypad device";
             return false;
         }
 
         joyPolyDriver[n].view(iJoy[n]);
         if (!iJoy[n])
         {
-            yError() << "joypad Device must implement the IJoypadController interface";
+            yCError(INPUT_HND) << "joypad Device must implement the IJoypadController interface";
             return false;
         }
         unsigned int count;
         iJoy[n]->getAxisCount(count);
         if(count < 4)
         {
-            yError() << "joypad must have at least 3 axes";
+            yCError(INPUT_HND) << "joypad must have at least 3 axes";
             return false;
         }
     }
@@ -195,7 +197,7 @@ bool Input::open(Property &_options)
 
     if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [BASECTRL_GENERAL] section";
+        yCError(INPUT_HND) << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
@@ -208,7 +210,7 @@ bool Input::open(Property &_options)
         if (ctrl_options.check("ROS_INPUT"))
         {
             yarp::os::Bottle rin_group = ctrl_options.findGroup("ROS_INPUT");
-            if (rin_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
+            if (rin_group.check("topic_name") == false)  { yCError(INPUT_HND) << "Missing topic_name parameter"; return false; }
             rosTopicName_twist = rin_group.find("topic_name").asString();
             rosInputEnabled = true;
         }
@@ -219,7 +221,7 @@ bool Input::open(Property &_options)
         
         if (!rosSubscriberPort_twist.topic(rosTopicName_twist))
         {
-            yError() << " opening " << rosTopicName_twist << " Topic, check your yarp-ROS network configuration\n";
+            yCError(INPUT_HND) << " opening " << rosTopicName_twist << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
     }
@@ -236,7 +238,7 @@ bool Input::open(Property &_options)
     //Joystick1
     if (general_options.check("joypad1_configuration")==false)
     {
-        yError() << "joypad1 device not configured";
+        yCError(INPUT_HND) << "joypad1 device not configured";
         return false;
     }
     else
@@ -244,7 +246,7 @@ bool Input::open(Property &_options)
         string joypad_group_name = general_options.find("joypad1_configuration").toString();
         if (joypad_group_name == "<none>")
         {
-            yInfo() << "No Joystick1 selected";
+            yCInfo(INPUT_HND) << "No Joystick1 selected";
         }
         else if (joypad_group_name=="<joystick_port>")
         {
@@ -256,12 +258,12 @@ bool Input::open(Property &_options)
             Bottle joypad_group = ctrl_options.findGroup(joypad_group_name);
             if (joypad_group.isNull())
             {
-                yError() << "Unable to find joypad section" << joypad_group_name;
+                yCError(INPUT_HND) << "Unable to find joypad section" << joypad_group_name;
                 return false;
             }
             if (configureJoypdad(0,joypad_group)==false)
             {
-                yError("Unable to configure joystick: JoypadDevice option not set.");
+                yCError(INPUT_HND,"Unable to configure joystick: JoypadDevice option not set.");
                 return false;
             }
         }
@@ -270,7 +272,7 @@ bool Input::open(Property &_options)
     //Joystick2
     if (general_options.check("joypad2_configuration")==false)
     {
-        yError() << "joypad2 device not configured";
+        yCError(INPUT_HND) << "joypad2 device not configured";
         return false;
     }
     else
@@ -278,7 +280,7 @@ bool Input::open(Property &_options)
         string joypad_group_name = general_options.find("joypad2_configuration").toString();
         if (joypad_group_name == "<none>")
         {
-            yInfo() << "No Joystick2 selected";
+            yCInfo(INPUT_HND) << "No Joystick2 selected";
         }
         else if (joypad_group_name=="<joystick_port>")
         {
@@ -290,12 +292,12 @@ bool Input::open(Property &_options)
             Bottle joypad_group = ctrl_options.findGroup(joypad_group_name);
             if (joypad_group.isNull())
             {
-                yError() << "Unable to find joypad section" << joypad_group_name;
+                yCError(INPUT_HND) << "Unable to find joypad section" << joypad_group_name;
                 return false;
             }
             if (configureJoypdad(1,joypad_group)==false)
             {
-                yError("Unable to configure joystick: JoypadDevice option not set.");
+                yCError(INPUT_HND,"Unable to configure joystick: JoypadDevice option not set.");
                 return false;
             }
          }
@@ -446,68 +448,70 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     //- - -read joysticks - - -
     for (int id=0; id<2; id++)
     {
+        //port joystick
         if (port_joystick_control[id])
-        if (Bottle* b = port_joystick_control[id]->read(false))
-        {                
-            if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
-            {
-                //received a joystick command.
-                read_percent_polar(b, joy_desired_direction[id],joy_linear_speed[id],joy_angular_speed[id],joy_pwm_gain[id]);
-                joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
-                joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
-                joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
-                joy_angular_speed[id] = (joy_angular_speed[id] < -100) ? -100 : joy_angular_speed[id];
-                joy_linear_speed[id] = joy_linear_speed[id] / 100 * linear_vel_at_100_joy;
-                joy_angular_speed[id] = joy_angular_speed[id] / 100 * angular_vel_at_100_joy;
-                wdt_old_joy_cmd = wdt_joy_cmd[id];
-                wdt_joy_cmd[id] = Time::now();
+        {
+            if (Bottle* b = port_joystick_control[id]->read(false))
+            {                
+                if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
+                {
+                    //received a joystick command.
+                    read_percent_polar(b, joy_desired_direction[id],joy_linear_speed[id],joy_angular_speed[id],joy_pwm_gain[id]);
+                    joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
+                    joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
+                    joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
+                    joy_angular_speed[id] = (joy_angular_speed[id] < -100) ? -100 : joy_angular_speed[id];
+                    joy_linear_speed[id] = joy_linear_speed[id] / 100 * linear_vel_at_100_joy;
+                    joy_angular_speed[id] = joy_angular_speed[id] / 100 * angular_vel_at_100_joy;
+                    wdt_old_joy_cmd = wdt_joy_cmd[id];
+                    wdt_joy_cmd[id] = Time::now();
 
-                //Joystick commands have higher priority respect to movement commands.
-                //this make the joystick to take control for 100*20 ms
-                if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
-            }
-            else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_POLAR)
-            {
-                //received a joystick command.
-                read_speed_polar(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
-                joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
-                joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
-                joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
-                joy_angular_speed[id] = (joy_angular_speed[id] < -100) ? -100 : joy_angular_speed[id];
-                joy_linear_speed[id] = joy_linear_speed[id] / 100 * linear_vel_at_100_joy;
-                joy_angular_speed[id] = joy_angular_speed[id] / 100 * angular_vel_at_100_joy;
-                wdt_old_joy_cmd = wdt_joy_cmd[id];
-                wdt_joy_cmd[id] = Time::now();
+                    //Joystick commands have higher priority respect to movement commands.
+                    //this make the joystick to take control for 100*20 ms
+                    if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
+                }
+                else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_POLAR)
+                {
+                    //received a joystick command.
+                    read_speed_polar(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
+                    joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
+                    joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
+                    joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
+                    joy_angular_speed[id] = (joy_angular_speed[id] < -100) ? -100 : joy_angular_speed[id];
+                    joy_linear_speed[id] = joy_linear_speed[id] / 100 * linear_vel_at_100_joy;
+                    joy_angular_speed[id] = joy_angular_speed[id] / 100 * angular_vel_at_100_joy;
+                    wdt_old_joy_cmd = wdt_joy_cmd[id];
+                    wdt_joy_cmd[id] = Time::now();
 
-                //Joystick commands have higher priority respect to movement commands.
-                //this make the joystick to take control for 100*20 ms
-                if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
-            }
-            else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
-            {
-                //received a joystick command.
-                read_speed_cart(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
-                joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
-                joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
-                joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
-                joy_angular_speed[id] = (joy_angular_speed[id] < -100) ? -100 : joy_angular_speed[id];
-                joy_linear_speed[id] = joy_linear_speed[id] / 100 * linear_vel_at_100_joy;
-                joy_angular_speed[id] = joy_angular_speed[id] / 100 * angular_vel_at_100_joy;
-                wdt_old_joy_cmd = wdt_joy_cmd[id];
-                wdt_joy_cmd[id] = Time::now();
+                    //Joystick commands have higher priority respect to movement commands.
+                    //this make the joystick to take control for 100*20 ms
+                    if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
+                }
+                else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
+                {
+                    //received a joystick command.
+                    read_speed_cart(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
+                    joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
+                    joy_angular_speed[id] = (joy_angular_speed[id] > 100) ? 100 : joy_angular_speed[id];
+                    joy_linear_speed[id] = (joy_linear_speed[id] < -100) ? -100 : joy_linear_speed[id];
+                    joy_angular_speed[id] = (joy_angular_speed[id] < -100) ? -100 : joy_angular_speed[id];
+                    joy_linear_speed[id] = joy_linear_speed[id] / 100 * linear_vel_at_100_joy;
+                    joy_angular_speed[id] = joy_angular_speed[id] / 100 * angular_vel_at_100_joy;
+                    wdt_old_joy_cmd = wdt_joy_cmd[id];
+                    wdt_joy_cmd[id] = Time::now();
 
-                //Joystick commands have higher priority respect to movement commands.
-                //this make the joystick to take control for 100*20 ms
-                if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
-            }
-            else
-            {
-                yError() << "Invalid format received on port_joystick_control";
+                    //Joystick commands have higher priority respect to movement commands.
+                    //this make the joystick to take control for 100*20 ms
+                    if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
+                }
+                else
+                {
+                    yCError(INPUT_HND) << "Invalid format received on port_joystick_control";
+                }
             }
         }
-
-        //- - -read joystick2 - - -
-        if(iJoy[id])
+        //- device joystick
+        else if(iJoy[id])
         {
             read_joystick_data(&jDescr[id], iJoy[id],joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
             joy_linear_speed[id] = (joy_linear_speed[id] > 100) ? 100 : joy_linear_speed[id];
@@ -551,7 +555,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
         }
         else
         {
-            yError() << "Invalid format received on port_movement_control";
+            yCError(INPUT_HND) << "Invalid format received on port_movement_control";
         }
     }
 
@@ -624,7 +628,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     //watchdog on received commands
     static double wdt_old=Time::now();
     double wdt=Time::now();
-    //yDebug("period: %f\n", wdt-wdt_old);
+    //yCDebug("period: %f\n", wdt-wdt_old);
     if (wdt-wdt_mov_cmd > 0.200)
     {
         cmd_desired_direction=0;
