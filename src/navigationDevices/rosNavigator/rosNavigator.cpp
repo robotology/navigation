@@ -53,6 +53,7 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
     m_abs_frame_id = "map";
     m_moveBase_isAction = true;
+    m_last_goal_id = "goal_0";
 }
 
 bool rosNavigator::open(yarp::os::Searchable &config)
@@ -317,7 +318,7 @@ void rosNavigator::run()
     yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
     if (statusArray)
     {
-        switch (statusArray->status_list[0].status)
+        switch (statusArray->status_list[statusArray->status_list.size()-1].status)
         {
         case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:
         {
@@ -391,18 +392,21 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
     gpose.orientation.w = q.w();
     m_current_goal = loc;
 
+    double temp_current_time_secs = yarp::os::Time::now();
+    m_last_goal_id = "goal_" + std::to_string(temp_current_time_secs);
+
     if (m_moveBase_isAction)
     {
         yarp::rosmsg::move_base_msgs::MoveBaseActionGoal &goal = m_rosPublisher_goal.prepare();
         goal.clear();
         goal.header.frame_id = "";
         goal.header.seq = 0;
-        goal.header.stamp.sec = yarp::os::Time::now();
+        goal.header.stamp.sec = temp_current_time_secs;
         goal.header.stamp.nsec = 0;
-        goal.goal_id.id = "goal_0";
+        goal.goal_id.id = m_last_goal_id;
         goal.goal.target_pose.header.frame_id = m_abs_frame_id;
         goal.goal.target_pose.header.seq = 0;
-        goal.goal.target_pose.header.stamp.sec = yarp::os::Time::now();
+        goal.goal.target_pose.header.stamp.sec = temp_current_time_secs;
         goal.goal.target_pose.header.stamp.nsec = 0;
         goal.goal.target_pose.pose = gpose;
         m_rosPublisher_goal.write();
@@ -413,7 +417,7 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
         pos.clear();
         pos.header.frame_id = m_abs_frame_id;
         pos.header.seq = 0;
-        pos.header.stamp.sec = yarp::os::Time::now();
+        pos.header.stamp.sec = temp_current_time_secs;
         pos.header.stamp.nsec = 0;
         pos.pose = gpose;
         m_rosPublisher_simple_goal.write();
@@ -470,7 +474,7 @@ bool rosNavigator::stopNavigation()
 {
     yarp::rosmsg::actionlib_msgs::GoalID &goal_id = m_rosPublisher_cancel.prepare();
     goal_id.clear();
-    goal_id.id = "goal_0";
+    goal_id.id = m_last_goal_id;
     m_rosPublisher_cancel.write();
 
     m_navigation_status = navigation_status_idle;
