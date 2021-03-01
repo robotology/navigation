@@ -52,7 +52,8 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
 //    m_abs_frame_id = "/odom";
-    m_abs_frame_id = "/map";
+    m_abs_frame_id = "map";
+    m_moveBase_isAction = true;
 }
 
 bool rosNavigator::open(yarp::os::Searchable& config)
@@ -82,6 +83,15 @@ bool rosNavigator::open(yarp::os::Searchable& config)
         }
         m_rosTopicName_goal = rosGroup.find("ROS_topicName_goal").asString();
         yInfo() << "rosNavigator: ROS_topicName_goal is " << m_rosTopicName_goal;
+
+        // check for ROS_goalIsAction parameter
+        if (!rosGroup.check("ROS_goalIsAction"))
+        {
+            yError() << " rosNavigator: cannot find ROS_goalIsAction parameter, mandatory when using ROS message";
+            return false;
+        }
+        m_moveBase_isAction = rosGroup.find("ROS_goalIsAction").asBool();
+        yInfo() << "rosNavigator: ROS_goalIsAction is " << m_moveBase_isAction;
     }
 
     //open ROS stuff
@@ -341,18 +351,18 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
         m_current_goal = loc;
         //m_current_goal.map_id = "ros_map";
 
-        if (1)
+        if (m_moveBase_isAction)
         {
             yarp::rosmsg::move_base_msgs::MoveBaseActionGoal& goal = m_rosPublisher_goal.prepare();
             goal.clear();
-            goal.header.frame_id = m_abs_frame_id;
+            goal.header.frame_id = "";
             goal.header.seq = 0;
-            goal.header.stamp.sec = 0;
+            goal.header.stamp.sec = yarp::os::Time::now();
             goal.header.stamp.nsec = 0;
-            goal.goal_id.id = "goal_0";
+            goal.goal_id.id = "";
             goal.goal.target_pose.header.frame_id = m_abs_frame_id;
             goal.goal.target_pose.header.seq = 0;
-            goal.goal.target_pose.header.stamp.sec = 0;
+            goal.goal.target_pose.header.stamp.sec = yarp::os::Time::now();
             goal.goal.target_pose.header.stamp.nsec = 0;
             goal.goal.target_pose.pose = gpose;
             m_rosPublisher_goal.write();
@@ -363,7 +373,7 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
             pos.clear();
             pos.header.frame_id = m_abs_frame_id;
             pos.header.seq = 0;
-            pos.header.stamp.sec = 0;
+            pos.header.stamp.sec = yarp::os::Time::now();
             pos.header.stamp.nsec = 0;
             pos.pose = gpose;
             m_rosPublisher_simple_goal.write();
