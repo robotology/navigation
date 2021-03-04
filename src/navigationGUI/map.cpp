@@ -45,6 +45,8 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace map_utilites;
 
+YARP_LOG_COMPONENT(NAVIGATION_GUI_MAP, "navigation.navigationGui.map")
+
 bool map_utilites::sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >* port, IplImage* image_to_send)
 {
     if (port!=0 && port->getOutputCount()>0)
@@ -200,7 +202,7 @@ void map_utilites::update_obstacles_map(MapGrid2D& map_to_be_updated, const MapG
     if (map_to_be_updated.width() != obstacles_map.width() ||
         map_to_be_updated.height() != map_to_be_updated.height())
     {
-        yError() << "update_obstacles_map: the two maps must have the same size!";
+        yCError(NAVIGATION_GUI_MAP) << "update_obstacles_map: the two maps must have the same size!";
         return;
     }
     for (size_t y=0; y<map_to_be_updated.height(); y++)

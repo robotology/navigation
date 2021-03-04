@@ -16,6 +16,8 @@
 using namespace yarp::os;
 using namespace FollowerTarget;
 
+YARP_LOG_COMPONENT(FOLLOWER_MODELRET, "navigation.follower.modelRetriever")
+
 bool HumanModel3DPointRetriever::init(yarp::os::ResourceFinder &rf)
 {
     m_refFrame=ReferenceFrameOfTarget_t::mobile_base_body_link;
@@ -23,7 +25,7 @@ bool HumanModel3DPointRetriever::init(yarp::os::ResourceFinder &rf)
     std::string portname="/follower/humanModelRetriver/rpc";
     if(!m_worldInterfacePort.open(portname))
     {
-        yError() << "HumanModel3DPointRetriever: error in opening" << portname << "rpc port";
+        yCError(FOLLOWER_MODELRET) << "HumanModel3DPointRetriever: error in opening" << portname << "rpc port";
         return false;
     }
 
@@ -46,7 +48,7 @@ Target_t HumanModel3DPointRetriever::getTarget(void)
     m_worldInterfacePort.write(cmdGet, ansGet);
 
     if(m_debugOn)
-        yDebug() << "HumanModel3DPointRetriever: cmd-GET= " << cmdGet.toString() << "  Ans=" << ansGet.toString();
+        yCDebug(FOLLOWER_MODELRET) << "HumanModel3DPointRetriever: cmd-GET= " << cmdGet.toString() << "  Ans=" << ansGet.toString();
 
 
     //NOTE: if Luca doesn't exist in Gazebo than the answer is "0.0 0.0 0.0 0.0 0.0 0.0".

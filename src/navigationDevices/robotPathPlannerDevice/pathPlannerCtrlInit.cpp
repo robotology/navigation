@@ -280,8 +280,8 @@ bool PlannerThread::threadInit()
         string tmp = rf.toString();
         innerNav_options.fromString(tmp);
         innerNav_options.put("device", m_localNavigatorPlugin_name);
-        yDebug() << "Opening local navigator" << m_localNavigatorPlugin_name << "with params: "<< " --context" << inner_ctex << " --from" << inner_file;
-        yDebug() << "Full configuration:" << innerNav_options.toString();
+        yCDebug(PATHPLAN_INIT) << "Opening local navigator" << m_localNavigatorPlugin_name << "with params: "<< " --context" << inner_ctex << " --from" << inner_file;
+        yCDebug(PATHPLAN_INIT) << "Full configuration:" << innerNav_options.toString();
 
         if (m_pInnerNav.open(innerNav_options) == false)
         {

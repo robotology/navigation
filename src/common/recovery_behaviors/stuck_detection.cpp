@@ -11,24 +11,26 @@
 using namespace yarp::dev::Nav2D;
 using namespace yarp::os;
 
+YARP_LOG_COMPONENT(STUCK_DETECT, "navigation.navigation_lib.struck_detection")
+
 bool navigation_with_stuck_detection::initialize_recovery(yarp::os::Searchable& config)
 {
     yarp::os::Bottle& recovGroup = config.findGroup("RECOVERY");
     if (recovGroup.isNull())
     {
-        yInfo() << "No recovery strategy selected. If needed please add a RECOVERY section";
+        yCInfo(STUCK_DETECT) << "No recovery strategy selected. If needed please add a RECOVERY section";
     }
     else
     {
-        if (!recovGroup.check("enable")) {yError() << "Missing RECOVERY::enable option"; return false;}
+        if (!recovGroup.check("enable")) {yCError(STUCK_DETECT) << "Missing RECOVERY::enable option"; return false;}
         m_stuck_recovery_enable = recovGroup.find("enable").asBool();
-        if (!recovGroup.check("lin_tolerance")) { yError() << "Missing RECOVERY::lin_tolerance option"; return false; }
+        if (!recovGroup.check("lin_tolerance")) { yCError(STUCK_DETECT) << "Missing RECOVERY::lin_tolerance option"; return false; }
         m_stuck_linear_tolerance = recovGroup.find("lin_tolerance").asFloat64();
-        if (!recovGroup.check("ang_tolerance")) { yError() << "Missing RECOVERY::ang_tolerance option"; return false; }
+        if (!recovGroup.check("ang_tolerance")) { yCError(STUCK_DETECT) << "Missing RECOVERY::ang_tolerance option"; return false; }
         m_stuck_angular_tolerance = recovGroup.find("ang_tolerance").asFloat64();
-        if (!recovGroup.check("time_tolerance")) { yError() << "Missing RECOVERY::time_tolerance option"; return false; }
+        if (!recovGroup.check("time_tolerance")) { yCError(STUCK_DETECT) << "Missing RECOVERY::time_tolerance option"; return false; }
         m_stuck_time_tolerance = recovGroup.find("time_tolerance").asFloat64();
-        if (!recovGroup.check("algorithm_name")) { yError() << "Missing RECOVERY::algorithm_name option"; return false; }
+        if (!recovGroup.check("algorithm_name")) { yCError(STUCK_DETECT) << "Missing RECOVERY::algorithm_name option"; return false; }
         m_recovery_algorithm_name = recovGroup.find("algorithm_name").asString();
         
         if (m_recovery_algorithm_name == "rotation_in_place")
@@ -37,7 +39,7 @@ bool navigation_with_stuck_detection::initialize_recovery(yarp::os::Searchable& 
         }
         else
         {
-            yError() << "Unknown recovery algorithm:" << m_recovery_algorithm_name;
+            yCError(STUCK_DETECT) << "Unknown recovery algorithm:" << m_recovery_algorithm_name;
             return false;
         }
     }

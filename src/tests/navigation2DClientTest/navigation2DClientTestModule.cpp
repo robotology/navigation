@@ -25,6 +25,9 @@ using namespace yarp::dev::Nav2D;
 using namespace std;
 #define PERIOD  0
 #define TIMEOUT 60
+
+YARP_LOG_COMPONENT(NAV_CLIENT_TEST, "navigation.navigation2DClientTest")
+
 NavTestModule::NavTestModule()
 {
     period          = PERIOD;
@@ -67,7 +70,7 @@ bool NavTestModule::configure(ResourceFinder& rf)
     pLocationServer_cfg.put("local", "/locationServer");
     pLocationServer_cfg.put("ROS_enabled", "");
     bool ok_location = ddLocServer.open(pLocationServer_cfg);
-    if(ok_location){yInfo() << "ddLocationServer open reported successful";};
+    if(ok_location){yCInfo(NAV_CLIENT_TEST) << "ddLocationServer open reported successful";};
 
     navTestCfg.put("device",         "navigation2DClient");
     navTestCfg.put("local",          "/navigationTest");
@@ -81,20 +84,20 @@ bool NavTestModule::configure(ResourceFinder& rf)
 
     if(okClient)
     {
-        yInfo("navigation2DClient device opened successful;y");
+        yCInfo(NAV_CLIENT_TEST,"navigation2DClient device opened successful;y");
         if(okView)
         {
-            yInfo("INavigation2D interface opened successfully");
+            yCInfo(NAV_CLIENT_TEST,"INavigation2D interface opened successfully");
         }
         else
         {
-            yError("Error opening INavigation2D interface");
+            yCError(NAV_CLIENT_TEST,"Error opening INavigation2D interface");
             return false;
         }
     }
     else
     {
-        yError("Error opening navigation2DClient device");
+        yCError(NAV_CLIENT_TEST,"Error opening navigation2DClient device");
         return false;
     }
 
@@ -109,14 +112,14 @@ bool NavTestModule::executeStep(navStep s)
 
     if(!iNav)
     {
-        yError("navigation interface pointer is not valid anymore");
+        yCError(NAV_CLIENT_TEST,"navigation interface pointer is not valid anymore");
         return false;
     }
 
     for(i = 0; i < s.frames.size(); i++)
     {
         navFrame& f = s.frames[i];
-        yInfo() << "reaching location" << s.label << ". heading towards step n." << i << "located in (relative) x:" << f.x << "y:" << f.y << "th:" << f.t << "for registration purpose";
+        yCInfo(NAV_CLIENT_TEST) << "reaching location" << s.label << ". heading towards step n." << i << "located in (relative) x:" << f.x << "y:" << f.y << "th:" << f.t << "for registration purpose";
         iNav->gotoTargetByRelativeLocation(f.x,f.y,f.t);
         iNav->getNavigationStatus(status);
         time = Time::now();
@@ -125,12 +128,12 @@ bool NavTestModule::executeStep(navStep s)
             yarp::os::Time::delay(0.1);
             if(!iNav->getNavigationStatus(status))
             {
-                yError("unable to get navigation status while heading towards frame %lu of step %s", i, s.label.c_str());
+                yCError(NAV_CLIENT_TEST,"unable to get navigation status while heading towards frame %lu of step %s", i, s.label.c_str());
                 return false;
             }
             if(Time::now() - time >= TIMEOUT)
             {
-                yError("time out while heading towards frame %lu of step %s ", i, s.label.c_str());
+                yCError(NAV_CLIENT_TEST,"time out while heading towards frame %lu of step %s ", i, s.label.c_str());
                 return false;
             }
         }
@@ -138,7 +141,7 @@ bool NavTestModule::executeStep(navStep s)
 
     if(!iNav->storeCurrentPosition(s.label))
     {
-        yError() << "error storing location" << s.label;
+        yCError(NAV_CLIENT_TEST) << "error storing location" << s.label;
     }
     return true;
 }
@@ -150,12 +153,12 @@ void NavTestModule::printRegisteredLocations()
     std::vector<Map2DLocation> coords;
     if(!iNav->getLocationsList(locations))
     {
-        yError() << "error retrieving location list";
+        yCError(NAV_CLIENT_TEST) << "error retrieving location list";
     }
 
     if(locations.size() == 0)
     {
-        yInfo() << "no locations registered";
+        yCInfo(NAV_CLIENT_TEST) << "no locations registered";
     }
 
     for(size_t i = 0; i < locations.size(); i++)
@@ -163,51 +166,51 @@ void NavTestModule::printRegisteredLocations()
         Map2DLocation l;
         if(!iNav->getLocation(locations[i], l))
         {
-            yError() << "error retrieving location" << locations[i];
+            yCError(NAV_CLIENT_TEST) << "error retrieving location" << locations[i];
         }
         else
         {
             coords.push_back(l);
-            yInfo() << locations[i] << " is located in x: " << l.x << " y: " << l.y << " and theta: " << l.theta;
+            yCInfo(NAV_CLIENT_TEST) << locations[i] << " is located in x: " << l.x << " y: " << l.y << " and theta: " << l.theta;
         }
     }
-    yInfo() << "Test: deleting 1st location";
+    yCInfo(NAV_CLIENT_TEST) << "Test: deleting 1st location";
     if(iNav->deleteLocation(locations[0]))
     {
-        yInfo() << "Successful!!";
+        yCInfo(NAV_CLIENT_TEST) << "Successful!!";
     }
     else
     {
-        yError() << "miserably failed..";
+        yCError(NAV_CLIENT_TEST) << "miserably failed..";
     }
 
-    yInfo() << "Test: deleting every stored location";
+    yCInfo(NAV_CLIENT_TEST) << "Test: deleting every stored location";
     if(iNav->clearAllLocations())
     {
-        yInfo() << "Succesful!!";
+        yCInfo(NAV_CLIENT_TEST) << "Successful!!";
     }
     else
     {
-        yError() << "miserably failed..";
+        yCError(NAV_CLIENT_TEST) << "miserably failed..";
     }
 
     iNav->getLocationsList(emptyLocationList);
 
     if(emptyLocationList.size())
     {
-        yError() << "error.. location server actually contains" << emptyLocationList.size() << "locations";
+        yCError(NAV_CLIENT_TEST) << "error.. location server actually contains" << emptyLocationList.size() << "locations";
     }
 
-    yInfo() << "Test: re-storing location removed";
+    yCInfo(NAV_CLIENT_TEST) << "Test: re-storing location removed";
     for(size_t i = 0; i < locations.size(); i++)
     {
         if(!iNav->storeLocation(locations[i], coords[i]))
         {
-            yError() << "error re-storing location" << locations[i];
+            yCError(NAV_CLIENT_TEST) << "error re-storing location" << locations[i];
         }
         else
         {
-            yInfo() << "Location" << locations[i] << "succesfully re-stored";
+            yCInfo(NAV_CLIENT_TEST) << "Location" << locations[i] << "successfully re-stored";
         }
     }
 
@@ -215,18 +218,18 @@ void NavTestModule::printRegisteredLocations()
     {
         Map2DLocation l;
         iNav->getLocation(locations[i], l);
-        yDebug() << locations[i] << " is located in x: " << l.x << " y: " << l.y << " and theta: " << l.theta;
+        yCDebug(NAV_CLIENT_TEST) << locations[i] << " is located in x: " << l.x << " y: " << l.y << " and theta: " << l.theta;
     }
 
 }
 
 void NavTestModule::absLocationTest()
 {
-    yInfo() << "Test: go to by absolute location:";
+    yCInfo(NAV_CLIENT_TEST) << "Test: go to by absolute location:";
     double time = Time::now();
     if(!iNav->gotoTargetByAbsoluteLocation( Map2DLocation("map",0,0,0) ) )
     {
-        yError() << "failed!";
+        yCError(NAV_CLIENT_TEST) << "failed!";
     }
     NavigationStatusEnum status;
     do
@@ -235,7 +238,7 @@ void NavTestModule::absLocationTest()
         yarp::os::Time::delay(0.1);
         if(Time::now() - time >= TIMEOUT)
         {
-            yError("time out!!");
+            yCError(NAV_CLIENT_TEST,"time out!!");
         }
     }
     while(status != navigation_status_goal_reached );
@@ -243,30 +246,30 @@ void NavTestModule::absLocationTest()
 
 void NavTestModule::suspResumeTest()
 {
-    yInfo() << "Test: suspending navigation";
+    yCInfo(NAV_CLIENT_TEST) << "Test: suspending navigation";
     if(iNav->suspendNavigation())
     {
-        yInfo() << "Successful!!";
+        yCInfo(NAV_CLIENT_TEST) << "Successful!!";
     }
     else
     {
-        yError() << "miserably failed..";
+        yCError(NAV_CLIENT_TEST) << "miserably failed..";
     }
 
-    yInfo() << "5 second delay..";
+    yCInfo(NAV_CLIENT_TEST) << "5 second delay..";
     for(size_t i = 0; i < 5; i ++)
     {
-        yDebug() << i;
+        yCDebug(NAV_CLIENT_TEST) << i;
         yarp::os::Time::delay(1);
     }
-    yInfo() << "Test: resuming navigation";
+    yCInfo(NAV_CLIENT_TEST) << "Test: resuming navigation";
     if(iNav->resumeNavigation())
     {
-        yInfo() << "Successful!!";
+        yCInfo(NAV_CLIENT_TEST) << "Successful!!";
     }
     else
     {
-        yError() << "miserably failed..";
+        yCError(NAV_CLIENT_TEST) << "miserably failed..";
     }
 }
 
@@ -320,7 +323,7 @@ bool NavTestModule::updateModule()
             navStep& s = stepVector[i];
             if(!executeStep(s))
             {
-                yError() << "step " << s.label << " failed";
+                yCError(NAV_CLIENT_TEST) << "step " << s.label << " failed";
                 iNav->stopNavigation();
                 return false;
             }
@@ -342,7 +345,7 @@ bool NavTestModule::updateModule()
     //checking getRelativeLocationOfCurrentTarget()
     static Map2DLocation target_delta;
     iNav->getRelativeLocationOfCurrentTarget(target_delta.x, target_delta.y, target_delta.theta);
-    yDebug() << "relative location of current target" << target_delta.x << target_delta.y << target_delta.theta;
+    yCDebug(NAV_CLIENT_TEST) << "relative location of current target" << target_delta.x << target_delta.y << target_delta.theta;
 
 
     //test suspendNavigation() and resumeNavigation()
@@ -357,13 +360,13 @@ bool NavTestModule::updateModule()
     {
         /*if(!checkCurrentGoalReached())
         {
-            yError() << "goal " << stepVector[currentGoal].label << " does not match!";
+            yCError() << "goal " << stepVector[currentGoal].label << " does not match!";
 
-            //yInfo() << "registered location:" << stepVector[currentGoal].
+            //yCInfo() << "registered location:" << stepVector[currentGoal].
         }
         else
         {
-            yInfo() << "goal" << stepVector[currentGoal].label << "match!";
+            yCInfo() << "goal" << stepVector[currentGoal].label << "match!";
         }*/
 
         currentGoal = i%stepVector.size();
@@ -373,21 +376,21 @@ bool NavTestModule::updateModule()
         iNav->getAbsoluteLocationOfCurrentTarget(currentLoc);
         if(currentLoc != loc)
         {
-            yError() << "absolute location of current target given by the navigation server is wrong";
+            yCError(NAV_CLIENT_TEST) << "absolute location of current target given by the navigation server is wrong";
             return false;
         }
         else
         {
-            yInfo() << "absolute location of current target successfully tested";
+            yCInfo(NAV_CLIENT_TEST) << "absolute location of current target successfully tested";
         }
-        yInfo() << "goal" << stepVector[(i-1)%stepVector.size()].label << "reached! heading towards goal" << stepVector[currentGoal].label;
+        yCInfo(NAV_CLIENT_TEST) << "goal" << stepVector[(i-1)%stepVector.size()].label << "reached! heading towards goal" << stepVector[currentGoal].label;
         time = Time::now();
         i++;
     }
 
     if(Time::now() - time > TIMEOUT)
     {
-        yError() << "time out while reaching goal " << stepVector[currentGoal].label;
+        yCError(NAV_CLIENT_TEST) << "time out while reaching goal " << stepVector[currentGoal].label;
         return false;
     }
 
@@ -413,14 +416,14 @@ bool NavTestModule::checkCurrentGoalReached()
     iNav->getCurrentPosition(cg);
     if(checkEqual(cg.x, f.x, linToll) && checkEqual(cg.y, f.y, linToll) && checkEqual(cg.theta, f.t, angToll))
     {
-        yInfo() << "tolerance:" << "linear:" << linToll << "angular:" << angToll;
-        yInfo() << "difference" << "x:" << cg.x-f.x << "y:" << cg.y-f.y << "t:" << cg.theta-f.t;
+        yCInfo(NAV_CLIENT_TEST) << "tolerance:" << "linear:" << linToll << "angular:" << angToll;
+        yCInfo(NAV_CLIENT_TEST) << "difference" << "x:" << cg.x-f.x << "y:" << cg.y-f.y << "t:" << cg.theta-f.t;
         return true;
     }
     else
     {
-        yInfo() << "tolerance:" << "linear:" << linToll << "angular:" << angToll;
-        yInfo() << "difference" << "x:" << cg.x-f.x << "y:" << cg.y-f.y << "t:" << cg.theta-f.t;
+        yCInfo(NAV_CLIENT_TEST) << "tolerance:" << "linear:" << linToll << "angular:" << angToll;
+        yCInfo(NAV_CLIENT_TEST) << "difference" << "x:" << cg.x-f.x << "y:" << cg.y-f.y << "t:" << cg.theta-f.t;
         return false;
     }
 }

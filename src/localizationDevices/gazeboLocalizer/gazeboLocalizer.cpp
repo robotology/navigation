@@ -42,6 +42,8 @@ using namespace std;
 #define RAD2DEG 180/M_PI
 #define DEG2RAD M_PI/180
 
+YARP_LOG_COMPONENT(GAZEBO_LOC, "navigation.gazeboLocalizer")
+
 void gazeboLocalizerRPCHandler::setInterface(gazeboLocalizer* iface)
 {
     this->interface = iface;
@@ -110,7 +112,7 @@ void gazeboLocalizerThread::run()
     if (current_time - m_last_statistics_printed > 10.0)
     {
         m_last_statistics_printed = yarp::os::Time::now();
-        yDebug() << "gazeboLocalizerThread running with period: " << this->getPeriod();
+        yCDebug(GAZEBO_LOC) << "gazeboLocalizerThread running with period: " << this->getPeriod();
     }
 
     lock_guard<std::mutex> lock(m_mutex);
@@ -151,7 +153,7 @@ void gazeboLocalizerThread::run()
 
 bool gazeboLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
-    yInfo() << "gazeboLocalizerThread: Localization init request: (" << loc.map_id << ")";
+    yCInfo(GAZEBO_LOC) << "gazeboLocalizerThread: Localization init request: (" << loc.map_id << ")";
     lock_guard<std::mutex> lock(m_mutex);
     //@@@@ put some check here on validity of loc
     m_localization_data.map_id = loc.map_id;
@@ -178,10 +180,10 @@ bool gazeboLocalizerThread::open_gazebo()
         {
             return true;
         }
-        yError() << "open_gazebo() failed, unable to connect port " << m_local_gazebo_port_name << " with " << m_remote_gazebo_port_name;
+        yCError(GAZEBO_LOC) << "open_gazebo() failed, unable to connect port " << m_local_gazebo_port_name << " with " << m_remote_gazebo_port_name;
         return false;
     }
-    yError() << "open_gazebo() failed, unable to open port " << m_local_gazebo_port_name;
+    yCError(GAZEBO_LOC) << "open_gazebo() failed, unable to open port " << m_local_gazebo_port_name;
     return false;
 }
 
@@ -191,49 +193,49 @@ bool gazeboLocalizerThread::threadInit()
     Bottle general_group = m_cfg.findGroup("GAZEBOLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing GAZEBOLOCALIZER_GENERAL group!";
+        yCError(GAZEBO_LOC) << "Missing GAZEBOLOCALIZER_GENERAL group!";
         return false;
     }
 
     Bottle initial_group = m_cfg.findGroup("INITIAL_POS");
     if (initial_group.isNull())
     {
-        yError() << "Missing INITIAL_POS group!";
+        yCError(GAZEBO_LOC) << "Missing INITIAL_POS group!";
         return false;
     }
 
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(GAZEBO_LOC) << "Missing LOCALIZATION group!";
         return false;
     }
 
     m_local_gazebo_port_name = m_name + "/gazebo_rpc";
 
     if (general_group.check("robot_name")) { m_object_name = general_group.find("robot_name").asString(); }
-    else { yError() << "missing robot_name param"; yError() << "I need the name of the object to be localized!"; return false; }
+    else { yCError(GAZEBO_LOC) << "missing robot_name param"; yCError(GAZEBO_LOC) << "I need the name of the object to be localized!"; return false; }
 
     if (general_group.check("world_interface_port")) { m_remote_gazebo_port_name = general_group.find("world_interface_port").asString(); }
-    else { yError() << "missing world_interface_port param"; return false; }
+    else { yCError(GAZEBO_LOC) << "missing world_interface_port param"; return false; }
 
     //starts communication with gazebo
     if (!open_gazebo())
     {
-        yError() << "Unable to start communication with gazebo!";
+        yCError(GAZEBO_LOC) << "Unable to start communication with gazebo!";
         return false;
     }
 
     //initial location initialization
     Map2DLocation tmp_loc;
     if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asDouble(); }
-    else { yError() << "missing map_transform_x param"; return false; }
+    else { yCError(GAZEBO_LOC) << "missing map_transform_x param"; return false; }
     if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asDouble(); }
-    else { yError() << "missing map_transform_y param"; return false; }
+    else { yCError(GAZEBO_LOC) << "missing map_transform_y param"; return false; }
     if (initial_group.check("map_transform_t")) { tmp_loc.theta = initial_group.find("map_transform_t").asDouble(); }
-    else { yError() << "missing map_transform_t param"; return false; }
+    else { yCError(GAZEBO_LOC) << "missing map_transform_t param"; return false; }
     if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
+    else { yCError(GAZEBO_LOC) << "missing initial_map param"; return false; }
     this->initializeLocalization(tmp_loc);
 
    return true;
@@ -241,7 +243,7 @@ bool gazeboLocalizerThread::threadInit()
 
 void gazeboLocalizerThread::threadRelease()
 {
-    yDebug() << "Closing ports";
+    yCDebug(GAZEBO_LOC) << "Closing ports";
     m_port_gazebo_comm.interrupt();
     m_port_gazebo_comm.close();
 }
@@ -251,7 +253,7 @@ bool gazeboLocalizer::open(yarp::os::Searchable& config)
     string cfg_temp = config.toString();
     Property p; p.fromString(cfg_temp);
 
-    yDebug() << "gazeboLocalizer configuration: \n" << p.toString().c_str();
+    yCDebug(GAZEBO_LOC) << "gazeboLocalizer configuration: \n" << p.toString().c_str();
 
     Bottle general_group = p.findGroup("GAZEBOLOCALIZER_GENERAL");
     double period = 0.010;
@@ -273,7 +275,7 @@ bool gazeboLocalizer::open(yarp::os::Searchable& config)
     bool ret = rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(GAZEBO_LOC) << "Unable to open module ports";
         return false;
     }
 
@@ -301,32 +303,32 @@ bool gazeboLocalizer::close()
 {
     rpcPort.interrupt();
     rpcPort.close();
-    yDebug() << "gazeboLocalizer terminated";
+    yCDebug(GAZEBO_LOC) << "gazeboLocalizer terminated";
     return true;
 }
  
 bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by gazeboLocalizer";
+    yCWarning(GAZEBO_LOC) << "Covariance matrix is not currently handled by gazeboLocalizer";
     thread->getCurrentLoc(loc);
     return true;
 }
 
 bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by gazeboLocalizer";
+    yCWarning(GAZEBO_LOC) << "Covariance matrix is not currently handled by gazeboLocalizer";
     thread->initializeLocalization(loc);
     return true;
 }
 
 bool    gazeboLocalizer::startLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(GAZEBO_LOC) << "Not yet implemented";
     return false;
 }
 
 bool    gazeboLocalizer::stopLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(GAZEBO_LOC) << "Not yet implemented";
     return false;
 }

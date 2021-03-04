@@ -20,6 +20,8 @@
 #include <yarp/os/LogStream.h>
 #include <limits>
 
+YARP_LOG_COMPONENT(CER_ODOM, "navigation.baseControl.cerOdometry")
+
 bool CER_Odometry::reset_odometry()
 {
     ienc->getEncoder(0,&encL_offset);
@@ -27,20 +29,20 @@ bool CER_Odometry::reset_odometry()
     odom_x=0;
     odom_y=0;
     encvel_estimator->reset();
-    yInfo("Odometry reset done");
+    yCInfo(CER_ODOM,"Odometry reset done");
     return true;
 }
 
 void CER_Odometry::printStats()
 {
     mutex.wait();
-    //yInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
-    yInfo("* Odometry Thread:");
-    yInfo("enc1:%+9.1f enc2:%+9.1f  ", enc[0]*57, enc[1]*57);
-    yInfo("env1:%+9.3f env2:%+9.3f ", encv[0] * 57, encv[1] * 57);
-    yInfo("ivlx:%+9.3f ivlx:%+9.3f",base_vel_lin, base_vel_theta);
-    yInfo("ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f", odom_vel_x, odom_vel_y, odom_vel_theta);
-    yInfo("x: %+5.3f y: %+5.3f t: %+5.3f", odom_x, odom_y, odom_theta);
+    //yCInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
+    yCInfo(CER_ODOM,"* Odometry Thread:");
+    yCInfo(CER_ODOM, "enc1:%+9.1f enc2:%+9.1f  ", enc[0]*57, enc[1]*57);
+    yCInfo(CER_ODOM, "env1:%+9.3f env2:%+9.3f ", encv[0] * 57, encv[1] * 57);
+    yCInfo(CER_ODOM, "ivlx:%+9.3f ivlx:%+9.3f",base_vel_lin, base_vel_theta);
+    yCInfo(CER_ODOM, "ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f", odom_vel_x, odom_vel_y, odom_vel_theta);
+    yCInfo(CER_ODOM, "x: %+5.3f y: %+5.3f t: %+5.3f", odom_x, odom_y, odom_theta);
     mutex.post();
 }
 
@@ -81,12 +83,12 @@ bool CER_Odometry::open(const Property& _options)
     localName = ctrl_options.find("local").asString();
 
     // open the control board driver
-    yInfo("Opening the motors interface...");
+    yCInfo(CER_ODOM,"Opening the motors interface...");
 
     Property control_board_options("(device remote_controlboard)");
     if (!control_board_driver)
     {
-        yError("control board driver not ready!");
+        yCError(CER_ODOM,"control board driver not ready!");
         return false;
     }
     // open the interfaces for the control boards
@@ -94,7 +96,7 @@ bool CER_Odometry::open(const Property& _options)
     ok = ok & control_board_driver->view(ienc);
     if(!ok)
     {
-        yError("one or more devices has not been viewed");
+        yCError(CER_ODOM, "one or more devices has not been viewed");
         return false;
     }
     // open control input ports
@@ -104,7 +106,7 @@ bool CER_Odometry::open(const Property& _options)
     ret &= port_vels.open((localName+"/velocity:o").c_str());
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(CER_ODOM) << "Unable to open module ports";
         return false;
     }
 
@@ -114,24 +116,24 @@ bool CER_Odometry::open(const Property& _options)
     //the base class open
     if (!OdometryHandler::open(_options))
     {
-        yError() << "Error in Odometry::open()"; return false;
+        yCError(CER_ODOM) << "Error in Odometry::open()"; return false;
     }
 
     //get robot geometry
     Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError("cer_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        yCError(CER_ODOM, "cer_Odometry::open Unable to find ROBOT_GEOMETRY group!");
         return false;
     }
     if (!geometry_group.check("geom_r"))
     {
-        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        yCError(CER_ODOM, "Missing param geom_r in [ROBOT_GEOMETRY] group");
         return false;
     }
     if (!geometry_group.check("geom_L"))
     {
-        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        yCError(CER_ODOM, "Missing param geom_L in [ROBOT_GEOMETRY] group");
         return false;
     }
     geom_r = geometry_group.find("geom_r").asDouble();
@@ -203,7 +205,7 @@ void CER_Odometry::compute()
     base_vel_y = 0;
     base_vel_lin = fabs(base_vel_x);
     base_vel_theta = vvv[0];///-(geom_r / geom_L) * encv[0] + (geom_r / geom_L) * encv[1];
-    //yDebug() << base_vel_theta << vvv[0];
+    //yCDebug() << base_vel_theta << vvv[0];
 
     
     odom_vel_x = base_vel_x * cos(odom_theta);

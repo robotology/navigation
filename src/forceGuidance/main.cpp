@@ -86,6 +86,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+YARP_LOG_COMPONENT(FORCE_GUID_M, "navigation.forceGuidance.main")
 
 class CtrlModule: public RFModule
 {
@@ -147,8 +148,8 @@ int main(int argc, char *argv[])
 
     if (rf.check("help"))
     {
-        yInfo() << "Options:";
-        yInfo() << "\tNo options at the moment" ;
+        yCInfo(FORCE_GUID_M) << "Options:";
+        yCInfo(FORCE_GUID_M) << "\tNo options at the moment" ;
         return 0;
     }
 

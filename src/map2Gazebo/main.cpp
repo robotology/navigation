@@ -33,6 +33,8 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 
+YARP_LOG_COMPONENT(MAP2GAZEBO, "navigation.map2Gazebo")
+
 class map2GazeboModule : public yarp::os::RFModule
 {
 protected:
@@ -144,7 +146,7 @@ public:
         bool ret = rpcPort.open("/map2Gazebo/rpc");
         if (ret == false)
         {
-            yError() << "Unable to open module ports";
+            yCError(MAP2GAZEBO) << "Unable to open module ports";
             return false;
         }
         attach(rpcPort);
@@ -153,13 +155,13 @@ public:
         if (rf.check("ceiling"))
         {
 			m_ceiling = rf.find("ceiling").asDouble();
-			yInfo() << "Using ceiling =" << m_ceiling <<"m";
+			yCInfo(MAP2GAZEBO) << "Using ceiling =" << m_ceiling <<"m";
 		}
 		
 		if (rf.check("crop"))
         {
 			m_crop = true;
-			yInfo() << "crop option enabled";
+			yCInfo(MAP2GAZEBO) << "crop option enabled";
 		}
 		
         if (rf.check("from_file"))
@@ -167,7 +169,7 @@ public:
             string map_name = rf.find("from_file").asString();
             if (m_yarp_map.loadFromFile(map_name) == false)
             {
-                yError() << "Failed to open map: " << map_name;
+                yCError(MAP2GAZEBO) << "Failed to open map: " << map_name;
                 return false;
             }
         }
@@ -181,32 +183,32 @@ public:
             map_options.put("remote", "/mapServer");
             if (m_pMap.open(map_options) == false)
             {
-                yError() << "Unable to open mapClient";
+                yCError(MAP2GAZEBO) << "Unable to open mapClient";
                 return false;
             }
             m_pMap.view(m_iMap);
             if (m_iMap == 0)
             {
-                yError() << "Unable to open map interface";
+                yCError(MAP2GAZEBO) << "Unable to open map interface";
                 return false;
             }
 
             //get the map from server
-            yInfo() << "Asking for map '" << map_name << "'...";
+            yCInfo(MAP2GAZEBO) << "Asking for map '" << map_name << "'...";
             bool b = m_iMap->get_map(map_name, m_yarp_map);
             if (b)
             {
-                yInfo() << "'" << map_name << "' received";
+                yCInfo(MAP2GAZEBO) << "'" << map_name << "' received";
             }
             else
             {
-                yError() << "'" << map_name << "' not found";
+                yCError(MAP2GAZEBO) << "'" << map_name << "' not found";
                 return false;
             }
         }
         else
         {
-            yError() << "missing options";
+            yCError(MAP2GAZEBO) << "missing options";
             return false;
         }
 
@@ -216,20 +218,20 @@ public:
         m_yarp_map.getOrigin(x0, y0, t0);
         m_yarp_map.getResolution(r);
         m_yarp_map.getSize_in_cells(w,h);
-        yInfo() << "Original map size (cells)" << w << "x" << h;
-        yInfo() << "Original map size (m)" << w*r << "x" << h*r;
-        yInfo() << "Original map origin (m)" << x0 << y0;
+        yCInfo(MAP2GAZEBO) << "Original map size (cells)" << w << "x" << h;
+        yCInfo(MAP2GAZEBO) << "Original map size (m)" << w*r << "x" << h*r;
+        yCInfo(MAP2GAZEBO) << "Original map origin (m)" << x0 << y0;
         
         if (m_crop)
         {
-			yInfo() << "applying crop";
+			yCInfo(MAP2GAZEBO) << "applying crop";
 			m_yarp_map.crop(-1, -1, -1, -1);
 			m_yarp_map.getOrigin(x0, y0, t0);
             m_yarp_map.getResolution(r);
             m_yarp_map.getSize_in_cells(w,h);
-            yInfo() << "Cropped map size (cells)" << w << "x" << h;
-            yInfo() << "Cropped map size (m)" << w*r << "x" << h*r;
-            yInfo() << "Cropped map origin (m)" << x0 << y0;
+            yCInfo(MAP2GAZEBO) << "Cropped map size (cells)" << w << "x" << h;
+            yCInfo(MAP2GAZEBO) << "Cropped map size (m)" << w*r << "x" << h*r;
+            yCInfo(MAP2GAZEBO) << "Cropped map origin (m)" << x0 << y0;
 		}       
 
         //heightmaps in gazebo must be square, with size n^2+1. 
@@ -242,11 +244,11 @@ public:
         map_size |= map_size >> 16;
         map_size++;
         map_size++;
-        yInfo() << "Heightmap size (cells)" << map_size << "x" << map_size;
-        yInfo() << "Heightmap size (m)" << map_size*r << "x" << map_size*r;
+        yCInfo(MAP2GAZEBO) << "Heightmap size (cells)" << map_size << "x" << map_size;
+        yCInfo(MAP2GAZEBO) << "Heightmap size (m)" << map_size*r << "x" << map_size*r;
         double x_off =map_size*r-w*r;
         double y_off =map_size*r-h*r;      
-        yDebug() << "Computed offset" << x_off << "," << y_off << "(m)";
+        yCDebug(MAP2GAZEBO) << "Computed offset" << x_off << "," << y_off << "(m)";
         
 
         //heightmap color code is the following: black=bottom, white=top
@@ -264,7 +266,7 @@ public:
             }
         
         int align = 1;
-        yDebug() << "Alignment type:" << align;
+        yCDebug(MAP2GAZEBO) << "Alignment type:" << align;
         for (cell.y=0; cell.y<h; cell.y++)
             for (cell.x=0; cell.x < w; cell.x++)
             {
@@ -306,7 +308,7 @@ public:
 
         //save the heightmap to disk
         yarp::sig::file::write(heightmap, "heightmap.png",yarp::sig::file::FORMAT_PNG);
-        yInfo() << "File " << "heightmap.png" << "saved.";
+        yCInfo(MAP2GAZEBO) << "File " << "heightmap.png" << "saved.";
 
         //process the sdf template
         size_t pos = 0;
@@ -323,7 +325,7 @@ public:
 			std::ofstream out("model.config");
             out << model_file_string;
             out.close();
-            yInfo() << "File "<< "model.config" << "saved.";
+            yCInfo(MAP2GAZEBO) << "File "<< "model.config" << "saved.";
 	    }
 
         //save the sdf to disk
@@ -331,7 +333,7 @@ public:
 			std::ofstream out("output.sdf");
             out << sdf_file_string;
             out.close();
-            yInfo() << "File "<< "output.sdf" << "saved.";
+            yCInfo(MAP2GAZEBO) << "File "<< "output.sdf" << "saved.";
         }
         return true;
     }
@@ -378,7 +380,7 @@ public:
         }
         else
         {
-            yError() << "Invalid command type";
+            yCError(MAP2GAZEBO) << "Invalid command type";
             reply.addString("err");
         }
         return true;
@@ -390,7 +392,7 @@ int main(int argc, char *argv[])
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError("check Yarp network.\n");
+        yCError(MAP2GAZEBO,"check Yarp network.\n");
         return -1;
     }
 
@@ -401,11 +403,11 @@ int main(int argc, char *argv[])
 
     if (rf.check("help"))
     {
-        yInfo() << "Options:";
-        yInfo() << "--from_server <map_id>";
-        yInfo() << "--from_file <file.map>";
-        yInfo() << "--ceiling <meters>";
-        yInfo() << "--crop";
+        yCInfo(MAP2GAZEBO) << "Options:";
+        yCInfo(MAP2GAZEBO) << "--from_server <map_id>";
+        yCInfo(MAP2GAZEBO) << "--from_file <file.map>";
+        yCInfo(MAP2GAZEBO) << "--ceiling <meters>";
+        yCInfo(MAP2GAZEBO) << "--crop";
         return 0;
     }
 

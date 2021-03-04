@@ -44,6 +44,8 @@ using namespace std;
 
 #define SIMULATE_POZYX
 
+YARP_LOG_COMPONENT(POZYX_DEV, "navigation.devices.pozyxLocalizer")
+
 void pozyxLocalizerRPCHandler::setInterface(pozyxLocalizer* iface)
 {
     this->interface = iface;
@@ -82,7 +84,7 @@ bool   pozyxLocalizer::getCurrentPosition(Map2DLocation& loc)
 
 bool  pozyxLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    yError() << " pozyxLocalizer::getEstimatedOdometry is not yet implemented";
+    yCError(POZYX_DEV) << " pozyxLocalizer::getEstimatedOdometry is not yet implemented";
     return false;
 }
 
@@ -136,7 +138,7 @@ void pozyxLocalizerThread::run()
 
 bool pozyxLocalizerThread::initializeLocalization(const Map2DLocation& loc)
 {
-    yInfo() << "pozyxLocalizerThread: Localization init request: (" << loc.map_id << ")";
+    yCInfo(POZYX_DEV) << "pozyxLocalizerThread: Localization init request: (" << loc.map_id << ")";
     lock_guard<std::mutex> lock(m_mutex);
     //@@@@ put some check here on validity of loc
     m_localization_data.map_id = loc.map_id;
@@ -166,7 +168,7 @@ bool pozyxLocalizerThread::initializeLocalization(const Map2DLocation& loc)
     }
     else
     {
-        yWarning() << "No anchors found";
+        yCWarning(POZYX_DEV) << "No anchors found";
     }
 
     return true;
@@ -213,13 +215,13 @@ bool pozyxLocalizerThread::publish_anchors_location()
 {
     if (!m_iMap)
     {
-        yError() << "pozyxLocalizerThread::publish_anchors_location() failed";
+        yCError(POZYX_DEV) << "pozyxLocalizerThread::publish_anchors_location() failed";
         return false;
     }
 
     if (m_anchors_pos.size() == 0)
     {
-        yError() << "pozyxLocalizerThread::publish_anchors_location() no anchors available";
+        yCError(POZYX_DEV) << "pozyxLocalizerThread::publish_anchors_location() no anchors available";
         return false;
     }
 
@@ -230,7 +232,7 @@ bool pozyxLocalizerThread::publish_anchors_location()
         bool ret = m_iMap->storeLocation(anchor_name, m_anchors_pos[i]);
         if (!ret)
         {
-            yError() << "Failed to store position of: " << anchor_name;
+            yCError(POZYX_DEV) << "Failed to store position of: " << anchor_name;
         }
     }
 
@@ -243,28 +245,28 @@ bool pozyxLocalizerThread::threadInit()
     Bottle general_group = m_cfg.findGroup("POZYXLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing POZYXLOCALIZER_GENERAL group!";
+        yCError(POZYX_DEV) << "Missing POZYXLOCALIZER_GENERAL group!";
         return false;
     }
 
     Bottle initial_group = m_cfg.findGroup("INITIAL_POS");
     if (initial_group.isNull())
     {
-        yError() << "Missing INITIAL_POS group!";
+        yCError(POZYX_DEV) << "Missing INITIAL_POS group!";
         return false;
     }
 
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(POZYX_DEV) << "Missing LOCALIZATION group!";
         return false;
     }
 
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
     {
-        yError() << "Missing TF group!";
+        yCError(POZYX_DEV) << "Missing TF group!";
         return false;
     }
 
@@ -275,30 +277,30 @@ bool pozyxLocalizerThread::threadInit()
     //@@@@ TO BE IMPLEMENTED
     if (!open_pozyx())
     {
-        yError() << "Unable to open pozyx device";
+        yCError(POZYX_DEV) << "Unable to open pozyx device";
         return false;
     }
     if (!get_anchors_location())
     {
-        yError() << "Unable to open map2DClient";
+        yCError(POZYX_DEV) << "Unable to open map2DClient";
         return false;
     }
 
     //initial location initialization
     Map2DLocation tmp_loc;
     if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asDouble(); }
-    else { yError() << "missing map_transform_x param"; return false; }
+    else { yCError(POZYX_DEV) << "missing map_transform_x param"; return false; }
     if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asDouble(); }
-    else { yError() << "missing map_transform_y param"; return false; }
+    else { yCError(POZYX_DEV) << "missing map_transform_y param"; return false; }
     if (initial_group.check("map_transform_t")) { tmp_loc.theta = initial_group.find("map_transform_t").asDouble(); }
-    else { yError() << "missing map_transform_t param"; return false; }
+    else { yCError(POZYX_DEV) << "missing map_transform_t param"; return false; }
     if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
+    else { yCError(POZYX_DEV) << "missing initial_map param"; return false; }
     this->initializeLocalization(tmp_loc);
 
     if (general_group.check("publish_anchors")) 
     {   m_publish_anchors_as_map_locations = general_group.find("publish_anchors").asBool();  }
-    else { yError() << "missing publish_anchors param"; return false; }
+    else { yCError(POZYX_DEV) << "missing publish_anchors param"; return false; }
 
     if (general_group.check("local_name"))
     {
@@ -306,7 +308,7 @@ bool pozyxLocalizerThread::threadInit()
     }
     else
     {
-        yInfo() << "local_name parameter not set. Using:" << m_name;
+        yCInfo(POZYX_DEV) << "local_name parameter not set. Using:" << m_name;
     }
 
     if (general_group.check("remote_mapServer"))
@@ -315,7 +317,7 @@ bool pozyxLocalizerThread::threadInit()
     }
     else
     {
-        yInfo() << "remote_mapServer parameter not set. Using:" << m_remote_map;
+        yCInfo(POZYX_DEV) << "remote_mapServer parameter not set. Using:" << m_remote_map;
     }
 
     //the optional map client
@@ -328,13 +330,13 @@ bool pozyxLocalizerThread::threadInit()
         map_options.put("remote", m_remote_map);
         if (m_pMap.open(map_options) == false)
         {
-            yError() << "Unable to open map2DClient";
+            yCError(POZYX_DEV) << "Unable to open map2DClient";
             return false;
         }
         m_pMap.view(m_iMap);
         if (m_iMap == 0)
         {
-            yError() << "Unable to open map interface";
+            yCError(POZYX_DEV) << "Unable to open map interface";
             return false;
         }
         //publish the anchor location
@@ -355,7 +357,7 @@ bool pozyxLocalizer::open(yarp::os::Searchable& config)
     string cfg_temp = config.toString();
     Property p; p.fromString(cfg_temp);
 
-    yDebug() << "pozyxLocalizer configuration: \n" << p.toString().c_str();
+    yCDebug(POZYX_DEV) << "pozyxLocalizer configuration: \n" << p.toString().c_str();
 
     Bottle general_group = p.findGroup("POZYXLOCALIZER_GENERAL");
     if (general_group.isNull()==false)
@@ -365,7 +367,7 @@ bool pozyxLocalizer::open(yarp::os::Searchable& config)
     bool ret = m_rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(POZYX_DEV) << "Unable to open module ports";
         return false;
     }
 
@@ -408,26 +410,26 @@ bool pozyxLocalizer::close()
 
 bool pozyxLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by pozyxLocalizer";
+    yCWarning(POZYX_DEV) << "Covariance matrix is not currently handled by pozyxLocalizer";
     m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool pozyxLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by pozyxLocalizer";
+    yCWarning(POZYX_DEV) << "Covariance matrix is not currently handled by pozyxLocalizer";
     m_thread->initializeLocalization(loc);
     return true;
 }
 
 bool  pozyxLocalizer::startLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(POZYX_DEV) << "Not yet implemented";
     return false;
 }
 
 bool  pozyxLocalizer::stopLocalizationService()
 {
-    yError() << "Not yet implemented";
+    yCError(POZYX_DEV) << "Not yet implemented";
     return false;
 }

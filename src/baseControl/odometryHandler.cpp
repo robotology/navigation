@@ -23,6 +23,8 @@
 #define RAD2DEG 180.0/M_PI
 #define DEG2RAD M_PI/180.0
 
+YARP_LOG_COMPONENT(ODOM_HND, "navigation.baseControl.OdometryHandler")
+
 OdometryHandler::~OdometryHandler()
 {
     close();
@@ -53,45 +55,45 @@ bool OdometryHandler::open(const Property &options)
     {
         yarp::os::Bottle g_group = ctrl_options.findGroup("BASECTRL_GENERAL");
         enable_ROS = (g_group.find("use_ROS").asBool() == true);
-        if (enable_ROS) yInfo() << "ROS enabled";
+        if (enable_ROS) yCInfo(ODOM_HND) << "ROS enabled";
         else
-            yInfo() << "ROS not enabled";
+            yCInfo(ODOM_HND) << "ROS not enabled";
     }
     else
     {
-        yError() << "Missing [BASECTRL_GENERAL] section";
+        yCError(ODOM_HND) << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
 
     if (ctrl_options.check("ROS_ODOMETRY"))
     {
         yarp::os::Bottle ro_group = ctrl_options.findGroup("ROS_ODOMETRY");
-        if (ro_group.check("odom_frame") == false) { yError() << "Missing odom_frame parameter"; return false; }
-        if (ro_group.check("base_frame") == false) { yError() << "Missing base_frame parameter"; return false; }
-        if (ro_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
+        if (ro_group.check("odom_frame") == false) { yCError(ODOM_HND) << "Missing odom_frame parameter"; return false; }
+        if (ro_group.check("base_frame") == false) { yCError(ODOM_HND) << "Missing base_frame parameter"; return false; }
+        if (ro_group.check("topic_name") == false) { yCError(ODOM_HND) << "Missing topic_name parameter"; return false; }
         odometry_frame_id = ro_group.find("odom_frame").asString();
         child_frame_id = ro_group.find("base_frame").asString();
         rosTopicName_odometry = ro_group.find("topic_name").asString();
     }
     else
     {
-        yError() << "Missing [ROS_ODOMETRY] section";
+        yCError(ODOM_HND) << "Missing [ROS_ODOMETRY] section";
         return false;
     }
 
     if (ctrl_options.check("ROS_FOOTPRINT"))
     {
         yarp::os::Bottle rf_group = ctrl_options.findGroup("ROS_FOOTPRINT");
-        if (rf_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
-        if (rf_group.check("footprint_diameter") == false)  { yError() << "Missing footprint_diameter parameter"; return false; }
-        if (rf_group.check("footprint_frame") == false) { yError() << "Missing footprint_frame parameter"; return false; }
+        if (rf_group.check("topic_name") == false)  { yCError(ODOM_HND) << "Missing topic_name parameter"; return false; }
+        if (rf_group.check("footprint_diameter") == false)  { yCError(ODOM_HND) << "Missing footprint_diameter parameter"; return false; }
+        if (rf_group.check("footprint_frame") == false) { yCError(ODOM_HND) << "Missing footprint_frame parameter"; return false; }
         footprint_frame_id = rf_group.find("footprint_frame").asString();
         rosTopicName_footprint = rf_group.find("topic_name").asString();
         footprint_diameter = rf_group.find("footprint_diameter").asDouble();
     }
     else
     {
-        yError() << "Missing [ROS_FOOTPRINT] section";
+        yCError(ODOM_HND) << "Missing [ROS_FOOTPRINT] section";
         return false;
     }
 
@@ -100,19 +102,19 @@ bool OdometryHandler::open(const Property &options)
 
         if (!rosPublisherPort_odometry.topic(rosTopicName_odometry))
         {
-            yError() << " opening " << rosTopicName_odometry << " Topic, check your yarp-ROS network configuration\n";
+            yCError(ODOM_HND) << " opening " << rosTopicName_odometry << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
 
         if (!rosPublisherPort_footprint.topic(rosTopicName_footprint))
         {
-            yError() << " opening " << rosTopicName_footprint << " Topic, check your yarp-ROS network configuration\n";
+            yCError(ODOM_HND) << " opening " << rosTopicName_footprint << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
 
         if (!rosPublisherPort_tf.topic("/tf"))
         {
-            yError() << " opening " << "/tf" << " Topic, check your yarp-ROS network configuration\n";
+            yCError(ODOM_HND) << " opening " << "/tf" << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
 

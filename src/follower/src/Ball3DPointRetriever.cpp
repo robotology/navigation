@@ -20,6 +20,7 @@
 using namespace yarp::os;
 using namespace FollowerTarget;
 
+YARP_LOG_COMPONENT(FOLLOWER_BALLRET, "navigation.follower.ballRetriever")
 
 Target_t Ball3DPointRetriever::getTarget(void)
 {
@@ -29,7 +30,7 @@ Target_t Ball3DPointRetriever::getTarget(void)
     if(nullptr == b)
     {
         if(m_debugOn)
-            yDebug() <<" Ball3DPointRetriever::getTarget: I received nothing!";
+            yCDebug(FOLLOWER_BALLRET) <<" Ball3DPointRetriever::getTarget: I received nothing!";
         return t;
     }
 
@@ -38,7 +39,7 @@ Target_t Ball3DPointRetriever::getTarget(void)
     if(!ballIsTracked)
     {
         if(m_debugOn)
-            yDebug() << "Ball3DPointRetriever: I can't see the redBall";
+            yCDebug(FOLLOWER_BALLRET) << "Ball3DPointRetriever: I can't see the redBall";
         return t;
     }
 
@@ -65,7 +66,7 @@ bool Ball3DPointRetriever::init(yarp::os::ResourceFinder &rf)
     Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if (config_group.isNull())
     {
-        yError() << "Missing FOLLOWER_GENERAL group! the module uses default value!";
+        yCError(FOLLOWER_BALLRET) << "Missing FOLLOWER_GENERAL group! the module uses default value!";
     }
     else
     {

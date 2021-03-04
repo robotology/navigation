@@ -22,6 +22,8 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
+YARP_LOG_COMPONENT(NAVIGATION_GUI_INIT, "navigation.navigationGui.init")
+
 NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
         PeriodicThread(_period), m_rf(_rf)
 {
@@ -72,35 +74,35 @@ bool NavGuiThread::threadInit()
     Bottle general_group = m_rf.findGroup("NAVIGATIONGUI_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing NAVIGATIONGUI_GENERAL group!";
+        yCError(NAVIGATION_GUI_INIT) << "Missing NAVIGATIONGUI_GENERAL group!";
         return false;
     }
 
     Bottle laser_group = m_rf.findGroup("LASER");
     if (laser_group.isNull())
     {
-        yError() << "Missing LASER group!";
+        yCError(NAVIGATION_GUI_INIT) << "Missing LASER group!";
         return false;
     }
 
     Bottle update_data_group = m_rf.findGroup("UPDATE_DATA");
     if (update_data_group.isNull())
     {
-        yError() << "Missing UPDATE_DATA group!";
+        yCError(NAVIGATION_GUI_INIT) << "Missing UPDATE_DATA group!";
         return false;
     }
 
     Bottle drawing_group = m_rf.findGroup("DRAWING");
     if (drawing_group.isNull())
     {
-        yError() << "Missing DRAWING group!";
+        yCError(NAVIGATION_GUI_INIT) << "Missing DRAWING group!";
         return false;
     }
 /*
     Bottle geometry_group = m_rf.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError() << "Missing ROBOT_GEOMETRY group!";
+        yCError() << "Missing ROBOT_GEOMETRY group!";
         return false;
     }
 
@@ -118,7 +120,7 @@ bool NavGuiThread::threadInit()
     }
     else
     {
-        yError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
+        yCError() << "Invalid/missing parameter in ROBOT_GEOMETRY group";
         return false;
     }
 */
@@ -149,7 +151,7 @@ bool NavGuiThread::threadInit()
     ret &= m_port_yarpview_target_input.open((m_name + "/yarpviewTarget:i").c_str());
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open module ports";
         return false;
     }
 
@@ -224,13 +226,13 @@ bool NavGuiThread::threadInit()
     loc_options.put("remote", m_remote_localization);
     if (m_pLoc.open(loc_options) == false)
     {
-        yError() << "Unable to open localization driver";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open localization driver";
         return false;
     }
     m_pLoc.view(m_iLoc);
     if (m_pLoc.isValid() == false || m_iLoc == 0)
     {
-        yError() << "Unable to view localization interface";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to view localization interface";
         return false;
     }
 
@@ -241,13 +243,13 @@ bool NavGuiThread::threadInit()
     map_options.put("remote", m_remote_map);
     if (m_pMap.open(map_options) == false)
     {
-        yError() << "Unable to open map2DClient";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open map2DClient";
         return false;
     }
     m_pMap.view(m_iMap);
     if (m_iMap == 0)
     {
-        yError() << "Unable to open map interface";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open map interface";
         return false;
     }
 
@@ -260,13 +262,13 @@ bool NavGuiThread::threadInit()
     nav_options.put("localization_server", m_remote_localization);
     if (m_pNav.open(nav_options) == false)
     {
-        yError() << "Unable to open navigation2DClient";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open navigation2DClient";
         return false;
     }
     m_pNav.view(m_iNav);
     if (m_iNav == 0)
     {
-        yError() << "Unable to open navigation interface";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open navigation interface";
         return false;
     }
 
@@ -274,12 +276,12 @@ bool NavGuiThread::threadInit()
     /*Bottle laserBottle = m_rf.findGroup("LASER");
     if (laserBottle.isNull())
     {
-        yError("LASER group not found,closing");
+        yCError("LASER group not found,closing");
         return false;
     }
     if (laserBottle.check("laser_port") == false)
     {
-        yError("laser_port param not found,closing");
+        yCError("laser_port param not found,closing");
         return false;
     }
     string laser_remote_port = laserBottle.find("laser_port").asString();*/
@@ -290,19 +292,19 @@ bool NavGuiThread::threadInit()
     las_options.put("remote", m_remote_laser);
     if (m_pLas.open(las_options) == false)
     {
-        yError() << "Unable to open laser driver";
+        yCError(NAVIGATION_GUI_INIT) << "Unable to open laser driver";
         return false;
     }
     m_pLas.view(m_iLaser);
     if (m_iLaser == 0)
     {
-        yWarning() << "Laser interface not available";
+        yCWarning(NAVIGATION_GUI_INIT) << "Laser interface not available";
     }
     else
     {
         if (m_iLaser->getScanLimits(m_min_laser_angle, m_max_laser_angle) == false)
         {
-            yError() << "Unable to obtain laser scan limits";
+            yCError(NAVIGATION_GUI_INIT) << "Unable to obtain laser scan limits";
             return false;
         }
         m_laser_angle_of_view = fabs(m_min_laser_angle) + fabs(m_max_laser_angle);
@@ -311,7 +313,7 @@ bool NavGuiThread::threadInit()
     //Get the maps
     if (readMaps() == false)
     {
-        yError() << "Error while reading maps";
+        yCError(NAVIGATION_GUI_INIT) << "Error while reading maps";
     }
 
     return true;

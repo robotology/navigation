@@ -34,6 +34,8 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::math;
 
+YARP_LOG_COMPONENT(BASECONTROL, "navigation.baseControl")
+
 bool CtrlModule::configure(ResourceFinder &rf)
 {
     string slash="/";
@@ -56,7 +58,7 @@ bool CtrlModule::configure(ResourceFinder &rf)
     std::string configFile=rf.findFile("from");
     if (configFile=="") //--from baseCtrl.ini
     {
-        yError("Cannot find .ini configuration file. By default I'm searching for baseCtrl.ini");
+        yCError(BASECONTROL,"Cannot find .ini configuration file. By default I'm searching for baseCtrl.ini");
         return false;
     }
     else
@@ -68,7 +70,7 @@ bool CtrlModule::configure(ResourceFinder &rf)
     ctrl_options.put("local", localName.c_str());
 
     //check for robotInterface availability
-    yInfo("Checking for yarpRobotInterface availability");
+    yCInfo(BASECONTROL,"Checking for yarpRobotInterface availability");
     Port startport;
     startport.open (localName + "/yarpRobotInterfaceCheck:rpc");
         
@@ -84,7 +86,7 @@ bool CtrlModule::configure(ResourceFinder &rf)
     bool skip_robot_interface_check = rf.check("skip_robot_interface_check");
     if (skip_robot_interface_check)
     {
-        yInfo("skipping yarpRobotInterface check");
+        yCInfo(BASECONTROL,"skipping yarpRobotInterface check");
     }
     else
     {
@@ -95,24 +97,24 @@ bool CtrlModule::configure(ResourceFinder &rf)
                 bool rc = yarp::os::Network::connect (localName + "/yarpRobotInterfaceCheck:rpc","/" + robotName + "/yarprobotinterface");
                 if (rc == false)
                 {
-                    yWarning ("Problems trying to connect to %s %d", std::string("/" + robotName + "/yarprobotinterface").c_str(), rc_count ++);
+                    yCWarning (BASECONTROL,"Problems trying to connect to %s %d", std::string("/" + robotName + "/yarprobotinterface").c_str(), rc_count ++);
                     yarp::os::Time::delay (1.0);
                     continue;
                 }
                 else 
                 {
                     not_yet_connected = false;  
-                    yDebug ("Connection established with yarpRobotInterface");
+                    yCDebug (BASECONTROL,"Connection established with yarpRobotInterface");
                 }
             }
     
             bool rp = startport.write (cmd, response);
             if (rp == false)
             {
-                yWarning ("Problems trying to connect to yarpRobotInterface %d", rp_count ++);
+                yCWarning (BASECONTROL,"Problems trying to connect to yarpRobotInterface %d", rp_count ++);
                 if (yarp::os::Time::now()-start_time>30)
                 {
-                    yError ("Timeout expired while trying to connect to yarpRobotInterface");
+                    yCError (BASECONTROL,"Timeout expired while trying to connect to yarpRobotInterface");
                     return false;
                 }
                 yarp::os::Time::delay (1.0);
@@ -122,10 +124,10 @@ bool CtrlModule::configure(ResourceFinder &rf)
             {
                 if (response.get(0).asString() != "ok")
                 {
-                    yWarning ("yarpRobotInterface is not ready yet, retrying... %d", rf_count++);
+                    yCWarning (BASECONTROL,"yarpRobotInterface is not ready yet, retrying... %d", rf_count++);
                     if (yarp::os::Time::now()-start_time>30)
                     {
-                    yError ("Timeout expired while waiting for yarpRobotInterface availability");
+                    yCError (BASECONTROL,"Timeout expired while waiting for yarpRobotInterface availability");
                     return false;
                     }
                     yarp::os::Time::delay (1.0);
@@ -133,7 +135,7 @@ bool CtrlModule::configure(ResourceFinder &rf)
                 }
                 else
                 {
-                    yInfo ("yarpRobotInterface is ready");
+                    yCInfo (BASECONTROL,"yarpRobotInterface is ready");
                     break;
                 }
             }
@@ -142,13 +144,13 @@ bool CtrlModule::configure(ResourceFinder &rf)
 
     //set the thread rate
     double period = rf.check("period",Value(0.020)).asDouble();
-    yInfo("baseCtrl thread period: %f s.",period);
+    yCInfo(BASECONTROL,"baseCtrl thread period: %f s.",period);
 
     //verbosity
     if (rf.check("silent") ||
         rf.check("no_verbose"))
     {
-        yInfo("Verbosity off");
+        yCInfo(BASECONTROL,"Verbosity off");
         verbose_print=false;
     }
 
@@ -156,7 +158,7 @@ bool CtrlModule::configure(ResourceFinder &rf)
     bool motors_enabled=true;
     if (rf.check("no_motors"))
     {
-        yInfo("'no_motors' option found. Skipping motor control part.");
+        yCInfo(BASECONTROL,"'no_motors' option found. Skipping motor control part.");
         motors_enabled=false;
     }
 
@@ -180,18 +182,18 @@ bool CtrlModule::configure(ResourceFinder &rf)
             yarp::os::Time::delay(1.0);
             if (yarp::os::Network::connect("/joystickCtrl:o",localName+"/joystick1:i"))
                 {
-                    yInfo("Joystick has been automatically connected");
+                    yCInfo(BASECONTROL,"Joystick has been automatically connected");
                     break;
                 }
             else
                 {
-                    yWarning("Unable to find the joystick port, retrying (%d/5)...",joystick_trials);
+                    yCWarning(BASECONTROL,"Unable to find the joystick port, retrying (%d/5)...",joystick_trials);
                     joystick_trials++;
                 }
 
             if (joystick_trials>=5)
                 {
-                    yError("Unable to find the joystick port, giving up");
+                    yCError(BASECONTROL,"Unable to find the joystick port, giving up");
                     break;
                 }
         }
@@ -235,11 +237,13 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
     {
         double val =command.get(1).asFloat64();
         control_thr->set_max_lin_vel(val);
+        return true;
     }
     else if (command.get(0).asString() == "set_max_ang_vel")
     {
         double val = command.get(1).asFloat64();
         control_thr->set_max_ang_vel(val);
+        return true;
     }
     else if (command.get(0).asString() == "set_max_joy_lin_vel")
     {
@@ -339,7 +343,7 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
             double kd = command.get(4).asDouble();
             control_thr->set_pid(identif,kp,ki,kd);
             reply.addString("New pid parameters set.");
-            yInfo("New pid parameters set.");
+            yCInfo(BASECONTROL,"New pid parameters set.");
         }
         return true;
     }
@@ -393,11 +397,11 @@ bool   CtrlModule::updateModule()
     }
     else
     {
-        yDebug("* Motor thread:not running");
+        yCDebug(BASECONTROL,"* Motor thread:not running");
     }
 
     static int life_counter=0;
-    if (verbose_print) yInfo( "* Life: %d\n\n", life_counter);
+    if (verbose_print) yCInfo(BASECONTROL, "* Life: %d\n\n", life_counter);
     life_counter++;
 
     return true;

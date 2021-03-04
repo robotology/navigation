@@ -85,7 +85,7 @@ double control_filters::ratelim_filter_0(double input, int i, double rate_pos, d
     //This is a rate limiter filter. 
     static double prev[10];
 
-//    if (i==9) {yDebug() << "9>>>" << input << rate_pos << rate_neg << prev[9];} //print lin vel along x axis
+//    if (i==9) {yCDebug() << "9>>>" << input << rate_pos << rate_neg << prev[9];} //print lin vel along x axis
     
     if (input*prev[i]>=0)
     {

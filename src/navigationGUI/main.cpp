@@ -30,6 +30,8 @@
 #include "navGui.h"
 #include <math.h>
 
+YARP_LOG_COMPONENT(NAVIGATION_GUI_MAIN, "navigation.navigationGui.main")
+
 class NavigationGUI : public yarp::os::RFModule
 {
 protected:
@@ -49,7 +51,7 @@ public:
         bool ret = rpcPort.open("/navigationGUI/rpc");
         if (ret == false)
         {
-            yError() << "Unable to open module ports";
+            yCError(NAVIGATION_GUI_MAIN) << "Unable to open module ports";
             return false;
         }
         attach(rpcPort);
@@ -102,17 +104,17 @@ public:
         bool err = false;
         if (las > TIMEOUT_MAX)
         {
-            yError("timeout, no laser data received!\n");
+            yCError(NAVIGATION_GUI_MAIN,"timeout, no laser data received!\n");
             err = true;
         }
         if (loc > TIMEOUT_MAX)
         {
-            yError(" timeout, no localization data received!\n");
+            yCError(NAVIGATION_GUI_MAIN," timeout, no localization data received!\n");
             err = true;
         }
         if (sta > TIMEOUT_MAX)
         {
-            yError("timeout, no status info received!\n");
+            yCError(NAVIGATION_GUI_MAIN,"timeout, no status info received!\n");
             err = true;
         }
 
@@ -120,7 +122,7 @@ public:
         {
             std::string status = "error";
             if (guiThread) status = guiThread->getNavigationStatusAsString();
-            yInfo() << "module running, ALL ok. Navigation status:" << status;
+            yCInfo(NAVIGATION_GUI_MAIN) << "module running, ALL ok. Navigation status:" << status;
         }
         return true; 
     }
@@ -148,12 +150,12 @@ public:
             }
             else if (command.get(0).isString())
             {
-                yDebug() << "Not yet implemented.";
+                yCDebug(NAVIGATION_GUI_MAIN) << "Not yet implemented.";
             }
         }
         else
         {
-            yError() << "Invalid command type";
+            yCError(NAVIGATION_GUI_MAIN) << "Invalid command type";
             reply.addVocab(VOCAB_ERR);
         }
         return true;
@@ -165,7 +167,7 @@ int main(int argc, char *argv[])
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError("check Yarp network.\n");
+        yCError(NAVIGATION_GUI_MAIN,"check Yarp network.\n");
         return -1;
     }
 

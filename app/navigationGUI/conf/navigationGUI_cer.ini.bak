@@ -1,0 +1,4 @@
+[import navigation navigation_base.ini]
+
+[LASER]
+remote_laser           /cer/laser:o

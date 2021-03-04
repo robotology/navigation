@@ -50,6 +50,8 @@ using namespace yarp::dev::Nav2D;
 #define RAD2DEG 180/M_PI
 #define DEG2RAD M_PI/180
 
+YARP_LOG_COMPONENT(ROS_LOC, "navigation.rosLocalizer")
+
 void rosLocalizerRPCHandler::setInterface(rosLocalizer* iface)
 {
     this->interface = iface;
@@ -77,7 +79,7 @@ bool   rosLocalizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocati
     {
         return thread->getEstimatedPoses(poses);
     }
-    yError() << "rosLocalizer thread not running";
+    yCError(ROS_LOC) << "rosLocalizer thread not running";
     return false;
 }
 
@@ -87,7 +89,7 @@ bool   rosLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
     {
         return thread->getCurrentLoc(loc);
     }
-    yError() << "rosLocalizer thread not running";
+    yCError(ROS_LOC) << "rosLocalizer thread not running";
     return false;
 }
 
@@ -116,7 +118,7 @@ bool   rosLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
         cov6x6[5][5]=m_default_covariance_3x3[2][2];
         return thread->initializeLocalization(loc, cov6x6);
     }
-    yError() << "rosLocalizer thread not running";
+    yCError(ROS_LOC) << "rosLocalizer thread not running";
     return false;
 }
 
@@ -208,7 +210,7 @@ void rosLocalizerThread::run()
     }
     if (current_time - m_tf_data_received > 0.1)
     {
-        yWarning() << "No localization data received for more than 0.1s!";
+        yCWarning(ROS_LOC) << "No localization data received for more than 0.1s!";
     }
     
     //republish the map periodically
@@ -231,7 +233,7 @@ bool rosLocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLoc
         bool b = m_iMap->get_map(m_localization_data.map_id, m_current_map);
         if (b==false)
         {
-            yError() << "Map "<<m_localization_data.map_id << " not found.";
+            yCError(ROS_LOC) << "Map "<<m_localization_data.map_id << " not found.";
         }
         else
         {
@@ -335,14 +337,14 @@ bool rosLocalizerThread::threadInit()
     Bottle general_group = m_cfg.findGroup("ROSLOCALIZER_GENERAL");
     if (general_group.isNull())
     {
-        yError() << "Missing ROSLOCALIZER_GENERAL group!";
+        yCError(ROS_LOC) << "Missing ROSLOCALIZER_GENERAL group!";
         return false;
     }
 
     Bottle localization_group = m_cfg.findGroup("LOCALIZATION");
     if (localization_group.isNull())
     {
-        yError() << "Missing LOCALIZATION group!";
+        yCError(ROS_LOC) << "Missing LOCALIZATION group!";
         return false;
     }
 
@@ -351,17 +353,17 @@ bool rosLocalizerThread::threadInit()
     Bottle tf_group = m_cfg.findGroup("TF");
     if (tf_group.isNull())
     {
-        yError() << "Missing TF group!";
+        yCError(ROS_LOC) << "Missing TF group!";
         return false;
     }
 
     Bottle map_group = m_cfg.findGroup("MAP");
     if (map_group.isNull())
     {
-        yError() << "Missing MAP group!";
+        yCError(ROS_LOC) << "Missing MAP group!";
         return false;
     }
-    yDebug() << map_group.toString();
+    yCDebug(ROS_LOC) << map_group.toString();
 
     m_rosNode = new yarp::os::Node(m_name);
     
@@ -376,7 +378,7 @@ bool rosLocalizerThread::threadInit()
                  delete m_rosNode;
                  m_rosNode=0;
              }
-             yError() << "localizationModule: unable to publish data on " << m_topic_occupancyGrid << " topic, check your yarp-ROS network configuration";
+             yCError(ROS_LOC) << "localizationModule: unable to publish data on " << m_topic_occupancyGrid << " topic, check your yarp-ROS network configuration";
              return false;
         }
     }
@@ -392,10 +394,10 @@ bool rosLocalizerThread::threadInit()
                 delete m_rosNode;
                 m_rosNode = 0;
             }
-            yError() << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
+            yCError(ROS_LOC) << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
             return false;
         }
-        yDebug() << "opened " << m_topic_particles << " topic";
+        yCDebug(ROS_LOC) << "opened " << m_topic_particles << " topic";
     }
 
      //initialize an initial pose publisher
@@ -410,18 +412,18 @@ bool rosLocalizerThread::threadInit()
                     delete m_rosNode;
                     m_rosNode=0;
                 }
-                yError() << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
+                yCError(ROS_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
                 return false;
             }
         }
     }
 
     //map server group
-    yDebug() << map_group.toString();
+    yCDebug(ROS_LOC) << map_group.toString();
 
     if (map_group.check("connect_to_yarp_mapserver") == false)
     {
-        yError() << "Missing `connect_to_yarp_mapserver` in [MAP] group";
+        yCError(ROS_LOC) << "Missing `connect_to_yarp_mapserver` in [MAP] group";
         return false;
     }
     m_use_map_server= (map_group.find("connect_to_yarp_mapserver").asInt()==1);
@@ -429,12 +431,12 @@ bool rosLocalizerThread::threadInit()
     //tf group
     if (tf_group.check("map_frame_id") == false)
     {
-        yError() << "Missing `map_frame_id` in [TF] group";
+        yCError(ROS_LOC) << "Missing `map_frame_id` in [TF] group";
         return false;
     }
     if (tf_group.check("robot_frame_id") == false)
     {
-        yError() << "Missing `robot_frame_id` in [TF] group";
+        yCError(ROS_LOC) << "Missing `robot_frame_id` in [TF] group";
         return false;
     }
     m_frame_map_id = tf_group.find("map_frame_id").asString();
@@ -448,13 +450,13 @@ bool rosLocalizerThread::threadInit()
     options.put("remote", "/transformServer");
     if (m_ptf.open(options) == false)
     {
-        yError() << "Unable to open transform client";
+        yCError(ROS_LOC) << "Unable to open transform client";
         return false;
     }
     m_ptf.view(m_iTf);
     if (m_ptf.isValid() == false || m_iTf == 0)
     {
-        yError() << "Unable to view iTransform interface";
+        yCError(ROS_LOC) << "Unable to view iTransform interface";
         return false;
     }
 
@@ -467,15 +469,15 @@ bool rosLocalizerThread::threadInit()
         map_options.put("remote", "/mapServer");
         if (m_pmap.open(map_options) == false)
         {
-            yWarning() << "Unable to open mapClient";
+            yCWarning(ROS_LOC) << "Unable to open mapClient";
         }
         else
         {
-            yInfo() << "Opened mapClient";
+            yCInfo(ROS_LOC) << "Opened mapClient";
             m_pmap.view(m_iMap);
             if (m_pmap.isValid() == false || m_iMap == 0)
             {
-                yError() << "Unable to view map interface";
+                yCError(ROS_LOC) << "Unable to view map interface";
                 return false;
             }
         }
@@ -522,7 +524,7 @@ bool rosLocalizer::open(yarp::os::Searchable& config)
     string cfg_temp = config.toString();
     Property p; p.fromString(cfg_temp);
 
-    yDebug() << "rosLocalizer configuration: \n" << p.toString().c_str();
+    yCDebug(ROS_LOC) << "rosLocalizer configuration: \n" << p.toString().c_str();
 
     Bottle general_group = p.findGroup("ROSLOCALIZER_GENERAL");
     if (general_group.isNull()==false)
@@ -537,17 +539,17 @@ bool rosLocalizer::open(yarp::os::Searchable& config)
     Bottle initial_group = p.findGroup("INITIAL_POS");
     if (initial_group.isNull())
     {
-        yError() << "Missing INITIAL_POS group!";
+        yCError(ROS_LOC) << "Missing INITIAL_POS group!";
         return false;
     }
     if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
-    else { yError() << "missing initial_x param"; return false; }
+    else { yCError(ROS_LOC) << "missing initial_x param"; return false; }
     if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
-    else { yError() << "missing initial_y param"; return false; }
+    else { yCError(ROS_LOC) << "missing initial_y param"; return false; }
     if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
-    else { yError() << "missing initial_theta param"; return false; }
+    else { yCError(ROS_LOC) << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map"))   { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
-    else { yError() << "missing initial_map param"; return false; }
+    else { yCError(ROS_LOC) << "missing initial_map param"; return false; }
     m_default_covariance_3x3.resize(3,3);
     m_default_covariance_3x3.zero();
     m_default_covariance_3x3[0][0] = 0.25;
@@ -565,7 +567,7 @@ bool rosLocalizer::open(yarp::os::Searchable& config)
     bool ret = rpcPort.open(m_name+"/rpc");
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(ROS_LOC) << "Unable to open module ports";
         return false;
     }
 
@@ -598,7 +600,7 @@ bool rosLocalizer::close()
 
 bool rosLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
-    yWarning() << "Covariance matrix is not currently handled by rosLocalizer";
+    yCWarning(ROS_LOC) << "Covariance matrix is not currently handled by rosLocalizer";
     thread->getCurrentLoc(loc);
     return true;
 }
@@ -622,7 +624,7 @@ bool rosLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Mat
 	    cov6x6[5][5]=cov[2][2];
 		return thread->initializeLocalization(loc, cov6x6);
 	}
-	yError() << "rosLocalizer thread not running";
+	yCError(ROS_LOC) << "rosLocalizer thread not running";
 	return false;
 }
 

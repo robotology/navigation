@@ -630,6 +630,7 @@ bool PlannerThread::reloadCurrentMap()
         m_current_map.enlargeObstacles(m_robot_radius);
         m_augmented_map = m_current_map;
         yCDebug(PATHPLAN_CTRL, ) << "Obstacles enlargement performed (" << m_robot_radius << "m)";
+        return true;
     }
     else
     {
@@ -644,6 +645,7 @@ bool PlannerThread::reloadCurrentMap()
         yCInfo(PATHPLAN_CTRL) << names;
         return false;
     }
+    return true;
 }
 
 bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) const

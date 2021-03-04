@@ -19,6 +19,8 @@
 #include "ikart_odometry.h"
 #include <yarp/os/LogStream.h>
 
+YARP_LOG_COMPONENT(IKART_ODOM, "navigation.baseControl.ikartOdometry")
+
 bool iKart_Odometry::reset_odometry()
 {
     ienc->getEncoder(0,&encA_offset);
@@ -27,19 +29,19 @@ bool iKart_Odometry::reset_odometry()
     odom_x=0;
     odom_y=0;
     encvel_estimator->reset();
-    yInfo("Odometry reset done");
+    yCInfo(IKART_ODOM,"Odometry reset done");
     return true;
 }
 
 void iKart_Odometry::printStats()
 {
     mutex.wait();
-    //yInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
-    yInfo ("* Odometry Thread:");
-    yInfo ("enc1:%+9.1f enc2:%+9.1f enc3:%+9.1f ******** env1:%+9.3f env2:%+9.3f env3:%+9.3f\n",
+    //yCInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
+    yCInfo (IKART_ODOM,"* Odometry Thread:");
+    yCInfo (IKART_ODOM,"enc1:%+9.1f enc2:%+9.1f enc3:%+9.1f ******** env1:%+9.3f env2:%+9.3f env3:%+9.3f\n",
     enc[0]*57, enc[1]*57, enc[2]*57, encv[0]*57, encv[1]*57, encv[2]*57);
     
-    yInfo ("ivlx:%+9.3f ivly:%+9.3f                ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f\n",
+    yCInfo (IKART_ODOM,"ivlx:%+9.3f ivly:%+9.3f                ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f\n",
     base_vel_x, base_vel_y, odom_vel_x, odom_vel_y, base_vel_theta,  odom_x, odom_y,odom_theta );
     mutex.post();
 }
@@ -79,12 +81,12 @@ bool iKart_Odometry::open(const Property &_options)
     localName = ctrl_options.find("local").asString();
 
     // open the control board driver
-    yInfo("Opening the motors interface...");
+    yCInfo(IKART_ODOM,"Opening the motors interface...");
 
     Property control_board_options("(device remote_controlboard)");
     if (!control_board_driver)
     {
-        yError("control board driver not ready!");
+        yCError(IKART_ODOM,"control board driver not ready!");
         return false;
     }
     // open the interfaces for the control boards
@@ -92,7 +94,7 @@ bool iKart_Odometry::open(const Property &_options)
     ok = ok & control_board_driver->view(ienc);
     if(!ok)
     {
-        yError("one or more devices has not been viewed");
+        yCError(IKART_ODOM,"one or more devices has not been viewed");
         return false;
     }
     // open control input ports
@@ -102,7 +104,7 @@ bool iKart_Odometry::open(const Property &_options)
     ret &= port_vels.open((localName+"/velocity:o").c_str());
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(IKART_ODOM) << "Unable to open module ports";
         return false;
     }
 
@@ -112,14 +114,14 @@ bool iKart_Odometry::open(const Property &_options)
     //the base class open
     if (!OdometryHandler::open(_options))
     {
-        yError() << "Error in Odometry::open()"; return false;
+        yCError(IKART_ODOM) << "Error in Odometry::open()"; return false;
     }
 
-    //yDebug() <<ctrl_options.toString();
+    //yCDebug() <<ctrl_options.toString();
     Bottle general_group = ctrl_options.findGroup("BASECTRL_GENERAL");
     if (general_group.isNull())
     {
-        yError("iKart_Odometry::open Unable to find BASECTRL_GENERAL group!");
+        yCError(IKART_ODOM,"iKart_Odometry::open Unable to find BASECTRL_GENERAL group!");
         return false;
     }
 
@@ -127,22 +129,22 @@ bool iKart_Odometry::open(const Property &_options)
     Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError("iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
+        yCError(IKART_ODOM,"iKart_Odometry::open Unable to find ROBOT_GEOMETRY group!");
         return false;
     }
     if (!geometry_group.check("geom_r"))
     {
-        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        yCError(IKART_ODOM,"Missing param geom_r in [ROBOT_GEOMETRY] group");
         return false;
     }
     if (!geometry_group.check("geom_L"))
     {
-        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        yCError(IKART_ODOM,"Missing param geom_L in [ROBOT_GEOMETRY] group");
         return false;
     }
     if (!geometry_group.check("g_angle"))
     {
-        yError("Missing param g_angle in [ROBOT_GEOMETRY] group");
+        yCError(IKART_ODOM,"Missing param g_angle in [ROBOT_GEOMETRY] group");
         return false;
     }
     geom_r = geometry_group.find("geom_r").asDouble();

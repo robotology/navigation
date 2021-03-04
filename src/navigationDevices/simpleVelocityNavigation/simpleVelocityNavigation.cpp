@@ -36,6 +36,8 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 
+YARP_LOG_COMPONENT(SIMPLE_VEL_NAV, "navigation.simpleVelocityNavigator")
+
 simpleVelocityNavigation::simpleVelocityNavigation() : PeriodicThread(DEFAULT_THREAD_PERIOD)
 {
     m_navigation_status = navigation_status_idle;
@@ -50,7 +52,7 @@ bool simpleVelocityNavigation::open(yarp::os::Searchable& config)
 
     if (ret == false)
     {
-        yError() << "Unable to open module ports";
+        yCError(SIMPLE_VEL_NAV) << "Unable to open module ports";
         return false;
     }
     this->start();
@@ -134,19 +136,19 @@ void simpleVelocityNavigation::send_command(control_type control_data)
 
 bool simpleVelocityNavigation::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
-    yError() << "gotoTargetByAbsoluteLocation() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "gotoTargetByAbsoluteLocation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::gotoTargetByRelativeLocation(double x, double y)
 {
-    yError() << "gotoTargetByRelativeLocation() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "gotoTargetByRelativeLocation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
-    yError() << "gotoTargetByRelativeLocation() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "gotoTargetByRelativeLocation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
@@ -168,54 +170,54 @@ bool simpleVelocityNavigation::getNavigationStatus(NavigationStatusEnum& status)
 
 bool simpleVelocityNavigation::stopNavigation()
 {
-    yError() << "stopNavigation() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "stopNavigation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
-    yError() << "getAbsoluteLocationOfCurrentTarget() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "getAbsoluteLocationOfCurrentTarget() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
-    yError() << "getRelativeLocationOfCurrentTarget() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "getRelativeLocationOfCurrentTarget() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
-    yError() << "getAllNavigationWaypoints() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "getAllNavigationWaypoints() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
-    yError() << "getCurrentNavigationWaypoint() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "getCurrentNavigationWaypoint() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::suspendNavigation(double time)
 {
-    yError() << "suspendNavigation() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "suspendNavigation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::resumeNavigation()
 {
-    yError() << "resumeNavigation() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "resumeNavigation() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::recomputeCurrentNavigationPath()
 {
-    yError() << "recomputeCurrentNavigationPath() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "recomputeCurrentNavigationPath() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }
 
 bool simpleVelocityNavigation::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
-    yError() << "getCurrentNavigationMap() Not implemented by simpleVelocityNavigation";
+    yCError(SIMPLE_VEL_NAV) << "getCurrentNavigationMap() Not implemented by simpleVelocityNavigation";
     return NOT_IMPLEMENTED;
 }

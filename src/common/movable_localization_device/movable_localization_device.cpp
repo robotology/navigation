@@ -24,6 +24,7 @@ using namespace yarp::dev::Nav2D;
 #define DEG2RAD M_PI/180
 #endif
 
+YARP_LOG_COMPONENT(MOVABLE_DEV, "navigation.navigation_lib.movable_localization_device")
 
 //////////////////////////
 
@@ -75,14 +76,14 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
     }
     else
     {
-        yWarning() << "iTf already exists";
+        yCWarning(MOVABLE_DEV) << "iTf already exists";
         m_iTf = iTf;
     }
 
     Bottle devicepos_group = cfg.findGroup("DEVICE_POS");
     if (devicepos_group.isNull())
     {
-        yError() << "Missing DEVICE_POS group!";
+        yCError(MOVABLE_DEV) << "Missing DEVICE_POS group!";
         return false;
     }
 
@@ -93,9 +94,9 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
         if (device_position_mode == "fixed") m_device_position = DEVICE_POS_IS_FIXED;
         else if (device_position_mode == "from_tf_fixed") m_device_position = DEVICE_FROM_TF_FIXED;
         else if (device_position_mode == "from_tf_variable") m_device_position = DEVICE_FROM_TF_VARIABLE;
-        else { yError() << "Invalid value for 'device_position' param"; return false; }
+        else { yCError(MOVABLE_DEV) << "Invalid value for 'device_position' param"; return false; }
     }
-    else { yError() << "missing 'device_position' param"; return false; }
+    else { yCError(MOVABLE_DEV) << "missing 'device_position' param"; return false; }
 
     if (m_device_position == DEVICE_POS_IS_FIXED)
     {
@@ -107,7 +108,7 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
     {
         if (m_iTf == nullptr)
         {
-            if (!init_tf())  { yError() << "general error"; return false; }
+            if (!init_tf())  { yCError(MOVABLE_DEV) << "general error"; return false; }
         }
         yarp::sig::Matrix transform;
         bool b = m_iTf->getTransform(m_frame_robot_id,m_frame_device_id,transform);
@@ -120,12 +121,12 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
     {
         if (m_iTf == nullptr)
         {
-            if (!init_tf()) { yError() << "m_iTf is nullptr"; return false; }
+            if (!init_tf()) { yCError(MOVABLE_DEV) << "m_iTf is nullptr"; return false; }
         }
     }
     else
     {
-        yError() << "m_device_position type unset";
+        yCError(MOVABLE_DEV) << "m_device_position type unset";
         return false;
     }
 }
@@ -139,13 +140,13 @@ bool movable_localization_device::init_tf()
     options.put("remote", "/transformServer");
     if (m_ptf.open(options) == false)
     {
-        yError() << "Unable to open transform client";
+        yCError(MOVABLE_DEV) << "Unable to open transform client";
         return false;
     }
     m_ptf.view(m_iTf);
     if (m_ptf.isValid() == false || m_iTf == nullptr)
     {
-        yError() << "Unable to view iTransform interface";
+        yCError(MOVABLE_DEV) << "Unable to view iTransform interface";
         return false;
     }
     return true;

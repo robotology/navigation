@@ -23,12 +23,14 @@
 #include "cer/cer_motors.h"
 #include "ikart/ikart_motors.h"
 
+YARP_LOG_COMPONENT(CONTROL_THRD, "navigation.baseControl.controlThread")
+
 void ControlThread::afterStart(bool s)
 {
     if (s)
-        yInfo("Control thread started successfully");
+        yCInfo(CONTROL_THRD, "Control thread started successfully");
     else
-        yError("Control thread did not start");
+        yCError(CONTROL_THRD,"Control thread did not start");
 }
 
 void ControlThread::threadRelease()
@@ -143,7 +145,7 @@ void ControlThread::apply_acceleration_limiter(double& linear_speed, double& ang
 #endif
 
     #if DEBUG_LIMTER
-    yDebug()<<angular_speed<<linear_speed;
+    yCDebug()<<angular_speed<<linear_speed;
     #endif
 }
 
@@ -196,7 +198,7 @@ void ControlThread::set_pid (string id, double kp, double ki, double kd)
 {
     yarp::os::Bottle old_options;
     this->angular_speed_pid->getOptions(old_options);
-    yInfo("Current configuration: %s\n",old_options.toString().c_str());
+    yCInfo(CONTROL_THRD,"Current configuration: %s\n",old_options.toString().c_str());
     
     // (Kp (10.0)) (Ki (0.0)) (Kf (0.0)) ... (satLim(-1000.0 1000.0)) (Ts 0.02)
     yarp::os::Bottle options;
@@ -206,7 +208,7 @@ void ControlThread::set_pid (string id, double kp, double ki, double kd)
     bkp.addString("Kp");    yarp::os::Bottle& bkp2 = bkp.addList();    bkp2.addDouble(kp);
     bki.addString("Ki");    yarp::os::Bottle& bki2 = bki.addList();    bki2.addDouble(ki);
     bkd.addString("Kd");    yarp::os::Bottle& bkd2 = bkd.addList();    bkd2.addDouble(kd);
-    yInfo("new configuration: %s\n", options.toString().c_str());
+    yCInfo(CONTROL_THRD, "new configuration: %s\n", options.toString().c_str());
 
     this->angular_speed_pid->setOptions(options);
     yarp::sig::Vector tmp; tmp.resize(1); tmp.zero();
@@ -233,7 +235,7 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,doubl
         {
             Bottle &b1=port_debug_linear.prepare();
             b1.clear();
-            yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
+            yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
             b1.addString(buff);
             port_debug_linear.write();
         }
@@ -242,7 +244,7 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_throttle,doubl
         {
             Bottle &b2=port_debug_angular.prepare();
             b2.clear();
-            yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
+            yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
             b2.addString(buff);
             port_debug_angular.write();
         }
@@ -266,13 +268,13 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
         char buff [255];
         Bottle &b1=port_debug_linear.prepare();
         b1.clear();
-        yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
+        yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
         b1.addString(buff);
         port_debug_linear.write();
 
         Bottle &b2=port_debug_angular.prepare();
         b2.clear();
-        yInfo("%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
+        yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
         b2.addString(buff);
         port_debug_angular.write();
     }
@@ -295,7 +297,7 @@ void ControlThread::run()
         static int print_counter = 0;
         if (print_counter++ == 10)
         {
-            yWarning() << "Performance warning: input_angular_speed <0. This should not happen!";
+            yCWarning(CONTROL_THRD) << "Performance warning: input_angular_speed <0. This should not happen!";
             print_counter = 0;
         }
         input_linear_speed = -input_linear_speed;
@@ -369,15 +371,15 @@ void ControlThread::run()
     }
     else
     {
-        yError ("Unknown control mode!");
+        yCError (CONTROL_THRD,"Unknown control mode!");
         this->m_motor_handler->execute_none();
 }
 }
 
 void ControlThread::printStats()
 {
-    yInfo ("* Control thread:\n");
-    yInfo ("Input command: %+5.2f %+5.2f %+5.2f  %+5.2f      ", input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
+    yCInfo (CONTROL_THRD, "* Control thread:\n");
+    yCInfo (CONTROL_THRD, "Input command: %+5.2f %+5.2f %+5.2f  %+5.2f      ", input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
 }
 
 bool ControlThread::set_control_type (string s)
@@ -389,10 +391,10 @@ bool ControlThread::set_control_type (string s)
     else if (s == "openloop_pid")    base_control_type = BASE_CONTROL_OPENLOOP_PID;
     else
     {
-        yError("Error: unknown type of control required: %s. Closing...\n",s.c_str());
+        yCError(CONTROL_THRD,"Error: unknown type of control required: %s. Closing...\n",s.c_str());
         return false;
     }
-    yInfo("Control type set to: %s\n",s.c_str());
+    yCInfo(CONTROL_THRD, "Control type set to: %s\n",s.c_str());
     return true;
 }
 
@@ -405,17 +407,17 @@ bool ControlThread::threadInit()
 {
     if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [BASECTRL_GENERAL] section";
+        yCError(CONTROL_THRD) << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
-    if (general_options.check("control_mode") == false) { yError() << "Missing 'control_mode' param"; return false; }
-    if (general_options.check("ratio_limiter_enabled") == false) { yError() << "Missing 'ratio_limiter_enabled' param"; return false; }
-    if (general_options.check("input_filter_enabled") == false) { yError() << "Missing 'input_filter_enabled' param"; return false; }
-    if (general_options.check("linear_angular_ratio") == false) { yError() << "Missing 'linear_angular_ratio' param"; return false; }
-    if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
-    if (general_options.check("max_linear_vel") == false)  { yError() << "Missing 'max_linear_vel' param";  return false; }
-    if (general_options.check("max_angular_vel") == false)   { yError() << "Missing 'max_angular_vel' param";   return false; }
+    if (general_options.check("control_mode") == false) { yCError(CONTROL_THRD) << "Missing 'control_mode' param"; return false; }
+    if (general_options.check("ratio_limiter_enabled") == false) { yCError(CONTROL_THRD) << "Missing 'ratio_limiter_enabled' param"; return false; }
+    if (general_options.check("input_filter_enabled") == false) { yCError(CONTROL_THRD) << "Missing 'input_filter_enabled' param"; return false; }
+    if (general_options.check("linear_angular_ratio") == false) { yCError(CONTROL_THRD) << "Missing 'linear_angular_ratio' param"; return false; }
+    if (general_options.check("robot_type") == false) { yCError(CONTROL_THRD) << "Missing 'robot_type' param"; return false; }
+    if (general_options.check("max_linear_vel") == false)  { yCError(CONTROL_THRD) << "Missing 'max_linear_vel' param";  return false; }
+    if (general_options.check("max_angular_vel") == false)   { yCError(CONTROL_THRD) << "Missing 'max_angular_vel' param";   return false; }
 
     string control_type, robot_type_s;
     bool useRos;
@@ -465,23 +467,23 @@ bool ControlThread::threadInit()
 
     if (max_angular_acc_pos<=0)
     {
-       yError() << "Invalid max_angular_acc_pos"; return false; 
+       yCError(CONTROL_THRD) << "Invalid max_angular_acc_pos"; return false;
     }
     if (max_angular_acc_neg<=0)
     {
-       yError() << "Invalid max_angular_acc_neg"; return false; 
+       yCError(CONTROL_THRD) << "Invalid max_angular_acc_neg"; return false;
     }
     if (max_linear_acc_pos<=0)
     {
-       yError() << "Invalid max_linear_acc_pos"; return false; 
+       yCError(CONTROL_THRD) << "Invalid max_linear_acc_pos"; return false;
     }
     if (max_linear_acc_neg<=0)
     {
-       yError() << "Invalid max_linear_acc_neg"; return false; 
+       yCError(CONTROL_THRD) << "Invalid max_linear_acc_neg"; return false;
     }
     
     // open the control board driver
-    yInfo("Opening the motors interface...\n");
+    yCInfo(CONTROL_THRD, "Opening the motors interface...\n");
 
     int trials  = 0;
     double      start_time = yarp::os::Time::now();
@@ -511,7 +513,7 @@ bool ControlThread::threadInit()
         //check if the timeout (10s) is expired
         if (current_time - start_time > 10.0)
         {
-            yError("It is not possible to instantiate the device driver. I tried %d times!", trials);
+            yCError(CONTROL_THRD,"It is not possible to instantiate the device driver. I tried %d times!", trials);
             if (control_board_driver)
             {
                 delete control_board_driver;
@@ -522,7 +524,7 @@ bool ControlThread::threadInit()
 
         yarp::os::Time::delay(0.5);
         trials++;
-        yWarning("Unable to connect the device driver, trying again...");
+        yCWarning(CONTROL_THRD,"Unable to connect the device driver, trying again...");
     } while (true);
 
     //initialize ROS
@@ -534,14 +536,14 @@ bool ControlThread::threadInit()
             yarp::os::Bottle r_group = ctrl_options.findGroup("ROS_GENERAL");
             if (r_group.check("node_name") == false)
             {
-                yError() << "Missing node_name parameter"; return false;
+                yCError(CONTROL_THRD) << "Missing node_name parameter"; return false;
             }
             rosNodeName = r_group.find("node_name").asString();
             rosNode     = new yarp::os::Node(rosNodeName);
         }
         else
         {
-            yError() << "[ROS_GENERAL] group is missing from configuration file. ROS communication will not be initialized";
+            yCError(CONTROL_THRD) << "[ROS_GENERAL] group is missing from configuration file. ROS communication will not be initialized";
         }
     }
 
@@ -554,7 +556,7 @@ bool ControlThread::threadInit()
 
     if (robot_type_s == "cer")
     {
-        yInfo("Using cer robot type");
+        yCInfo(CONTROL_THRD, "Using cer robot type");
         robot_type       = ROBOT_TYPE_DIFFERENTIAL;
         if (odometry_enabled) m_odometry_handler = new CER_Odometry(control_board_driver);
         m_motor_handler    = new CER_MotorControl(control_board_driver);
@@ -565,7 +567,7 @@ bool ControlThread::threadInit()
     }
     else if (robot_type_s == "ikart_V1")
     {
-        yInfo("Using ikart_V1 robot type");
+        yCInfo(CONTROL_THRD, "Using ikart_V1 robot type");
         robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
         if (odometry_enabled) m_odometry_handler = new iKart_Odometry(control_board_driver);
         m_motor_handler    = new iKart_MotorControl(control_board_driver);
@@ -577,7 +579,7 @@ bool ControlThread::threadInit()
     }
     else if (robot_type_s == "ikart_V2")
     {
-        yInfo("Using ikart_V2 robot type");
+        yCInfo(CONTROL_THRD, "Using ikart_V2 robot type");
         robot_type       = ROBOT_TYPE_THREE_MECHANUM;
         if (odometry_enabled) m_odometry_handler = new iKart_Odometry(control_board_driver);
         m_motor_handler    = new iKart_MotorControl(control_board_driver);
@@ -589,7 +591,7 @@ bool ControlThread::threadInit()
     }
     else
     {
-        yError() << "Invalid Robot type selected: ROBOT_TYPE_NONE";
+        yCError(CONTROL_THRD) << "Invalid Robot type selected: ROBOT_TYPE_NONE";
         return false;
     }
     
@@ -601,38 +603,38 @@ bool ControlThread::threadInit()
     
     if (m_odometry_handler && m_odometry_handler->open(ctrl_options) == false)
     {
-        yError() << "Problem occurred while opening odometry handler";
+        yCError(CONTROL_THRD) << "Problem occurred while opening odometry handler";
         return false;
     }
 
     if (m_motor_handler->open(ctrl_options) == false)
     {
-        yError() << "Problem occurred while opening motor handler";
+        yCError(CONTROL_THRD) << "Problem occurred while opening motor handler";
         return false;
     }
 
     if (m_input_handler->open(ctrl_options) == false)
     {
-        yError() << "Problem occurred while opening input handler";
+        yCError(CONTROL_THRD) << "Problem occurred while opening input handler";
         return false;
     }
 
-    yInfo("%s", ctrl_options.toString().c_str());
+    yCInfo(CONTROL_THRD, "%s", ctrl_options.toString().c_str());
 
     //create the pid controllers
     if (!ctrl_options.check("HEADING_VELOCITY_PID"))
     {
-        yError("Error reading from .ini file, section PID");
+        yCError(CONTROL_THRD,"Error reading from .ini file, section PID");
         return false;
     }
     if (!ctrl_options.check("LINEAR_VELOCITY_PID"))
     {
-        yError("Error reading from .ini file, section PID");
+        yCError(CONTROL_THRD,"Error reading from .ini file, section PID");
         return false;
     }
     if (!ctrl_options.check("ANGULAR_VELOCITY_PID"))
     {
-        yError("Error reading from .ini file, section PID");
+        yCError(CONTROL_THRD,"Error reading from .ini file, section PID");
         return false;
     }
     yarp::sig::Vector kp[3], ki[3], kd[3];
@@ -684,15 +686,15 @@ bool ControlThread::threadInit()
     //start the motors
     if (rf.check("no_start"))
     {
-        yInfo("no_start option found");
+        yCInfo(CONTROL_THRD,"no_start option found");
         return true;
     }
 
-    yInfo() << control_type.c_str();
-    if      (control_type == string("velocity_pid"))    { this->set_control_type("velocity_pid");    yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
-    else if (control_type == string("velocity_no_pid")) { this->set_control_type("velocity_no_pid"); yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
-    else if (control_type == string("openloop_pid"))    { this->set_control_type("openloop_pid");    yInfo("setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true; }
-    else if (control_type == string("openloop_no_pid")) { this->set_control_type("openloop_no_pid"); yInfo("setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true; }
-    else if (control_type == string("none"))            { this->set_control_type("none");            yInfo("setting control mode none");  return true; }
-    else                                              { yError("Invalid control_mode");  return false; }
+    yCInfo(CONTROL_THRD) << control_type.c_str();
+    if      (control_type == string("velocity_pid"))    { this->set_control_type("velocity_pid");    yCInfo(CONTROL_THRD, "setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
+    else if (control_type == string("velocity_no_pid")) { this->set_control_type("velocity_no_pid"); yCInfo(CONTROL_THRD, "setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true; }
+    else if (control_type == string("openloop_pid"))    { this->set_control_type("openloop_pid");    yCInfo(CONTROL_THRD, "setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true; }
+    else if (control_type == string("openloop_no_pid")) { this->set_control_type("openloop_no_pid"); yCInfo(CONTROL_THRD, "setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true; }
+    else if (control_type == string("none"))            { this->set_control_type("none");            yCInfo(CONTROL_THRD, "setting control mode none");  return true; }
+    else                                              { yCError(CONTROL_THRD,"Invalid control_mode");  return false; }
 }

@@ -22,6 +22,8 @@
 #include <yarp/os/LogStream.h>
 #include <limits>
 
+YARP_LOG_COMPONENT(CER_MOT, "navigation.baseControl.cerMotorControl")
+
 void CER_MotorControl::close()
 {
 }
@@ -39,7 +41,7 @@ bool CER_MotorControl::open(const Property &_options)
     //the base class open
     if (!MotorControl::open(_options))
     {
-        yError() << "Error in MotorControl::open()"; return false;
+        yCError(CER_MOT) << "Error in MotorControl::open()"; return false;
     }
 
     // open the interfaces for the control boards
@@ -52,13 +54,13 @@ bool CER_MotorControl::open(const Property &_options)
     ok = ok & control_board_driver->view(icmd);
     if(!ok)
     {
-        yError("One or more devices has not been viewed, returning\n");
+        yCError(CER_MOT,"One or more devices has not been viewed, returning\n");
         return false;
     }
 
     if (!ctrl_options.check("BASECTRL_GENERAL"))
     {
-        yError() << "Missing [BASECTRL_GENERAL] section";
+        yCError(CER_MOT) << "Missing [BASECTRL_GENERAL] section";
         return false;
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("BASECTRL_GENERAL");
@@ -67,17 +69,17 @@ bool CER_MotorControl::open(const Property &_options)
     Bottle geometry_group = ctrl_options.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
     {
-        yError("CER_MotorControl::open Unable to find ROBOT_GEOMETRY group!");
+        yCError(CER_MOT,"Unable to find ROBOT_GEOMETRY group!");
         return false;
     }
     if (!geometry_group.check("geom_r"))
     {
-        yError("Missing param geom_r in [ROBOT_GEOMETRY] group");
+        yCError(CER_MOT,"Missing param geom_r in [ROBOT_GEOMETRY] group");
         return false;
     }
     if (!geometry_group.check("geom_L"))
     {
-        yError("Missing param geom_L in [ROBOT_GEOMETRY] group");
+        yCError(CER_MOT,"Missing param geom_L in [ROBOT_GEOMETRY] group");
         return false;
     }
     geom_r = geometry_group.find("geom_r").asDouble();
@@ -117,7 +119,7 @@ void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desir
     double appl_linear_speed_to_wheels = appl_linear_speed * this->get_vlin_coeff();
     decouple(appl_linear_speed_to_wheels, appl_desired_direction, appl_angular_speed_to_wheels);
 
-    //yDebug() << appl_linear_speed << appl_linear_speed_to_wheels;
+    //yCDebug() << appl_linear_speed << appl_linear_speed_to_wheels;
     //Use a low pass filter to obtain smooth control
     for (size_t i=0; i < F.size(); i++)
     {
@@ -127,7 +129,7 @@ void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desir
     //Apply the commands
     ivel->velocityMove(0,F[0]);
     ivel->velocityMove(1,F[1]);
-    //yDebug() << F[0] << F[1];
+    //yCDebug() << F[0] << F[1];
 }
 
 void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)

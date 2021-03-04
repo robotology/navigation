@@ -16,7 +16,7 @@
 
 #include "NavigationController.h"
 
-
+YARP_LOG_COMPONENT(FOLLOWER_NAV, "navigation.follower.navigationController")
 
 using namespace FollowerTarget;
 using namespace std;
@@ -41,11 +41,11 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 
     if(enabled==false)
     {
-        yDebug() << "Autonomous Navigation is NOT enabled in config file!!!";
+        yCDebug(FOLLOWER_NAV) << "Autonomous Navigation is NOT enabled in config file!!!";
         return true;
     }
 
-    yDebug() << "Autonomous Navigation is ENABLED in config file!!!";
+    yCDebug(FOLLOWER_NAV) << "Autonomous Navigation is ENABLED in config file!!!";
 
 
     if(rf.check("navServerRoot"))
@@ -61,7 +61,7 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 //     pLocationServer_cfg.put("ROS_enabled", "");
 //     if(!m_locServer_driver.open(pLocationServer_cfg))
 //     {
-//         yError() << "Error opening location server driver";
+//         yCError() << "Error opening location server driver";
 //         return false;
 //     }
 
@@ -74,18 +74,18 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
     m_iNav = nullptr;
     if(!m_navClient_driver.open(navClientCfg))
     {
-        yError() << "Error opening navigation client driver";
+        yCError(FOLLOWER_NAV) << "Error opening navigation client driver";
         return false;
     }
 
     if(!m_navClient_driver.view(m_iNav))
     {
-        yError() << "Error opening navigation interface";
+        yCError(FOLLOWER_NAV) << "Error opening navigation interface";
         return false;
     }
 
     if(m_debugOn)
-        yDebug() << "Navigation controller is configured!";
+        yCDebug(FOLLOWER_NAV) << "Navigation controller is configured!";
 
     return true;
 }
@@ -105,7 +105,7 @@ bool NavigationController::startAutonomousNav(double x, double y, double theta)
         return false;
 
     if(m_debugOn)
-        yDebug() << "NavCtrl: gotoTargetByRelativeLocation" << x << y <<theta;
+        yCDebug(FOLLOWER_NAV) << "NavCtrl: gotoTargetByRelativeLocation" << x << y <<theta;
 
     m_navStarted=true;
     return(m_iNav->gotoTargetByRelativeLocation(x,y, theta));
@@ -133,7 +133,7 @@ bool NavigationController::AbortAutonomousNav(void)
     {
        ret=m_iNav->stopNavigation();
         if(m_debugOn)
-            yDebug() << "NavCtrl: abort autonomous navigation";
+            yCDebug(FOLLOWER_NAV) << "NavCtrl: abort autonomous navigation";
     }
     m_navStarted=false;
     return ret;

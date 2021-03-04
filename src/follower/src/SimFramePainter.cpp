@@ -20,13 +20,14 @@
 using namespace yarp::os;
 using namespace FollowerTarget;
 
+YARP_LOG_COMPONENT(FOLLOWER_FRAME, "navigation.follower.framePainter")
 
 bool SimManager::init(std::string robotName, std::string rpcNamePort, bool debugOn)
 {
     m_worldInterfacePort_ptr = std::make_shared<yarp::os::RpcClient>();
     if(!m_worldInterfacePort_ptr->open(rpcNamePort)) //"/follower/worldInterface/rpc"
     {
-        yError() << "Error opening worldInterface rpc port!!";
+        yCError(FOLLOWER_FRAME) << "Error opening worldInterface rpc port!!";
         return false;
     }
 
@@ -66,7 +67,7 @@ void SimFramePainter::paint(const yarp::sig::Vector &point)
     if( (!m_isCreated) && (m_worldInterfacePort_ptr->asPort().getOutputCount() >0 ))
     {
         if(m_debugOn)
-            yDebug() << "I'm about to create the target frame called " << m_nameOfFrame;
+            yCDebug(FOLLOWER_FRAME) << "I'm about to create the target frame called " << m_nameOfFrame;
         Bottle cmd, ans;
         cmd.clear();
         ans.clear();
@@ -88,7 +89,7 @@ void SimFramePainter::paint(const yarp::sig::Vector &point)
 
         m_worldInterfacePort_ptr->write(cmd, ans);
         if(m_debugOn)
-            yDebug() << "follower: makeFrame= " << cmd.toString() << "  Ans=" << ans.toString();
+            yCDebug(FOLLOWER_FRAME) << "follower: makeFrame= " << cmd.toString() << "  Ans=" << ans.toString();
 
         if(ans.toString() == m_nameOfFrame)
         {
@@ -135,7 +136,7 @@ void SimFramePainter::erase(void)
     if((m_isCreated) && (m_worldInterfacePort_ptr->asPort().getOutputCount() >0 ))
     {
         if(m_debugOn)
-            yDebug() << "I'm about to delete the frame called" << m_nameOfFrame;
+            yCDebug(FOLLOWER_FRAME) << "I'm about to delete the frame called" << m_nameOfFrame;
         Bottle cmd, ans;
         cmd.clear();
         ans.clear();
@@ -145,6 +146,6 @@ void SimFramePainter::erase(void)
 
         m_worldInterfacePort_ptr->write(cmd, ans);
         if(m_debugOn)
-            yDebug() << "follower: deleteCmd= " << cmd.toString() << "  Ans=" << ans.toString();
+            yCDebug(FOLLOWER_FRAME) << "follower: deleteCmd= " << cmd.toString() << "  Ans=" << ans.toString();
     }
 }

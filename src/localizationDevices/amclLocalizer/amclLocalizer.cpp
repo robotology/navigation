@@ -176,17 +176,17 @@ void amclLocalizerThread::updateFilter()
 #ifdef LOWLEVEL_DEBUG
         if (update)
         {
-            yDebug() << "Update requested by thresholds";
+            yCDebug(AMCL_DEV) << "Update requested by thresholds";
         }
         else
         {
     #ifdef LOWLEVEL_ALWAYS_DEBUG
-            yDebug() << "No threshold update requested";
+            yCDebug() << "No threshold update requested";
     #endif
         }
         if(m_force_update)
         {
-            yDebug() << "Force Update requested";
+            yCDebug(AMCL_DEV) << "Force Update requested";
         }
 #endif
 
@@ -201,14 +201,14 @@ void amclLocalizerThread::updateFilter()
                 m_lasers_update[i] = true;
             }
 #ifdef LOWLEVEL_DEBUG
-            yDebug() << "1. Laser updated = true";
+            yCDebug(AMCL_DEV) << "1. Laser updated = true";
 #endif
         }
         else
         {
 #ifdef LOWLEVEL_DEBUG
     #ifdef LOWLEVEL_ALWAYS_DEBUG
-            yDebug() << "1. Laser updated unrequested";
+            yCDebug() << "1. Laser updated unrequested";
     #endif
 #endif
         }
@@ -219,7 +219,7 @@ void amclLocalizerThread::updateFilter()
     if (m_pf_initialized==false)
     {
 #ifdef LOWLEVEL_DEBUG
-        yDebug() << "m_pf_initialized=false, initialiazing...";
+        yCDebug(AMCL_DEV) << "m_pf_initialized=false, initialiazing...";
 #endif
         // Pose at last filter update
         m_pf_odom_pose = pose;
@@ -237,7 +237,7 @@ void amclLocalizerThread::updateFilter()
     else if (m_pf_initialized && m_lasers_update[laser_index])
     {
 #ifdef LOWLEVEL_DEBUG
-        yDebug() << "m_pf_init=true, m_lasers_update=true. update odometry";
+        yCDebug(AMCL_DEV) << "m_pf_init=true, m_lasers_update=true. update odometry";
 #endif
         //printf("pose\n");
         //pf_vector_fprintf(pose, stdout, "%.3f");
@@ -261,7 +261,7 @@ void amclLocalizerThread::updateFilter()
     if (m_lasers_update[laser_index])
     {
 #ifdef LOWLEVEL_DEBUG
-        yDebug() << "m_lasers_update=true, update laser data";
+        yCDebug(AMCL_DEV) << "m_lasers_update=true, update laser data";
 #endif
         AMCLLaserData ldata;
         ldata.sensor = m_lasers[laser_index];
@@ -272,7 +272,7 @@ void amclLocalizerThread::updateFilter()
         angle_increment = fmod(angle_increment + 5 * M_PI, 2 * M_PI) - M_PI; //@@@CHEKC THIS
 
 #ifdef  LOWLEVEL_DEBUG 
-        yDebug("Laser #%d, angles in base frame: min: %.3f, inc: %.3f, size %d", laser_index, angle_min, angle_increment, ldata.range_count);
+        yCDebug(AMCL_DEV,"Laser #%d, angles in base frame: min: %.3f, inc: %.3f, size %d", laser_index, angle_min, angle_increment, ldata.range_count);
 #endif
 
         // Apply range min/max thresholds, if the user supplied them
@@ -314,7 +314,7 @@ void amclLocalizerThread::updateFilter()
             }
             // Compute bearing
             ldata.ranges[i][1] = angle_min + (i * angle_increment);
-            yDebug() << ldata.ranges[i][1];
+            yCDebug(AMCL_DEV) << ldata.ranges[i][1];
         }
 
         m_lasers[laser_index]->UpdateSensor(m_handler_pf, (AMCLSensorData*)&ldata);
@@ -327,13 +327,13 @@ void amclLocalizerThread::updateFilter()
         if (!(++m_resample_count % m_resample_interval))
         {
             pf_update_resample(m_handler_pf);
-            yDebug("Resampled by time (count %d / %d)", m_resample_count, m_resample_interval);
+            yCDebug(AMCL_DEV,"Resampled by time (count %d / %d)", m_resample_count, m_resample_interval);
             resampled = true;
         }
 
         pf_sample_set_t* set = m_handler_pf->sets + m_handler_pf->current_set;
 #ifdef LOWLEVEL_DEBUG
-        yDebug("Num samples: %d\n", set->sample_count);
+        yCDebug(AMCL_DEV,"Num samples: %d\n", set->sample_count);
 #endif
         // Publish the resulting cloud
         // TODO: set maximum rate for publishing
@@ -386,7 +386,7 @@ void amclLocalizerThread::updateFilter()
 
         if (max_weight > 0.0)
         {
-            yDebug("Max weight pose: x:%.3f y:%.3f t:%.3f (t_deg:%.3f)",
+            yCDebug(AMCL_DEV,"Max weight pose: x:%.3f y:%.3f t:%.3f (t_deg:%.3f)",
                 hyps[max_weight_hyp].pf_pose_mean.v[0],
                 hyps[max_weight_hyp].pf_pose_mean.v[1],
                 hyps[max_weight_hyp].pf_pose_mean.v[2],
@@ -424,8 +424,8 @@ void amclLocalizerThread::run()
     double current_time = yarp::os::Time::now();
 
 #ifdef LOWLEVEL_DEBUG
-//    yDebug();
-//    yDebug("current time: %f", current_time);
+//    yCDebug();
+//    yCDebug("current time: %f", current_time);
 #endif // LOWLEVEL_DEBUG
 
     //print some stats every 10 seconds
@@ -439,7 +439,7 @@ void amclLocalizerThread::run()
     //read odometry data
     if (current_time - m_last_odometry_data_received > 0.1)
     {
-        yWarning() << "No localization data received for more than 0.1s!";
+        yCWarning(AMCL_DEV) << "No localization data received for more than 0.1s!";
     }
     yarp::dev::OdometryData* odom = m_port_odometry_input.read(false);
     if (odom)
@@ -725,7 +725,7 @@ bool amclLocalizerThread::threadInit()
     }
     else
     {
-        yWarning("Unknown laser model type \"%s\"; defaulting to likelihood_field model",
+        yCWarning(AMCL_DEV,"Unknown laser model type \"%s\"; defaulting to likelihood_field model",
                  tmp_laser_model_type.c_str());
                  m_laser_model_type = LASER_MODEL_LIKELIHOOD_FIELD;
     }
@@ -741,7 +741,7 @@ bool amclLocalizerThread::threadInit()
         m_odom_model_type = ODOM_MODEL_OMNI_CORRECTED;
     else
     {
-        yWarning("Unknown odom model type \"%s\"; defaulting to diff model",
+        yCWarning(AMCL_DEV,"Unknown odom model type \"%s\"; defaulting to diff model",
             tmp_odom_model_type.c_str());
         m_odom_model_type = ODOM_MODEL_DIFF;
     }
@@ -943,7 +943,7 @@ pf_vector_t amclLocalizerThread::uniformPoseGenerator(void* arg)
 
     pf_vector_t p;
 
-    yDebug("Generating new uniform sample");
+    yCDebug(AMCL_DEV,"Generating new uniform sample");
     std::random_device rd;
     std::mt19937 gen(rd());
 #if 0
@@ -1049,7 +1049,7 @@ bool amclLocalizer::open(yarp::os::Searchable& config)
     string cfg_temp = config.toString();
     Property p; p.fromString(cfg_temp);
 
-    yDebug() << "amclLocalizer configuration: \n" << p.toString().c_str();
+    yCDebug(AMCL_DEV) << "amclLocalizer configuration: \n" << p.toString().c_str();
 
     Bottle general_group = p.findGroup("AMCLLOCALIZER_GENERAL");
     if (general_group.isNull()==false)
