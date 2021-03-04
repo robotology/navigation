@@ -316,7 +316,7 @@ void rosNavigator::run()
     }
 
     yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
-    if (statusArray)
+    if (statusArray && statusArray->status_list.size() != 0)
     {
         switch (statusArray->status_list[statusArray->status_list.size()-1].status)
         {
