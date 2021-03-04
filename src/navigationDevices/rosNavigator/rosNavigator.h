@@ -65,6 +65,8 @@ protected:
 
     double                            m_stats_time_curr;
     double                            m_stats_time_last;
+
+    bool                              m_moveBase_isAction; // False by default
     
     std::string                       m_rosNodeName;
     yarp::os::Node                    *m_rosNode;                  // add a ROS node
@@ -80,6 +82,7 @@ protected:
     std::string                       m_rosTopicName_result;
     std::string                       m_rosTopicName_globalOccupancyGrid;
     std::string                       m_rosTopicName_localOccupancyGrid;
+    std::string                       m_last_goal_id;
     yarp::os::Publisher<yarp::rosmsg::move_base_msgs::MoveBaseActionGoal> m_rosPublisher_goal;
     yarp::os::Publisher<yarp::rosmsg::actionlib_msgs::GoalID> m_rosPublisher_cancel;
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseStamped> m_rosPublisher_simple_goal;
