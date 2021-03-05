@@ -105,6 +105,8 @@ public:
 
 private:
     std::string getStatusAsString(yarp::dev::Nav2D::NavigationStatusEnum status);
+    bool readLocalizationData();
+    bool reloadCurrentMap();
 
 public:
     /**

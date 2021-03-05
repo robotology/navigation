@@ -197,19 +197,8 @@ bool rosNavigator::threadInit()
         return false;
     }
 
-    //get the map
-    yCInfo(ROS_NAV) << "Asking for map 'ros_map'...";
-    bool b = m_iMap->get_map("ros_map", m_global_map);
-    m_global_map.crop(-1, -1, -1, -1);
-
-    if (b)
-    {
-        yCInfo(ROS_NAV) << "'ros_map' received";
-    }
-    else
-    {
-        yCError(ROS_NAV) << "'ros_map' not found";
-    }
+    //read localization data and get the map
+    readLocalizationData();
 
     m_stats_time_curr = yarp::os::Time::now();
     m_stats_time_last = yarp::os::Time::now();
@@ -220,6 +209,71 @@ bool rosNavigator::threadInit()
 void rosNavigator::threadRelease()
 {
     m_pLoc.close();
+}
+
+bool rosNavigator::readLocalizationData()
+{
+    //gets the current position of the robot from the localization server
+    //and reloads the map from the map server if it the map indicated in the current position of the robot
+    //is different from the one currently used
+    bool ret = m_iLoc->getCurrentPosition(m_current_position);
+    if (ret)
+    {
+        //reset watchdog
+    }
+    else
+    {
+        yCError(ROS_NAV) << "Unable to receive localization data";
+        return false;
+    }
+
+    if (m_current_position.map_id != m_global_map.getMapName())
+    {
+        yCWarning(ROS_NAV) << "Current map name (" << m_global_map.getMapName() << ") != m_localization_data.map_id (" << m_current_position.map_id << ")";
+        yCInfo(ROS_NAV) << "Asking the map '" << m_current_position.map_id << "' to the MAP server";
+        bool b = reloadCurrentMap();
+
+        yarp::os::Time::delay(1.0);
+        if (b)
+        {
+            return true;
+        }
+        else
+        {
+            return true; //@@@consider changing this to false
+        }
+    }
+
+    return true;
+}
+
+
+bool rosNavigator::reloadCurrentMap()
+{
+    yCDebug(ROS_NAV, "Reloading map %f from server", m_global_map);
+    bool map_get_succesfull = this->m_iMap->get_map(m_current_position.map_id, m_global_map);
+    if (map_get_succesfull)
+    {
+        yCInfo(ROS_NAV) << "Map '" << m_current_position.map_id << "' successfully obtained from server";
+        m_global_map.crop(-1, -1, -1, -1);
+        //m_global_map.enlargeObstacles(m_robot_radius);
+        //yCDebug(ROS_NAV) << "Obstacles enlargement performed (" << m_robot_radius << "m)";
+        return true;
+    }
+    else
+    {
+        yCError(ROS_NAV) << "Unable to get map '" << m_current_position.map_id << "' from map server";
+        std::vector<std::string> names_vector;
+        m_iMap->get_map_names(names_vector);
+        std::string names = "Known maps are:";
+        for (auto it = names_vector.begin(); it != names_vector.end(); it++)
+        {
+            names = names + " " + (*it);
+        }
+        yCInfo(ROS_NAV) << names;
+        return false;
+    }
+    return true;
 }
 
 void rosNavigator::run()
@@ -248,7 +302,7 @@ void rosNavigator::run()
             yCInfo(ROS_NAV) << "rosNavigator running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
     }
 
-    bool b1 = m_iLoc->getCurrentPosition(m_current_position);
+    bool b1 = readLocalizationData();
 
     if (0)
     {
