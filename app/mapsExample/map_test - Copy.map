@@ -1,7 +1,0 @@
-#The YARP root map description file.
-#it points to yarp flag maps
-#it points to ROS occupancy grid (optional)
-
-MapName     testMap
-YarpMapData map_test_yarpflags.ppm
-RosMapData  map_test_grid.yaml

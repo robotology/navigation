@@ -1,7 +1,0 @@
-#The YARP root map description file.
-#it points to yarp flag maps
-#it points to ROS occupancy grid (optional)
-
-MapName     giorgio_complete
-YarpMapData giorgio_complete_yarpflags.ppm
-RosMapData  giorgio_complete.yaml
