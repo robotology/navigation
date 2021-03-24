@@ -5,6 +5,7 @@
 #
 
 add_subdirectory(rosLocalizer)
+add_subdirectory(ros2Localizer)
 add_subdirectory(odomLocalizer)
 add_subdirectory(gazeboLocalizer)
 add_subdirectory(pozyxLocalizer)
