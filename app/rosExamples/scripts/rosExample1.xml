@@ -35,14 +35,14 @@
 </module>
 
 <module>
-   <name>localizationServer</name>
-   <parameters>--context rosExamples --from localizationServer_yarp.ini</parameters>
+   <name>yarpdev</name>
+   <parameters>--device localizationServer --subdevice rosLocalizer --context rosExamples --from localizationServer_ros.ini</parameters>
    <node>console</node>
 </module>
 
 <module>
    <name>yarpdev</name>
-   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_file C:\\software\\navigation\\app\\mapsExample\\map_test.map --localization_client</parameters>
+   <parameters>--device Rangefinder2DWrapper --subdevice fakeLaser --period 10 --name /ikart/laser:o --test use_mapfile --map_context mapsExample --map_file map_test.map --localization_client</parameters>
    <node>console</node>
 </module>
 
