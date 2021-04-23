@@ -576,10 +576,10 @@ bool rosNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnu
 {
     if (trajectory_type==global_trajectory)
     {
-        m_global_plan.clear();
         yarp::rosmsg::nav_msgs::Path *globalPath = m_rosSubscriber_globalPath.read(false);
         if (globalPath && globalPath->poses.size() != 0 )
         {
+			m_global_plan.clear();
             for(std::vector<yarp::rosmsg::geometry_msgs::PoseStamped>::const_iterator it = globalPath->poses.begin(); it!= globalPath->poses.end();  ++it)
             {
                 Map2DLocation loc;
@@ -589,8 +589,6 @@ bool rosNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnu
                 loc.theta = it->pose.orientation.w;
 
                 m_global_plan.push_back(loc);
-
-                waypoints = m_global_plan;
             }
 
         }
@@ -599,6 +597,7 @@ bool rosNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnu
 
     //yCDebug(ROS_NAV) << "Not yet implemented";
     //return false;
+	waypoints = m_global_plan;
     return true;
 }
 
