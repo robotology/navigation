@@ -557,13 +557,23 @@ bool ControlThread::threadInit()
     if (robot_type_s == "cer")
     {
         yCInfo(CONTROL_THRD, "Using cer robot type");
-        robot_type       = ROBOT_TYPE_DIFFERENTIAL;
+        robot_type = ROBOT_TYPE_DIFFERENTIAL;
+
+        double geom_r = 320.0 / 2 / 1000.0;
+        double geom_L = 338 / 1000.0;
+        if (ctrl_options.check("R1_ODOMETRY"))
+        {
+            yarp::os::Bottle& r1_odometry_options = ctrl_options.findGroup("R1_ODOMETRY");
+            if (r1_odometry_options.check("geom_r")) {geom_r = r1_odometry_options.find("geom_r").asDouble();}
+            if (r1_odometry_options.check("geom_r")) {geom_L = r1_odometry_options.find("geom_L").asDouble();}
+        }
+        yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
+        robot_geom.put("geom_r", geom_r);
+        robot_geom.put("geom_L", geom_L);
+
         if (odometry_enabled) m_odometry_handler = new CER_Odometry(control_board_driver);
         m_motor_handler    = new CER_MotorControl(control_board_driver);
         m_input_handler    = new Input();
-        yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
-        robot_geom.put("geom_r", 320.0 / 2 / 1000.0);
-        robot_geom.put("geom_L", 338 / 1000.0);
     }
     else if (robot_type_s == "ikart_V1")
     {
