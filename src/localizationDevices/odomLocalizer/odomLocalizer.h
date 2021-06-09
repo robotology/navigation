@@ -111,13 +111,16 @@ protected:
     //odometry port
     std::string                  m_port_broadcast_odometry_name;
     yarp::os::BufferedPort<yarp::dev::OdometryData>  m_port_odometry_input;
-    double                       m_last_odometry_data_received;
+    double                       m_last_port_odometryData_time;
+    yarp::dev::OdometryData      m_last_port_odometryData;
 
 public:
     odomLocalizerThread(const double _period, std::string _name, yarp::os::Searchable& _cfg);
     virtual bool threadInit() override;
     virtual void threadRelease() override;
     virtual void run() override;
+
+    bool   getLastOdometryDataFromPort(yarp::dev::OdometryData& odom);
 
 public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc);

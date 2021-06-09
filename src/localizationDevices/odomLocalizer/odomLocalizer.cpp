@@ -105,7 +105,8 @@ bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 
 bool  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    yCErrorThrottle(ODOMLOC, DISPLAY_PERIOD) << " odomLocalizer::getEstimatedOdometry is not yet implemented";
+//    odom = m_thread->getOdometry(); //from the estimator
+    m_thread->getLastOdometryDataFromPort(odom);
     return false;
 }
 
@@ -119,7 +120,7 @@ bool   odomLocalizer::setInitialPose(const Map2DLocation& loc)
 
 odomLocalizerThread::odomLocalizerThread(double _period, string _name, yarp::os::Searchable& _cfg) : PeriodicThread(_period), m_name (_name), m_cfg(_cfg)
 {
-    m_last_odometry_data_received = -1;
+    m_last_port_odometryData_time = -1;
     m_last_statistics_printed = -1;
 
     m_current_loc.map_id = m_current_odom.map_id = m_initial_odom.map_id   = m_initial_loc.map_id = "unknown";
@@ -142,10 +143,11 @@ void odomLocalizerThread::run()
     yarp::dev::OdometryData *loc = m_port_odometry_input.read(false);
     if (loc)
     {
-        m_last_odometry_data_received = yarp::os::Time::now();
-        m_current_odom.x     = loc->odom_x;
-        m_current_odom.y     = loc->odom_y;
-        m_current_odom.theta = loc->odom_theta;
+        m_last_port_odometryData = *loc;
+        m_last_port_odometryData_time = yarp::os::Time::now();
+        m_current_odom.x     = m_last_port_odometryData.odom_x;
+        m_current_odom.y     = m_last_port_odometryData.odom_y;
+        m_current_odom.theta = m_last_port_odometryData.odom_theta;
 
         double c = cos((-m_initial_odom.theta + m_initial_loc.theta)*DEG2RAD);
         double s = sin((-m_initial_odom.theta + m_initial_loc.theta)*DEG2RAD);
@@ -159,7 +161,7 @@ void odomLocalizerThread::run()
         if      (m_current_loc.theta >= +360) m_current_loc.theta -= 360;
         else if (m_current_loc.theta <= -360) m_current_loc.theta += 360;
     }
-    if (current_time - m_last_odometry_data_received > 0.1)
+    if (current_time - m_last_port_odometryData_time > 0.1)
     {
         yCWarningThrottle(ODOMLOC,DISPLAY_PERIOD) << "No localization data received for more than 0.1s!";
     }
@@ -276,6 +278,12 @@ void odomLocalizerThread::threadRelease()
 
 }
 
+bool odomLocalizerThread::getLastOdometryDataFromPort(yarp::dev::OdometryData& odom)
+{
+    lock_guard<std::mutex> lock(m_mutex);
+    odom = this->m_last_port_odometryData;
+    return true;
+}
 
 bool odomLocalizer::open(yarp::os::Searchable& config)
 {
