@@ -565,7 +565,7 @@ bool ControlThread::threadInit()
         {
             yarp::os::Bottle& r1_odometry_options = ctrl_options.findGroup("R1_ODOMETRY");
             if (r1_odometry_options.check("geom_r")) {geom_r = r1_odometry_options.find("geom_r").asDouble();}
-            if (r1_odometry_options.check("geom_r")) {geom_L = r1_odometry_options.find("geom_L").asDouble();}
+            if (r1_odometry_options.check("geom_L")) {geom_L = r1_odometry_options.find("geom_L").asDouble();}
         }
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", geom_r);
