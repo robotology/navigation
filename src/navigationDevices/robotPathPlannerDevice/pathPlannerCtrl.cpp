@@ -619,7 +619,7 @@ bool PlannerThread::getCurrentMap(MapGrid2D& map) const
 
 bool PlannerThread::reloadCurrentMap()
 {
-    yCDebug(PATHPLAN_CTRL, "Reloading map %f from server", m_current_map);
+    yCDebug(PATHPLAN_CTRL, "Reloading map %s from server", m_current_map.m_map_name.c_str());
     bool map_get_succesfull = this->m_iMap->get_map(m_localization_data.map_id, m_current_map);
     if (map_get_succesfull)
     {

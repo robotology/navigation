@@ -250,7 +250,7 @@ bool rosNavigator::readLocalizationData()
 
 bool rosNavigator::reloadCurrentMap()
 {
-    yCDebug(ROS_NAV, "Reloading map %f from server", m_global_map);
+    yCDebug(ROS_NAV, "Reloading map %s from server", m_global_map.m_map_name.c_str());
     bool map_get_succesfull = this->m_iMap->get_map(m_current_position.map_id, m_global_map);
     if (map_get_succesfull)
     {
