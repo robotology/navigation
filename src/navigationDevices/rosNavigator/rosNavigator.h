@@ -35,6 +35,7 @@
 #include <yarp/rosmsg/move_base_msgs/MoveBaseActionGoal.h>
 #include <yarp/rosmsg/move_base_msgs/MoveBaseActionResult.h>
 #include <yarp/rosmsg/move_base_msgs/MoveBaseActionFeedback.h>
+#include <yarp/rosmsg/move_base_msgs/RecoveryStatus.h>
 #include <yarp/rosmsg/actionlib_msgs/GoalID.h>
 #include <yarp/rosmsg/actionlib_msgs/GoalStatusArray.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>

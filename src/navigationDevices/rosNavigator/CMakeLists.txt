@@ -16,7 +16,8 @@ yarp_add_idl (ROS_MSG "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/actionlib_
                       "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/actionlib_msgs/GoalStatusArray.msg"
                       "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/move_base_msgs/MoveBaseActionGoal.msg"
                       "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/move_base_msgs/MoveBaseActionFeedback.msg"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/move_base_msgs/MoveBaseActionResult.msg")
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/move_base_msgs/MoveBaseActionResult.msg"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/move_base_msgs/RecoveryStatus.msg")
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
