@@ -39,6 +39,7 @@
 #include <yarp/rosmsg/actionlib_msgs/GoalID.h>
 #include <yarp/rosmsg/actionlib_msgs/GoalStatusArray.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
+#include <yarp/rosmsg/nav_msgs/Path.h>
 #include <math.h>
 
 #ifndef ROS_NAVIGATOR_H
@@ -74,6 +75,8 @@ protected:
     yarp::os::NetUint32               m_rosMsgCounter;             // incremental counter in the ROS message
     yarp::dev::Nav2D::MapGrid2D       m_local_map;
     yarp::dev::Nav2D::MapGrid2D       m_global_map;
+    yarp::dev::Nav2D::Map2DPath       m_global_plan;
+    yarp::dev::Nav2D::Map2DPath       m_local_plan;
 
     std::string                       m_rosTopicName_goal;
     std::string                       m_rosTopicName_cancel;
@@ -84,6 +87,8 @@ protected:
     std::string                       m_rosTopicName_globalOccupancyGrid;
     std::string                       m_rosTopicName_localOccupancyGrid;
     std::string                       m_last_goal_id;
+    std::string                       m_rosTopicName_globalPath;
+    std::string                       m_rosTopicName_localPath;
     yarp::os::Publisher<yarp::rosmsg::move_base_msgs::MoveBaseActionGoal> m_rosPublisher_goal;
     yarp::os::Publisher<yarp::rosmsg::actionlib_msgs::GoalID> m_rosPublisher_cancel;
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseStamped> m_rosPublisher_simple_goal;
@@ -92,6 +97,9 @@ protected:
     yarp::os::Subscriber<yarp::rosmsg::move_base_msgs::MoveBaseActionResult> m_rosSubscriber_result;
     yarp::os::Subscriber<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosSubscriber_localOccupancyGrid;
     yarp::os::Subscriber<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosSubscriber_globalOccupancyGrid;
+    yarp::os::Subscriber<yarp::rosmsg::nav_msgs::Path> m_rosSubscriber_globalPath;
+    yarp::os::Subscriber<yarp::rosmsg::nav_msgs::Path> m_rosSubscriber_localPath;
+
 
 public:
     rosNavigator();
