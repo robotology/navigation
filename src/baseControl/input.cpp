@@ -661,7 +661,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
         aux_pwm_gain=0;
         aux_timeout_counter++;
     }
-    if (wdt-wdt_ros_cmd > 0.200)
+    if (wdt-wdt_ros_cmd > 0.500)
     {
         ros_desired_direction=0;
         ros_linear_speed=0;
