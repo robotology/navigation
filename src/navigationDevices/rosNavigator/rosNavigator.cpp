@@ -53,6 +53,7 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_remote_localization = "/localizationServer";
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
+    m_rosTopicName_recoveryStatus = "/move_base/recovery_status";
     m_abs_frame_id = "map";
     m_moveBase_isAction = true;
     m_last_goal_id = "goal_0";
@@ -145,8 +146,16 @@ bool rosNavigator::open(yarp::os::Searchable &config)
         yCError(ROS_NAV) << " opening " << m_rosTopicName_localOccupancyGrid << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
+    if (!m_rosSubscriber_recoveryStatus.topic(m_rosTopicName_recoveryStatus))
+    {
+        yCError(ROS_NAV) << " opening " << m_rosTopicName_recoveryStatus << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
 
     this->start();
+
+    m_time_recovery = yarp::os::Time::now() - m_time_limit_recovery - 1.0;
+
     return true;
 }
 
@@ -374,58 +383,74 @@ void rosNavigator::run()
         }
     }
 
-    yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
-    if (statusArray && statusArray->status_list.size() != 0)
+    yarp::rosmsg::move_base_msgs::RecoveryStatus *recoveryInfo = m_rosSubscriber_recoveryStatus.read(false);
+    if (recoveryInfo && recoveryInfo->recovery_behavior_name.length() > 0)
     {
-        switch (statusArray->status_list[statusArray->status_list.size()-1].status)
+        m_time_recovery = yarp::os::Time::now();
+        yCInfo(ROS_NAV) << "Navigation status set to recovery:" << recoveryInfo->recovery_behavior_name;
+        
+    }
+
+    double m_timeNow = yarp::os::Time::now();
+    if (m_timeNow - m_time_recovery < m_time_limit_recovery) // if the recovery happened in the last m_time_limit_recovery seconds we keep publishing the recovery
+    {
+        m_navigation_status = navigation_status_waiting_obstacle;
+    }
+    else
+    {
+        yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
+        if (statusArray && statusArray->status_list.size() != 0)
         {
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:
-        {
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE:
-        {
-            m_navigation_status = navigation_status_moving;
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED:
-        {
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED:
-        {
-            m_navigation_status = navigation_status_goal_reached;
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED:
-        {
-            m_navigation_status = navigation_status_aborted;
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED:
-        {
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING:
-        {
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING:
-        {
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED:
-        {
-        }
-        break;
-        case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST:
-        {
-        }
-        break;
-        default:
-        {
-        }
-        break;
+            switch (statusArray->status_list[statusArray->status_list.size() - 1].status)
+            {
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE:
+            {
+                m_navigation_status = navigation_status_moving;
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED:
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED:
+            {
+                m_navigation_status = navigation_status_goal_reached;
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED:
+            {
+                m_navigation_status = navigation_status_aborted;
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED:
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING:
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING:
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED:
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST:
+            {
+            }
+            break;
+            default:
+            {
+            }
+            break;
+            }
         }
     }
 }
