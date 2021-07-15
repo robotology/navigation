@@ -154,8 +154,6 @@ bool rosNavigator::open(yarp::os::Searchable &config)
 
     this->start();
 
-    m_time_recovery = yarp::os::Time::now() - m_time_limit_recovery - 1.0;
-
     return true;
 }
 
@@ -385,18 +383,19 @@ void rosNavigator::run()
 
     yarp::rosmsg::move_base_msgs::RecoveryStatus *recoveryInfo = m_rosSubscriber_recoveryStatus.read(false);
     if (recoveryInfo && recoveryInfo->recovery_behavior_name.length() > 0)
-    {
-        m_time_recovery = yarp::os::Time::now();
-        yCInfo(ROS_NAV) << "Navigation status set to recovery:" << recoveryInfo->recovery_behavior_name;
-        
+    {        
+        if (recoveryInfo->total_number_of_recoveries == 999){
+			yCInfo(ROS_NAV) << "Navigation finished recovery:" << recoveryInfo->recovery_behavior_name;
+			m_navigation_status = navigation_status_waiting_obstacle;
+			m_isRecovering = true;
+		}else{
+			yCInfo(ROS_NAV) << "Navigation status set to recovery:" << recoveryInfo->recovery_behavior_name;
+			m_navigation_status = navigation_status_thinking;
+			m_isRecovering = false;
+		}
     }
-
-    double m_timeNow = yarp::os::Time::now();
-    if (m_timeNow - m_time_recovery < m_time_limit_recovery) // if the recovery happened in the last m_time_limit_recovery seconds we keep publishing the recovery
-    {
-        m_navigation_status = navigation_status_waiting_obstacle;
-    }
-    else
+    
+    if (!m_isRecovering)
     {
         yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
         if (statusArray && statusArray->status_list.size() != 0)

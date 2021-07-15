@@ -66,11 +66,10 @@ protected:
 
     double                            m_stats_time_curr;
     double                            m_stats_time_last;
-    double                            m_time_recovery;
-    double                            m_time_limit_recovery = 5.0; 
 
     bool                              m_moveBase_isAction; // False by default
-    
+    bool                              m_isRecovering; // False by default
+
     std::string                       m_rosNodeName;
     yarp::os::Node                    *m_rosNode;                  // add a ROS node
     yarp::os::NetUint32               m_rosMsgCounter;             // incremental counter in the ROS message
