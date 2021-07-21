@@ -54,6 +54,8 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
     m_rosTopicName_recoveryStatus = "/move_base/recovery_status";
+    m_rosTopicName_globalPath = "/move_base/NavfnROS/plan";
+    m_rosTopicName_localPath = " /move_base/DWAPlannerROS/local_plan";
     m_abs_frame_id = "map";
     m_moveBase_isAction = true;
     m_last_goal_id = "goal_0";
@@ -149,6 +151,16 @@ bool rosNavigator::open(yarp::os::Searchable &config)
     if (!m_rosSubscriber_recoveryStatus.topic(m_rosTopicName_recoveryStatus))
     {
         yCError(ROS_NAV) << " opening " << m_rosTopicName_recoveryStatus << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosSubscriber_globalPath.topic(m_rosTopicName_globalPath))
+    {
+        yCError(ROS_NAV) << " opening " << m_rosTopicName_globalPath << " Topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    if (!m_rosSubscriber_localPath.topic(m_rosTopicName_localPath))
+    {
+        yCError(ROS_NAV) << " opening " << m_rosTopicName_localPath << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
 
@@ -592,10 +604,46 @@ bool rosNavigator::resumeNavigation()
 
 bool rosNavigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath &waypoints)
 {
-    // @@@@ TEMPORARY to stop spam!
+    if (trajectory_type==global_trajectory)
+    {
+        yarp::rosmsg::nav_msgs::Path *globalPath = m_rosSubscriber_globalPath.read(false);
+        if (globalPath && globalPath->poses.size() != 0 )
+        {
+			m_global_plan.clear();
+            for(std::vector<yarp::rosmsg::geometry_msgs::PoseStamped>::const_iterator it = globalPath->poses.begin(); it!= globalPath->poses.end();  ++it)
+            {
+                Map2DLocation loc;
+                loc.map_id = "";
+                loc.x = it->pose.position.x;
+                loc.y = it->pose.position.y;
+                loc.theta = it->pose.orientation.w;
 
-    //yCDebug(ROS_NAV) << "Not yet implemented";
-    //return false;
+                m_global_plan.push_back(loc);
+            }
+
+        }
+    	waypoints = m_global_plan;
+    }
+    if (trajectory_type==local_trajectory)
+    {
+        yarp::rosmsg::nav_msgs::Path *localPath = m_rosSubscriber_localPath.read(false);
+        if (localPath && localPath->poses.size() != 0 )
+        {
+			m_local_plan.clear();
+            for(std::vector<yarp::rosmsg::geometry_msgs::PoseStamped>::const_iterator it = localPath->poses.begin(); it!= localPath->poses.end();  ++it)
+            {
+                Map2DLocation loc;
+                loc.map_id = "";
+                loc.x = it->pose.position.x;
+                loc.y = it->pose.position.y;
+                loc.theta = it->pose.orientation.w;
+
+                m_local_plan.push_back(loc);
+            }
+
+        }
+    	waypoints = m_local_plan;
+    }
     return true;
 }
 
