@@ -69,7 +69,7 @@ protected:
     double                            m_stats_time_last;
 
     bool                              m_moveBase_isAction; // False by default
-    bool                              m_isRecovering; // False by default
+    bool                              m_isRecovering = false;
 
     std::string                       m_rosNodeName;
     yarp::os::Node                    *m_rosNode;                  // add a ROS node
