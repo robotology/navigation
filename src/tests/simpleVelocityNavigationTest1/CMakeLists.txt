@@ -1,4 +1,4 @@
-project(simpleVelocityNavigationTest)
+project(simpleVelocityNavigationTest1)
 
 file(GLOB folder_source *.cpp)
 file(GLOB folder_header *.h)
@@ -12,6 +12,6 @@ add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
-set_property(TARGET simpleVelocityNavigationTest PROPERTY FOLDER "Tests")
+set_property(TARGET simpleVelocityNavigationTest1 PROPERTY FOLDER "Tests")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

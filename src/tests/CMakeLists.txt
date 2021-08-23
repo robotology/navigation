@@ -6,4 +6,5 @@
 
 add_subdirectory(navigation2DClientSnippet)
 add_subdirectory(navigation2DClientTest)
-add_subdirectory(simpleVelocityNavigationTest)
+add_subdirectory(simpleVelocityNavigationTest1)
+add_subdirectory(simpleVelocityNavigationTest2)

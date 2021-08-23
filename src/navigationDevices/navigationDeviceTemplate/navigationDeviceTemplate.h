@@ -35,6 +35,7 @@
 class navigationDeviceTemplate : public yarp::os::PeriodicThread,
                                  public yarp::dev::Nav2D::INavigation2DTargetActions,
                                  public yarp::dev::Nav2D::INavigation2DControlActions,
+                                 public yarp::dev::Nav2D::INavigation2DVelocityActions,
                                  public yarp::dev::DeviceDriver
 {
 protected:

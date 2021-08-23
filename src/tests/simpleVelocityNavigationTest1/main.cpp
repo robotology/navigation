@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     bool ok;
     Property navTestCfg;
     yarp::dev::PolyDriver      ddNavClient;
-    yarp::dev::Nav2D::INavigation2D*  iNav = nullptr;
+    yarp::dev::Nav2D::INavigation2DVelocityActions*  iVel = nullptr;
     navTestCfg.put("device", "navigation2DClient");
     navTestCfg.put("local", "/navigationTest");
     navTestCfg.put("navigation_server", "/navigationServer");
@@ -55,17 +55,17 @@ int main(int argc, char* argv[])
 
     ok = ddNavClient.open(navTestCfg);
     if (!ok) { yFatal(); }
-    ok = ddNavClient.view(iNav);
+    ok = ddNavClient.view(iVel);
     if (!ok) { yFatal(); }
 
     double timeout = 1.0; //s
-    ok = iNav->applyVelocityCommand(1.0, 0.0, 0.0, timeout);
+    ok = iVel->applyVelocityCommand(1.0, 0.0, 0.0, timeout);
     yarp::os::Time::delay(3);
-    ok = iNav->applyVelocityCommand(-1.0, 0.0, 0.0, timeout);
+    ok = iVel->applyVelocityCommand(-1.0, 0.0, 0.0, timeout);
     yarp::os::Time::delay(3);
-    ok = iNav->applyVelocityCommand(0.0, 0.0, 90.0, timeout);
+    ok = iVel->applyVelocityCommand(0.0, 0.0, 90.0, timeout);
     yarp::os::Time::delay(3);
-    ok = iNav->applyVelocityCommand(0.0, 0.0, -90.0, timeout);
+    ok = iVel->applyVelocityCommand(0.0, 0.0, -90.0, timeout);
     yarp::os::Time::delay(3);
 
     ddNavClient.close();

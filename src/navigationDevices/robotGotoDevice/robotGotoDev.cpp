@@ -244,12 +244,6 @@ bool robotGotoDev::gotoTargetByRelativeLocation(double x, double y)
     return b;
 }
 
-bool robotGotoDev::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
-{
-    yCWarning(GOTO_DEV) << "applyVelocityCommand() currently not implemented";
-    return true;
-}
-
 bool robotGotoDev::stopNavigation()
 {
     bool b=gotoThread->stopMovement();
