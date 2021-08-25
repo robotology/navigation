@@ -142,3 +142,9 @@ bool simpleVelocityNavigation::applyVelocityCommand(double x_vel, double y_vel, 
     m_control_out.reception_time = yarp::os::Time::now();
     return true;
 }
+
+bool simpleVelocityNavigation::getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel)
+{
+    yCError(SIMPLE_VEL_NAV) << "getLastVelocityCommand() not yet implemented";
+    return false;
+}

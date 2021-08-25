@@ -70,7 +70,8 @@ public:
 
 public:
     //INavigation2D methods
-    virtual bool applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout = 0.1) override;
+    bool applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout = 0.1) override;
+    bool getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel) override;
 };
 
 #endif

@@ -97,12 +97,6 @@ bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y, 
     return false;
 }
 
-bool navigationDeviceTemplate::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
-{
-    //### TO BE IMPLEMENTED BY USER
-    return true;
-}
-
 bool navigationDeviceTemplate::getNavigationStatus(NavigationStatusEnum& status)
 {
     status = m_navigation_status;
