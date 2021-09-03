@@ -98,7 +98,7 @@ bool  PlannerThread::getRobotRadius(double& size)
     return true;
 }
 
-bool  PlannerThread::readInnerNavigationStatus()
+bool  PlannerThread::internal_controller_t::readInnerNavigationStatus()
 {
     static double last_print_time = 0;
 
@@ -214,7 +214,7 @@ void PlannerThread::run()
             yCError(PATHPLAN_CTRL, " timeout, no localization data received!\n");
             err = true;
         }
-        if (m_inner_status_timeout_counter > TIMEOUT_MAX)
+        if (m_inner_controller.m_inner_status_timeout_counter > TIMEOUT_MAX)
         {
             yCError(PATHPLAN_CTRL, "timeout, no status info received!\n");
             err = true;
@@ -229,7 +229,7 @@ void PlannerThread::run()
     readLaserData();
     //double check2 = yarp::os::Time::now();
     //yCDebug() << check2-check1;
-    if (readInnerNavigationStatus() == false)
+    if (m_inner_controller.readInnerNavigationStatus() == false)
     {
         m_planner_status = navigation_status_error;
         //yCError(PATHPLAN_CTRL) << "Error status";
@@ -244,7 +244,7 @@ void PlannerThread::run()
     {
         case navigation_status_moving:
         {
-            if (m_inner_status == navigation_status_goal_reached)
+            if (m_inner_controller.m_inner_status == navigation_status_goal_reached)
             {
                 if (m_current_path_iterator == m_current_path->end())
                 {
@@ -375,19 +375,19 @@ void PlannerThread::run()
                     sendWaypoint();
                 }
             }
-            else if (m_inner_status == navigation_status_preparing_before_move)
+            else if (m_inner_controller.m_inner_status == navigation_status_preparing_before_move)
             {
                 //do nothing, just wait
             }
-            else if (m_inner_status == navigation_status_moving)
+            else if (m_inner_controller.m_inner_status == navigation_status_moving)
             {
                 //do nothing, just wait
             }
-            else if (m_inner_status == navigation_status_waiting_obstacle)
+            else if (m_inner_controller.m_inner_status == navigation_status_waiting_obstacle)
             {
                 //do nothing, just wait
             }
-            else if (m_inner_status == navigation_status_failing)
+            else if (m_inner_controller.m_inner_status == navigation_status_failing)
             {
                 if (m_enable_try_recovery)
                 {
@@ -426,19 +426,19 @@ void PlannerThread::run()
                     abortNavigation();
                 }
             }
-            else if (m_inner_status == navigation_status_aborted)
+            else if (m_inner_controller.m_inner_status == navigation_status_aborted)
             {
                 //terminate navigation
                 m_planner_status = navigation_status_aborted;
                 yCError(PATHPLAN_CTRL, "unable to reach next waypoint, aborting navigation");
                 //current_path.clear();
             }
-            else if (m_inner_status == navigation_status_error)
+            else if (m_inner_controller.m_inner_status == navigation_status_error)
             {
                 yCError(PATHPLAN_CTRL, "PathPlanner in error status");
                 m_planner_status = navigation_status_error;
             }
-            else if (m_inner_status == navigation_status_idle)
+            else if (m_inner_controller.m_inner_status == navigation_status_idle)
             {
                 //send the first waypoint
                 m_current_path_iterator = m_current_path->begin();
@@ -505,7 +505,7 @@ void PlannerThread::run()
             }
             else
             {
-                yCError(PATHPLAN_CTRL, "unrecognized inner status: %d", m_inner_status);
+                yCError(PATHPLAN_CTRL, "unrecognized inner status: %d", m_inner_controller.m_inner_status);
             }
         }
         break;
@@ -558,7 +558,7 @@ void PlannerThread::run()
         break;
         case navigation_status_error:
         {
-            if (m_inner_status != navigation_status_error)
+            if (m_inner_controller.m_inner_status != navigation_status_error)
             {
                 m_planner_status = navigation_status_aborted;
             }
@@ -710,12 +710,12 @@ void PlannerThread::sendWaypoint()
         loc.theta = m_final_goal.theta;
     }
     yCDebug(PATHPLAN_CTRL, "sending command: %s", loc.toString().c_str());
-    m_iInnerNav_target->gotoTargetByAbsoluteLocation(loc);
+    m_inner_controller.m_iInnerNav_target->gotoTargetByAbsoluteLocation(loc);
 
     //get inner navigation status
     NavigationStatusEnum inner_status;
-    m_iInnerNav_ctrl->getNavigationStatus(inner_status);
-    m_inner_status = inner_status;
+    m_inner_controller.m_iInnerNav_ctrl->getNavigationStatus(inner_status);
+    m_inner_controller.m_inner_status = inner_status;
 }
 
 void PlannerThread::sendFinalGoal()
@@ -726,12 +726,12 @@ void PlannerThread::sendFinalGoal()
         yCDebug(PATHPLAN_CTRL, );
     }
     yCDebug(PATHPLAN_CTRL, "sending command: %s", m_final_goal.toString().c_str());
-    m_iInnerNav_target->gotoTargetByAbsoluteLocation(m_final_goal);
+    m_inner_controller.m_iInnerNav_target->gotoTargetByAbsoluteLocation(m_final_goal);
 
     //get inner navigation status
     NavigationStatusEnum inner_status;
-    m_iInnerNav_ctrl->getNavigationStatus(inner_status);
-    m_inner_status = inner_status;
+    m_inner_controller.m_iInnerNav_ctrl->getNavigationStatus(inner_status);
+    m_inner_controller.m_inner_status = inner_status;
 }
 
 bool PlannerThread::startPath()

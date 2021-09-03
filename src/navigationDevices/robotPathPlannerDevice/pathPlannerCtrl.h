@@ -61,6 +61,19 @@ const double DEG2RAD = M_PI / 180.0;
 
 class PlannerThread: public yarp::os::PeriodicThread
 {
+    struct internal_controller_t
+    {
+        yarp::dev::PolyDriver                            m_pInnerNav;
+        yarp::dev::Nav2D::INavigation2DControlActions*   m_iInnerNav_ctrl = nullptr;
+        yarp::dev::Nav2D::INavigation2DTargetActions*    m_iInnerNav_target = nullptr;
+        std::string                                      m_inner_NavigatorPlugin_name;
+        yarp::dev::Nav2D::NavigationStatusEnum           m_inner_status = yarp::dev::Nav2D::NavigationStatusEnum::navigation_status_idle;
+        int                                              m_inner_status_timeout_counter = 0;
+
+        bool                                             readInnerNavigationStatus();
+        bool                                             open(yarp::os::Searchable& cfg);
+    };
+
     protected:
     //parameters affecting navigation behavior
     double m_goal_tolerance_lin;       //m 
@@ -123,10 +136,8 @@ class PlannerThread: public yarp::os::PeriodicThread
     BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > m_port_map_output;
     BufferedPort<yarp::os::Bottle>                         m_port_status_output;
     RpcClient                                              m_port_commands_output;
-    yarp::dev::PolyDriver                                  m_pInnerNav;
-    yarp::dev::Nav2D::INavigation2DControlActions*         m_iInnerNav_ctrl = nullptr;
-    yarp::dev::Nav2D::INavigation2DTargetActions*          m_iInnerNav_target = nullptr;
-    std::string                                            m_localNavigatorPlugin_name;
+
+    internal_controller_t                                  m_inner_controller;
 
     //internal data
     Searchable                             &m_cfg;
@@ -147,13 +158,11 @@ class PlannerThread: public yarp::os::PeriodicThread
 
     //statuses of the internal finite-state machine
     yarp::dev::Nav2D::NavigationStatusEnum   m_planner_status;
-    yarp::dev::Nav2D::NavigationStatusEnum   m_inner_status;
 
     //timeout counters (watchdog on the communication with external modules)
     protected:
     int                 m_loc_timeout_counter;
     int                 m_laser_timeout_counter;
-    int                 m_inner_status_timeout_counter;
     double              m_stats_time_curr;
     double              m_stats_time_last;
 
@@ -287,7 +296,6 @@ class PlannerThread: public yarp::os::PeriodicThread
     void          sendFinalGoal();
     bool          readLocalizationData();
     void          readLaserData();
-    bool          readInnerNavigationStatus();
     bool          getCurrentWaypoint(yarp::dev::Nav2D::XYCell &c) const;
     void          abortNavigation();
 

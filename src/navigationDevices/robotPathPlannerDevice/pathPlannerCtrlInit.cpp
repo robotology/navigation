@@ -29,10 +29,8 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
         PeriodicThread(_period), m_cfg(_cfg)
 {
     m_planner_status = navigation_status_idle;
-    m_inner_status = navigation_status_idle;
     m_loc_timeout_counter = 0;
     m_laser_timeout_counter = 0;
-    m_inner_status_timeout_counter = 0;
     m_goal_tolerance_lin = 0.05;
     m_goal_tolerance_ang = 0.6;
     m_waypoint_tolerance_lin = 0.05;
@@ -248,56 +246,58 @@ bool PlannerThread::threadInit()
 
 
     //open the local navigator
+    return m_inner_controller.open(m_cfg);
+}
+
+bool PlannerThread::internal_controller_t::open(yarp::os::Searchable& cfg)
+{
+    Bottle innerNavigation_group = cfg.findGroup("INTERNAL_NAVIGATOR");
+    if (innerNavigation_group.isNull())
     {
-        Bottle innerNavigation_group = m_cfg.findGroup("INTERNAL_NAVIGATOR");
-        if (innerNavigation_group.isNull())
-        {
-            yCError(PATHPLAN_INIT) << "Missing INTERNAL_NAVIGATOR group!";
-            return false;
-        }
-        bool nn = innerNavigation_group.check("plugin");
-        nn &= innerNavigation_group.check("context");
-        nn &= innerNavigation_group.check("from");
-        if (!nn)
-        {
-            yCError(PATHPLAN_INIT) << "Invalid/missing parameter in INTERNAL_NAVIGATOR group";
-            return false;
-        }
-        m_localNavigatorPlugin_name = innerNavigation_group.find("plugin").asString();
-        std::string inner_ctex = innerNavigation_group.find("context").asString();
-        std::string inner_file = innerNavigation_group.find("from").asString();
-
-        yarp::os::ResourceFinder rf;
-        rf.setDefaultConfigFile(inner_file);
-        rf.setDefaultContext(inner_ctex);
-        rf.configure(0, nullptr);
-
-        Property innerNav_options;
-        string tmp = rf.toString();
-        innerNav_options.fromString(tmp);
-        innerNav_options.put("device", m_localNavigatorPlugin_name);
-        yCDebug(PATHPLAN_INIT) << "Opening local navigator" << m_localNavigatorPlugin_name << "with params: "<< " --context" << inner_ctex << " --from" << inner_file;
-        yCDebug(PATHPLAN_INIT) << "Full configuration:" << innerNav_options.toString();
-
-        if (m_pInnerNav.open(innerNav_options) == false)
-        {
-            yCError(PATHPLAN_INIT) << "Unable to open local Navigator plugin:" << m_localNavigatorPlugin_name;
-            return false;
-        }
-        m_pInnerNav.view(m_iInnerNav_target);
-        if (m_iInnerNav_target == nullptr)
-        {
-            yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_target interface";
-            return false;
-        }
-        m_pInnerNav.view(m_iInnerNav_ctrl);
-        if (m_iInnerNav_ctrl == nullptr)
-        {
-            yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_ctrl interface";
-            return false;
-        }
+        yCError(PATHPLAN_INIT) << "Missing INTERNAL_NAVIGATOR group!";
+        return false;
     }
-    return true;
+    bool nn = innerNavigation_group.check("plugin");
+    nn &= innerNavigation_group.check("context");
+    nn &= innerNavigation_group.check("from");
+    if (!nn)
+    {
+        yCError(PATHPLAN_INIT) << "Invalid/missing parameter in INTERNAL_NAVIGATOR group";
+        return false;
+    }
+    m_inner_NavigatorPlugin_name = innerNavigation_group.find("plugin").asString();
+    std::string inner_ctex = innerNavigation_group.find("context").asString();
+    std::string inner_file = innerNavigation_group.find("from").asString();
+
+    yarp::os::ResourceFinder rf;
+    rf.setDefaultConfigFile(inner_file);
+    rf.setDefaultContext(inner_ctex);
+    rf.configure(0, nullptr);
+
+    Property innerNav_options;
+    string tmp = rf.toString();
+    innerNav_options.fromString(tmp);
+    innerNav_options.put("device", m_inner_NavigatorPlugin_name);
+    yCDebug(PATHPLAN_INIT) << "Opening local navigator" << m_inner_NavigatorPlugin_name << "with params: " << " --context" << inner_ctex << " --from" << inner_file;
+    yCDebug(PATHPLAN_INIT) << "Full configuration:" << innerNav_options.toString();
+
+    if (m_pInnerNav.open(innerNav_options) == false)
+    {
+        yCError(PATHPLAN_INIT) << "Unable to open local Navigator plugin:" << m_inner_NavigatorPlugin_name;
+        return false;
+    }
+    m_pInnerNav.view(m_iInnerNav_target);
+    if (m_iInnerNav_target == nullptr)
+    {
+        yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_target interface";
+        return false;
+    }
+    m_pInnerNav.view(m_iInnerNav_ctrl);
+    if (m_iInnerNav_ctrl == nullptr)
+    {
+        yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_ctrl interface";
+        return false;
+    }
 }
 
 void PlannerThread :: threadRelease()

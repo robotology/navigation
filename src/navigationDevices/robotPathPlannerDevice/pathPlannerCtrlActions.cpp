@@ -128,7 +128,7 @@ bool PlannerThread::stopMovement()
 {
     bool ret = true;
     //stop the inner navigation loop
-    m_iInnerNav_ctrl->stopNavigation();
+    m_inner_controller.m_iInnerNav_ctrl->stopNavigation();
 
     //stop the outer navigation loop
     if (m_planner_status != navigation_status_idle)
@@ -148,7 +148,7 @@ bool PlannerThread::resumeMovement()
 {
     bool ret = true;
     //resuming the inner navigation loop
-    m_iInnerNav_ctrl->resumeNavigation();
+    m_inner_controller.m_iInnerNav_ctrl->resumeNavigation();
 
     //resume the outer navigation loop
     if (m_planner_status != navigation_status_moving)
@@ -168,7 +168,7 @@ bool PlannerThread::pauseMovement(double d)
 {
     bool ret = true;
     //pausing the inner navigation loop
-    m_iInnerNav_ctrl->suspendNavigation(d);
+    m_inner_controller.m_iInnerNav_ctrl->suspendNavigation(d);
 
     //pausing the outer navigation loop
     if (m_planner_status != navigation_status_paused)

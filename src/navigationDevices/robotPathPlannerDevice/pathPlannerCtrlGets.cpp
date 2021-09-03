@@ -106,5 +106,5 @@ void  PlannerThread::getTimeouts(int& localiz, int& laser, int& inner_status)
 {
     localiz = m_loc_timeout_counter;
     laser = m_laser_timeout_counter;
-    inner_status = m_inner_status_timeout_counter;
+    inner_status = m_inner_controller.m_inner_status_timeout_counter;
 }
