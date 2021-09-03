@@ -89,7 +89,7 @@ bool OdometryHandler::open(const Property &options)
         if (rf_group.check("footprint_frame") == false) { yCError(ODOM_HND) << "Missing footprint_frame parameter"; return false; }
         footprint_frame_id = rf_group.find("footprint_frame").asString();
         rosTopicName_footprint = rf_group.find("topic_name").asString();
-        footprint_diameter = rf_group.find("footprint_diameter").asDouble();
+        footprint_diameter = rf_group.find("footprint_diameter").asFloat64();
     }
     else
     {
@@ -176,8 +176,8 @@ void OdometryHandler::broadcast()
         port_odometer.setEnvelope(timeStamp);
         Bottle &t = port_odometer.prepare();
         t.clear();
-        t.addDouble(traveled_distance);
-        t.addDouble(traveled_angle);
+        t.addFloat64(traveled_distance);
+        t.addFloat64(traveled_angle);
         port_odometer.write();
     }
 
@@ -186,8 +186,8 @@ void OdometryHandler::broadcast()
         port_vels.setEnvelope(timeStamp);
         Bottle &v = port_vels.prepare();
         v.clear();
-        v.addDouble(base_vel_lin);
-        v.addDouble(base_vel_theta);
+        v.addFloat64(base_vel_lin);
+        v.addFloat64(base_vel_theta);
         port_vels.write();
     }
 

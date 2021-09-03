@@ -108,7 +108,7 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
     {
         if (command.get(0).asString()=="help")
         {
-            reply.addVocab(Vocab::encode("many"));
+            reply.addVocab32(Vocab32::encode("many"));
             reply.addString("set_robot_radius <size_m>");
             reply.addString("get_robot_radius");
         }
@@ -120,7 +120,7 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
     else
     {
         yCError(PATHPLAN_DEV) << "Invalid command type";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     yarp::os::ConnectionWriter *returnToSender = connection.getWriter();

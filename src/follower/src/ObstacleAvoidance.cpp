@@ -43,8 +43,8 @@ bool ObstacleVerifier::configure(yarp::os::ResourceFinder &rf)
     else
     {
         if (config_group.check("enabled"))  {enabled = config_group.find("enabled").asBool(); }
-        if (config_group.check("maxDistance"))  {m_maxDistanceThreshold  = config_group.find("maxDistance").asDouble(); }
-        if (config_group.check("robotRadius"))  {m_robotRadius  = config_group.find("robotRadius").asDouble(); }
+        if (config_group.check("maxDistance"))  {m_maxDistanceThreshold  = config_group.find("maxDistance").asFloat64(); }
+        if (config_group.check("robotRadius"))  {m_robotRadius  = config_group.find("robotRadius").asFloat64(); }
         if (config_group.check("robotLaserPortName"))  {m_robotLaserPortName  = config_group.find("robotLaserPortName").asString(); }
     }
     if(!enabled)

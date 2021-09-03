@@ -23,25 +23,25 @@ YARP_LOG_COMPONENT(HEAD_ORIENTATOR, "navigation.headOrientator")
 bool HeadOrientator::configure(yarp::os::Property rf)
 {
     // --------- Generic config --------- //
-    if(rf.check("img_width")){m_imgWidth = rf.find("img_width").asInt();}
+    if(rf.check("img_width")){m_imgWidth = rf.find("img_width").asInt32();}
     else
     {
         yCError(HEAD_ORIENTATOR,"Img_width not found");
         return false;
     }
-    if(rf.check("img_height")) {m_imgHeight = rf.find("img_height").asInt();}
+    if(rf.check("img_height")) {m_imgHeight = rf.find("img_height").asInt32();}
     else
     {
         yCError(HEAD_ORIENTATOR,"Img_height not found");
         return false;
     }
-    if(rf.check("hor_fov")) {m_horFOV = rf.find("hor_fov").asDouble();}
+    if(rf.check("hor_fov")) {m_horFOV = rf.find("hor_fov").asFloat64();}
     else
     {
         yCError(HEAD_ORIENTATOR,"Hor_fov not found");
         return false;
     }
-    if(rf.check("ver_fov")) {m_verFOV = rf.find("ver_fov").asDouble();}
+    if(rf.check("ver_fov")) {m_verFOV = rf.find("ver_fov").asFloat64();}
     else
     {
         yCError(HEAD_ORIENTATOR,"Ver_fov not found");
@@ -116,8 +116,8 @@ void HeadOrientator::backToZero()
 
 void HeadOrientator::rotateHead(yarp::os::Bottle &b)
 {
-    double dX = b.get(0).asDouble() - b.get(2).asDouble();
-    double dY = b.get(3).asDouble() - b.get(1).asDouble();
+    double dX = b.get(0).asFloat64() - b.get(2).asFloat64();
+    double dY = b.get(3).asFloat64() - b.get(1).asFloat64();
 
     m_iNeckPos->relativeMove(1,dX*m_uToYaw);
     m_iNeckPos->relativeMove(0,dY*m_vToPitch);

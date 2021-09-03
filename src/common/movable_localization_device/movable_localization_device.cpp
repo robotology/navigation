@@ -100,9 +100,9 @@ bool movable_localization_device::init(const yarp::os::Searchable&  cfg, yarp::d
 
     if (m_device_position == DEVICE_POS_IS_FIXED)
     {
-        m_device_to_robot_transform.x = devicepos_group.find("device_position_x").asDouble();
-        m_device_to_robot_transform.y = devicepos_group.find("device_position_y").asDouble();
-        m_device_to_robot_transform.theta = devicepos_group.find("device_position_t").asDouble();
+        m_device_to_robot_transform.x = devicepos_group.find("device_position_x").asFloat64();
+        m_device_to_robot_transform.y = devicepos_group.find("device_position_y").asFloat64();
+        m_device_to_robot_transform.theta = devicepos_group.find("device_position_t").asFloat64();
     }
     else if (m_device_position == DEVICE_FROM_TF_FIXED)
     {

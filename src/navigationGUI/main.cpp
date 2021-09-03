@@ -143,7 +143,7 @@ public:
 
             else if (command.get(0).asString()=="help")
             {
-                reply.addVocab(Vocab::encode("many"));
+                reply.addVocab32(Vocab32::encode("many"));
                 reply.addString("Available commands are:");
                 reply.addString("quit");
                 reply.addString("draw_locations <0/1>");
@@ -156,7 +156,7 @@ public:
         else
         {
             yCError(NAVIGATION_GUI_MAIN) << "Invalid command type";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
         return true;
     }

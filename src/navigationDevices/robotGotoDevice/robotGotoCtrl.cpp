@@ -236,16 +236,16 @@ bool GotoThread::threadInit()
         return false;
     }
 
-    if (trajectory_group.check("robot_is_holonomic")) { m_robot_is_holonomic = trajectory_group.find("robot_is_holonomic").asInt() == 1; }
-    if (trajectory_group.check("max_beta_angle"))     { m_default_beta_angle_threshold = m_beta_angle_threshold = trajectory_group.find("max_beta_angle").asDouble(); }
-    if (trajectory_group.check("ang_speed_gain"))     { m_default_gain_ang           = m_gain_ang           = trajectory_group.find("ang_speed_gain").asDouble(); }
-    if (trajectory_group.check("lin_speed_gain"))     { m_default_gain_lin           = m_gain_lin           = trajectory_group.find("lin_speed_gain").asDouble(); }
-    if (trajectory_group.check("max_lin_speed"))      { m_default_max_lin_speed      = m_max_lin_speed      = trajectory_group.find("max_lin_speed").asDouble(); }
-    if (trajectory_group.check("max_ang_speed"))      { m_default_max_ang_speed      = m_max_ang_speed      = trajectory_group.find("max_ang_speed").asDouble(); }
-    if (trajectory_group.check("min_lin_speed"))      { m_default_max_ang_speed      = m_min_lin_speed      = trajectory_group.find("min_lin_speed").asDouble(); }
-    if (trajectory_group.check("min_ang_speed"))      { m_default_max_ang_speed      = m_min_ang_speed      = trajectory_group.find("min_ang_speed").asDouble(); }
-    if (trajectory_group.check("goal_tolerance_lin")) { m_default_goal_tolerance_lin = m_goal_tolerance_lin = trajectory_group.find("goal_tolerance_lin").asDouble(); }
-    if (trajectory_group.check("goal_tolerance_ang")) { m_default_goal_tolerance_lin = m_goal_tolerance_ang = trajectory_group.find("goal_tolerance_ang").asDouble(); }
+    if (trajectory_group.check("robot_is_holonomic")) { m_robot_is_holonomic = trajectory_group.find("robot_is_holonomic").asInt32() == 1; }
+    if (trajectory_group.check("max_beta_angle"))     { m_default_beta_angle_threshold = m_beta_angle_threshold = trajectory_group.find("max_beta_angle").asFloat64(); }
+    if (trajectory_group.check("ang_speed_gain"))     { m_default_gain_ang           = m_gain_ang           = trajectory_group.find("ang_speed_gain").asFloat64(); }
+    if (trajectory_group.check("lin_speed_gain"))     { m_default_gain_lin           = m_gain_lin           = trajectory_group.find("lin_speed_gain").asFloat64(); }
+    if (trajectory_group.check("max_lin_speed"))      { m_default_max_lin_speed      = m_max_lin_speed      = trajectory_group.find("max_lin_speed").asFloat64(); }
+    if (trajectory_group.check("max_ang_speed"))      { m_default_max_ang_speed      = m_max_ang_speed      = trajectory_group.find("max_ang_speed").asFloat64(); }
+    if (trajectory_group.check("min_lin_speed"))      { m_default_max_ang_speed      = m_min_lin_speed      = trajectory_group.find("min_lin_speed").asFloat64(); }
+    if (trajectory_group.check("min_ang_speed"))      { m_default_max_ang_speed      = m_min_ang_speed      = trajectory_group.find("min_ang_speed").asFloat64(); }
+    if (trajectory_group.check("goal_tolerance_lin")) { m_default_goal_tolerance_lin = m_goal_tolerance_lin = trajectory_group.find("goal_tolerance_lin").asFloat64(); }
+    if (trajectory_group.check("goal_tolerance_ang")) { m_default_goal_tolerance_lin = m_goal_tolerance_ang = trajectory_group.find("goal_tolerance_ang").asFloat64(); }
 
     Bottle geometry_group = m_cfg.findGroup("ROBOT_GEOMETRY");
     if (geometry_group.isNull())
@@ -268,10 +268,10 @@ bool GotoThread::threadInit()
 
     if (ff)
     {
-        m_robot_radius = geometry_group.find("robot_radius").asDouble();
-        m_robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
-        m_robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
-        m_robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
+        m_robot_radius = geometry_group.find("robot_radius").asFloat64();
+        m_robot_laser_x = geometry_group.find("laser_pos_x").asFloat64();
+        m_robot_laser_y = geometry_group.find("laser_pos_y").asFloat64();
+        m_robot_laser_t = geometry_group.find("laser_pos_theta").asFloat64();
     }
     else
     {
@@ -284,18 +284,18 @@ bool GotoThread::threadInit()
 
     Bottle btmp;
     btmp = m_cfg.findGroup("OBSTACLES_AVOIDANCE");
-    if (btmp.check("enable_obstacles_avoidance", Value(0)).asInt() == 1)
+    if (btmp.check("enable_obstacles_avoidance", Value(0)).asInt32() == 1)
         m_enable_obstacles_avoidance = true;
 
     btmp = m_cfg.findGroup("OBSTACLES_EMERGENCY_STOP");
-    if (btmp.check("enable_obstacles_emergency_stop", Value(0)).asInt() == 1)
+    if (btmp.check("enable_obstacles_emergency_stop", Value(0)).asInt32() == 1)
         m_enable_obstacles_emergency_stop = true;
 
     btmp = m_cfg.findGroup("RETREAT_OPTION");
-    if (btmp.check("enable_retreat", Value(0)).asInt() == 1)
+    if (btmp.check("enable_retreat", Value(0)).asInt32() == 1)
         m_enable_retreat = true;
 
-    m_retreat_duration_default = btmp.check("retreat_duration", Value(0.3)).asDouble();
+    m_retreat_duration_default = btmp.check("retreat_duration", Value(0.3)).asFloat64();
 
     //open module ports
     string localName = "/robotGoto";
@@ -908,11 +908,11 @@ void GotoThread::sendOutput()
         Bottle &b = m_port_commands_output.prepare();
         m_port_commands_output.setEnvelope(stamp);
         b.clear();
-        b.addInt(2);                    // polar speed commands
-        b.addDouble(m_control_out.linear_dir);    // angle in deg
-        b.addDouble(m_control_out.linear_vel);    // lin_vel in m/s
-        b.addDouble(m_control_out.angular_vel);    // ang_vel in deg/s
-        b.addDouble(100);
+        b.addInt32(2);                    // polar speed commands
+        b.addFloat64(m_control_out.linear_dir);    // angle in deg
+        b.addFloat64(m_control_out.linear_vel);    // lin_vel in m/s
+        b.addFloat64(m_control_out.angular_vel);    // ang_vel in deg/s
+        b.addFloat64(100);
         m_port_commands_output.write();
     }
 
@@ -933,15 +933,15 @@ void GotoThread::sendOutput()
         Bottle &b = m_port_gui_output.prepare();
         m_port_gui_output.setEnvelope(stamp);
         b.clear();
-        b.addDouble(m_control_out.linear_dir);
-        b.addDouble(m_control_out.linear_vel);
-        b.addDouble(m_control_out.angular_vel);
-        b.addDouble(m_obstacle_handler->m_angle_f);
-        b.addDouble(m_obstacle_handler->m_angle_t);
-        b.addDouble(m_obstacle_handler->m_w_f);
-        b.addDouble(m_obstacle_handler->m_w_t);
-        b.addDouble(m_obstacle_handler->m_max_obstacle_distance);
-        b.addDouble(m_obstacle_handler->m_angle_g);
+        b.addFloat64(m_control_out.linear_dir);
+        b.addFloat64(m_control_out.linear_vel);
+        b.addFloat64(m_control_out.angular_vel);
+        b.addFloat64(m_obstacle_handler->m_angle_f);
+        b.addFloat64(m_obstacle_handler->m_angle_t);
+        b.addFloat64(m_obstacle_handler->m_w_f);
+        b.addFloat64(m_obstacle_handler->m_w_t);
+        b.addFloat64(m_obstacle_handler->m_max_obstacle_distance);
+        b.addFloat64(m_obstacle_handler->m_angle_g);
         m_port_gui_output.write();
     }
 }

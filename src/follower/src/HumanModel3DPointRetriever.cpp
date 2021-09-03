@@ -58,13 +58,13 @@ Target_t HumanModel3DPointRetriever::getTarget(void)
     if(ansGet.size() == 0)
         return t;
 
-    if((ansGet.get(0).asDouble()==0) && (ansGet.get(1).asDouble()==0) && (ansGet.get(2).asDouble()==0)  &&
-       (ansGet.get(3).asDouble()==0)  && (ansGet.get(4).asDouble()==0) && (ansGet.get(5).asDouble()==0))
+    if((ansGet.get(0).asFloat64()==0) && (ansGet.get(1).asFloat64()==0) && (ansGet.get(2).asFloat64()==0)  &&
+       (ansGet.get(3).asFloat64()==0)  && (ansGet.get(4).asFloat64()==0) && (ansGet.get(5).asFloat64()==0))
         return t;
 
-    t.point3D[0] = ansGet.get(0).asDouble();
-    t.point3D[1] = ansGet.get(1).asDouble();
-    t.point3D[2] = ansGet.get(2).asDouble();
+    t.point3D[0] = ansGet.get(0).asFloat64();
+    t.point3D[1] = ansGet.get(1).asFloat64();
+    t.point3D[2] = ansGet.get(2).asFloat64();
     t.isValid=true;
 
     return t;

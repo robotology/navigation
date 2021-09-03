@@ -57,7 +57,7 @@ void odomLocalizerRPCHandler::setInterface(odomLocalizer* iface)
 bool odomLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
     reply.clear();
-    reply.addVocab(Vocab::encode("many"));
+    reply.addVocab32(Vocab32::encode("many"));
     reply.addString("Not yet Implemented");
     return true;
 }
@@ -260,11 +260,11 @@ bool odomLocalizerThread::threadInit()
 
     //initial location initialization
     Map2DLocation tmp_loc;
-    if (initial_group.check("initial_x")) { tmp_loc.x = initial_group.find("initial_x").asDouble(); }
+    if (initial_group.check("initial_x")) { tmp_loc.x = initial_group.find("initial_x").asFloat64(); }
     else { yCError(ODOMLOC) << "missing initial_x param"; return false; }
-    if (initial_group.check("initial_y")) { tmp_loc.y = initial_group.find("initial_y").asDouble(); }
+    if (initial_group.check("initial_y")) { tmp_loc.y = initial_group.find("initial_y").asFloat64(); }
     else { yCError(ODOMLOC) << "missing initial_y param"; return false; }
-    if (initial_group.check("initial_theta")) { tmp_loc.theta = initial_group.find("initial_theta").asDouble(); }
+    if (initial_group.check("initial_theta")) { tmp_loc.theta = initial_group.find("initial_theta").asFloat64(); }
     else { yCError(ODOMLOC) << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
     else { yCError(ODOMLOC) << "missing initial_map param"; return false; }

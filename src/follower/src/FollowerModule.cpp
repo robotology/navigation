@@ -88,7 +88,7 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
         {
             if(command.get(1).asString() == "debug")
             {
-                reply.addVocab(Vocab::encode("many"));
+                reply.addVocab32(Vocab32::encode("many"));
                 reply.addString("debug <level> <true/false>");
                 reply.addString("   Debug levels are:");
                 reply.addString("   general=1");
@@ -107,7 +107,7 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
         }
         else
         {
-        reply.addVocab(Vocab::encode("many"));
+        reply.addVocab32(Vocab32::encode("many"));
         reply.addString("Available commands are:");
         reply.addString("start");
         reply.addString("stop");
@@ -138,7 +138,7 @@ bool FollowerModule::respond(const Bottle& command, Bottle& reply)
     }
     else if(command.get(0).asString() == "debug")
     {
-        DebugLevel_t level=static_cast<DebugLevel_t>(command.get(1).asInt());
+        DebugLevel_t level=static_cast<DebugLevel_t>(command.get(1).asInt32());
         bool on=command.get(2).asBool();
         if((level == DebugLevel_t::targetRetriever) && (m_pointRetriever_ptr != nullptr))
             m_pointRetriever_ptr->setDebug(on);

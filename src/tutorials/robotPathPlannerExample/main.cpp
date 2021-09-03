@@ -51,7 +51,7 @@ bool gotoLoc(string location, INavigation2D* iNav)
         iNav->getNavigationStatus(status);
         if (status == navigation_status_idle) break;
 
-        yCInfo(ROBOTPATHPLANNER_EXAMPLE) << "Current navigation status:" << yarp::os::Vocab::decode(status) << "Waiting for navigation_status_idle";
+        yCInfo(ROBOTPATHPLANNER_EXAMPLE) << "Current navigation status:" << yarp::os::Vocab32::decode(status) << "Waiting for navigation_status_idle";
         yarp::os::Time::delay(0.1);
     } while (1);
 
@@ -74,7 +74,7 @@ bool gotoLoc(string location, INavigation2D* iNav)
         if (status == navigation_status_aborted) break;
         if (status == navigation_status_failing) break;
 
-        yCInfo(ROBOTPATHPLANNER_EXAMPLE) << "Current navigation status:" << yarp::os::Vocab::decode(status);
+        yCInfo(ROBOTPATHPLANNER_EXAMPLE) << "Current navigation status:" << yarp::os::Vocab32::decode(status);
         yCInfo(ROBOTPATHPLANNER_EXAMPLE) << "Current position:" << pos.toString();
         yCInfo(ROBOTPATHPLANNER_EXAMPLE) << "Current goal:" << current_waypoint.toString();
 

@@ -205,9 +205,9 @@ void ControlThread::set_pid (string id, double kp, double ki, double kd)
     yarp::os::Bottle& bkp = options.addList();
     yarp::os::Bottle& bki = options.addList();
     yarp::os::Bottle& bkd = options.addList();
-    bkp.addString("Kp");    yarp::os::Bottle& bkp2 = bkp.addList();    bkp2.addDouble(kp);
-    bki.addString("Ki");    yarp::os::Bottle& bki2 = bki.addList();    bki2.addDouble(ki);
-    bkd.addString("Kd");    yarp::os::Bottle& bkd2 = bkd.addList();    bkd2.addDouble(kd);
+    bkp.addString("Kp");    yarp::os::Bottle& bkp2 = bkp.addList();    bkp2.addFloat64(kp);
+    bki.addString("Ki");    yarp::os::Bottle& bki2 = bki.addList();    bki2.addFloat64(ki);
+    bkd.addString("Kd");    yarp::os::Bottle& bkd2 = bkd.addList();    bkd2.addFloat64(kd);
     yCInfo(CONTROL_THRD, "new configuration: %s\n", options.toString().c_str());
 
     this->angular_speed_pid->setOptions(options);
@@ -322,8 +322,8 @@ void ControlThread::run()
 
     Bottle &coms = port_filtered_commands.prepare();
     coms.clear();
-    coms.addDouble(input_linear_speed);
-    coms.addDouble(input_angular_speed);
+    coms.addFloat64(input_linear_speed);
+    coms.addFloat64(input_angular_speed);
     port_filtered_commands.write();
 
     /*
@@ -423,45 +423,45 @@ bool ControlThread::threadInit()
     bool useRos;
     
     control_type          = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
-    input_filter_enabled  = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt();
-    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt()==1;
-    lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
+    input_filter_enabled  = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt32();
+    ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt32()==1;
+    lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asFloat64();
     robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
     useRos                = general_options.check("use_ROS",              Value(false),  "enable ROS communications").asBool();
 
     //max velocities
     {
         double tmp = 0;
-        tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
+        tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asFloat64();
         if (tmp >= 0) { max_angular_vel = tmp; }
         
-        tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
+        tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asFloat64();
         if (tmp >= 0) { max_linear_vel = tmp; }
     }
 
     //max angular/linear acc
     {
         double tmp=0;
-        tmp = (general_options.check("max_angular_acc", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+        tmp = (general_options.check("max_angular_acc", Value(0), "maximum angular acceleration of the platform [deg/s]")).asFloat64();
         if (tmp > 0) { max_angular_acc_pos = max_angular_acc_neg = tmp; }
 
-        tmp = (general_options.check("max_linear_acc", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+        tmp = (general_options.check("max_linear_acc", Value(0), "maximum linear acceleration of the platform [m/s]")).asFloat64();
         if (tmp > 0) { max_linear_acc_pos = max_linear_acc_neg = tmp; }
     }
 
     //max angular/linear acc pos/neg
     {
         double tmp = 0;
-        tmp = (general_options.check("max_angular_acc_pos", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+        tmp = (general_options.check("max_angular_acc_pos", Value(0), "maximum angular acceleration of the platform [deg/s]")).asFloat64();
         if (tmp > 0) { max_angular_acc_pos = tmp; }
     
-        tmp = (general_options.check("max_linear_acc_pos", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+        tmp = (general_options.check("max_linear_acc_pos", Value(0), "maximum linear acceleration of the platform [m/s]")).asFloat64();
         if (tmp > 0) { max_linear_acc_pos = tmp; }
     
-        tmp = (general_options.check("max_angular_acc_neg", Value(0), "maximum angular acceleration of the platform [deg/s]")).asDouble();
+        tmp = (general_options.check("max_angular_acc_neg", Value(0), "maximum angular acceleration of the platform [deg/s]")).asFloat64();
         if (tmp > 0) { max_angular_acc_neg = tmp; }
     
-        tmp = (general_options.check("max_linear_acc_neg", Value(0), "maximum linear acceleration of the platform [m/s]")).asDouble();
+        tmp = (general_options.check("max_linear_acc_neg", Value(0), "maximum linear acceleration of the platform [m/s]")).asFloat64();
         if (tmp > 0) { max_linear_acc_neg = tmp; }
     }
 
@@ -564,8 +564,8 @@ bool ControlThread::threadInit()
         if (ctrl_options.check("R1_ODOMETRY"))
         {
             yarp::os::Bottle& r1_odometry_options = ctrl_options.findGroup("R1_ODOMETRY");
-            if (r1_odometry_options.check("geom_r")) {geom_r = r1_odometry_options.find("geom_r").asDouble();}
-            if (r1_odometry_options.check("geom_L")) {geom_L = r1_odometry_options.find("geom_L").asDouble();}
+            if (r1_odometry_options.check("geom_r")) {geom_r = r1_odometry_options.find("geom_r").asFloat64();}
+            if (r1_odometry_options.check("geom_L")) {geom_L = r1_odometry_options.find("geom_L").asFloat64();}
         }
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
         robot_geom.put("geom_r", geom_r);
@@ -667,17 +667,17 @@ bool ControlThread::threadInit()
         Tt[i] = 1;
     }
 
-    kp[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
-    kd[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
-    ki[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
-    sat[0](0, 0)      = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
-    sat[0](0, 1)      = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
+    kp[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asFloat64();
+    kd[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asFloat64();
+    ki[0]             = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asFloat64();
+    sat[0](0, 0)      = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("min", Value(0), "min").asFloat64();
+    sat[0](0, 1)      = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("max", Value(0), "max").asFloat64();
                       
-    kp[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
-    kd[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
-    ki[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
-    sat[1](0, 0)      = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
-    sat[1](0, 1)      = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
+    kp[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asFloat64();
+    kd[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asFloat64();
+    ki[1]             = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asFloat64();
+    sat[1](0, 0)      = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("min", Value(0), "min").asFloat64();
+    sat[1](0, 1)      = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("max", Value(0), "max").asFloat64();
 
     linear_speed_pid  = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[0], ki[0], kd[0], wp[0], wi[0], wd[0], N[0], Tt[0], sat[0]);
     angular_speed_pid = new iCub::ctrl::parallelPID(thread_period / 1000.0, kp[1], ki[1], kd[1], wp[1], wi[1], wd[1], N[1], Tt[1], sat[1]);

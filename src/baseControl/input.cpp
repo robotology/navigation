@@ -119,10 +119,10 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
             {
                 idPar     = std::get<0>(p)+t.first+"_id";
                 factorPar = std::get<0>(p)+t.first+"_factor";
-                if(joypad_group.check(idPar) && joypad_group.find(idPar).isInt())
+                if(joypad_group.check(idPar) && joypad_group.find(idPar).isInt32())
                 {
                     idFound = true;
-                    if(joypad_group.check(factorPar) && joypad_group.find(factorPar).isDouble())
+                    if(joypad_group.check(factorPar) && joypad_group.find(factorPar).isFloat64())
                     {
                         facFound = true;
                         type = str2types[t.first];
@@ -152,9 +152,9 @@ bool Input::configureJoypdad(int n, const Bottle& joypad_group)
                 return false;
             }
 
-            *std::get<1>(p) = joypad_group.find(idPar).asInt();
+            *std::get<1>(p) = joypad_group.find(idPar).asInt32();
             *std::get<2>(p) = type;
-            *std::get<3>(p) = joypad_group.find(factorPar).asDouble();
+            *std::get<3>(p) = joypad_group.find(factorPar).asFloat64();
         }
 
         yCInfo(INPUT_HND) << "opening" << joydevicename.asString() << "device";
@@ -228,9 +228,9 @@ bool Input::open(Property &_options)
     
 
     double tmp = 0;
-    tmp = (joystick_options.check("linear_vel_at_full_control", Value(0), "linear velocity at 100% of the joystick control [m/s]")).asDouble();
+    tmp = (joystick_options.check("linear_vel_at_full_control", Value(0), "linear velocity at 100% of the joystick control [m/s]")).asFloat64();
     if (tmp>0) linear_vel_at_100_joy = tmp;
-    tmp = (joystick_options.check("angular_vel_at_full_control", Value(0), "angular velocity at 100% of the joystick control [deg/s]")).asDouble();
+    tmp = (joystick_options.check("angular_vel_at_full_control", Value(0), "angular velocity at 100% of the joystick control [deg/s]")).asFloat64();
     if (tmp>0) angular_vel_at_100_joy = tmp;
 
     localName = ctrl_options.find("local").asString();
@@ -361,20 +361,20 @@ Input::Input()
 
 void Input::read_percent_polar(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
-    des_dir  = b->get(1).asDouble();
-    lin_spd  = b->get(2).asDouble();
-    ang_spd  = b->get(3).asDouble();
-    pwm_gain = b->get(4).asDouble();
+    des_dir  = b->get(1).asFloat64();
+    lin_spd  = b->get(2).asFloat64();
+    ang_spd  = b->get(3).asFloat64();
+    pwm_gain = b->get(4).asFloat64();
     pwm_gain = (pwm_gain<+100) ? pwm_gain : +100; 
     pwm_gain = (pwm_gain>0)    ? pwm_gain : 0;
 }
 
 void Input::read_percent_cart(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
-    double x_speed = b->get(1).asDouble();
-    double y_speed = b->get(2).asDouble();
-    double t_speed = b->get(3).asDouble();
-    pwm_gain       = b->get(4).asDouble();
+    double x_speed = b->get(1).asFloat64();
+    double y_speed = b->get(2).asFloat64();
+    double t_speed = b->get(3).asFloat64();
+    pwm_gain       = b->get(4).asFloat64();
     des_dir        = atan2(y_speed, x_speed) * RAD2DEG;
     lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
     ang_spd        = t_speed;
@@ -384,23 +384,23 @@ void Input::read_percent_cart(const Bottle *b, double& des_dir, double& lin_spd,
 
 void Input::read_speed_polar(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
-    des_dir  = b->get(1).asDouble();
-    lin_spd  = b->get(2).asDouble();
-    ang_spd  = b->get(3).asDouble();
-    pwm_gain = b->get(4).asDouble();
+    des_dir  = b->get(1).asFloat64();
+    lin_spd  = b->get(2).asFloat64();
+    ang_spd  = b->get(3).asFloat64();
+    pwm_gain = b->get(4).asFloat64();
     pwm_gain = (pwm_gain<+100) ? pwm_gain : +100;
     pwm_gain = (pwm_gain>0) ? pwm_gain : 0;
 }
 
 void Input::read_speed_cart(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
 {
-     double x_speed = b->get(1).asDouble();
-     double y_speed = b->get(2).asDouble();
-     double t_speed = b->get(3).asDouble();
+     double x_speed = b->get(1).asFloat64();
+     double y_speed = b->get(2).asFloat64();
+     double t_speed = b->get(3).asFloat64();
      des_dir        = atan2(y_speed, x_speed) * RAD2DEG;
      lin_spd        = sqrt (x_speed*x_speed+y_speed*y_speed);
      ang_spd        = t_speed;
-     pwm_gain = b->get(4).asDouble();
+     pwm_gain = b->get(4).asFloat64();
 }
 
 void Input::read_joystick_data(JoyDescription *jDescr, IJoypadController* iJoy, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
@@ -453,7 +453,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
         {
             if (Bottle* b = port_joystick_control[id]->read(false))
             {                
-                if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
+                if (b->get(0).asInt32()== BASECONTROL_COMMAND_PERCENT_POLAR)
                 {
                     //received a joystick command.
                     read_percent_polar(b, joy_desired_direction[id],joy_linear_speed[id],joy_angular_speed[id],joy_pwm_gain[id]);
@@ -470,7 +470,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
                     //this make the joystick to take control for 100*20 ms
                     if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
                 }
-                else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_POLAR)
+                else if (b->get(0).asInt32() == BASECONTROL_COMMAND_VELOCIY_POLAR)
                 {
                     //received a joystick command.
                     read_speed_polar(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
@@ -487,7 +487,7 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
                     //this make the joystick to take control for 100*20 ms
                     if (joy_pwm_gain[id]>10) joystick_received[id] = 100;
                 }
-                else if (b->get(0).asInt() == BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
+                else if (b->get(0).asInt32() == BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
                 {
                     //received a joystick command.
                     read_speed_cart(b, joy_desired_direction[id], joy_linear_speed[id], joy_angular_speed[id], joy_pwm_gain[id]);
@@ -532,21 +532,21 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
     //- - - read command port - - -
     if (Bottle *b = port_movement_control.read(false))
     {
-        if (b->get(0).asInt()== BASECONTROL_COMMAND_PERCENT_POLAR)
+        if (b->get(0).asInt32()== BASECONTROL_COMMAND_PERCENT_POLAR)
         {
             read_percent_polar(b, cmd_desired_direction,cmd_linear_speed,cmd_angular_speed,cmd_pwm_gain);
             wdt_old_mov_cmd = wdt_mov_cmd;
             wdt_mov_cmd = Time::now();
             command_received = 100;
         }
-        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_POLAR)
+        else if (b->get(0).asInt32()== BASECONTROL_COMMAND_VELOCIY_POLAR)
         {
             read_speed_polar(b, cmd_desired_direction,cmd_linear_speed,cmd_angular_speed,cmd_pwm_gain);
             wdt_old_mov_cmd = wdt_mov_cmd;
             wdt_mov_cmd = Time::now();
             command_received = 100;
         }
-        else if (b->get(0).asInt()== BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
+        else if (b->get(0).asInt32()== BASECONTROL_COMMAND_VELOCIY_CARTESIAN)
         {
             read_speed_cart(b, cmd_desired_direction,cmd_linear_speed,cmd_angular_speed,cmd_pwm_gain);
             wdt_old_mov_cmd = wdt_mov_cmd;
@@ -576,11 +576,11 @@ void Input::read_inputs(double& linear_speed,double& angular_speed,double& desir
         if (yarp::rosmsg::geometry_msgs::Twist* rosTwist = rosSubscriberPort_twist.read(false))
         {
             Bottle b;
-            b.addInt(3);
-            b.addDouble(rosTwist->linear.x);
-            b.addDouble(rosTwist->linear.y);
-            b.addDouble(rosTwist->angular.z * RAD2DEG);
-            b.addDouble(100);
+            b.addInt32(3);
+            b.addFloat64(rosTwist->linear.x);
+            b.addFloat64(rosTwist->linear.y);
+            b.addFloat64(rosTwist->angular.z * RAD2DEG);
+            b.addFloat64(100);
             read_speed_cart(&b, ros_desired_direction, ros_linear_speed, ros_angular_speed, ros_pwm_gain);
             wdt_old_ros_cmd   = wdt_ros_cmd;
             wdt_ros_cmd       = Time::now();

@@ -34,7 +34,7 @@ Target_t Ball3DPointRetriever::getTarget(void)
         return t;
     }
 
-    bool ballIsTracked = (b->get(6).asDouble() == 1.0) ? true : false;
+    bool ballIsTracked = (b->get(6).asFloat64() == 1.0) ? true : false;
 
     if(!ballIsTracked)
     {
@@ -44,12 +44,12 @@ Target_t Ball3DPointRetriever::getTarget(void)
     }
 
 
-    t.point3D[0] = b->get(0).asDouble();
-    t.point3D[1] = b->get(1).asDouble();
-    t.point3D[2] = b->get(2).asDouble();
+    t.point3D[0] = b->get(0).asFloat64();
+    t.point3D[1] = b->get(1).asFloat64();
+    t.point3D[2] = b->get(2).asFloat64();
 
-    t.pixel[0] = b->get(4).asDouble(); //u and V are the the coordinate x any of image.
-    t.pixel[1] = b->get(5).asDouble();
+    t.pixel[0] = b->get(4).asFloat64(); //u and V are the the coordinate x any of image.
+    t.pixel[1] = b->get(5).asFloat64();
 
     t.isValid=true;
 

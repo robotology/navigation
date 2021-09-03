@@ -38,11 +38,11 @@ bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
 {
     if (bot &&
         bot->size() == 5 &&
-        bot->get(0).isInt() &&
-        bot->get(1).isDouble() &&
-        bot->get(2).isDouble() &&
-        bot->get(3).isDouble() &&
-        bot->get(0).isDouble())
+        bot->get(0).isInt32() &&
+        bot->get(1).isFloat64() &&
+        bot->get(2).isFloat64() &&
+        bot->get(3).isFloat64() &&
+        bot->get(0).isFloat64())
     { 
         return true;
     }
@@ -56,7 +56,7 @@ yarp::os::Things& Joy2vel::update(yarp::os::Things& thing)
     yAssert(bot);
     validate_bot(bot);
 
-    if (bot->get(0).asInt()==3)
+    if (bot->get(0).asInt32()==3)
     {
         double percent = bot->get(4).asFloat64()/100.0;
         this->command.vel_x = bot->get(1).asFloat64() * percent;

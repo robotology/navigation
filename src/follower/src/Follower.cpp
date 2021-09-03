@@ -794,7 +794,7 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
         if (config_group.check("outputPort"))  { cfg.outputPortName = config_group.find("outputPort").asString(); }
         if (config_group.check("targetType"))  { cfg.targetType = config_group.find("targetType").asString(); }
         if (config_group.check("startWithoutCommand"))  { cfg.startWithoutCommand= config_group.find("startWithoutCommand").asBool(); }
-        if (config_group.check("invalidTargetMax"))  { cfg.invalidTargetMax = config_group.find("invalidTargetMax").asInt(); }
+        if (config_group.check("invalidTargetMax"))  { cfg.invalidTargetMax = config_group.find("invalidTargetMax").asInt32(); }
         if (config_group.check("onSimulator"))  { cfg.onSimulator = config_group.find("onSimulator").asBool(); }
     }
 
@@ -806,16 +806,16 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     }
     else
     {
-        if (config_group.check("factorDist2Vel")) { cfg.navigation.factorDist2Vel = config_group.find("factorDist2Vel").asDouble(); }
-        if (config_group.check("factorAng2Vel"))  { cfg.navigation.factorAng2Vel = config_group.find("factorAng2Vel").asDouble(); }
-        if (config_group.check("distanceThreshold"))  { cfg.navigation.distanceThreshold = config_group.find("distanceThreshold").asDouble(); }
-        if (config_group.check("angleThreshold"))  { cfg.navigation.angleThreshold = config_group.find("angleThreshold").asDouble(); }
-        if (config_group.check("angularVelLimit"))  { cfg.navigation.velocityLimits.angular = config_group.find("angularVelLimit").asDouble(); }
-        if (config_group.check("linearVelLimit"))  { cfg.navigation.velocityLimits.linear = config_group.find("linearVelLimit").asDouble(); }
+        if (config_group.check("factorDist2Vel")) { cfg.navigation.factorDist2Vel = config_group.find("factorDist2Vel").asFloat64(); }
+        if (config_group.check("factorAng2Vel"))  { cfg.navigation.factorAng2Vel = config_group.find("factorAng2Vel").asFloat64(); }
+        if (config_group.check("distanceThreshold"))  { cfg.navigation.distanceThreshold = config_group.find("distanceThreshold").asFloat64(); }
+        if (config_group.check("angleThreshold"))  { cfg.navigation.angleThreshold = config_group.find("angleThreshold").asFloat64(); }
+        if (config_group.check("angularVelLimit"))  { cfg.navigation.velocityLimits.angular = config_group.find("angularVelLimit").asFloat64(); }
+        if (config_group.check("linearVelLimit"))  { cfg.navigation.velocityLimits.linear = config_group.find("linearVelLimit").asFloat64(); }
         if (config_group.check("angleLimitsVelReduction"))
         {
-            cfg.navigation.angleLimitsVelReduction.min = config_group.find("angleLimitsVelReduction").asList()->get(0).asDouble();
-            cfg.navigation.angleLimitsVelReduction.max = config_group.find("angleLimitsVelReduction").asList()->get(1).asDouble();
+            cfg.navigation.angleLimitsVelReduction.min = config_group.find("angleLimitsVelReduction").asList()->get(0).asFloat64();
+            cfg.navigation.angleLimitsVelReduction.max = config_group.find("angleLimitsVelReduction").asList()->get(1).asFloat64();
         }
     }
 
@@ -829,7 +829,7 @@ bool Follower::readConfig(yarp::os::ResourceFinder &rf, FollowerConfig &cfg)
     {
         if (config_group.check("enable")) { cfg.debug.enabled = config_group.find("enable").asBool(); }
         if (config_group.check("paintGazeFrame"))  { cfg.debug.paintGazeFrame = config_group.find("paintGazeFrame").asBool(); }
-        if (config_group.check("printPeriod"))  { cfg.debug.period = config_group.find("printPeriod").asDouble(); }
+        if (config_group.check("printPeriod"))  { cfg.debug.period = config_group.find("printPeriod").asFloat64(); }
     }
 
     cfg.print();
@@ -877,11 +877,11 @@ bool Follower::sendCommand2BaseControl(double linearDirection, double linearVelo
         Bottle &b = m_outputPort2baseCtr.prepare();
         m_outputPort2baseCtr.setEnvelope(stamp);
         b.clear();
-        b.addInt(2);                    // polar speed commands
-        b.addDouble(linearDirection);    // angle in deg
-        b.addDouble(linearVelocity);    // lin_vel in m/s
-        b.addDouble(angularVelocity);    // ang_vel in deg/s
-        b.addDouble(100);
+        b.addInt32(2);                    // polar speed commands
+        b.addFloat64(linearDirection);    // angle in deg
+        b.addFloat64(linearVelocity);    // lin_vel in m/s
+        b.addFloat64(angularVelocity);    // ang_vel in deg/s
+        b.addFloat64(100);
         m_outputPort2baseCtr.write();
     }
 
@@ -901,9 +901,9 @@ bool Follower::sendCommand2BaseControl(double linearDirection, double linearVelo
 //
 //     Bottle location = yarp::os::Bottle();
 //     Bottle &val = location.addList();
-//     val.addDouble(x);
-//     val.addDouble(y);
-//     val.addDouble(z);
+//     val.addFloat64(x);
+//     val.addFloat64(y);
+//     val.addFloat64(z);
 //     p.put("target-location",location.get(0));
 //     m_outputPort2gazeCtr.write();
 //
@@ -925,8 +925,8 @@ bool Follower::sendCommand2BaseControl(double linearDirection, double linearVelo
 //
 //     Bottle location = yarp::os::Bottle();
 //     Bottle &val = location.addList();
-//     val.addDouble(u);
-//     val.addDouble(v);
+//     val.addFloat64(u);
+//     val.addFloat64(v);
 //     p.put("target-location",location.get(0));
 //     m_outputPort2gazeCtr.write();
 //
@@ -1018,11 +1018,11 @@ void Follower::sendOutputLikeJoystick()
     m_outputPortJoystick.setEnvelope(stamp);
     b.clear();
     //like joystick
-    b.addInt(3);//write cartesian speed
-    b.addDouble(100);    // angle in deg
-    b.addDouble(0);    // lin_vel in m/s
-    b.addDouble(0);    // ang_vel in deg/s
-    b.addDouble(100);
+    b.addInt32(3);//write cartesian speed
+    b.addFloat64(100);    // angle in deg
+    b.addFloat64(0);    // lin_vel in m/s
+    b.addFloat64(0);    // ang_vel in deg/s
+    b.addFloat64(100);
 
     m_outputPortJoystick.write();
 }
@@ -1043,13 +1043,13 @@ void Follower::sendtargets4Debug(yarp::sig::Vector &VonCamFrame, yarp::sig::Vect
     m_outputPortJoystick.setEnvelope(stamp);
     b.clear();
     //like joystick
-    b.addDouble(VonCamFrame[0]);
-    b.addDouble(VonCamFrame[1]);
-    b.addDouble(VonCamFrame[2]);
+    b.addFloat64(VonCamFrame[0]);
+    b.addFloat64(VonCamFrame[1]);
+    b.addFloat64(VonCamFrame[2]);
 
-    b.addDouble(VonBaseFrame[0]);
-    b.addDouble(VonBaseFrame[1]);
-    b.addDouble(VonBaseFrame[2]);
+    b.addFloat64(VonBaseFrame[0]);
+    b.addFloat64(VonBaseFrame[1]);
+    b.addFloat64(VonBaseFrame[2]);
 
 
     m_outputPortJoystick.write();

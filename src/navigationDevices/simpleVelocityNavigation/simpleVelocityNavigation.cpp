@@ -125,11 +125,11 @@ void simpleVelocityNavigation::send_command(control_type control_data)
     Bottle &b = m_port_commands_output.prepare();
     m_port_commands_output.setEnvelope(stamp);
     b.clear();
-    b.addInt(BASECONTROL_COMMAND_VELOCIY_CARTESIAN);
-    b.addDouble(control_data.linear_xvel);    // lin_vel in m/s
-    b.addDouble(control_data.linear_yvel);    // lin_vel in m/s
-    b.addDouble(control_data.angular_vel);    // ang_vel in deg/s
-    b.addDouble(100);
+    b.addInt32(BASECONTROL_COMMAND_VELOCIY_CARTESIAN);
+    b.addFloat64(control_data.linear_xvel);    // lin_vel in m/s
+    b.addFloat64(control_data.linear_yvel);    // lin_vel in m/s
+    b.addFloat64(control_data.angular_vel);    // ang_vel in deg/s
+    b.addFloat64(100);
     m_port_commands_output.write();
 }
 

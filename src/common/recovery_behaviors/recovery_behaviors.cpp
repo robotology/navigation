@@ -38,11 +38,11 @@ void recovery_behavior::run()
     Bottle& b = m_port_commands_output->prepare();
     //m_port_commands_output.setEnvelope(stamp);
     b.clear();
-    b.addInt(2);               // polar speed commands
-    b.addDouble(0.0);          // angle in deg
-    b.addDouble(0.0);          // lin_vel in m/s
-    b.addDouble(ang_speed);    // ang_vel in deg/s
-    b.addDouble(100);
+    b.addInt32(2);               // polar speed commands
+    b.addFloat64(0.0);          // angle in deg
+    b.addFloat64(0.0);          // lin_vel in m/s
+    b.addFloat64(ang_speed);    // ang_vel in deg/s
+    b.addFloat64(100);
     m_port_commands_output->write();
 
     if (current_time-start_time >10.0)

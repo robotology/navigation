@@ -113,10 +113,10 @@ bool NavGuiThread::threadInit()
 
     if (ff)
     {
-        m_robot_radius = geometry_group.find("robot_radius").asDouble();
-        m_robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
-        m_robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
-        m_robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
+        m_robot_radius = geometry_group.find("robot_radius").asFloat64();
+        m_robot_laser_x = geometry_group.find("laser_pos_x").asFloat64();
+        m_robot_laser_y = geometry_group.find("laser_pos_y").asFloat64();
+        m_robot_laser_t = geometry_group.find("laser_pos_theta").asFloat64();
     }
     else
     {

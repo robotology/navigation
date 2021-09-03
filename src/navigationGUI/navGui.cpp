@@ -71,8 +71,8 @@ bool NavGuiThread::click_in_menu(yarp::os::Bottle *gui_targ, yarp::math::Vec2D<i
     int yoff = i1_map->height;
     int xw = i1_map->width;
     int yh = i1_map->height;
-    click_p.x = (*gui_targ).get(0).asInt();
-    click_p.y = (*gui_targ).get(1).asInt();
+    click_p.x = (*gui_targ).get(0).asInt32();
+    click_p.y = (*gui_targ).get(1).asInt32();
     if (click_p.x > 0 && click_p.x < xw &&
         click_p.y > button1_t && click_p.y < button1_b)
     {
@@ -137,8 +137,8 @@ void NavGuiThread::readTargetFromYarpView()
         if (gui_targ->size() == 2)
         {
             XYCell c_end_gui;
-            c_end_gui.x = (*gui_targ).get(0).asInt();
-            c_end_gui.y = (*gui_targ).get(1).asInt();
+            c_end_gui.x = (*gui_targ).get(0).asInt32();
+            c_end_gui.y = (*gui_targ).get(1).asInt32();
             yarp::sig::Vector v = static_cast<yarp::sig::Vector>(m_current_map.cell2World(c_end_gui));
             yCInfo(NAVIGATION_GUI,"selected point is located at (%6.3f, %6.3f)", v[0], v[1]);
             Map2DLocation loc;
@@ -165,10 +165,10 @@ void NavGuiThread::readTargetFromYarpView()
             XYCell c_end_gui;
             XYWorld c_start_world;
             XYWorld c_end_world;
-            c_start_gui.x = (*gui_targ).get(0).asInt();
-            c_start_gui.y = (*gui_targ).get(1).asInt();
-            c_end_gui.x = (*gui_targ).get(2).asInt();
-            c_end_gui.y = (*gui_targ).get(3).asInt();
+            c_start_gui.x = (*gui_targ).get(0).asInt32();
+            c_start_gui.y = (*gui_targ).get(1).asInt32();
+            c_end_gui.x = (*gui_targ).get(2).asInt32();
+            c_end_gui.y = (*gui_targ).get(3).asInt32();
             c_start_world = (m_current_map.cell2World(c_start_gui));
             c_end_world = (m_current_map.cell2World(c_end_gui));
             double angle = atan2(c_end_world.y - c_start_world.y, c_end_world.x - c_start_world.x) * 180.0 / M_PI;

@@ -77,43 +77,43 @@ bool PlannerThread::threadInit()
         yCError(PATHPLAN_INIT) << "Missing NAVIGATION group!";
         return false;
     }
-    if (navigation_group.check("waypoint_tolerance_lin")) { m_waypoint_tolerance_lin = navigation_group.find("waypoint_tolerance_lin").asDouble(); }
+    if (navigation_group.check("waypoint_tolerance_lin")) { m_waypoint_tolerance_lin = navigation_group.find("waypoint_tolerance_lin").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_tolerance_lin parameter"; return false; }
-    if (navigation_group.check("waypoint_tolerance_ang")) { m_waypoint_tolerance_ang = navigation_group.find("waypoint_tolerance_ang").asDouble(); }
+    if (navigation_group.check("waypoint_tolerance_ang")) { m_waypoint_tolerance_ang = navigation_group.find("waypoint_tolerance_ang").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_tolerance_ang parameter"; return false; }
-    if (navigation_group.check("goal_tolerance_lin")) { m_goal_tolerance_lin = navigation_group.find("goal_tolerance_lin").asDouble(); }
+    if (navigation_group.check("goal_tolerance_lin")) { m_goal_tolerance_lin = navigation_group.find("goal_tolerance_lin").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_tolerance_lin parameter"; return false; }
-    if (navigation_group.check("goal_tolerance_ang")) { m_goal_tolerance_ang = navigation_group.find("goal_tolerance_ang").asDouble(); }
+    if (navigation_group.check("goal_tolerance_ang")) { m_goal_tolerance_ang = navigation_group.find("goal_tolerance_ang").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_tolerance_ang parameter"; return false; }
-    if (navigation_group.check("use_optimized_path")) { int p = navigation_group.find("use_optimized_path").asInt(); m_use_optimized_path = (p == 1); }
+    if (navigation_group.check("use_optimized_path")) { int p = navigation_group.find("use_optimized_path").asInt32(); m_use_optimized_path = (p == 1); }
     else { yCError(PATHPLAN_INIT) << "Missing use_optimized_path parameter"; return false; }
-    if (navigation_group.check("waypoint_max_lin_speed")) { m_waypoint_max_lin_speed = navigation_group.find("waypoint_max_lin_speed").asDouble(); }
+    if (navigation_group.check("waypoint_max_lin_speed")) { m_waypoint_max_lin_speed = navigation_group.find("waypoint_max_lin_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_max_lin_speed parameter"; return false; }
-    if (navigation_group.check("waypoint_max_ang_speed")) { m_waypoint_max_ang_speed = navigation_group.find("waypoint_max_ang_speed").asDouble(); }
+    if (navigation_group.check("waypoint_max_ang_speed")) { m_waypoint_max_ang_speed = navigation_group.find("waypoint_max_ang_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_max_ang_speed parameter"; return false; }
-    if (navigation_group.check("waypoint_min_lin_speed")) { m_waypoint_min_lin_speed = navigation_group.find("waypoint_min_lin_speed").asDouble(); }
+    if (navigation_group.check("waypoint_min_lin_speed")) { m_waypoint_min_lin_speed = navigation_group.find("waypoint_min_lin_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_min_lin_speed parameter"; return false; }
-    if (navigation_group.check("waypoint_min_ang_speed")) { m_waypoint_min_ang_speed = navigation_group.find("waypoint_min_ang_speed").asDouble(); }
+    if (navigation_group.check("waypoint_min_ang_speed")) { m_waypoint_min_ang_speed = navigation_group.find("waypoint_min_ang_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_min_ang_speed parameter"; return false; }
-    if (navigation_group.check("waypoint_lin_speed_gain")) { m_waypoint_lin_gain = navigation_group.find("waypoint_lin_speed_gain").asDouble(); }
+    if (navigation_group.check("waypoint_lin_speed_gain")) { m_waypoint_lin_gain = navigation_group.find("waypoint_lin_speed_gain").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_lin_speed_gain parameter"; return false; }
-    if (navigation_group.check("waypoint_ang_speed_gain")) { m_waypoint_ang_gain = navigation_group.find("waypoint_ang_speed_gain").asDouble(); }
+    if (navigation_group.check("waypoint_ang_speed_gain")) { m_waypoint_ang_gain = navigation_group.find("waypoint_ang_speed_gain").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing waypoint_ang_speed_gain parameter"; return false; }
-    if (navigation_group.check("goal_max_lin_speed")) { m_goal_max_lin_speed = navigation_group.find("goal_max_lin_speed").asDouble(); }
+    if (navigation_group.check("goal_max_lin_speed")) { m_goal_max_lin_speed = navigation_group.find("goal_max_lin_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_max_lin_speed parameter"; return false; }
-    if (navigation_group.check("goal_max_ang_speed")) { m_goal_max_ang_speed = navigation_group.find("goal_max_ang_speed").asDouble(); }
+    if (navigation_group.check("goal_max_ang_speed")) { m_goal_max_ang_speed = navigation_group.find("goal_max_ang_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_max_ang_speed parameter"; return false; }
-    if (navigation_group.check("goal_min_lin_speed")) { m_goal_min_lin_speed = navigation_group.find("goal_min_lin_speed").asDouble(); }
+    if (navigation_group.check("goal_min_lin_speed")) { m_goal_min_lin_speed = navigation_group.find("goal_min_lin_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_min_lin_speed parameter"; return false; }
-    if (navigation_group.check("goal_min_ang_speed")) { m_goal_min_ang_speed = navigation_group.find("goal_min_ang_speed").asDouble(); }
+    if (navigation_group.check("goal_min_ang_speed")) { m_goal_min_ang_speed = navigation_group.find("goal_min_ang_speed").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_min_ang_speed parameter"; return false; }
-    if (navigation_group.check("goal_lin_speed_gain")) { m_goal_lin_gain = navigation_group.find("goal_lin_speed_gain").asDouble(); }
+    if (navigation_group.check("goal_lin_speed_gain")) { m_goal_lin_gain = navigation_group.find("goal_lin_speed_gain").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_lin_speed_gain parameter"; return false; }
-    if (navigation_group.check("goal_ang_speed_gain")) { m_goal_ang_gain = navigation_group.find("goal_ang_speed_gain").asDouble(); }
+    if (navigation_group.check("goal_ang_speed_gain")) { m_goal_ang_gain = navigation_group.find("goal_ang_speed_gain").asFloat64(); }
     else { yCError(PATHPLAN_INIT) << "Missing goal_ang_speed_gain parameter"; return false; }
-    if (navigation_group.check("min_waypoint_distance")) { m_min_waypoint_distance = navigation_group.find("min_waypoint_distance").asInt(); }
+    if (navigation_group.check("min_waypoint_distance")) { m_min_waypoint_distance = navigation_group.find("min_waypoint_distance").asInt32(); }
     else { yCError(PATHPLAN_INIT) << "Missing min_waypoint_distance parameter"; return false; }
-    if (navigation_group.check("enable_try_recovery")) { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt() == 1); }
+    if (navigation_group.check("enable_try_recovery")) { m_enable_try_recovery = (navigation_group.find("enable_try_recovery").asInt32() == 1); }
     else { yCError(PATHPLAN_INIT) << "Missing enable_try_recovery parameter"; return false; }
 
     Bottle general_group = m_cfg.findGroup("PATHPLANNER_GENERAL");
@@ -148,10 +148,10 @@ bool PlannerThread::threadInit()
     ff &= geometry_group.check("laser_pos_theta");
     if (ff)
     {
-        m_robot_radius = geometry_group.find("robot_radius").asDouble();
-        m_robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
-        m_robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
-        m_robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
+        m_robot_radius = geometry_group.find("robot_radius").asFloat64();
+        m_robot_laser_x = geometry_group.find("laser_pos_x").asFloat64();
+        m_robot_laser_y = geometry_group.find("laser_pos_y").asFloat64();
+        m_robot_laser_t = geometry_group.find("laser_pos_theta").asFloat64();
     }
     else
     {

@@ -34,26 +34,26 @@ bool GazeController::init(GazeCtrlUsedCamera cam, yarp::os::ResourceFinder &rf, 
     {
         if(gaze_group.check("pixel_x_range"))
         {
-            xpixelRange.first=gaze_group.find("pixel_x_range").asList()->get(0).asInt();
-            xpixelRange.second=gaze_group.find("pixel_x_range").asList()->get(1).asInt();
+            xpixelRange.first=gaze_group.find("pixel_x_range").asList()->get(0).asInt32();
+            xpixelRange.second=gaze_group.find("pixel_x_range").asList()->get(1).asInt32();
         }
 
         if(gaze_group.check("pixel_y_range"))
         {
-            ypixelRange.first=gaze_group.find("pixel_y_range").asList()->get(0).asInt();
-            ypixelRange.second=gaze_group.find("pixel_y_range").asList()->get(1).asInt();
+            ypixelRange.first=gaze_group.find("pixel_y_range").asList()->get(0).asInt32();
+            ypixelRange.second=gaze_group.find("pixel_y_range").asList()->get(1).asInt32();
         }
 
         if(gaze_group.check("trajTimeInLookingup"))
         {
-            m_trajectoryTime=gaze_group.find("trajTimeInLookingup").asDouble();
+            m_trajectoryTime=gaze_group.find("trajTimeInLookingup").asFloat64();
         }
         else
             m_trajectoryTime = 10;//sec
 
         if(gaze_group.check("trajTime_timeout"))
         {
-            m_lookup_timeout=gaze_group.find("trajTime_timeout").asDouble();
+            m_lookup_timeout=gaze_group.find("trajTime_timeout").asFloat64();
         }
     }
 
@@ -314,8 +314,8 @@ bool GazeController::lookAtPixel(double u, double v)
 
     Bottle location = yarp::os::Bottle();
     Bottle &val = location.addList();
-    val.addDouble(u);
-    val.addDouble(v);
+    val.addFloat64(u);
+    val.addFloat64(v);
     p.put("target-location",location.get(0));
     m_outputPort2gazeCtr.write();
 
@@ -365,8 +365,8 @@ bool GazeController::lookAtAngle(double a, double b)
 
     Bottle target;
     Bottle &val = target.addList();
-    val.addDouble(a);
-    val.addDouble(b);
+    val.addFloat64(a);
+    val.addFloat64(b);
     p.put("target-location",target.get(0));
 
    if(m_debugOn)
@@ -411,7 +411,7 @@ bool GazeController::setTrajectoryTime(double T)
 
     cmd.addString("set");
     cmd.addString("T");
-    cmd.addDouble(T);
+    cmd.addFloat64(T);
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
@@ -444,7 +444,7 @@ bool GazeController::getTrajectoryTime(void)
 
     if(ans.get(0).toString() == "ack")
     {
-        m_trajectoryTimeDefault=ans.get(1).asDouble();
+        m_trajectoryTimeDefault=ans.get(1).asFloat64();
         return true;
     }
     else
@@ -469,9 +469,9 @@ bool GazeController::checkMotionDone(void)
    if(m_debugOn)
        yCDebug(FOLLOWER_GAZE) << "GazeController: rpc_cmd=" << cmd.toString() << "Ans=" << ans.toString();
 
-    if(ans.get(0).asVocab() == yarp::os::Vocab::encode("ack"))
+    if(ans.get(0).asVocab32() == yarp::os::Vocab32::encode("ack"))
     {
-        if(ans.get(1).asInt() == 1)
+        if(ans.get(1).asInt32() == 1)
         {
             return true;
         }
@@ -525,7 +525,7 @@ count =0;
 
     m_rpcPort2gazeCtr.write(cmd, ans);
 
-    if(ans.get(0).asVocab() == yarp::os::Vocab::encode("ack"))
+    if(ans.get(0).asVocab32() == yarp::os::Vocab32::encode("ack"))
     {
         return true;
     }

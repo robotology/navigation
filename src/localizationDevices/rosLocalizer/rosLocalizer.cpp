@@ -61,7 +61,7 @@ void rosLocalizerRPCHandler::setInterface(rosLocalizer* iface)
 bool rosLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
     reply.clear();
-    reply.addVocab(Vocab::encode("many"));
+    reply.addVocab32(Vocab32::encode("many"));
     reply.addString("Not yet Implemented");
     return true;
 }
@@ -426,7 +426,7 @@ bool rosLocalizerThread::threadInit()
         yCError(ROS_LOC) << "Missing `connect_to_yarp_mapserver` in [MAP] group";
         return false;
     }
-    m_use_map_server= (map_group.find("connect_to_yarp_mapserver").asInt()==1);
+    m_use_map_server= (map_group.find("connect_to_yarp_mapserver").asInt32()==1);
 
     //tf group
     if (tf_group.check("map_frame_id") == false)
@@ -542,11 +542,11 @@ bool rosLocalizer::open(yarp::os::Searchable& config)
         yCError(ROS_LOC) << "Missing INITIAL_POS group!";
         return false;
     }
-    if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
+    if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asFloat64(); }
     else { yCError(ROS_LOC) << "missing initial_x param"; return false; }
-    if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
+    if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asFloat64(); }
     else { yCError(ROS_LOC) << "missing initial_y param"; return false; }
-    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
+    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asFloat64(); }
     else { yCError(ROS_LOC) << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map"))   { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
     else { yCError(ROS_LOC) << "missing initial_map param"; return false; }

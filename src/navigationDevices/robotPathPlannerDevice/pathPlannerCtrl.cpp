@@ -267,56 +267,56 @@ void PlannerThread::run()
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("linear_tol");
-                        cmd.addDouble(m_goal_tolerance_lin);
+                        cmd.addFloat64(m_goal_tolerance_lin);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd2, ans2;
                         cmd2.addString("set");
                         cmd2.addString("angular_tol");
-                        cmd2.addDouble(m_goal_tolerance_ang);
+                        cmd2.addFloat64(m_goal_tolerance_ang);
                         m_port_commands_output.write(cmd2, ans2);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("min_lin_speed");
-                        cmd.addDouble(m_goal_min_lin_speed);
+                        cmd.addFloat64(m_goal_min_lin_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("max_lin_speed");
-                        cmd.addDouble(m_goal_max_lin_speed);
+                        cmd.addFloat64(m_goal_max_lin_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("min_ang_speed");
-                        cmd.addDouble(m_goal_min_ang_speed);
+                        cmd.addFloat64(m_goal_min_ang_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("max_ang_speed");
-                        cmd.addDouble(m_goal_max_ang_speed);
+                        cmd.addFloat64(m_goal_max_ang_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("ang_speed_gain");
-                        cmd.addDouble(m_goal_ang_gain);
+                        cmd.addFloat64(m_goal_ang_gain);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("lin_speed_gain");
-                        cmd.addDouble(m_goal_lin_gain);
+                        cmd.addFloat64(m_goal_lin_gain);
                         m_port_commands_output.write(cmd, ans);
                     }
                     sendFinalGoal();
@@ -334,42 +334,42 @@ void PlannerThread::run()
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("min_lin_speed");
-                        cmd.addDouble(m_waypoint_min_lin_speed);
+                        cmd.addFloat64(m_waypoint_min_lin_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("max_lin_speed");
-                        cmd.addDouble(m_waypoint_max_lin_speed);
+                        cmd.addFloat64(m_waypoint_max_lin_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("min_ang_speed");
-                        cmd.addDouble(m_waypoint_min_ang_speed);
+                        cmd.addFloat64(m_waypoint_min_ang_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("max_ang_speed");
-                        cmd.addDouble(m_waypoint_max_ang_speed);
+                        cmd.addFloat64(m_waypoint_max_ang_speed);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("ang_speed_gain");
-                        cmd.addDouble(m_waypoint_ang_gain);
+                        cmd.addFloat64(m_waypoint_ang_gain);
                         m_port_commands_output.write(cmd, ans);
                     }
                     {
                         Bottle cmd, ans;
                         cmd.addString("set");
                         cmd.addString("lin_speed_gain");
-                        cmd.addDouble(m_waypoint_lin_gain);
+                        cmd.addFloat64(m_waypoint_lin_gain);
                         m_port_commands_output.write(cmd, ans);
                     }
                     sendWaypoint();
@@ -449,56 +449,56 @@ void PlannerThread::run()
                     Bottle cmd1, ans1;
                     cmd1.addString("set");
                     cmd1.addString("linear_tol");
-                    cmd1.addDouble(m_waypoint_tolerance_lin);
+                    cmd1.addFloat64(m_waypoint_tolerance_lin);
                     m_port_commands_output.write(cmd1, ans1);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("angular_tol");
-                    cmd.addDouble(m_waypoint_tolerance_ang);
+                    cmd.addFloat64(m_waypoint_tolerance_ang);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("max_lin_speed");
-                    cmd.addDouble(m_waypoint_max_lin_speed);
+                    cmd.addFloat64(m_waypoint_max_lin_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("max_ang_speed");
-                    cmd.addDouble(m_waypoint_max_ang_speed);
+                    cmd.addFloat64(m_waypoint_max_ang_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("min_lin_speed");
-                    cmd.addDouble(m_waypoint_min_lin_speed);
+                    cmd.addFloat64(m_waypoint_min_lin_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("min_ang_speed");
-                    cmd.addDouble(m_waypoint_min_ang_speed);
+                    cmd.addFloat64(m_waypoint_min_ang_speed);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("ang_speed_gain");
-                    cmd.addDouble(m_waypoint_ang_gain);
+                    cmd.addFloat64(m_waypoint_ang_gain);
                     m_port_commands_output.write(cmd, ans);
                 }
                 {
                     Bottle cmd, ans;
                     cmd.addString("set");
                     cmd.addString("lin_speed_gain");
-                    cmd.addDouble(m_waypoint_lin_gain);
+                    cmd.addFloat64(m_waypoint_lin_gain);
                     m_port_commands_output.write(cmd, ans);
                 }
                 sendWaypoint();

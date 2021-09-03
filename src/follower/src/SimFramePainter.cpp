@@ -73,17 +73,17 @@ void SimFramePainter::paint(const yarp::sig::Vector &point)
         ans.clear();
 
         cmd.addString("makeFrame");
-        cmd.addDouble(0.2); //size
-        cmd.addDouble(point[0]);
-        cmd.addDouble(point[1]); //y
-        cmd.addDouble(point[2]); //z
-        cmd.addDouble(0); //r
-        cmd.addDouble(0); //p
-        cmd.addDouble(0); //y
+        cmd.addFloat64(0.2); //size
+        cmd.addFloat64(point[0]);
+        cmd.addFloat64(point[1]); //y
+        cmd.addFloat64(point[2]); //z
+        cmd.addFloat64(0); //r
+        cmd.addFloat64(0); //p
+        cmd.addFloat64(0); //y
         //orange color on central ball
-        cmd.addInt(0); //red
-        cmd.addInt(0); //green
-        cmd.addInt(0); //blue
+        cmd.addInt32(0); //red
+        cmd.addInt32(0); //green
+        cmd.addInt32(0); //blue
         cmd.addString(m_frameIdOfRef); /*head_leopard_left*/ //frame name
         cmd.addString(m_nameOfFrame); //box obj name
 
@@ -120,12 +120,12 @@ void SimFramePainter::paint(const yarp::sig::Vector &point)
     //send command for new position
     cmdSet.addString("setPose");
     cmdSet.addString(m_nameOfFrame);
-    cmdSet.addDouble(point[0]);
-    cmdSet.addDouble(point[1]);
-    cmdSet.addDouble(point[2]); // z
-    cmdSet.addDouble(ansGet.get(3).asDouble()); // r
-    cmdSet.addDouble(ansGet.get(4).asDouble()); // p
-    cmdSet.addDouble(ansGet.get(5).asDouble()); // y
+    cmdSet.addFloat64(point[0]);
+    cmdSet.addFloat64(point[1]);
+    cmdSet.addFloat64(point[2]); // z
+    cmdSet.addFloat64(ansGet.get(3).asFloat64()); // r
+    cmdSet.addFloat64(ansGet.get(4).asFloat64()); // p
+    cmdSet.addFloat64(ansGet.get(5).asFloat64()); // y
     cmdSet.addString(m_frameIdOfRef);
     m_worldInterfacePort_ptr->write(cmdSet, ansSet);
 

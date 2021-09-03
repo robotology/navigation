@@ -143,7 +143,7 @@ bool CtrlModule::configure(ResourceFinder &rf)
     }
 
     //set the thread rate
-    double period = rf.check("period",Value(0.020)).asDouble();
+    double period = rf.check("period",Value(0.020)).asFloat64();
     yCInfo(BASECONTROL,"baseCtrl thread period: %f s.",period);
 
     //verbosity
@@ -217,7 +217,7 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
     reply.clear(); 
     if (command.get(0).asString()=="help")
     {
-        reply.addVocab(Vocab::encode("many"));
+        reply.addVocab32(Vocab32::encode("many"));
         reply.addString("Available commands are:");
         reply.addString("run");
         reply.addString("idle");
@@ -259,7 +259,7 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
     {
         if (control_thr)
         {
-            if (command.get(1).asInt()>0)
+            if (command.get(1).asInt32()>0)
                 {control_thr->enable_debug(true); reply.addString("debug mode on");}
             else
                 {control_thr->enable_debug(false); reply.addString("debug mode off");}
@@ -270,8 +270,8 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
     {
         if (control_thr)
         {
-            if (command.get(1).asInt()>0) 
-                {control_thr->set_input_filter(command.get(1).asInt()); reply.addString("Prefilter on");}
+            if (command.get(1).asInt32()>0) 
+                {control_thr->set_input_filter(command.get(1).asInt32()); reply.addString("Prefilter on");}
             else
                 {control_thr->set_input_filter(0); reply.addString("Prefilter off");}
         }
@@ -281,7 +281,7 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
     {
         if (control_thr)
         {
-            int f= command.get(1).asInt();
+            int f= command.get(1).asInt32();
             if (f==1) 
                 {control_thr->get_motor_handler()->set_motors_filter(MotorControl::HZ_1); reply.addString("Motors filter on");}
             if (f==2) 
@@ -338,9 +338,9 @@ bool CtrlModule::respond(const Bottle& command, Bottle& reply)
         if (control_thr)
         {
             string identif = command.get(1).asString().c_str();
-            double kp = command.get(2).asDouble();
-            double ki = command.get(3).asDouble();
-            double kd = command.get(4).asDouble();
+            double kp = command.get(2).asFloat64();
+            double ki = command.get(3).asFloat64();
+            double kd = command.get(4).asFloat64();
             control_thr->set_pid(identif,kp,ki,kd);
             reply.addString("New pid parameters set.");
             yCInfo(BASECONTROL,"New pid parameters set.");

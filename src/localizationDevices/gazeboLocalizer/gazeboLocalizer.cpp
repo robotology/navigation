@@ -53,7 +53,7 @@ void gazeboLocalizerRPCHandler::setInterface(gazeboLocalizer* iface)
 bool gazeboLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
     reply.clear();
-    reply.addVocab(Vocab::encode("many"));
+    reply.addVocab32(Vocab32::encode("many"));
     reply.addString("Not yet Implemented");
     return true;
 }
@@ -228,11 +228,11 @@ bool gazeboLocalizerThread::threadInit()
 
     //initial location initialization
     Map2DLocation tmp_loc;
-    if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asDouble(); }
+    if (initial_group.check("map_transform_x")) { tmp_loc.x = initial_group.find("map_transform_x").asFloat64(); }
     else { yCError(GAZEBO_LOC) << "missing map_transform_x param"; return false; }
-    if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asDouble(); }
+    if (initial_group.check("map_transform_y")) { tmp_loc.y = initial_group.find("map_transform_y").asFloat64(); }
     else { yCError(GAZEBO_LOC) << "missing map_transform_y param"; return false; }
-    if (initial_group.check("map_transform_t")) { tmp_loc.theta = initial_group.find("map_transform_t").asDouble(); }
+    if (initial_group.check("map_transform_t")) { tmp_loc.theta = initial_group.find("map_transform_t").asFloat64(); }
     else { yCError(GAZEBO_LOC) << "missing map_transform_t param"; return false; }
     if (initial_group.check("initial_map")) { tmp_loc.map_id = initial_group.find("initial_map").asString(); }
     else { yCError(GAZEBO_LOC) << "missing initial_map param"; return false; }
@@ -260,7 +260,7 @@ bool gazeboLocalizer::open(yarp::os::Searchable& config)
     if (general_group.isNull() == false)
     {
         if (general_group.check("name")) { m_name = general_group.find("local_name").asString(); }
-        if (general_group.check("period")) { period = general_group.find("period").asDouble(); }
+        if (general_group.check("period")) { period = general_group.find("period").asFloat64(); }
     }
 
     thread = new gazeboLocalizerThread(period, m_name, p);

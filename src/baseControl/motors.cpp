@@ -140,14 +140,14 @@ bool MotorControl::open(const Property &_options)
         return false;
     }
 
-    int f = motors_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+    int f = motors_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt32();
     motors_filter_enabled = DISABLED;
     if (f==1) motors_filter_enabled = HZ_1;
     else if (f==2) motors_filter_enabled = HZ_2;
     else if (f==4) motors_filter_enabled = HZ_4;
     else if (f==8) motors_filter_enabled = HZ_8;
-    max_motor_pwm = motors_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
-    max_motor_vel = motors_options.check("max_motor_vel", Value(0), "max_motor_vel").asDouble();
+    max_motor_pwm = motors_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asFloat64();
+    max_motor_vel = motors_options.check("max_motor_vel", Value(0), "max_motor_vel").asFloat64();
 
     localName = ctrl_options.find("local").asString();
 
@@ -215,7 +215,7 @@ void MotorControl::printStats()
         t.clear();
         for (int i=0; i<motors_num; i++)
         {
-            string s = yarp::os::Vocab::decode(board_control_modes[i]);
+            string s = yarp::os::Vocab32::decode(board_control_modes[i]);
             t.addString(s);
         }
         port_status.write();

@@ -203,11 +203,11 @@ void CtrlThread::run()
 
     //send data to yarp output port (to baseControl)
     Bottle bot; 
-    bot.addInt(1);
-    bot.addDouble(desired_direction);
-    bot.addDouble(linear_speed);
-    bot.addDouble(angular_speed);
-    bot.addDouble(pwm_gain);
+    bot.addInt32(1);
+    bot.addFloat64(desired_direction);
+    bot.addFloat64(linear_speed);
+    bot.addFloat64(angular_speed);
+    bot.addFloat64(pwm_gain);
     commands_out_port.write(bot);
 }
 

@@ -147,9 +147,9 @@ bool iKart_Odometry::open(const Property &_options)
         yCError(IKART_ODOM,"Missing param g_angle in [ROBOT_GEOMETRY] group");
         return false;
     }
-    geom_r = geometry_group.find("geom_r").asDouble();
-    geom_L = geometry_group.find("geom_L").asDouble();
-    g_angle = geometry_group.find("g_angle").asDouble();
+    geom_r = geometry_group.find("geom_r").asFloat64();
+    geom_L = geometry_group.find("geom_L").asFloat64();
+    g_angle = geometry_group.find("g_angle").asFloat64();
     geometry_group.toString();
     return true;
 }

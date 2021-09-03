@@ -72,10 +72,10 @@ obstacles_class::obstacles_class(Searchable &rf)
 
     if (ff)
     {
-        m_robot_radius = geometry_group.find("robot_radius").asDouble();
-        m_robot_laser_x = geometry_group.find("laser_pos_x").asDouble();
-        m_robot_laser_y = geometry_group.find("laser_pos_y").asDouble();
-        m_robot_laser_t = geometry_group.find("laser_pos_theta").asDouble();
+        m_robot_radius = geometry_group.find("robot_radius").asFloat64();
+        m_robot_laser_x = geometry_group.find("laser_pos_x").asFloat64();
+        m_robot_laser_y = geometry_group.find("laser_pos_y").asFloat64();
+        m_robot_laser_t = geometry_group.find("laser_pos_theta").asFloat64();
     }
     else
     {
@@ -89,12 +89,12 @@ obstacles_class::obstacles_class(Searchable &rf)
         yCError(GOTO_OBSTACLES) << "Missing OBSTACLES_EMERGENCY_STOP group!";
     }
 
-    if (obstacles_stop_group.check("enable_dynamic_max_distance", Value(0)).asInt() == 1)
+    if (obstacles_stop_group.check("enable_dynamic_max_distance", Value(0)).asInt32() == 1)
         m_enable_dynamic_max_distance = true;
 
-    m_max_obstacle_waiting_time = obstacles_stop_group.check("max_waiting_time", Value(60.0)).asDouble();
-    m_max_detection_distance = obstacles_stop_group.check("max_detection_distance", Value(1.5)).asDouble();
-    m_min_detection_distance = obstacles_stop_group.check("min_detection_distance", Value(0.4)).asDouble();
+    m_max_obstacle_waiting_time = obstacles_stop_group.check("max_waiting_time", Value(60.0)).asFloat64();
+    m_max_detection_distance = obstacles_stop_group.check("max_detection_distance", Value(1.5)).asFloat64();
+    m_min_detection_distance = obstacles_stop_group.check("min_detection_distance", Value(0.4)).asFloat64();
 
     //////////////
     Bottle obstacles_avoidance_group = rf.findGroup("OBSTACLES_AVOIDANCE");
@@ -104,10 +104,10 @@ obstacles_class::obstacles_class(Searchable &rf)
     }
 
     if (obstacles_avoidance_group.check("frontal_blind_angle"))
-        m_frontal_blind_angle = obstacles_avoidance_group.check("frontal_blind_angle", Value(25.0)).asDouble();
+        m_frontal_blind_angle = obstacles_avoidance_group.check("frontal_blind_angle", Value(25.0)).asFloat64();
 
     if (obstacles_avoidance_group.check("speed_reduction_factor"))
-        m_speed_reduction_factor = obstacles_avoidance_group.check("speed_reduction_factor", Value(0.70)).asDouble();
+        m_speed_reduction_factor = obstacles_avoidance_group.check("speed_reduction_factor", Value(0.70)).asFloat64();
 }
 
 //checks if a point is inside a polygon

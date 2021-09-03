@@ -63,7 +63,7 @@ bool FreeFloorThread::threadInit()
         if (pointcloud_clip_config.check("ceiling_height"))   {m_ceiling_height = pointcloud_clip_config.find("ceiling_height").asFloat64();}
         if (pointcloud_clip_config.check("ground_frame_id")) {m_ground_frame_id = pointcloud_clip_config.find("ground_frame_id").asString();}
         if (pointcloud_clip_config.check("camera_frame_id")) {m_camera_frame_id = pointcloud_clip_config.find("camera_frame_id").asString();}
-        if (pointcloud_clip_config.check("column_granularity")) {m_col_granularity = pointcloud_clip_config.find("column_granularity").asInt();}
+        if (pointcloud_clip_config.check("column_granularity")) {m_col_granularity = pointcloud_clip_config.find("column_granularity").asInt32();}
     }
 
     // --------- Point cloud quality -------- //
@@ -71,8 +71,8 @@ bool FreeFloorThread::threadInit()
     if(okPCQuality)
     {
         yarp::os::Searchable& pointcloud_qual_config = m_rf.findGroup("POINTCLOUD_QUALITY");
-        if (pointcloud_qual_config.check("x_step"))   {m_pc_stepx = pointcloud_qual_config.find("x_step").asInt();}
-        if (pointcloud_qual_config.check("y_step"))   {m_pc_stepy = pointcloud_qual_config.find("y_step").asInt();}
+        if (pointcloud_qual_config.check("x_step"))   {m_pc_stepx = pointcloud_qual_config.find("x_step").asInt32();}
+        if (pointcloud_qual_config.check("y_step"))   {m_pc_stepy = pointcloud_qual_config.find("y_step").asInt32();}
     }
 
     // --------- RGBDSensor config --------- //
@@ -339,12 +339,12 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
 
 void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
 {
-    size_t u = b.get(0).asInt();
+    size_t u = b.get(0).asInt32();
     if(u >= m_rgbImage.width() || u<0)
     {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
     }
-    size_t v = b.get(1).asInt();
+    size_t v = b.get(1).asInt32();
     if(v >= m_rgbImage.height() || v<0)
     {
         yCError(FREE_FLOOR_THREAD, "Pixel outside image boundaries");
@@ -380,9 +380,9 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
         yCError(FREE_FLOOR_THREAD,"An error occurred while retrieving the rgb camera FOV");
     }
 
-    int deltaPx = (b.get(0).asInt()-b.get(2).asInt());
+    int deltaPx = (b.get(0).asInt32()-b.get(2).asInt32());
     double rotation = (double)deltaPx * horizFOV/m_depth_width;
-    //int sign = (b.get(0).asInt()-b.get(2).asInt())/(abs(b.get(0).asInt()-b.get(2).asInt())>0?abs(b.get(0).asInt()-b.get(2).asInt()):1);
+    //int sign = (b.get(0).asInt32()-b.get(2).asInt32())/(abs(b.get(0).asInt32()-b.get(2).asInt32())>0?abs(b.get(0).asInt32()-b.get(2).asInt32()):1);
     if(m_nav2DPoly.isValid())
     {
         m_iNav2D->gotoTargetByRelativeLocation(0.0,0.0,rotation);

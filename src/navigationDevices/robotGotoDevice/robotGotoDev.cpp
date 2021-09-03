@@ -110,9 +110,9 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
 
     else if (command.get(0).isString() && command.get(0).asString() == "approach")
     {
-        double dir    = command.get(1).asDouble();
-        double speed  = command.get(2).asDouble();
-        double time   = command.get(3).asDouble();
+        double dir    = command.get(1).asFloat64();
+        double speed  = command.get(2).asFloat64();
+        double time   = command.get(3).asFloat64();
         gotoThread->approachTarget(dir,speed,time);
         reply.addString("approach command received");
     }
@@ -121,47 +121,47 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
     {
         if (command.get(1).asString() == "linear_tol")
         {
-            gotoThread->m_goal_tolerance_lin = command.get(2).asDouble();
+            gotoThread->m_goal_tolerance_lin = command.get(2).asFloat64();
             reply.addString("linear_tol set.");
         }
         else if (command.get(1).asString() == "angular_tol")
         {
-            gotoThread->m_goal_tolerance_ang = command.get(2).asDouble();
+            gotoThread->m_goal_tolerance_ang = command.get(2).asFloat64();
             reply.addString("angular_tol set.");
         }
         else if (command.get(1).asString() == "max_lin_speed")
         {
-            gotoThread->m_max_lin_speed = command.get(2).asDouble();
+            gotoThread->m_max_lin_speed = command.get(2).asFloat64();
             reply.addString("max_lin_speed set.");
         }
         else if (command.get(1).asString() == "max_ang_speed")
         {
-            gotoThread->m_max_ang_speed = command.get(2).asDouble();
+            gotoThread->m_max_ang_speed = command.get(2).asFloat64();
             reply.addString("max_ang_speed set.");
         }
         else if (command.get(1).asString() == "min_lin_speed")
         {
-            gotoThread->m_min_lin_speed = command.get(2).asDouble();
+            gotoThread->m_min_lin_speed = command.get(2).asFloat64();
             reply.addString("min_lin_speed set.");
         }
         else if (command.get(1).asString() == "min_ang_speed")
         {
-            gotoThread->m_min_ang_speed = command.get(2).asDouble();
+            gotoThread->m_min_ang_speed = command.get(2).asFloat64();
             reply.addString("min_ang_speed set.");
         }
         else if (command.get(1).asString() == "ang_speed_gain")
         {
-            gotoThread->m_gain_ang = command.get(2).asDouble();
+            gotoThread->m_gain_ang = command.get(2).asFloat64();
             reply.addString("ang_speed_gain set.");
         }
         else if (command.get(1).asString() == "lin_speed_gain")
         {
-            gotoThread->m_gain_lin = command.get(2).asDouble();
+            gotoThread->m_gain_lin = command.get(2).asFloat64();
             reply.addString("lin_speed_gain set.");
         }
         else if (command.get(1).asString() == "obstacle_avoidance")
         {
-            if (command.get(2).asInt() == 0)
+            if (command.get(2).asInt32() == 0)
             {
                 reply.addString("enable_obstacles_avoidance=false");
                 gotoThread->m_enable_obstacles_avoidance = false;
@@ -174,7 +174,7 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
         }
         else if (command.get(1).asString() == "obstacle_stop")
         {
-            if (command.get(2).asInt()==0)
+            if (command.get(2).asInt32()==0)
             {
                 reply.addString("enable_obstacle_stop=false");
                 gotoThread->m_enable_obstacles_emergency_stop = false;
@@ -296,7 +296,7 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
 
     if (command.get(0).asString() == "help")
     {
-        reply.addVocab(Vocab::encode("many"));
+        reply.addVocab32(Vocab32::encode("many"));
         reply.addString("Available commands are:");
         reply.addString("approach <angle in degrees> <linear velocity> <time>");
         reply.addString("reset_params");
@@ -316,7 +316,7 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     else
     {
         yCError(GOTO_DEV) << "RobotGotoDev: Received invalid command type on RPC port";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     interface->gotoThread->m_mutex.post();

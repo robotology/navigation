@@ -154,7 +154,7 @@ public:
 
         if (rf.check("ceiling"))
         {
-			m_ceiling = rf.find("ceiling").asDouble();
+			m_ceiling = rf.find("ceiling").asFloat64();
 			yCInfo(MAP2GAZEBO) << "Using ceiling =" << m_ceiling <<"m";
 		}
 		
@@ -373,7 +373,7 @@ public:
 
             else if (command.get(0).asString()=="help")
             {
-                reply.addVocab(Vocab::encode("many"));
+                reply.addVocab32(Vocab32::encode("many"));
                 reply.addString("Available commands are:");
                 reply.addString("<not yet implemented>");
             }
