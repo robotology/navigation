@@ -46,7 +46,7 @@
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 #include <yarp/dev/Map2DPath.h>
 #include <yarp/dev/Map2DLocation.h>
-#include "map.h"
+#include <mapUtils.h>
 
 using namespace std;
 

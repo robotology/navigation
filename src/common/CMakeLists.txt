@@ -11,7 +11,10 @@ set(${LIBRARY_TARGET_NAME}_SRC
         movable_localization_device/movable_localization_device.cpp
         odometry_estimation/localization_device_with_estimated_odometry.cpp
         recovery_behaviors/recovery_behaviors.cpp
-        recovery_behaviors/stuck_detection.cpp)
+        recovery_behaviors/stuck_detection.cpp
+        planner_aStar/aStar.cpp
+        planner_aStar/mapUtils.cpp)
+
 
 
 set(${LIBRARY_TARGET_NAME}_HDR
@@ -19,7 +22,9 @@ set(${LIBRARY_TARGET_NAME}_HDR
         odometry_estimation/localization_device_with_estimated_odometry.h
         recovery_behaviors/recovery_behaviors.h
         recovery_behaviors/stuck_detection.h
-        include/navigation_defines.h)
+        include/navigation_defines.h
+        planner_aStar/aStar.h
+        planner_aStar/mapUtils.h)
 
 add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC} ${${LIBRARY_TARGET_NAME}_HDR})
 add_library(navigation::${LIBRARY_TARGET_NAME} ALIAS ${LIBRARY_TARGET_NAME})
@@ -31,6 +36,7 @@ set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       ${navigati
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/recovery_behaviors>" 
                                                          "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/movable_localization_device>"
                                                          "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/odometry_estimation>"
+                                                         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/planner_aStar>"
                                                          "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                          "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
 

@@ -24,7 +24,7 @@
 #include <string>
 #include <math.h>
 
-#include "map.h"
+#include "mapUtils.h"
 #include "aStar.h"
 
 using namespace std;
