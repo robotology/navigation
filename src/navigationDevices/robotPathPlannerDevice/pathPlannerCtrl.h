@@ -115,17 +115,17 @@ class PlannerThread: public yarp::os::PeriodicThread
     yarp::dev::PolyDriver                                  m_pLoc;
     yarp::dev::PolyDriver                                  m_pLas;
     yarp::dev::PolyDriver                                  m_pMap;
-    yarp::dev::IRangefinder2D*                             m_iLaser;
-    yarp::dev::Nav2D::IMap2D*                              m_iMap;
-    yarp::dev::Nav2D::ILocalization2D*                     m_iLoc;
+    yarp::dev::IRangefinder2D*                             m_iLaser = nullptr;
+    yarp::dev::Nav2D::IMap2D*                              m_iMap = nullptr;
+    yarp::dev::Nav2D::ILocalization2D*                     m_iLoc = nullptr;
 
     //yarp ports
     BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > m_port_map_output;
     BufferedPort<yarp::os::Bottle>                         m_port_status_output;
     RpcClient                                              m_port_commands_output;
     yarp::dev::PolyDriver                                  m_pInnerNav;
-    yarp::dev::Nav2D::INavigation2DControlActions*         m_iInnerNav_ctrl;
-    yarp::dev::Nav2D::INavigation2DTargetActions*          m_iInnerNav_target;
+    yarp::dev::Nav2D::INavigation2DControlActions*         m_iInnerNav_ctrl = nullptr;
+    yarp::dev::Nav2D::INavigation2DTargetActions*          m_iInnerNav_target = nullptr;
     std::string                                            m_localNavigatorPlugin_name;
 
     //internal data
@@ -141,7 +141,7 @@ class PlannerThread: public yarp::os::PeriodicThread
     //the path computed by the planner, stored a sequence of waypoints to be reached
     yarp::dev::Nav2D::Map2DPath                   m_computed_path;
     yarp::dev::Nav2D::Map2DPath                   m_computed_simplified_path;
-    yarp::dev::Nav2D::Map2DPath*                  m_current_path;
+    yarp::dev::Nav2D::Map2DPath*                  m_current_path = nullptr;
     yarp::dev::Nav2D::Map2DPath::iterator         m_current_path_iterator;
     std::deque< yarp::dev::Nav2D::Map2DLocation>  m_remaining_path;
 

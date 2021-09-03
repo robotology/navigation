@@ -48,8 +48,6 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_use_optimized_path = true;
     m_current_path = &m_computed_simplified_path;
     m_min_waypoint_distance = 0;
-    m_iLaser = 0;
-    m_iLoc = 0;
     m_min_laser_angle = 0;
     m_max_laser_angle = 0;
     m_robot_radius = 0;
@@ -59,8 +57,6 @@ PlannerThread::PlannerThread(double _period, Searchable &_cfg) :
     m_enable_try_recovery=false;
     m_stats_time_curr = yarp::os::Time::now();
     m_stats_time_last = yarp::os::Time::now();
-    m_iInnerNav_ctrl = 0;
-    m_iInnerNav_target = 0;
     m_force_map_reload = false;
     m_navigation_started_at_timeX = 0;
     m_final_goal_reached_at_timeX = 0;
@@ -186,7 +182,7 @@ bool PlannerThread::threadInit()
             return false;
         }
         m_pLoc.view(m_iLoc);
-        if (m_pLoc.isValid() == false || m_iLoc == 0)
+        if (m_pLoc.isValid() == false || m_iLoc == nullptr)
         {
             yCError(PATHPLAN_INIT) << "Unable to view localization interface";
             return false;
@@ -205,7 +201,7 @@ bool PlannerThread::threadInit()
             return false;
         }
         m_pMap.view(m_iMap);
-        if (m_iMap == 0)
+        if (m_iMap == nullptr)
         {
             yCError(PATHPLAN_INIT) << "Unable to open map interface";
             return false;
@@ -237,7 +233,7 @@ bool PlannerThread::threadInit()
             return false;
         }
         m_pLas.view(m_iLaser);
-        if (m_iLaser == 0)
+        if (m_iLaser == nullptr)
         {
             yCError(PATHPLAN_INIT) << "Unable to open laser interface";
             return false;
@@ -289,13 +285,13 @@ bool PlannerThread::threadInit()
             return false;
         }
         m_pInnerNav.view(m_iInnerNav_target);
-        if (m_iInnerNav_target == 0)
+        if (m_iInnerNav_target == nullptr)
         {
             yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_target interface";
             return false;
         }
         m_pInnerNav.view(m_iInnerNav_ctrl);
-        if (m_iInnerNav_ctrl == 0)
+        if (m_iInnerNav_ctrl == nullptr)
         {
             yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_ctrl interface";
             return false;
