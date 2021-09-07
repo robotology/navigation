@@ -1,12 +1,30 @@
-#
-# Copyright (C) 2016 iCub Facility - IIT Istituto Italiano di Tecnologia 
+# Copyright (C) 2021 IIT Istituto Italiano di Tecnologia 
 # Author: Marco Randazzo marco.randazzo@iit.it
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
-#
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.12)
 
-project(navigation VERSION 0.0.0.0)
+set(ROOT_PROJECT_NAME navigation)
+project(${ROOT_PROJECT_NAME} LANGUAGES C CXX
+                             VERSION 1.19.2)
+
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(YCM_REQUIRED_VERSION 0.11.0)
+set(YARP_REQUIRED_VERSION 3.5)
+
+find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
+find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
+
+if(YARP_math_FOUND)
+  set(ICUB_HAS_YARP TRUE CACHE BOOL "" FORCE)
+  message(STATUS "found libYARP_math")
+else()
+  set(ICUB_HAS_YARP FALSE CACHE BOOL "" FORCE)
+  message(FATAL_ERROR "YARP was found, but no libYARP_math was detected, please recompile yarp")
+endif()
 
 include(GNUInstallDirs)
 
@@ -45,7 +63,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 #### Find YARP, require that YARP version is at least ICUB_REQYARP_VERSION
-find_package(YARP 3.4 COMPONENTS os sig dev math gsl rosmsg idl_tools REQUIRED)
+find_package(YARP 3.5 COMPONENTS os sig dev math gsl rosmsg idl_tools REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
 
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
@@ -66,9 +84,11 @@ set_property(GLOBAL PROPERTY USE_FOLDERS 1)
 
 include(InstallBasicPackageFiles)
 install_basic_package_files(${PROJECT_NAME}
+                            NAMESPACE navigation::
                             VERSION ${${PROJECT_NAME}_VERSION}
+                            EXPORT navigation
                             COMPATIBILITY AnyNewerVersion
-                            VARS_PREFIX ${PROJECT_NAME}
+                            DEPENDENCIES ICUB
                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 include(AddUninstallTarget)
 

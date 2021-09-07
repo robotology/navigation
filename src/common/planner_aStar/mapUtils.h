@@ -50,6 +50,9 @@ namespace map_utilites
 
     // register new obstacles into a map
     void update_obstacles_map(yarp::dev::Nav2D::MapGrid2D& map_to_be_updated, const yarp::dev::Nav2D::MapGrid2D& obstacles_map);
+
+    // computes a list of areas crossed by given path
+    std::vector<yarp::dev::Nav2D::Map2DArea> compute_areas_to_cross(const yarp::dev::Nav2D::Map2DPath& path, const std::vector<yarp::dev::Nav2D::Map2DArea>& Areas);
 };
 
 #endif

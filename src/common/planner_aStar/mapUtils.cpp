@@ -165,3 +165,27 @@ bool map_utilites::findPath(MapGrid2D& map, XYCell start, XYCell goal, Map2DPath
     }
     return false;
 }
+
+std::vector<yarp::dev::Nav2D::Map2DArea> map_utilites::compute_areas_to_cross(const yarp::dev::Nav2D::Map2DPath& path, const std::vector<yarp::dev::Nav2D::Map2DArea>& Areas)
+{
+    std::vector<yarp::dev::Nav2D::Map2DLocation> waipoints = path.waypoints;
+    std::vector<yarp::dev::Nav2D::Map2DArea> AreasToReturn;
+    std::vector<yarp::dev::Nav2D::Map2DArea> AreasTmp = Areas;
+    yarp::dev::Nav2D::Map2DLocation location = waipoints[0];
+    yarp::dev::Nav2D::Map2DArea area = Areas[0];
+    for (int i = 0; i < waipoints.size(); i++)
+    {
+        location = waipoints[i];
+        for (int j = 0; j < AreasTmp.size(); j++)
+        {
+            area = AreasTmp[j];
+            if (area.checkLocationInsideArea(location))
+            {
+                AreasToReturn.push_back(area);
+                AreasTmp.erase(AreasTmp.begin() + j);
+                break;
+            }
+        }
+    }
+    return AreasToReturn;
+}

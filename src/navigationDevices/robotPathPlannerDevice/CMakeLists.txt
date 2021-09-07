@@ -18,8 +18,6 @@ yarp_add_plugin(robotPathPlannerDev robotPathPlannerDev.h robotPathPlannerDev.cp
                 pathPlannerCtrlActions.cpp pathPlannerCtrlGets.cpp pathPlannerCtrlInit.cpp
                 pathPlannerCtrlHelpers.cpp pathPlannerCtrlHelpers.h)
 
-include_directories (include)
-    
 target_link_libraries(robotPathPlannerDev YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
