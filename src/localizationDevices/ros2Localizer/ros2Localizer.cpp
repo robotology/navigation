@@ -93,7 +93,7 @@ void ros2LocalizerRPCHandler::setInterface(ros2Localizer* iface)
 bool ros2LocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
     reply.clear();
-    reply.addVocab(Vocab::encode("many"));
+    reply.addVocab32(Vocab::encode("many"));
     reply.addString("Not yet Implemented");
     return true;
 }
@@ -125,11 +125,11 @@ bool ros2Localizer::open(yarp::os::Searchable& config)
         yCError(ROS2_LOC) << "Missing INITIAL_POS group!";
         return false;
     }
-    if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asDouble(); }
+    if (initial_group.check("initial_x"))     { m_initial_loc.x = initial_group.find("initial_x").asFloat64(); }
     else { yCError(ROS2_LOC) << "missing initial_x param"; return false; }
-    if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asDouble(); }
+    if (initial_group.check("initial_y"))     { m_initial_loc.y = initial_group.find("initial_y").asFloat64(); }
     else { yCError(ROS2_LOC) << "missing initial_y param"; return false; }
-    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asDouble(); }
+    if (initial_group.check("initial_theta")) { m_initial_loc.theta = initial_group.find("initial_theta").asFloat64(); }
     else { yCError(ROS2_LOC) << "missing initial_theta param"; return false; }
     if (initial_group.check("initial_map"))   { m_initial_loc.map_id = initial_group.find("initial_map").asString(); }
     else { yCError(ROS2_LOC) << "missing initial_map param"; return false; }
@@ -377,8 +377,8 @@ bool ros2LocalizerThread::threadInit()
     if (ros_group.check("particles_topic"))
     {
         m_topic_particles = ros_group.find("particles_topic").asString();
-        m_ros2Subscriber_particles = Ros2Init::get().node->create_subscription<geometry_msgs::msg::PoseArray>(m_topic, 10, std::bind(&ros2LocalizerThread::particles_callback, this, _1));
-        if (m_rosSubscriber_particles == nullptr)
+        m_ros2Subscriber_particles = Ros2Init::get().node->create_subscription<geometry_msgs::msg::PoseArray>(m_topic_particles, 10, std::bind(&ros2LocalizerThread::particles_callback, this, _1));
+        if (m_ros2Subscriber_particles == nullptr)
         {
             yCError(ROS2_LOC) << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
             return false;
@@ -427,7 +427,7 @@ bool ros2LocalizerThread::threadInit()
     options.put("device", "frameTransformClient");
     if(!tf_group.check("ft_client_config"))
     {
-        yCWarning(ROS_LOC) << "Parameter 'ft_client_config' missing in [TF] group. Using default value: 'ftc_yarp_only.xml'";
+        yCWarning(ROS2_LOC) << "Parameter 'ft_client_config' missing in [TF] group. Using default value: 'ftc_yarp_only.xml'";
         options.put("filexml_option", "ftc_yarp_only.xml");
     }
     else
@@ -436,7 +436,7 @@ bool ros2LocalizerThread::threadInit()
     }
     if(!tf_group.check("ft_client_prefix"))
     {
-        yCWarning(ROS_LOC) << "Parameter 'ft_client_prefix' missing in [TF] group. Using: '/" << m_name << "'";
+        yCWarning(ROS2_LOC) << "Parameter 'ft_client_prefix' missing in [TF] group. Using: '/" << m_name << "'";
         options.put("ft_client_prefix", m_name);
     }
     else
@@ -446,7 +446,7 @@ bool ros2LocalizerThread::threadInit()
 
     if(!tf_group.check("ft_server_prefix"))
     {
-        yCWarning(ROS_LOC) << "Parameter 'ft_server_prefix' missing in [TF] group. Using an empty string";
+        yCWarning(ROS2_LOC) << "Parameter 'ft_server_prefix' missing in [TF] group. Using an empty string";
     }
     else
     {
@@ -487,10 +487,6 @@ bool ros2LocalizerThread::threadInit()
             }
         }
     }
-
-    m_innerSpinner = new Ros2Spinner();
-    m_innerSpinner->start();
-    m_spun = true;
 
     return true;
 }
@@ -533,6 +529,13 @@ void ros2LocalizerThread::publish_map()
 void ros2LocalizerThread::run()
 {
     double current_time = yarp::os::Time::now();
+
+    if (!m_spun)
+    {
+        m_innerSpinner = new Ros2Spinner();
+        m_innerSpinner->start();
+        m_spun = true;
+    }
 
     //print some stats every 10 seconds
     if (current_time - m_last_statistics_printed > 10.0)
