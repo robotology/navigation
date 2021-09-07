@@ -43,7 +43,7 @@
 #include <tf2_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include <nav_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h>
-#include <nav_msgs/msg/rosidl_typesupport_connext_cpp__visibility_control.h>
+//#include <nav_msgs/msg/rosidl_typesupport_connext_cpp__visibility_control.h>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <geometry_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h>
@@ -65,7 +65,7 @@ public:
     static Ros2Init& get();
 };
 
-class Ros2Spinner : yarp::os::Thread
+class Ros2Spinner : public yarp::os::Thread
 {
 private:
     bool m_spun{false};
