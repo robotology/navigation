@@ -445,9 +445,35 @@ bool rosLocalizerThread::threadInit()
 
     //opens a client to receive localization data from transformServer
     Property options;
-    options.put("device", "transformClient");
-    options.put("local", m_name + "/TfClient");
-    options.put("remote", "/transformServer");
+    options.put("device", "frameTransformClient");
+    if(!tf_group.check("ft_client_config"))
+    {
+        yCWarning(ROS_LOC) << "Parameter 'ft_client_config' missing in [TF] group. Using default value: 'ftc_yarp_only.xml'";
+        options.put("filexml_option", "ftc_yarp_only.xml");
+    }
+    else
+    {
+        options.put("filexml_option", tf_group.find("ft_client_config").asString());
+    }
+    if(!tf_group.check("ft_client_prefix"))
+    {
+        yCWarning(ROS_LOC) << "Parameter 'ft_client_prefix' missing in [TF] group. Using: '/" << m_name << "'";
+        options.put("ft_client_prefix", m_name);
+    }
+    else
+    {
+        options.put("ft_client_prefix", tf_group.find("ft_client_prefix").asString());
+    }
+
+    if(!tf_group.check("ft_server_prefix"))
+    {
+        yCWarning(ROS_LOC) << "Parameter 'ft_server_prefix' missing in [TF] group. Using an empty string";
+    }
+    else
+    {
+        options.put("ft_server_prefix", tf_group.find("ft_server_prefix").asString());
+    }
+
     if (m_ptf.open(options) == false)
     {
         yCError(ROS_LOC) << "Unable to open transform client";
