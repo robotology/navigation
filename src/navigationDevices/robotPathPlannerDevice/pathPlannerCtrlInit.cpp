@@ -298,6 +298,7 @@ bool PlannerThread::internal_controller_t::open(yarp::os::Searchable& cfg)
         yCError(PATHPLAN_INIT) << "Unable to open m_iInnerNav_ctrl interface";
         return false;
     }
+    return true;
 }
 
 void PlannerThread :: threadRelease()
