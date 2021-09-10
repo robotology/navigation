@@ -90,10 +90,17 @@ class NavGuiThread: public yarp::os::PeriodicThread
 
     //yarp ports
     std::string                                            m_name = "/navigationGui";
-    std::string                                            m_remote_localization;
-    std::string                                            m_remote_map;
-    std::string                                            m_remote_laser;
-    std::string                                            m_remote_navigation;
+
+    std::string                                            m_localization_client_device_name = "localization2DClient";
+    std::string                                            m_map_client_device_name = "map2DClient";
+    std::string                                            m_laser_client_device_name = "Rangefinder2DClient";
+    std::string                                            m_navigation_client_device_name = "navigation2DClient";
+
+    std::string                                            m_remote_localization_port_name = "/localizationServer";
+    std::string                                            m_remote_map_port_name = "/mapServer";
+    std::string                                            m_remote_laser_port_name = "/ikart/laser:o";
+    std::string                                            m_remote_navigation_port_name = "/navigationServer";
+
     BufferedPort<yarp::os::Bottle>                         m_port_yarpview_target_input;
     BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > m_port_map_output;
 

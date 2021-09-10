@@ -30,11 +30,6 @@ NavGuiThread::NavGuiThread(double _period, ResourceFinder &_rf) :
     m_navigation_status          = navigation_status_idle;
     m_previous_navigation_status = navigation_status_idle;
 
-    m_remote_localization = "/localizationServer";
-    m_remote_map = "/mapServer";
-    m_remote_laser = "/ikart/laser:o";
-    m_remote_navigation = "/navigationServer";
-
     const int button_w = 70;
     const int button_h = 20;
 
@@ -131,22 +126,63 @@ bool NavGuiThread::threadInit()
     {
         m_name = general_group.find("local").asString();
     }
+
+    //remote ports
     if (general_group.check("remote_localization"))
     {
-        m_remote_localization = general_group.find("remote_localization").asString();
+        m_remote_localization_port_name = general_group.find("remote_localization").asString();
     }
     if (general_group.check("remote_navigation"))
     {
-        m_remote_navigation = general_group.find("remote_navigation").asString();
+        m_remote_navigation_port_name = general_group.find("remote_navigation").asString();
     }
     if (general_group.check("remote_map"))
     {
-        m_remote_map = general_group.find("remote_map").asString();
+        m_remote_map_port_name = general_group.find("remote_map").asString();
     }
     if (laser_group.check("remote_laser"))
     {
-        m_remote_laser = laser_group.find("remote_laser").asString();
+        m_remote_laser_port_name = laser_group.find("remote_laser").asString();
     }
+
+    //remote devices
+    if (general_group.check("localization_client"))
+    {
+        m_localization_client_device_name = general_group.find("localization_client").asString();
+    }
+    else
+    {
+        yCError(NAVIGATION_GUI_INIT) << "Missing localization_client parameter, e.g. localization2DClient / localization2D_nwc_yarp";
+        return false;
+    }
+    if (general_group.check("navigation_client"))
+    {
+        m_navigation_client_device_name = general_group.find("navigation_client").asString();
+    }
+    else
+    {
+        yCError(NAVIGATION_GUI_INIT) << "Missing navigation_client parameter, e.g. navigation2DClient / navigation2D_nwc_yarp";
+        return false;
+    }
+    if (general_group.check("map_client"))
+    {
+        m_map_client_device_name = general_group.find("map_client").asString();
+    }
+    else
+    {
+        yCError(NAVIGATION_GUI_INIT) << "Missing map_client parameter, e.g. map2DClient / map2D_nwc_yarp";
+        return false;
+    }
+    if (laser_group.check("laser_client"))
+    {
+        m_laser_client_device_name = laser_group.find("laser_client").asString();
+    }
+    else
+    {
+        yCError(NAVIGATION_GUI_INIT) << "Missing laser_client parameter, e.g. Rangefinder2DClient / rangefinder2D_nwc_yarp";
+        return false;
+    }
+
     ret &= m_port_map_output.open((m_name + "/map:o").c_str());
     ret &= m_port_yarpview_target_input.open((m_name + "/yarpviewTarget:i").c_str());
     if (ret == false)
@@ -221,9 +257,9 @@ bool NavGuiThread::threadInit()
 
     //localization
     Property loc_options;
-    loc_options.put("device", "localization2DClient");
+    loc_options.put("device", m_localization_client_device_name);
     loc_options.put("local", m_name+"/localizationClient");
-    loc_options.put("remote", m_remote_localization);
+    loc_options.put("remote", m_remote_localization_port_name);
     if (m_pLoc.open(loc_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open localization driver";
@@ -238,9 +274,9 @@ bool NavGuiThread::threadInit()
 
     //open the map interface
     Property map_options;
-    map_options.put("device", "map2DClient");
+    map_options.put("device", m_map_client_device_name);
     map_options.put("local", m_name+"/map2DClient");
-    map_options.put("remote", m_remote_map);
+    map_options.put("remote", m_remote_map_port_name);
     if (m_pMap.open(map_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open map2DClient";
@@ -255,11 +291,11 @@ bool NavGuiThread::threadInit()
 
     //open the navigation interface
     Property nav_options;
-    nav_options.put("device", "navigation2DClient");
+    nav_options.put("device", m_navigation_client_device_name);
     nav_options.put("local", m_name + "/navigation2DClient");
-    nav_options.put("navigation_server", m_remote_navigation);
-    nav_options.put("map_locations_server", m_remote_map);
-    nav_options.put("localization_server", m_remote_localization);
+    nav_options.put("navigation_server", m_remote_navigation_port_name);
+    nav_options.put("map_locations_server", m_remote_map_port_name);
+    nav_options.put("localization_server", m_remote_localization_port_name);
     if (m_pNav.open(nav_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open navigation2DClient";
@@ -287,9 +323,9 @@ bool NavGuiThread::threadInit()
     string laser_remote_port = laserBottle.find("laser_port").asString();*/
 
     Property las_options;
-    las_options.put("device", "Rangefinder2DClient");
+    las_options.put("device", m_laser_client_device_name);
     las_options.put("local", m_name+"/laser2DClient");
-    las_options.put("remote", m_remote_laser);
+    las_options.put("remote", m_remote_laser_port_name);
     if (m_pLas.open(las_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open laser driver";
