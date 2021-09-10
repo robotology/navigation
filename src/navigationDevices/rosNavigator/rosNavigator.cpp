@@ -184,7 +184,7 @@ bool rosNavigator::threadInit()
 {
     //localization
     Property loc_options;
-    loc_options.put("device", "localization2DClient");
+    loc_options.put("device", LOCALIZATION_CLIENT_DEVICE_DEFAULT);
     loc_options.put("local", m_name + "/localizationClient");
     loc_options.put("remote", m_remote_localization);
     if (m_pLoc.open(loc_options) == false)
@@ -201,7 +201,7 @@ bool rosNavigator::threadInit()
 
     //map_server
     Property map_options;
-    map_options.put("device", "map2DClient");
+    map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
     map_options.put("remote", "/mapServer");
     if (m_pMap.open(map_options) == false)

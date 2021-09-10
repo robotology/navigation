@@ -18,6 +18,11 @@ set(YARP_REQUIRED_VERSION 3.5)
 find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
 
+option(NAVIGATION_USE_NWC "if enabled, yarp nwc devices instead of standard clients" OFF)
+if(NAVIGATION_USE_NWC)
+    add_definitions(-DNAVIGATION_USE_NWC=1)
+endif()
+
 if(YARP_math_FOUND)
   set(ICUB_HAS_YARP TRUE CACHE BOOL "" FORCE)
   message(STATUS "found libYARP_math")

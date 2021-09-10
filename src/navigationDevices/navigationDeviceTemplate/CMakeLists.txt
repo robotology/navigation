@@ -12,7 +12,8 @@ yarp_add_plugin(navigationDeviceTemplate navigationDeviceTemplate.h
 target_link_libraries(navigationDeviceTemplate YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
-                                   YARP::YARP_math)
+                                   YARP::YARP_math
+                                   navigation_lib)
 
 yarp_install(TARGETS navigationDeviceTemplate
            EXPORT YARP_${YARP_PLUGIN_MASTER}

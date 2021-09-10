@@ -759,7 +759,7 @@ bool amclLocalizerThread::threadInit()
 
     //get the map from the map_server
     Property map_options;
-    map_options.put("device", "map2DClient");
+    map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", m_name); //This is just a prefix. map2DClient will complete the port name.
     map_options.put("remote", "/mapServer");
     if (m_pMap.open(map_options) == false)
@@ -858,7 +858,7 @@ bool amclLocalizerThread::threadInit()
 
     //opens the laser client and the corresponding interface
     Property options;
-    options.put("device", "Rangefinder2DClient");
+    options.put("device", LIDAR_CLIENT_DEVICE_DEFAULT);
     options.put("local", m_name + "/laser:i");
     options.put("remote", m_laser_remote_port);
     if (m_pLas.open(options) == false)

@@ -30,6 +30,8 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/INavigation2D.h>
 
+#include "navigation_defines.h"
+
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
@@ -130,7 +132,7 @@ int main(int argc, char* argv[])
 
     //opens a navigation2DClient device to control the robot
     Property        navTestCfg;
-    navTestCfg.put("device", "navigation2DClient");
+    navTestCfg.put("device", NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local", "/robotGotoExample");
     navTestCfg.put("navigation_server", navigation_server_name);
     navTestCfg.put("map_locations_server", "/mapServer");

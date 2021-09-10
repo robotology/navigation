@@ -32,6 +32,7 @@
 #include <math.h>
 #include <yarp/dev/IMap2D.h>
 #include <localization_device_with_estimated_odometry.h>
+#include "navigation_defines.h"
 
 #ifndef POZYX_LOCALIZER_H
 #define POZYX_LOCALIZER_H

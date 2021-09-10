@@ -841,7 +841,7 @@ bool Follower::initTransformClient(void)
 {
     // Prepare properties for the FrameTransformClient
     yarp::os::Property propTfClient;
-    propTfClient.put("device", "transformClient");
+    propTfClient.put("device", TF_CLIENT_DEFAULT_DEVICE);
     propTfClient.put("local", "/transformClient-follower");
     propTfClient.put("remote", "/transformServer");
 

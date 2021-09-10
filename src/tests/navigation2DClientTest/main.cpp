@@ -26,6 +26,8 @@
 #include <string>
 
 #include "navigation2DClientTestModule.h"
+#include "navigation_defines.h"
+
 
 using namespace yarp::os;
 using namespace yarp::dev;

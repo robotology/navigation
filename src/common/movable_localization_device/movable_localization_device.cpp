@@ -135,7 +135,7 @@ bool movable_localization_device::init_tf()
 {
     std::string module_name;
     Property options;
-    options.put("device", "transformClient");
+    options.put("device", TF_CLIENT_DEFAULT_DEVICE);
     options.put("local", "/" + module_name + "/TfClient");
     options.put("remote", "/transformServer");
     if (m_ptf.open(options) == false)

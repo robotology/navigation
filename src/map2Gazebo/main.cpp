@@ -27,6 +27,7 @@
 #include <iostream>
 #include <algorithm>
 #include <yarp/sig/ImageFile.h>
+#include "navigation_defines.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -178,7 +179,7 @@ public:
             string map_name = rf.find("from_server").asString();
             //open a client for the server
             Property map_options;
-            map_options.put("device", "map2DClient");
+            map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
             map_options.put("local", "/map2Gazebo"); //This is just a prefix. map2DClient will complete the port name.
             map_options.put("remote", "/mapServer");
             if (m_pMap.open(map_options) == false)

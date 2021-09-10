@@ -41,6 +41,7 @@
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
 #include <yarp/rosmsg/nav_msgs/Path.h>
 #include <math.h>
+#include "navigation_defines.h"
 
 #ifndef ROS_NAVIGATOR_H
 #define ROS_NAVIGATOR_H

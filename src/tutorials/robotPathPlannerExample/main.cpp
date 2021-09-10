@@ -31,6 +31,8 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/IMap2D.h>
 
+#include "navigation_defines.h"
+
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
@@ -139,7 +141,7 @@ int main(int argc, char* argv[])
 
     //opens a navigation2DClient device to control the robot
     Property        navTestCfg;
-    navTestCfg.put("device", "navigation2DClient");
+    navTestCfg.put("device", NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local", "/robotPathPlannerExample");
     navTestCfg.put("navigation_server", navigation_server_name);
     navTestCfg.put("map_locations_server", "/mapServer");
@@ -168,7 +170,7 @@ int main(int argc, char* argv[])
     //opens a map2DClient device to communicate with MapServer
     Property map_options;
     PolyDriver ddMapClient;
-    map_options.put("device", "map2DClient");
+    map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", "/robotPathPlannerExample"); //This is just a prefix. map2DClient will complete the port name.
     map_options.put("remote", "/mapServer");
     if (ddMapClient.open(map_options) == false)

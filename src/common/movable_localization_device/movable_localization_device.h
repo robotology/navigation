@@ -18,6 +18,7 @@
 #include <yarp/dev/IFrameTransform.h>
 #include <mutex>
 #include <math.h>
+#include "navigation_defines.h"
 
 using namespace yarp::os;
 

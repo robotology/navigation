@@ -325,7 +325,7 @@ bool GotoThread::threadInit()
 
     //open the localization client and the corresponding interface
     Property loc_options;
-    loc_options.put("device", "localization2DClient");
+    loc_options.put("device", LOCALIZATION_CLIENT_DEVICE_DEFAULT);
     loc_options.put("local", localName+"/localizationClient");
     loc_options.put("remote", localizationServer_name);
 
@@ -361,7 +361,7 @@ bool GotoThread::threadInit()
 
     //opens the laser client and the corresponding interface
     Property options;
-    options.put("device", "Rangefinder2DClient");
+    options.put("device", LIDAR_CLIENT_DEVICE_DEFAULT);
     options.put("local", localName+"/laser:i");
     options.put("remote", laser_remote_port);
     if (m_pLas.open(options) == false)

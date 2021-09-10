@@ -3,7 +3,7 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
-
+#include "navigation_defines.h"
 
 typedef struct navigationTestFrame
 {

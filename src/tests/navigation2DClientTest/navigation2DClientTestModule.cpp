@@ -72,7 +72,7 @@ bool NavTestModule::configure(ResourceFinder& rf)
     bool ok_location = ddLocServer.open(pLocationServer_cfg);
     if(ok_location){yCInfo(NAV_CLIENT_TEST) << "ddLocationServer open reported successful";};
 
-    navTestCfg.put("device",         "navigation2DClient");
+    navTestCfg.put("device",         NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local",          "/navigationTest");
     navTestCfg.put("navigation_server", navServerRoot);
     navTestCfg.put("map_locations_server", "/mapServer");

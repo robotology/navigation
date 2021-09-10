@@ -325,7 +325,7 @@ bool pozyxLocalizerThread::threadInit()
     {
         //open the map interface
         Property map_options;
-        map_options.put("device", "map2DClient");
+        map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", m_name + "/map2DClient");
         map_options.put("remote", m_remote_map);
         if (m_pMap.open(map_options) == false)

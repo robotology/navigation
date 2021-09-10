@@ -19,3 +19,18 @@
 #define BASECONTROL_COMMAND_VELOCIY_CARTESIAN 3
 #define BASECONTROL_COMMAND_VELOCIY_POLAR     2
 #define BASECONTROL_COMMAND_PERCENT_POLAR     1
+
+
+#ifdef NAVIGATION_USE_NWC
+    #define LOCALIZATION_CLIENT_DEVICE_DEFAULT    "localization2D_nwc_yarp"
+    #define MAP_CLIENT_DEVICE_DEFAULT             "map2D_nwc_yarp"
+    #define NAVIGATION_CLIENT_DEVICE_DEFAULT      "navigation2D_nwc_yarp"
+    #define LIDAR_CLIENT_DEVICE_DEFAULT           "rangefinder2D_nwc_yarp"
+    #define TF_CLIENT_DEFAULT_DEVICE              "frameTransformClient"
+#else
+    #define LOCALIZATION_CLIENT_DEVICE_DEFAULT    "localization2DClient"
+    #define MAP_CLIENT_DEVICE_DEFAULT             "map2DClient"
+    #define NAVIGATION_CLIENT_DEVICE_DEFAULT      "navigation2DClient"
+    #define LIDAR_CLIENT_DEVICE_DEFAULT           "Rangefinder2DClient"
+    #define TF_CLIENT_DEFAULT_DEVICE              "transformClient"
+#endif

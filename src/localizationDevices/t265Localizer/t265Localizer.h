@@ -27,7 +27,7 @@
 #include <localization_device_with_estimated_odometry.h>
 
 #include <yarp/dev/IFrameTransform.h>
-
+#include "navigation_defines.h"
 
 //realsense
 #include <librealsense2/rs.hpp>

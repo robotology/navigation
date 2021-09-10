@@ -171,7 +171,7 @@ bool PlannerThread::threadInit()
     //localization
     {
         Property loc_options;
-        loc_options.put("device", "localization2DClient");
+        loc_options.put("device", LOCALIZATION_CLIENT_DEVICE_DEFAULT);
         loc_options.put("local", localName+"/localizationClient");
         loc_options.put("remote", localizationServer_name);
         if (m_pLoc.open(loc_options) == false)
@@ -190,7 +190,7 @@ bool PlannerThread::threadInit()
     //open the map interface
     {
         Property map_options;
-        map_options.put("device", "map2DClient");
+        map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", localName); //This is just a prefix. map2DClient will complete the port name.
         map_options.put("remote", mapServer_name);
         if (m_pMap.open(map_options) == false)
@@ -222,7 +222,7 @@ bool PlannerThread::threadInit()
         string laser_remote_port = laserBottle.find("laser_port").asString();
 
         Property las_options;
-        las_options.put("device", "Rangefinder2DClient");
+        las_options.put("device", LIDAR_CLIENT_DEVICE_DEFAULT);
         las_options.put("local", localName+"/laser:i");
         las_options.put("remote", laser_remote_port);
         if (m_pLas.open(las_options) == false)

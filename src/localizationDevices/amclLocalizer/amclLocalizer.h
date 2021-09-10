@@ -28,6 +28,7 @@
 #include "./amcl/sensors/amcl_odom.h"
 #include "./amcl/sensors/amcl_laser.h"
 #include <localization_device_with_estimated_odometry.h>
+#include "navigation_defines.h"
 
 
 using namespace yarp::os;

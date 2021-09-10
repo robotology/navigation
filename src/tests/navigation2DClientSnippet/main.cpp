@@ -2,6 +2,7 @@
 #include <yarp/dev/all.h>
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/IMap2D.h>
+#include "navigation_defines.h"
 
 //#include <yarp/dev/IFrameTransform.h>
 using namespace yarp::os;
@@ -17,7 +18,7 @@ int main(int argc, char *argv[])
     
     //opens a navigation2DClient device and gets a INavigation2D interface.
     Property navTestCfg;
-    navTestCfg.put("device",               "navigation2DClient");
+    navTestCfg.put("device",               NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local",                "/navigationTest_navClient");
     navTestCfg.put("navigation_server",    "/robotPathPlanner");
     navTestCfg.put("map_locations_server", "/mapServer");
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 
     //opens a map2DClient device and gets a iMap2D interface.
     Property map_options;
-    map_options.put("device", "map2DClient");
+    map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", "/navigationTest_mapClient");
     map_options.put("remote", "/mapServer");
     PolyDriver      ddMapClient;

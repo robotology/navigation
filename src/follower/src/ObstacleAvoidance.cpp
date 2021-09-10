@@ -15,6 +15,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+#include "navigation_defines.h"
 
 #include<iostream>
 
@@ -65,7 +66,7 @@ bool ObstacleVerifier::initLaserClient(yarp::os::ResourceFinder &rf)
 {
     // Prepare properties for the Rangefinder2DClient
     yarp::os::Property prop;
-    prop.put("device", "Rangefinder2DClient");
+    prop.put("device", LIDAR_CLIENT_DEVICE_DEFAULT);
     prop.put("local", "/follower-rangeFinder");
     prop.put("remote", m_robotLaserPortName);
 

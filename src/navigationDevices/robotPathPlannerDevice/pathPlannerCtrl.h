@@ -47,6 +47,7 @@
 #include <yarp/dev/Map2DPath.h>
 #include <yarp/dev/Map2DLocation.h>
 #include <mapUtils.h>
+#include "navigation_defines.h"
 
 using namespace std;
 

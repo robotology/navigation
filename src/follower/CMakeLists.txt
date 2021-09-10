@@ -79,14 +79,15 @@ target_link_libraries(follower YARP::YARP_os
                                YARP::YARP_math 
                                YARP::YARP_dev
                                ${OpenCV_LIBS}
-                               ${YARP_LIBRARIES})
+                               ${YARP_LIBRARIES}
+                               navigation_lib)
 
 if(YARPBTModules_FOUND)
     target_link_libraries(follower YARPBTModules)
 endif()
  
 if(AssistiveRehab_FOUND)
-    target_link_libraries(follower ${AssistiveRehab_LIBRARIES})
+    target_link_libraries(follower ${AssistiveRehab_LIBRARIES} navigation_lib)
 endif()
 
 set_property(TARGET follower PROPERTY FOLDER "Modules")

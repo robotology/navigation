@@ -41,7 +41,7 @@
 #include <math.h>
 
 #include <localization_device_with_estimated_odometry.h>
-
+#include "navigation_defines.h"
 
 using namespace yarp::os;
 

@@ -490,7 +490,7 @@ bool rosLocalizerThread::threadInit()
     {
         //opens a client to send/received data from mapServer
         Property map_options;
-        map_options.put("device", "map2DClient");
+        map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", m_name); //This is just a prefix. map2DClient will complete the port name.
         map_options.put("remote", "/mapServer");
         if (m_pmap.open(map_options) == false)

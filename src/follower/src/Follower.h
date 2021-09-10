@@ -28,6 +28,7 @@
 #include "GazeController.h"
 #include "NavigationController.h"
 #include "ObstacleAvoidance.h"
+#include "navigation_defines.h"
 
 namespace FollowerTarget
 {

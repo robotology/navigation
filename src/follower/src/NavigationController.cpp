@@ -15,6 +15,7 @@
 #include <yarp/os/LogStream.h>
 
 #include "NavigationController.h"
+#include "navigation_defines.h"
 
 YARP_LOG_COMPONENT(FOLLOWER_NAV, "navigation.follower.navigationController")
 
@@ -65,7 +66,7 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 //         return false;
 //     }
 
-    navClientCfg.put("device",         "navigation2DClient");
+    navClientCfg.put("device",         NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navClientCfg.put("local",          "/follower/nav");
     navClientCfg.put("navigation_server", navServerRoot);
     navClientCfg.put("map_locations_server", "/mapServer");

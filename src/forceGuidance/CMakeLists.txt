@@ -17,7 +17,7 @@ include_directories(${GSL_INCLUDE_DIRS})
 
 add_executable(${PROJECTNAME} ${folder_source})
 
-target_link_libraries(${PROJECTNAME} ${GSL_LIBRARIES} ${YARP_LIBRARIES})
+target_link_libraries(${PROJECTNAME} ${GSL_LIBRARIES} ${YARP_LIBRARIES} navigation_lib)
 
 set_property(TARGET ${PROJECTNAME} PROPERTY FOLDER "Modules")
 

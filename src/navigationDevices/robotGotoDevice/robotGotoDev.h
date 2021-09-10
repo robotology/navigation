@@ -32,6 +32,7 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <math.h>
 #include "robotGotoCtrl.h"
+#include "navigation_defines.h"
 
 class robotGotoDev;
 

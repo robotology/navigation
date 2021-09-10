@@ -10,7 +10,7 @@ include_directories(${ICUB_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} navigation_lib)
 
 set_property(TARGET simpleVelocityNavigationTest1 PROPERTY FOLDER "Tests")
 

@@ -386,7 +386,7 @@ bool t265LocalizerThread::threadInit()
     {
         //open the map interface
         Property map_options;
-        map_options.put("device", "map2DClient");
+        map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", m_name + "/map2DClient");
         map_options.put("remote", m_remote_map);
         if (m_pMap.open(map_options) == false)
@@ -425,7 +425,7 @@ bool t265LocalizerThread::threadInit()
 
 
     Property    pTC;
-    pTC.put("device","transformClient");
+    pTC.put("device",TF_CLIENT_DEFAULT_DEVICE);
     if (tfC_group.check("localTC"))
         pTC.put("local",tfC_group.find("localTC").asString());
     else
