@@ -109,7 +109,7 @@ bool ros2Localizer::open(yarp::os::Searchable& config)
 
     yCDebug(ROS2_LOC) << "ros2Localizer configuration: \n" << p.toString().c_str();
 
-    Bottle general_group = p.findGroup("ros2LOCALIZER_GENERAL");
+    Bottle general_group = p.findGroup("ROS2LOCALIZER_GENERAL");
     if (!general_group.isNull())
     {
         if (general_group.check("name")) {m_name = general_group.find("name").asString(); }
@@ -138,6 +138,7 @@ bool ros2Localizer::open(yarp::os::Searchable& config)
     m_default_covariance_3x3[0][0] = 0.25;
     m_default_covariance_3x3[1][1] = 0.25;
     m_default_covariance_3x3[2][2] = 0.068538;
+    
     setInitialPose(m_initial_loc,m_default_covariance_3x3);
     
     //start the thread
@@ -386,18 +387,6 @@ bool ros2LocalizerThread::threadInit()
         yCDebug(ROS2_LOC) << "opened " << m_topic_particles << " topic";
     }
 
-    //initialize an initial pose publisher
-    if (ros_group.check ("initialpose_topic"))
-    {
-        m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
-        m_ros2Publisher_initial_pose = Ros2Init::get().node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
-        if (m_ros2Publisher_initial_pose == nullptr)
-        {
-            yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
-            return false;
-        }
-    }
-
     // MAP group //////////////////////////////////////////////////////////////////////////////////////////////////////
     yCDebug(ROS2_LOC) << map_group.toString();
 
@@ -577,6 +566,26 @@ void ros2LocalizerThread::run()
 bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6)
 {
     m_localization_data.map_id = loc.map_id;
+    
+    Bottle ros_group = m_cfg.findGroup("ROS2");
+    
+    if (ros_group.isNull())
+    {
+        yCError(ROS2_LOC) << "Missing ROS2 group!";
+        return false;
+    }
+    
+    //initialize an initial pose publisher
+    if (ros_group.check ("initialpose_topic") && m_ros2Publisher_initial_pose == nullptr)
+    {
+        m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
+        m_ros2Publisher_initial_pose = Ros2Init::get().node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
+        if (m_ros2Publisher_initial_pose == nullptr)
+        {
+            yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
+            return false;
+        }
+    }
 
     if (m_iMap)
     {
