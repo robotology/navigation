@@ -28,7 +28,10 @@ target_link_libraries(ros2Localizer YARP::YARP_os
                                    YARP::YARP_math
                                    YARP::YARP_rosmsg
                                    navigation_lib
+                                   rclcpp::rclcpp
+                                   std_msgs::std_msgs__rosidl_typesupport_cpp
                                    nav_msgs::nav_msgs__rosidl_typesupport_cpp
+                                   test_msgs::test_msgs__rosidl_typesupport_cpp
                                    geometry_msgs::geometry_msgs__rosidl_typesupport_cpp
                                    tf2_msgs::tf2_msgs__rosidl_typesupport_cpp)
 
