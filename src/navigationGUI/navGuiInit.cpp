@@ -144,6 +144,10 @@ bool NavGuiThread::threadInit()
     {
         m_remote_laser_port_name = laser_group.find("remote_laser").asString();
     }
+    if (general_group.check("draw_and_publish_period"))
+    {
+        m_imagemap_draw_and_send_period = general_group.find("draw_and_publish_period").asFloat64();
+    }
 
     //remote devices
     if (general_group.check("localization_client"))
