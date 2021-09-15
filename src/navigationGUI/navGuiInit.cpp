@@ -149,6 +149,11 @@ bool NavGuiThread::threadInit()
         m_imagemap_draw_and_send_period = general_group.find("draw_and_publish_period").asFloat64();
     }
 
+    m_las_carrier = general_group.check("las_carrier",yarp::os::Value("tcp"),"carrier for connection with las server").asString();
+    m_map_carrier = general_group.check("map_carrier", yarp::os::Value("tcp"), "carrier for connection with map server").asString();
+    m_nav_carrier = general_group.check("nav_carrier", yarp::os::Value("tcp"), "carrier for connection with nav server").asString();
+    m_loc_carrier = general_group.check("loc_carrier", yarp::os::Value("tcp"), "carrier for connection with loc server").asString();
+    
     //remote devices
     if (general_group.check("localization_client"))
     {
@@ -264,6 +269,7 @@ bool NavGuiThread::threadInit()
     loc_options.put("device", m_localization_client_device_name);
     loc_options.put("local", m_name+"/localizationClient");
     loc_options.put("remote", m_remote_localization_port_name);
+    loc_options.put("carrier", m_loc_carrier);
     if (m_pLoc.open(loc_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open localization driver";
@@ -281,6 +287,7 @@ bool NavGuiThread::threadInit()
     map_options.put("device", m_map_client_device_name);
     map_options.put("local", m_name+"/map2DClient");
     map_options.put("remote", m_remote_map_port_name);
+    map_options.put("carrier", m_map_carrier);
     if (m_pMap.open(map_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open map2DClient";
@@ -300,6 +307,7 @@ bool NavGuiThread::threadInit()
     nav_options.put("navigation_server", m_remote_navigation_port_name);
     nav_options.put("map_locations_server", m_remote_map_port_name);
     nav_options.put("localization_server", m_remote_localization_port_name);
+    nav_options.put("carrier", m_nav_carrier);
     if (m_pNav.open(nav_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open navigation2DClient";
@@ -330,6 +338,7 @@ bool NavGuiThread::threadInit()
     las_options.put("device", m_laser_client_device_name);
     las_options.put("local", m_name+"/laser2DClient");
     las_options.put("remote", m_remote_laser_port_name);
+    las_options.put("carrier", m_las_carrier);
     if (m_pLas.open(las_options) == false)
     {
         yCError(NAVIGATION_GUI_INIT) << "Unable to open laser driver";

@@ -102,6 +102,11 @@ class NavGuiThread: public yarp::os::PeriodicThread
     std::string                                            m_remote_laser_port_name = "/ikart/laser:o";
     std::string                                            m_remote_navigation_port_name = "/navigationServer";
 
+    std::string                                            m_las_carrier;
+    std::string                                            m_map_carrier;
+    std::string                                            m_nav_carrier;
+    std::string                                            m_loc_carrier;
+
     BufferedPort<yarp::os::Bottle>                         m_port_yarpview_target_input;
     BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > m_port_map_output;
 
