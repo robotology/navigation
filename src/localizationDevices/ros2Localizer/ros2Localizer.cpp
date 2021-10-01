@@ -363,29 +363,42 @@ bool ros2LocalizerThread::threadInit()
 
     // ROS2 group /////////////////////////////////////////////////////////////////////////////////////////////////////
     //initialize an occupancy grid publisher (every time the localization is re-initialized, the map is published too)
-    if (ros_group.check ("occupancygrid_topic"))
+    if(!ros_group.check("node_name"))
     {
-        m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
-        m_ros2Publisher_occupancyGrid = Ros2Init::get().node->create_publisher<nav_msgs::msg::OccupancyGrid>(m_topic_occupancyGrid, 10);
-        if (m_ros2Publisher_occupancyGrid == nullptr)
-        {
-            yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_occupancyGrid << " topic, check your yarp-ROS network configuration";
-            return false;
-        }
+        yCError(ROS2_LOC) << "No node_name specified";
+        return false;
+    }
+    m_nodeName = ros_group.find ("node_name").asString();
+    m_node = NodeCreator::createNode(m_nodeName);
+
+    if (!ros_group.check ("occupancygrid_topic"))
+    {
+        yCError(ROS2_LOC) << "No occupancygrid_topic specified";
+        return false;
+    }
+    m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
+    m_ros2Publisher_occupancyGrid = m_node->create_publisher<nav_msgs::msg::OccupancyGrid>(m_topic_occupancyGrid, 10);
+    if (m_ros2Publisher_occupancyGrid == nullptr)
+    {
+        yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_occupancyGrid
+                          << " topic, check your yarp-ROS network configuration";
+        return false;
     }
 
     //initialize a subscriber for pose particles
-    if (ros_group.check("particles_topic"))
+    if (!ros_group.check("particles_topic"))
     {
-        m_topic_particles = ros_group.find("particles_topic").asString();
-        m_ros2Subscriber_particles = Ros2Init::get().node->create_subscription<geometry_msgs::msg::PoseArray>(m_topic_particles, 10, std::bind(&ros2LocalizerThread::particles_callback, this, _1));
-        if (m_ros2Subscriber_particles == nullptr)
-        {
-            yCError(ROS2_LOC) << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
-            return false;
-        }
-        yCDebug(ROS2_LOC) << "opened " << m_topic_particles << " topic";
+        yCError(ROS2_LOC) << "No particles_topic specified";
+        return false;
     }
+    m_topic_particles = ros_group.find("particles_topic").asString();
+    m_ros2Subscriber_particles = m_node->create_subscription<geometry_msgs::msg::PoseArray>(m_topic_particles, 10, std::bind(&ros2LocalizerThread::particles_callback, this, _1));
+    if (m_ros2Subscriber_particles == nullptr)
+    {
+        yCError(ROS2_LOC) << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
+        return false;
+    }
+    yCDebug(ROS2_LOC) << "opened " << m_topic_particles << " topic";
 
     // MAP group //////////////////////////////////////////////////////////////////////////////////////////////////////
     yCDebug(ROS2_LOC) << map_group.toString();
@@ -521,7 +534,7 @@ void ros2LocalizerThread::run()
 
     if (!m_spun)
     {
-        m_innerSpinner = new Ros2Spinner();
+        m_innerSpinner = new Ros2Spinner(m_node);
         m_innerSpinner->start();
         m_spun = true;
     }

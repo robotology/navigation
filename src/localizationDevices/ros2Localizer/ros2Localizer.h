@@ -51,31 +51,11 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <yarp/math/Math.h>
 #include <localization_device_with_estimated_odometry.h>
+#include "Ros2Spinner.h"
+#include "Ros2Utils.h"
+#include "Ros2Subscriber.h"
 
 #include <mutex>
-
-
-class Ros2Init
-{
-public:
-    Ros2Init();
-
-    std::shared_ptr<rclcpp::Node> node;
-
-    static Ros2Init& get();
-};
-
-class Ros2Spinner : public yarp::os::Thread
-{
-private:
-    bool m_spun{false};
-public:
-    Ros2Spinner()=default;
-    ~Ros2Spinner()=default;
-
-    void run();
-    void threadRelease() override;
-};
 
 
 using namespace yarp::os;
@@ -93,9 +73,10 @@ using namespace yarp::os;
  * |  INITIAL_POS            |  initial_theta                        |  double  |  deg    |  0.0                 |  Yes       |  Initial estimation of robot position                                                           |  -                                                         |
  * |  INITIAL_POS            |  initial_map                          |  string  |  -      |  -                   |  Yes       |  Name of the map on which localization is performed                                             |  -                                                         |
  * |  MAP                    |  connect_to_yarp_mapserver            |  int     |  0/1    |  -                   |  Yes       |  If set to 1, LocalizationServer will ask maps to yarp map server when initial pose is updated  |  -                                                         |
- * |  ROS2                   |  initialpose_topic                    |  string  |  -      |  -                   |  No        |  Name of the topic which will be used to publish the initial pose                               |  -                                                         |
- * |  ROS2                   |  occupancygrid_topic                  |  string  |  -      |  -                   |  No        |  Name of the topic which will be used to publish map data when initial pose is updated          |  -                                                         |
- * |  ROS2                   |  particles_topic                      |  string  |  -      |  -                   |  No        |  Name of the topic from which particles data will be received                                   |  -                                                         |
+ * |  ROS2                   |  node_name                            |  string  |  -      |  -                   |  Yes       |  Name of the ROS2 node                                                                          |  -                                                         |
+ * |  ROS2                   |  initialpose_topic                    |  string  |  -      |  -                   |  Yes       |  Name of the topic which will be used to publish the initial pose                               |  -                                                         |
+ * |  ROS2                   |  occupancygrid_topic                  |  string  |  -      |  -                   |  Yes       |  Name of the topic which will be used to publish map data when initial pose is updated          |  -                                                         |
+ * |  ROS2                   |  particles_topic                      |  string  |  -      |  -                   |  Yes       |  Name of the topic from which particles data will be received                                   |  -                                                         |
  * |  TF                     |  map_frame_id                         |  string  |  -      |  -                   |  Yes       |  Name of the map reference frame                                                                |  e.g. /map                                                 |
  * |  TF                     |  robot_frame_id                       |  string  |  -      |  -                   |  Yes       |  Name of the robot reference frame                                                              |  e.g. /mobile_base                                         |
  * |  LOCALIZATION           |  use_localization_from_odometry_port  |  int     |  0/1    |  -                   |  Yes       |  If set to 1, the module will use a port to receive localization data                           |  Incompatible with 'use_localization_from_tf=1'            |
@@ -183,9 +164,11 @@ protected:
     //ROS2
     size_t                            m_seq_counter;
     builtin_interfaces::msg::Time     m_rosTime;
+    std::string                       m_nodeName;
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
     std::string                       m_topic_particles;
+    rclcpp::Node::SharedPtr           m_node
     Ros2Spinner*                      m_innerSpinner{nullptr};
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr  m_ros2Publisher_initial_pose{nullptr};
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr                   m_ros2Publisher_occupancyGrid{nullptr};
@@ -210,3 +193,4 @@ public:
 };
 
 #endif  // ROS2LOCALIZER_H
+
