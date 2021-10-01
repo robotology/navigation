@@ -324,13 +324,16 @@ bool ros2LocalizerThread::threadInit()
 
     // ROS2 group /////////////////////////////////////////////////////////////////////////////////////////////////////
     //initialize an occupancy grid publisher (every time the localization is re-initialized, the map is published too)
-    if(!ros_group.check("node_name"))
+    if(!m_node)
     {
-        yCError(ROS2_LOC) << "No node_name specified";
-        return false;
+        if(!ros_group.check("node_name"))
+        {
+            yCError(ROS2_LOC) << "No node_name specified";
+            return false;
+        }
+        m_nodeName = ros_group.find ("node_name").asString();
+        m_node = NodeCreator::createNode(m_nodeName);
     }
-    m_nodeName = ros_group.find ("node_name").asString();
-    m_node = NodeCreator::createNode(m_nodeName);
 
     if (!ros_group.check ("occupancygrid_topic"))
     {
@@ -548,7 +551,16 @@ bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLo
         yCError(ROS2_LOC) << "Missing ROS2 group!";
         return false;
     }
-    
+    if(!m_node)
+    {
+        if(!ros_group.check("node_name"))
+        {
+            yCError(ROS2_LOC) << "No node_name specified";
+            return false;
+        }
+        m_nodeName = ros_group.find ("node_name").asString();
+        m_node = NodeCreator::createNode(m_nodeName);
+    }
     //initialize an initial pose publisher
     if (ros_group.check ("initialpose_topic") && m_ros2Publisher_initial_pose == nullptr)
     {
