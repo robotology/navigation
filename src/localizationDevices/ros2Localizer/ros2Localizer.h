@@ -168,7 +168,7 @@ protected:
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
     std::string                       m_topic_particles;
-    rclcpp::Node::SharedPtr           m_node
+    rclcpp::Node::SharedPtr           m_node;
     Ros2Spinner*                      m_innerSpinner{nullptr};
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr  m_ros2Publisher_initial_pose{nullptr};
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr                   m_ros2Publisher_occupancyGrid{nullptr};
