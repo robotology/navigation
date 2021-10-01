@@ -20,7 +20,13 @@ yarp_prepare_plugin(ros2Localizer
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-yarp_add_plugin(ros2Localizer ros2Localizer.h ros2Localizer.cpp)
+file(GLOB folder_source *.cpp)
+file(GLOB folder_header *.h)
+
+source_group("Source Files" FILES ${folder_source})
+source_group("Header Files" FILES ${folder_header})
+
+yarp_add_plugin(ros2Localizer ${folder_source} ${folder_header})
                               
 target_link_libraries(ros2Localizer YARP::YARP_os
                                    YARP::YARP_sig
