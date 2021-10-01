@@ -42,45 +42,6 @@ using namespace yarp::dev::Nav2D;
 
 YARP_LOG_COMPONENT(ROS2_LOC, "navigation.ros2Localizer")
 
-/////////////////////////////////////////////////////////////////////
-
-// Ros2Init
-
-Ros2Init::Ros2Init()
-{
-    rclcpp::init(/*argc*/ 0, /*argv*/ nullptr);
-    node = std::make_shared<rclcpp::Node>("yarprobotinterface_node");
-}
-
-Ros2Init& Ros2Init::get()
-{
-    static Ros2Init instance;
-    return instance;
-}
-
-/////////////////////////////////////////////////////////////////////
-
-// Ros2Spinner
-
-void Ros2Spinner::run()
-{
-    if(!m_spun)  //This is just a temporary solution.
-    {
-        rclcpp::spin(Ros2Init::get().node);
-        m_spun = true;
-    }
-}
-
-void Ros2Spinner::threadRelease()
-{
-    if(m_spun)
-    {
-        rclcpp::shutdown();
-        m_spun = false;
-    }
-}
-
-/////////////////////////////////////////////////////////////////////
 
 // Handler
 
@@ -592,7 +553,7 @@ bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLo
     if (ros_group.check ("initialpose_topic") && m_ros2Publisher_initial_pose == nullptr)
     {
         m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
-        m_ros2Publisher_initial_pose = Ros2Init::get().node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
+        m_ros2Publisher_initial_pose = m_node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
         if (m_ros2Publisher_initial_pose == nullptr)
         {
             yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
