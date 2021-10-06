@@ -130,19 +130,19 @@ bool NavGuiThread::threadInit()
     //remote ports
     if (general_group.check("remote_localization"))
     {
-        m_remote_localization_port_name = general_group.find("remote_localization").asString();
+        m_nameof_remote_localization_port = general_group.find("remote_localization").asString();
     }
     if (general_group.check("remote_navigation"))
     {
-        m_remote_navigation_port_name = general_group.find("remote_navigation").asString();
+        m_nameof_remote_navigation_port = general_group.find("remote_navigation").asString();
     }
     if (general_group.check("remote_map"))
     {
-        m_remote_map_port_name = general_group.find("remote_map").asString();
+        m_nameof_remote_map_port = general_group.find("remote_map").asString();
     }
     if (laser_group.check("remote_laser"))
     {
-        m_remote_laser_port_name = laser_group.find("remote_laser").asString();
+        m_nameof_remote_laser_port = laser_group.find("remote_laser").asString();
     }
     if (general_group.check("draw_and_publish_period"))
     {
@@ -268,7 +268,7 @@ bool NavGuiThread::threadInit()
     Property loc_options;
     loc_options.put("device", m_localization_client_device_name);
     loc_options.put("local", m_name+"/localizationClient");
-    loc_options.put("remote", m_remote_localization_port_name);
+    loc_options.put("remote", m_nameof_remote_localization_port);
     loc_options.put("carrier", m_loc_carrier);
     if (m_pLoc.open(loc_options) == false)
     {
@@ -286,7 +286,7 @@ bool NavGuiThread::threadInit()
     Property map_options;
     map_options.put("device", m_map_client_device_name);
     map_options.put("local", m_name+"/map2DClient");
-    map_options.put("remote", m_remote_map_port_name);
+    map_options.put("remote", m_nameof_remote_map_port);
     map_options.put("carrier", m_map_carrier);
     if (m_pMap.open(map_options) == false)
     {
@@ -304,9 +304,9 @@ bool NavGuiThread::threadInit()
     Property nav_options;
     nav_options.put("device", m_navigation_client_device_name);
     nav_options.put("local", m_name + "/navigation2DClient");
-    nav_options.put("navigation_server", m_remote_navigation_port_name);
-    nav_options.put("map_locations_server", m_remote_map_port_name);
-    nav_options.put("localization_server", m_remote_localization_port_name);
+    nav_options.put("navigation_server", m_nameof_remote_navigation_port);
+    nav_options.put("map_locations_server", m_nameof_remote_map_port);
+    nav_options.put("localization_server", m_nameof_remote_localization_port);
     nav_options.put("carrier", m_nav_carrier);
     if (m_pNav.open(nav_options) == false)
     {
@@ -337,7 +337,7 @@ bool NavGuiThread::threadInit()
     Property las_options;
     las_options.put("device", m_laser_client_device_name);
     las_options.put("local", m_name+"/laser2DClient");
-    las_options.put("remote", m_remote_laser_port_name);
+    las_options.put("remote", m_nameof_remote_laser_port);
     las_options.put("carrier", m_las_carrier);
     if (m_pLas.open(las_options) == false)
     {

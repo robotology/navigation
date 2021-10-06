@@ -75,8 +75,8 @@ bool NavTestModule::configure(ResourceFinder& rf)
     navTestCfg.put("device",         NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local",          "/navigationTest");
     navTestCfg.put("navigation_server", navServerRoot);
-    navTestCfg.put("map_locations_server", "/mapServer");
-    navTestCfg.put("localization_server", "/localizationServer");
+    navTestCfg.put("map_locations_server", m_nameof_remote_map_port);
+    navTestCfg.put("localization_server", m_nameof_remote_localization_port);
 
     iNav            = 0;
     okClient        = ddNavClient.open(navTestCfg);

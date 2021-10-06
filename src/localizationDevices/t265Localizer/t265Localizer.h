@@ -114,14 +114,14 @@ protected:
     std::string                         m_name;
 
     //map server
-    std::string                  m_remote_map;
+    std::string                  m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
     yarp::dev::PolyDriver        m_pMap;
-    yarp::dev::Nav2D::IMap2D*    m_iMap;
+    yarp::dev::Nav2D::IMap2D*    m_iMap = nullptr;
 
     //device
     rs2::pipeline                m_realsense_pipe;
     rs2::config                  m_realsense_cfg;
-    odometry_handler*            m_odometry_handler;
+    odometry_handler*            m_odometry_handler = nullptr;
 
 private:
     bool open_device();

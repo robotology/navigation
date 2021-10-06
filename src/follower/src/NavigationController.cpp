@@ -29,7 +29,9 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 {
     bool            okClient, okView, enabled=true;;
     Property        navClientCfg, pLocationServer_cfg;
-    string          navServerRoot;
+    string          m_nameof_remote_navigation_port = NAVIGATION_REMOTE_PORT_DEFAULT;
+    string          m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+    string          m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
 
     Bottle config_group = rf.findGroup("FOLLOWER_GENERAL");
     if(!config_group.isNull())
@@ -51,11 +53,11 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 
     if(rf.check("navServerRoot"))
     {
-        navServerRoot = rf.find("navServerRoot").asString();
+        m_nameof_remote_navigation_port = rf.find("navServerRoot").asString();
     }
     else
     {
-        navServerRoot = "/navigationServer";
+        m_nameof_remote_navigation_port = NAVIGATION_REMOTE_PORT_DEFAULT;
     }
 //     pLocationServer_cfg.put("device", "locationsServer");
 //     pLocationServer_cfg.put("local", "/locationServer");
@@ -68,9 +70,9 @@ bool NavigationController::configure(yarp::os::ResourceFinder &rf)
 
     navClientCfg.put("device",         NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navClientCfg.put("local",          "/follower/nav");
-    navClientCfg.put("navigation_server", navServerRoot);
-    navClientCfg.put("map_locations_server", "/mapServer");
-    navClientCfg.put("localization_server", "/localizationServer");
+    navClientCfg.put("navigation_server", m_nameof_remote_navigation_port);
+    navClientCfg.put("map_locations_server", m_nameof_remote_map_port);
+    navClientCfg.put("localization_server", m_nameof_remote_localization_port);
 
     m_iNav = nullptr;
     if(!m_navClient_driver.open(navClientCfg))

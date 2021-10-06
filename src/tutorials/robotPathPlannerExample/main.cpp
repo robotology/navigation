@@ -139,13 +139,17 @@ int main(int argc, char* argv[])
         navigation_server_name = rf.find("navServer_name").asString();
     }
 
+    string m_nameof_remote_navigation_port = "/robotPathPlanner";
+    string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+    string m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
+
     //opens a navigation2DClient device to control the robot
     Property        navTestCfg;
     navTestCfg.put("device", NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local", "/robotPathPlannerExample");
-    navTestCfg.put("navigation_server", navigation_server_name);
-    navTestCfg.put("map_locations_server", "/mapServer");
-    navTestCfg.put("localization_server", "/localizationServer");
+    navTestCfg.put("navigation_server", m_nameof_remote_navigation_port);
+    navTestCfg.put("map_locations_server", m_nameof_remote_map_port);
+    navTestCfg.put("localization_server", m_nameof_remote_localization_port);
     PolyDriver ddNavClient;
     bool ok = ddNavClient.open(navTestCfg);
     if (!ok)
@@ -172,7 +176,7 @@ int main(int argc, char* argv[])
     PolyDriver ddMapClient;
     map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", "/robotPathPlannerExample"); //This is just a prefix. map2DClient will complete the port name.
-    map_options.put("remote", "/mapServer");
+    map_options.put("remote", m_nameof_remote_map_port);
     if (ddMapClient.open(map_options) == false)
     {
         yCError(ROBOTPATHPLANNER_EXAMPLE) << "Unable to open mapClient";

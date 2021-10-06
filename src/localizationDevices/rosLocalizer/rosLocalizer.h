@@ -124,6 +124,7 @@ class rosLocalizerThread : public yarp::os::PeriodicThread,
 protected:
     //general
     std::string                  m_name;
+    std::string                  m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
     double                       m_last_statistics_printed;
     double                       m_last_published_map;
     yarp::dev::Nav2D::MapGrid2D         m_current_map;

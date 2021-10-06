@@ -124,19 +124,21 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    std::string navigation_server_name = "/robotGoto";
+    std::string m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
+    std::string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+    std::string m_nameof_remote_navigation_port = "/robotGoto";
     if (rf.check("navServer_name"))
     {
-        navigation_server_name = rf.find("navServer_name").asString();
+        m_nameof_remote_navigation_port = rf.find("navServer_name").asString();
     }
 
     //opens a navigation2DClient device to control the robot
     Property        navTestCfg;
     navTestCfg.put("device", NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local", "/robotGotoExample");
-    navTestCfg.put("navigation_server", navigation_server_name);
-    navTestCfg.put("map_locations_server", "/mapServer");
-    navTestCfg.put("localization_server", "/localizationServer");
+    navTestCfg.put("navigation_server", m_nameof_remote_navigation_port);
+    navTestCfg.put("map_locations_server", m_nameof_remote_map_port);
+    navTestCfg.put("localization_server", m_nameof_remote_localization_port);
     PolyDriver ddNavClient;
     bool ok = ddNavClient.open(navTestCfg);
     if (!ok)

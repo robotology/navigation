@@ -144,6 +144,8 @@ public:
 
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
+        string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+
         bool ret = rpcPort.open("/map2Gazebo/rpc");
         if (ret == false)
         {
@@ -181,7 +183,7 @@ public:
             Property map_options;
             map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
             map_options.put("local", "/map2Gazebo"); //This is just a prefix. map2DClient will complete the port name.
-            map_options.put("remote", "/mapServer");
+            map_options.put("remote", m_nameof_remote_map_port);
             if (m_pMap.open(map_options) == false)
             {
                 yCError(MAP2GAZEBO) << "Unable to open mapClient";

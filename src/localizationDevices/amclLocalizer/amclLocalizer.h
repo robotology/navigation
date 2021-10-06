@@ -104,6 +104,7 @@ protected:
     std::mutex                   m_mutex;
     yarp::os::Searchable&        m_cfg;
     std::string                  m_name = "/amclLocalizer";
+    std::string                  m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
 
     //odometry port
     std::string                  m_port_broadcast_odometry_name;

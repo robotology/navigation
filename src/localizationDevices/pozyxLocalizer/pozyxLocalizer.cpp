@@ -105,9 +105,7 @@ pozyxLocalizerThread::pozyxLocalizerThread(double _period, string _name, yarp::o
     m_localization_data.y = 0;
     m_localization_data.theta = 0;
 
-    m_iMap = 0;
     m_publish_anchors_as_map_locations = false;
-    m_remote_map = "/mapServer";
 }
 
 void pozyxLocalizerThread::run()
@@ -313,11 +311,11 @@ bool pozyxLocalizerThread::threadInit()
 
     if (general_group.check("remote_mapServer"))
     {
-        m_remote_map = general_group.find("remote_mapServer").asString();
+        m_nameof_remote_map_port = general_group.find("remote_mapServer").asString();
     }
     else
     {
-        yCInfo(POZYX_DEV) << "remote_mapServer parameter not set. Using:" << m_remote_map;
+        yCInfo(POZYX_DEV) << "remote_mapServer parameter not set. Using:" << m_nameof_remote_map_port;
     }
 
     //the optional map client
@@ -327,7 +325,7 @@ bool pozyxLocalizerThread::threadInit()
         Property map_options;
         map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", m_name + "/map2DClient");
-        map_options.put("remote", m_remote_map);
+        map_options.put("remote", m_nameof_remote_map_port);
         if (m_pMap.open(map_options) == false)
         {
             yCError(POZYX_DEV) << "Unable to open map2DClient";

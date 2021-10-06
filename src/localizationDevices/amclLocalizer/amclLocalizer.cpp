@@ -761,7 +761,7 @@ bool amclLocalizerThread::threadInit()
     Property map_options;
     map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", m_name); //This is just a prefix. map2DClient will complete the port name.
-    map_options.put("remote", "/mapServer");
+    map_options.put("remote", m_nameof_remote_map_port);
     if (m_pMap.open(map_options) == false)
     {
         yCError(AMCL_DEV) << "Unable to open mapClient";

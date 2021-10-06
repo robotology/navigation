@@ -64,8 +64,8 @@ bool PlannerThread::threadInit()
 {
 	//default values
 	string localName = "/robotPathPlanner";
-    string localizationServer_name = "/localizationServer";
-    string mapServer_name = "/mapServer";
+    string m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
+    string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
     
     //read configuration parameters
     std::string debug_rf = m_cfg.toString();
@@ -136,8 +136,8 @@ bool PlannerThread::threadInit()
 
     if (localization_group.check("robot_frame_id")) { m_frame_robot_id = localization_group.find("robot_frame_id").asString(); }
     if (localization_group.check("map_frame_id")) { m_frame_map_id = localization_group.find("map_frame_id").asString(); }
-    if (localization_group.check("localizationServer_name")) localizationServer_name = localization_group.find("localizationServer_name").asString();
-    if (localization_group.check("mapServer_name")) mapServer_name = localization_group.find("mapServer_name").asString();
+    if (localization_group.check("localizationServer_name")) m_nameof_remote_localization_port = localization_group.find("localizationServer_name").asString();
+    if (localization_group.check("mapServer_name")) m_nameof_remote_map_port = localization_group.find("mapServer_name").asString();
     if (general_group.check("name")) localName = general_group.find("name").asString();
     
     bool ff = geometry_group.check("robot_radius");
@@ -173,7 +173,7 @@ bool PlannerThread::threadInit()
         Property loc_options;
         loc_options.put("device", LOCALIZATION_CLIENT_DEVICE_DEFAULT);
         loc_options.put("local", localName+"/localizationClient");
-        loc_options.put("remote", localizationServer_name);
+        loc_options.put("remote", m_nameof_remote_localization_port);
         if (m_pLoc.open(loc_options) == false)
         {
             yCError(PATHPLAN_INIT) << "Unable to open localization driver";
@@ -192,7 +192,7 @@ bool PlannerThread::threadInit()
         Property map_options;
         map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", localName); //This is just a prefix. map2DClient will complete the port name.
-        map_options.put("remote", mapServer_name);
+        map_options.put("remote", m_nameof_remote_map_port);
         if (m_pMap.open(map_options) == false)
         {
             yCError(PATHPLAN_INIT) << "Unable to open mapClient";

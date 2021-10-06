@@ -43,6 +43,8 @@ private:
     yarp::dev::PolyDriver      ddNavClient;
     yarp::dev::PolyDriver      ddLocServer;
     yarp::dev::Nav2D::INavigation2D*  iNav;
+    std::string m_nameof_remote_localization_port =LOCALIZATION_REMOTE_PORT_DEFAULT;
+    std::string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
 
     //goal/location variables
     std::vector<navStep>       stepVector;

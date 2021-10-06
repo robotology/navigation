@@ -27,10 +27,16 @@
     #define NAVIGATION_CLIENT_DEVICE_DEFAULT      "navigation2D_nwc_yarp"
     #define LIDAR_CLIENT_DEVICE_DEFAULT           "rangefinder2D_nwc_yarp"
     #define TF_CLIENT_DEFAULT_DEVICE              "frameTransformClient"
+    #define MAP_REMOTE_PORT_DEFAULT               "/mapServer"
+    #define NAVIGATION_REMOTE_PORT_DEFAULT        "/navigationServer"
+    #define LOCALIZATION_REMOTE_PORT_DEFAULT      "/localizationServer"
 #else
     #define LOCALIZATION_CLIENT_DEVICE_DEFAULT    "localization2DClient"
     #define MAP_CLIENT_DEVICE_DEFAULT             "map2DClient"
     #define NAVIGATION_CLIENT_DEVICE_DEFAULT      "navigation2DClient"
     #define LIDAR_CLIENT_DEVICE_DEFAULT           "Rangefinder2DClient"
     #define TF_CLIENT_DEFAULT_DEVICE              "transformClient"
+    #define MAP_REMOTE_PORT_DEFAULT               "/mapServer"
+    #define NAVIGATION_REMOTE_PORT_DEFAULT        "/navigationServer"
+    #define LOCALIZATION_REMOTE_PORT_DEFAULT      "/localizationServer"
 #endif

@@ -138,9 +138,6 @@ t265LocalizerThread::t265LocalizerThread(double _period, string _name, yarp::os:
     m_odometry_handler = nullptr;
     m_last_statistics_printed = -1;
 
-    m_iMap = 0;
-    m_remote_map = "/mapServer";
-
     m_current_loc.map_id = m_current_device_data.map_id = m_initial_device_data.map_id = m_initial_loc.map_id = "unknown";
     m_current_loc.x = m_current_device_data.x = m_initial_device_data.x = m_initial_loc.x = 0;
     m_current_loc.y = m_current_device_data.y = m_initial_device_data.y = m_initial_loc.y = 0;
@@ -374,11 +371,11 @@ bool t265LocalizerThread::threadInit()
 
     if (general_group.check("remote_mapServer"))
     {
-        m_remote_map = general_group.find("remote_mapServer").asString();
+        m_nameof_remote_map_port = general_group.find("remote_mapServer").asString();
     }
     else
     {
-        yCInfo(T265_LOC) << "remote_mapServer parameter not set. Using:" << m_remote_map;
+        yCInfo(T265_LOC) << "remote_mapServer parameter not set. Using:" << m_nameof_remote_map_port;
     }
 
     //the optional map client
@@ -388,7 +385,7 @@ bool t265LocalizerThread::threadInit()
         Property map_options;
         map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
         map_options.put("local", m_name + "/map2DClient");
-        map_options.put("remote", m_remote_map);
+        map_options.put("remote", m_nameof_remote_map_port);
         if (m_pMap.open(map_options) == false)
         {
             yCError(T265_LOC) << "Unable to open map2DClient";

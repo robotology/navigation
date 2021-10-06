@@ -299,7 +299,7 @@ bool GotoThread::threadInit()
 
     //open module ports
     string localName = "/robotGoto";
-    string localizationServer_name = "/localizationServer";
+    string m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
     
     Bottle general_group = m_cfg.findGroup("ROBOTGOTO_GENERAL");
     if (general_group.isNull())
@@ -309,7 +309,7 @@ bool GotoThread::threadInit()
     }
     if (general_group.check("name")) localName = general_group.find("name").asString();
     
-    if (localization_group.check("localizationServer_name")) localizationServer_name = localization_group.find("localizationServer_name").asString();
+    if (localization_group.check("localizationServer_name")) m_nameof_remote_localization_port = localization_group.find("localizationServer_name").asString();
         
     
     bool ret = true;
@@ -327,7 +327,7 @@ bool GotoThread::threadInit()
     Property loc_options;
     loc_options.put("device", LOCALIZATION_CLIENT_DEVICE_DEFAULT);
     loc_options.put("local", localName+"/localizationClient");
-    loc_options.put("remote", localizationServer_name);
+    loc_options.put("remote", m_nameof_remote_localization_port);
 
     if (m_pLoc.open(loc_options) == false)
     {

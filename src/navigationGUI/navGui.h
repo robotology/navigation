@@ -97,10 +97,10 @@ class NavGuiThread: public yarp::os::PeriodicThread
     std::string                                            m_laser_client_device_name = LIDAR_CLIENT_DEVICE_DEFAULT;
     std::string                                            m_navigation_client_device_name = NAVIGATION_CLIENT_DEVICE_DEFAULT;
 
-    std::string                                            m_remote_localization_port_name = "/localizationServer";
-    std::string                                            m_remote_map_port_name = "/mapServer";
-    std::string                                            m_remote_laser_port_name = "/ikart/laser:o";
-    std::string                                            m_remote_navigation_port_name = "/navigationServer";
+    std::string                                            m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
+    std::string                                            m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+    std::string                                            m_nameof_remote_laser_port = "/ikart/laser:o";
+    std::string                                            m_nameof_remote_navigation_port = NAVIGATION_REMOTE_PORT_DEFAULT;
 
     std::string                                            m_las_carrier;
     std::string                                            m_map_carrier;

@@ -15,14 +15,18 @@ YARP_LOG_COMPONENT(NAV_CLIENT_SNIPPET, "navigation.navigation2DClientSnippet")
 int main(int argc, char *argv[])
 {
     Network yarp;
-    
+
+    string m_nameof_remote_navigation_port = "/robotPathPlanner";
+    string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+    string m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
+
     //opens a navigation2DClient device and gets a INavigation2D interface.
     Property navTestCfg;
     navTestCfg.put("device",               NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local",                "/navigationTest_navClient");
-    navTestCfg.put("navigation_server",    "/robotPathPlanner");
-    navTestCfg.put("map_locations_server", "/mapServer");
-    navTestCfg.put("localization_server",  "/localizationServer");
+    navTestCfg.put("navigation_server",    m_nameof_remote_navigation_port);
+    navTestCfg.put("map_locations_server", m_nameof_remote_map_port);
+    navTestCfg.put("localization_server",  m_nameof_remote_localization_port);
     yarp::dev::PolyDriver     ddNavClient;
     yarp::dev::Nav2D::INavigation2D* iNav                 = 0;
     bool okClient             = ddNavClient.open(navTestCfg);
@@ -37,7 +41,7 @@ int main(int argc, char *argv[])
     Property map_options;
     map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", "/navigationTest_mapClient");
-    map_options.put("remote", "/mapServer");
+    map_options.put("remote", m_nameof_remote_map_port);
     PolyDriver      ddMapClient;
     IMap2D* iMap    = 0;
     okClient             = ddMapClient.open(map_options);

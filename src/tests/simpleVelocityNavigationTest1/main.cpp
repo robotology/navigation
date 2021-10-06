@@ -44,15 +44,19 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    string m_nameof_remote_navigation_port = NAVIGATION_REMOTE_PORT_DEFAULT;
+    string m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
+    string m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
+
     bool ok;
     Property navTestCfg;
     yarp::dev::PolyDriver      ddNavClient;
     yarp::dev::Nav2D::INavigation2DVelocityActions*  iVel = nullptr;
     navTestCfg.put("device", NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local", "/navigationTest");
-    navTestCfg.put("navigation_server", "/navigationServer");
-    navTestCfg.put("map_locations_server", "/mapServer");
-    navTestCfg.put("localization_server", "/localizationServer");
+    navTestCfg.put("navigation_server", m_nameof_remote_navigation_port);
+    navTestCfg.put("map_locations_server", m_nameof_remote_map_port);
+    navTestCfg.put("localization_server", m_nameof_remote_localization_port);
 
     ok = ddNavClient.open(navTestCfg);
     if (!ok) { yFatal(); }

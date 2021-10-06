@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include "navigation_defines.h"
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -47,9 +48,9 @@ int main(int argc, char* argv[])
     Property navTestCfg;
     yarp::dev::PolyDriver      ddNavClient;
     yarp::dev::Nav2D::INavigation2DVelocityActions*  iVel = nullptr;
-    navTestCfg.put("device", "TO_BE_CHANGED_HERE");
+    navTestCfg.put("device", NAVIGATION_CLIENT_DEVICE_DEFAULT);
     navTestCfg.put("local", "/navigationTest");
-    navTestCfg.put("navigation_server", "/navigationServer");
+    navTestCfg.put("navigation_server", NAVIGATION_REMOTE_PORT_DEFAULT);
 
     ok = ddNavClient.open(navTestCfg);
     if (!ok) { yFatal(); }

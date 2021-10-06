@@ -50,7 +50,7 @@ rosNavigator::rosNavigator() : PeriodicThread(DEFAULT_THREAD_PERIOD)
     m_rosTopicName_status = "/move_base/status";
     m_rosTopicName_result = "/move_base/result";
     m_navigation_status = navigation_status_idle;
-    m_remote_localization = "/localizationServer";
+    m_nameof_remote_localization_port = LOCALIZATION_REMOTE_PORT_DEFAULT;
     m_rosTopicName_globalOccupancyGrid = "/move_base/global_costmap/costmap";
     m_rosTopicName_localOccupancyGrid = "/move_base/local_costmap/costmap";
     m_rosTopicName_recoveryStatus = "/move_base/recovery_status";
@@ -186,7 +186,7 @@ bool rosNavigator::threadInit()
     Property loc_options;
     loc_options.put("device", LOCALIZATION_CLIENT_DEVICE_DEFAULT);
     loc_options.put("local", m_name + "/localizationClient");
-    loc_options.put("remote", m_remote_localization);
+    loc_options.put("remote", m_nameof_remote_localization_port);
     if (m_pLoc.open(loc_options) == false)
     {
         yCError(ROS_NAV) << "Unable to open localization driver";
@@ -203,7 +203,7 @@ bool rosNavigator::threadInit()
     Property map_options;
     map_options.put("device", MAP_CLIENT_DEVICE_DEFAULT);
     map_options.put("local", "/robotPathPlanner"); //This is just a prefix. map2DClient will complete the port name.
-    map_options.put("remote", "/mapServer");
+    map_options.put("remote", m_nameof_remote_map_port);
     if (m_pMap.open(map_options) == false)
     {
         yCError(ROS_NAV) << "Unable to open mapClient";

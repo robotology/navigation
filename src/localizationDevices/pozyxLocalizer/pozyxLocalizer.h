@@ -98,9 +98,9 @@ protected:
 
     //publish anchors onto map as locations
     bool                         m_publish_anchors_as_map_locations;
-    std::string                  m_remote_map;
+    std::string                  m_nameof_remote_map_port = MAP_REMOTE_PORT_DEFAULT;
     yarp::dev::PolyDriver        m_pMap;
-    yarp::dev::Nav2D::IMap2D*    m_iMap;
+    yarp::dev::Nav2D::IMap2D*    m_iMap = nullptr;
     std::string                  m_name = "/pozyxLocalizer";
 
 private:
