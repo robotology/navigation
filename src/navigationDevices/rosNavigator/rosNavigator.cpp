@@ -164,9 +164,9 @@ bool rosNavigator::open(yarp::os::Searchable &config)
         return false;
     }
 
-    this->start();
+    bool bth = this->start();
 
-    return true;
+    return bth;
 }
 
 bool rosNavigator::close()
