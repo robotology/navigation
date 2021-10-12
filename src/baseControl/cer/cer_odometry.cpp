@@ -26,8 +26,8 @@ bool CER_Odometry::reset_odometry()
 {
     ienc->getEncoder(0,&encL_offset);
     ienc->getEncoder(1,&encR_offset);
-    odom_x=0;
-    odom_y=0;
+    m_odom_x=0;
+    m_odom_y=0;
     encvel_estimator->reset();
     yCInfo(CER_ODOM,"Odometry reset done");
     return true;
@@ -35,15 +35,15 @@ bool CER_Odometry::reset_odometry()
 
 void CER_Odometry::printStats()
 {
-    mutex.wait();
+    data_mutex.lock();
     //yCInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
     yCInfo(CER_ODOM,"* Odometry Thread:");
     yCInfo(CER_ODOM, "enc1:%+9.1f enc2:%+9.1f  ", enc[0]*57, enc[1]*57);
     yCInfo(CER_ODOM, "env1:%+9.3f env2:%+9.3f ", encv[0] * 57, encv[1] * 57);
     yCInfo(CER_ODOM, "ivlx:%+9.3f ivlx:%+9.3f",base_vel_lin, base_vel_theta);
     yCInfo(CER_ODOM, "ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f", odom_vel_x, odom_vel_y, odom_vel_theta);
-    yCInfo(CER_ODOM, "x: %+5.3f y: %+5.3f t: %+5.3f", odom_x, odom_y, odom_theta);
-    mutex.post();
+    yCInfo(CER_ODOM, "x: %+5.3f y: %+5.3f t: %+5.3f", m_odom_x, m_odom_y, m_odom_theta);
+    data_mutex.unlock();
 }
 
 CER_Odometry::~CER_Odometry()
@@ -54,9 +54,9 @@ CER_Odometry::~CER_Odometry()
 CER_Odometry::CER_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
 {
     control_board_driver= _driver;
-    odom_x=0;
-    odom_y=0;
-    odom_theta=0;
+    m_odom_x=0;
+    m_odom_y=0;
+    m_odom_theta=0;
 
     odom_vel_x=0;
     odom_vel_y=0;
@@ -80,7 +80,6 @@ CER_Odometry::CER_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
 bool CER_Odometry::open(const Property& _options)
 {
     ctrl_options = _options;
-    localName = ctrl_options.find("local").asString();
 
     // open the control board driver
     yCInfo(CER_ODOM,"Opening the motors interface...");
@@ -97,16 +96,6 @@ bool CER_Odometry::open(const Property& _options)
     if(!ok)
     {
         yCError(CER_ODOM, "one or more devices has not been viewed");
-        return false;
-    }
-    // open control input ports
-    bool ret = true;
-    ret &= port_odometry.open((localName+"/odometry:o").c_str());
-    ret &= port_odometer.open((localName+"/odometer:o").c_str());
-    ret &= port_vels.open((localName+"/velocity:o").c_str());
-    if (ret == false)
-    {
-        yCError(CER_ODOM) << "Unable to open module ports";
         return false;
     }
 
@@ -144,7 +133,7 @@ bool CER_Odometry::open(const Property& _options)
 
 void CER_Odometry::compute()
 {
-    mutex.wait();
+    data_mutex.lock();
 
     //read the encoders (deg)
     ienc->getEncoder(0,&encL);
@@ -165,10 +154,10 @@ void CER_Odometry::compute()
     encv= encvel_estimator->estimate(el);
 
     //compute the orientation.
-    odom_theta = (geom_r / geom_L) * (-enc[0] + enc[1]);
+    m_odom_theta = (geom_r / geom_L) * (-enc[0] + enc[1]);
 
     iCub::ctrl::AWPolyElement el2;
-    el2.data = yarp::sig::Vector(1,odom_theta);
+    el2.data = yarp::sig::Vector(1, m_odom_theta);
     el2.time = Time::now();
     yarp::sig::Vector vvv;
     vvv.resize(1, 0.0);
@@ -208,27 +197,27 @@ void CER_Odometry::compute()
     //yCDebug() << base_vel_theta << vvv[0];
 
     
-    odom_vel_x = base_vel_x * cos(odom_theta);
-    odom_vel_y = base_vel_x * sin(odom_theta);
+    odom_vel_x = base_vel_x * cos(m_odom_theta);
+    odom_vel_y = base_vel_x * sin(m_odom_theta);
     odom_vel_lin = base_vel_lin;
     odom_vel_theta = base_vel_theta;
 
     //the integration step
     double period=el.time-last_time;
-    odom_x=odom_x + (odom_vel_x * period);
-    odom_y=odom_y + (odom_vel_y * period);
+    m_odom_x= m_odom_x + (odom_vel_x * period);
+    m_odom_y= m_odom_y + (odom_vel_y * period);
 
     //compute traveled distance (odometer)
     traveled_distance = traveled_distance + fabs(base_vel_lin   * period);
     traveled_angle    = traveled_angle    + fabs(base_vel_theta * period);
 
     //convert from radians back to degrees
-    odom_theta       *= RAD2DEG;
+    m_odom_theta       *= RAD2DEG;
     base_vel_theta   *= RAD2DEG;
     odom_vel_theta   *= RAD2DEG;
     traveled_angle   *= RAD2DEG;
 
-    mutex.post();
+    data_mutex.unlock();
     last_time = yarp::os::Time::now();
 }
 

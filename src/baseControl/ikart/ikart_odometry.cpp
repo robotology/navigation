@@ -26,8 +26,8 @@ bool iKart_Odometry::reset_odometry()
     ienc->getEncoder(0,&encA_offset);
     ienc->getEncoder(1,&encB_offset);
     ienc->getEncoder(2,&encC_offset);
-    odom_x=0;
-    odom_y=0;
+    m_odom_x=0;
+    m_odom_y=0;
     encvel_estimator->reset();
     yCInfo(IKART_ODOM,"Odometry reset done");
     return true;
@@ -35,15 +35,15 @@ bool iKart_Odometry::reset_odometry()
 
 void iKart_Odometry::printStats()
 {
-    mutex.wait();
+    data_mutex.lock();
     //yCInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
     yCInfo (IKART_ODOM,"* Odometry Thread:");
     yCInfo (IKART_ODOM,"enc1:%+9.1f enc2:%+9.1f enc3:%+9.1f ******** env1:%+9.3f env2:%+9.3f env3:%+9.3f\n",
     enc[0]*57, enc[1]*57, enc[2]*57, encv[0]*57, encv[1]*57, encv[2]*57);
     
     yCInfo (IKART_ODOM,"ivlx:%+9.3f ivly:%+9.3f                ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f\n",
-    base_vel_x, base_vel_y, odom_vel_x, odom_vel_y, base_vel_theta,  odom_x, odom_y,odom_theta );
-    mutex.post();
+    base_vel_x, base_vel_y, odom_vel_x, odom_vel_y, base_vel_theta, m_odom_x, m_odom_y, m_odom_theta );
+    data_mutex.unlock();
 }
 
 iKart_Odometry::~iKart_Odometry()
@@ -54,9 +54,9 @@ iKart_Odometry::~iKart_Odometry()
 iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
 {
     control_board_driver= _driver;
-    odom_x=0;
-    odom_y=0;
-    odom_theta=0;
+    m_odom_x=0;
+    m_odom_y=0;
+    m_odom_theta=0;
     odom_vel_x=0;
     odom_vel_y=0;
     base_vel_x=0;
@@ -78,7 +78,6 @@ iKart_Odometry::iKart_Odometry(PolyDriver* _driver) : OdometryHandler(_driver)
 bool iKart_Odometry::open(const Property &_options)
 {
     ctrl_options = _options;
-    localName = ctrl_options.find("local").asString();
 
     // open the control board driver
     yCInfo(IKART_ODOM,"Opening the motors interface...");
@@ -95,16 +94,6 @@ bool iKart_Odometry::open(const Property &_options)
     if(!ok)
     {
         yCError(IKART_ODOM,"one or more devices has not been viewed");
-        return false;
-    }
-    // open control input ports
-    bool ret= true;
-    ret &= port_odometry.open((localName+"/odometry:o").c_str());
-    ret &= port_odometer.open((localName+"/odometer:o").c_str());
-    ret &= port_vels.open((localName+"/velocity:o").c_str());
-    if (ret == false)
-    {
-        yCError(IKART_ODOM) << "Unable to open module ports";
         return false;
     }
 
@@ -156,7 +145,7 @@ bool iKart_Odometry::open(const Property &_options)
 
 void iKart_Odometry::compute()
 {
-    mutex.wait();
+    data_mutex.lock();
 
     //read the encoders (deg)
     ienc->getEncoder(0,&encA);
@@ -185,7 +174,7 @@ void iKart_Odometry::compute()
     // -------------------------------------------------------------------------------------
 
     //compute the orientation. odom_theta is expressed in radians
-    odom_theta = geom_r*(enc[0]+enc[1]+enc[2])/(3*geom_L);
+    m_odom_theta = geom_r*(enc[0]+enc[1]+enc[2])/(3*geom_L);
 
     //build the kinematics matrix
     yarp::sig::Matrix kin;
@@ -218,10 +207,10 @@ void iKart_Odometry::compute()
     yarp::sig::Matrix m1;
     m1.resize(3,3);
     m1.zero();
-    m1(0,0) = cos (odom_theta);
-    m1(0,1) = -sin (odom_theta);
-    m1(1,0) = sin (odom_theta);
-    m1(1,1) = cos (odom_theta);
+    m1(0,0) = cos (m_odom_theta);
+    m1(0,1) = -sin (m_odom_theta);
+    m1(1,0) = sin (m_odom_theta);
+    m1(1,1) = cos (m_odom_theta);
     m1(2,2) = 1;
 
     yarp::sig::Matrix m2;
@@ -259,13 +248,13 @@ void iKart_Odometry::compute()
         base_vel_theta = atan2(base_vel_x,base_vel_y)*RAD2DEG;
     }
     //convert from radians back to degrees
-    odom_theta       *= RAD2DEG;
+    m_odom_theta       *= RAD2DEG;
     traveled_angle   *= RAD2DEG;
 
     //the integration step
     double period=el.time-last_time;
-    odom_x=odom_x + (odom_vel_x * period);
-    odom_y=odom_y + (odom_vel_y * period);
+    m_odom_x= m_odom_x + (odom_vel_x * period);
+    m_odom_y= m_odom_y + (odom_vel_y * period);
 
     //compute traveled distance (odometer)
     traveled_distance = traveled_distance + fabs(base_vel_lin   * period);
@@ -292,7 +281,7 @@ void iKart_Odometry::compute()
                 (sin(odom_theta)-si3m)*encC
                 );
     */  
-    mutex.post();
+    data_mutex.unlock();
     last_time = yarp::os::Time::now();
 }
 
