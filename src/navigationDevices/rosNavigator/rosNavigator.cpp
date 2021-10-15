@@ -399,11 +399,11 @@ void rosNavigator::run()
         if (recoveryInfo->total_number_of_recoveries == 999){
 			yCInfo(ROS_NAV) << "Navigation finished recovery:" << recoveryInfo->recovery_behavior_name;
 			m_navigation_status = navigation_status_waiting_obstacle;
-			m_isRecovering = true;
+			m_isRecovering = false;
 		}else{
 			yCInfo(ROS_NAV) << "Navigation status set to recovery:" << recoveryInfo->recovery_behavior_name;
 			m_navigation_status = navigation_status_thinking;
-			m_isRecovering = false;
+			m_isRecovering = true;
 		}
     }
     
