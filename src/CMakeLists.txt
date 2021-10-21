@@ -9,6 +9,8 @@ add_subdirectory(common)
 # add_subdirectory(deprecated)
 
 add_subdirectory(baseControl)
+add_subdirectory(baseControl2)
+
 add_subdirectory(forceGuidance)
 add_subdirectory(navigationGUI)
 
