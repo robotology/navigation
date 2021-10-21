@@ -39,6 +39,7 @@
 #include <math.h>
 
 #include "odometryHandler.h"
+#include "odometryBroadcaster.h"
 #include "motors.h"
 #include "input.h"
 
@@ -110,9 +111,10 @@ protected:
     BufferedPort<Bottle> port_debug_angular;
     BufferedPort<Bottle> port_filtered_commands;
 
-    OdometryHandler*            m_odometry_handler;
-    MotorControl*        m_motor_handler;
-    Input*               m_input_handler;
+    OdometryHandler*            m_odometry_handler = nullptr;
+    OdometryBroadcaster*        m_odometry_broadcaster = nullptr;
+    MotorControl*        m_motor_handler = nullptr;
+    Input*               m_input_handler = nullptr;
 
     string               remoteName;
     string               localName;

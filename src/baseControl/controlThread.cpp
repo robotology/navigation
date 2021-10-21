@@ -18,6 +18,7 @@
 
 #include "controlThread.h"
 #include "filters.h"
+#include "odometryHandler.h"
 #include "cer/cer_odometry.h"
 #include "ikart/ikart_odometry.h"
 #include "cer/cer_motors.h"
@@ -90,9 +91,6 @@ ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property opti
     angular_ol_pid           = 0;
     remoteName               = ctrl_options.find("remote").asString();
     localName                = ctrl_options.find("local").asString();
-    m_odometry_handler       = 0;
-    m_motor_handler          = 0;
-    m_input_handler          = 0;
 }
 
 void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_speed)
@@ -283,7 +281,7 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
 void ControlThread::run()
 {
     if (m_odometry_handler) this->m_odometry_handler->compute();
-    if (m_odometry_handler) this->m_odometry_handler->broadcast();
+    if (m_odometry_broadcaster) this->m_odometry_broadcaster->broadcast();
 
     double pidout_linear_throttle = 0;
     double pidout_angular_throttle = 0;
@@ -571,7 +569,11 @@ bool ControlThread::threadInit()
         robot_geom.put("geom_r", geom_r);
         robot_geom.put("geom_L", geom_L);
 
-        if (odometry_enabled) m_odometry_handler = new CER_Odometry(control_board_driver);
+        if (odometry_enabled)
+        {
+            m_odometry_handler = new CER_Odometry(control_board_driver);
+            m_odometry_broadcaster = new OdometryBroadcaster(m_odometry_handler);
+        }
         m_motor_handler    = new CER_MotorControl(control_board_driver);
         m_input_handler    = new Input();
     }
@@ -579,7 +581,11 @@ bool ControlThread::threadInit()
     {
         yCInfo(CONTROL_THRD, "Using ikart_V1 robot type");
         robot_type       = ROBOT_TYPE_THREE_ROTOCASTER;
-        if (odometry_enabled) m_odometry_handler = new iKart_Odometry(control_board_driver);
+        if (odometry_enabled) 
+        {
+            m_odometry_handler = new iKart_Odometry(control_board_driver);
+            m_odometry_broadcaster = new OdometryBroadcaster(m_odometry_handler);
+        }
         m_motor_handler    = new iKart_MotorControl(control_board_driver);
         m_input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
@@ -591,7 +597,11 @@ bool ControlThread::threadInit()
     {
         yCInfo(CONTROL_THRD, "Using ikart_V2 robot type");
         robot_type       = ROBOT_TYPE_THREE_MECHANUM;
-        if (odometry_enabled) m_odometry_handler = new iKart_Odometry(control_board_driver);
+        if (odometry_enabled)
+        {
+           m_odometry_handler = new iKart_Odometry(control_board_driver);
+           m_odometry_broadcaster = new OdometryBroadcaster(m_odometry_handler);
+        }
         m_motor_handler    = new iKart_MotorControl(control_board_driver);
         m_input_handler    = new Input();
         yarp::os::Property& robot_geom = ctrl_options.addGroup("ROBOT_GEOMETRY");
@@ -604,16 +614,17 @@ bool ControlThread::threadInit()
         yCError(CONTROL_THRD) << "Invalid Robot type selected: ROBOT_TYPE_NONE";
         return false;
     }
-    
-    if(useRos)
-    {
-        //odometry_handler->rosNode = rosNode;
-        //input_handler->rosNode    = rosNode;
-    }
-    
+
     if (m_odometry_handler && m_odometry_handler->open(ctrl_options) == false)
     {
         yCError(CONTROL_THRD) << "Problem occurred while opening odometry handler";
+        return false;
+    }
+
+    string ssss = ctrl_options.toString();
+    if (m_odometry_broadcaster&& m_odometry_broadcaster->open(ctrl_options) == false)
+    {
+        yCError(CONTROL_THRD) << "Problem occurred while opening odometry broadcaster";
         return false;
     }
 

@@ -16,9 +16,10 @@
 * Public License for more details
 */
 
-#ifndef ODOMETRY_H
-#define ODOMETRY_H
+#ifndef ODOMETRYBROADCASTER_H
+#define ODOMETRYBROADCASTER_H
 
+#include "odometryHandler.h"
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Bottle.h>
@@ -60,94 +61,63 @@ using namespace yarp::math;
 #define DEG2RAD M_PI/180.0
 #endif
 
-class OdometryHandler
+class OdometryBroadcaster
 {
 protected:
-    Property              ctrl_options;
-    mutable std::mutex    data_mutex;
-    yarp::os::Stamp       timeStamp;
-    double                last_time;
+    yarp::os::Stamp            m_timeStamp;
+    yarp::dev::OdometryData    m_robot_odom;
+    OdometryHandler*           m_dev=nullptr;
+
+    //ROS
+    bool                                            enable_ROS;
+    yarp::os::Publisher<yarp::rosmsg::nav_msgs::Odometry>          rosPublisherPort_odometry;
+    std::string                                     odometry_frame_id;
+    std::string                                     child_frame_id;
+    std::string                                     rosTopicName_odometry;
+
+    yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PolygonStamped>          rosPublisherPort_footprint;
+    double                                                     footprint_diameter;
+    std::string                                                rosTopicName_footprint;
+    yarp::rosmsg::geometry_msgs::PolygonStamped                footprint;
+    std::string                                                footprint_frame_id;
+
+    yarp::os::Publisher<yarp::rosmsg::tf2_msgs::TFMessage>                    rosPublisherPort_tf;
 
 protected:
-    //estimated cartesian velocity in the fixed odometry reference frame (world)
-    double              odom_vel_x;
-    double              odom_vel_y;
-    double              odom_vel_lin;
-    double              odom_vel_theta;
-
-    //estimated cartesian velocity in the base relative reference frame
-    double              base_vel_x;
-    double              base_vel_y;
-    double              base_vel_lin;
-    double              base_vel_theta;
-
-    //estimated odometer 
-    double              traveled_distance;
-    double              traveled_angle;
-
-    //estimated cartesian pos in the fixed odometry reference frame
-    double              m_odom_x;
-    double              m_odom_y;
-    double              m_odom_theta;
-
-protected:
-    //motor control interfaces 
-    PolyDriver                      *control_board_driver;
-    IEncoders                       *ienc;
+    BufferedPort<yarp::dev::OdometryData>          port_odometry;
+    BufferedPort<Bottle>                           port_odometer;
+    BufferedPort<Bottle>                           port_vels;
+    string                                         localName;
 
 public:
     /**
     * Constructor
     * @param _driver is a pointer to a remoteControlBoard driver.
     */
-    OdometryHandler(PolyDriver* _driver);
+    OdometryBroadcaster (OdometryHandler* _pp);
 
     /**
     * Default destructor
     */
-    ~OdometryHandler();
+    ~OdometryBroadcaster();
     
-    /**
-    * Resets the robot odometry, meaning the current robot pose becomes 0,0,0.
-    * @return true/false if the command is accepted.
-    */
-    virtual bool   reset_odometry() = 0;
-
     /**
     * Initializes the odometry module.
     * @param options the options to be passed to odometry module.
     * @return true/false if the odometry module is opened successfully.
     */
-    virtual bool   open(const Property &options) = 0;
+    virtual bool   open(const Property &options);
 
     /**
-    * Performs the odometry computation.
+    * Broadcast odometry data over YARP ports (or ROS topics)
     */
-    virtual void   compute() = 0;
-
-    /**
-    * Print some stats about the computed odometry estimation
-    */
-    virtual void   printStats() = 0;
+    virtual void   broadcast();
 
     /**
     * Terminates the execution of the odometry module
     */
     virtual void   close();
 
-    /**
-    * Get the current robot linear velocity
-    * @return the current linear velocity
-    */
-    virtual double get_base_vel_lin();
-
-    /**
-    * Get the current robot angular velocity
-    * @return the current angular velocity
-    */
-    virtual double get_base_vel_theta();
-
-    bool getOdometry(yarp::dev::OdometryData& odomData) const;
 };
 
 #endif
