@@ -153,6 +153,7 @@ bool rosNavigator::open(yarp::os::Searchable &config)
         yCError(ROS_NAV) << " opening " << m_rosTopicName_recoveryStatus << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
+    m_rosSubscriber_recoveryStatus.setStrict();
     if (!m_rosSubscriber_globalPath.topic(m_rosTopicName_globalPath))
     {
         yCError(ROS_NAV) << " opening " << m_rosTopicName_globalPath << " Topic, check your yarp-ROS network configuration\n";
