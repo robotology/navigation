@@ -29,7 +29,7 @@
       #define LIDAR_CLIENT_DEVICE_DEFAULT           "Rangefinder2DClient"
     #define TF_CLIENT_DEFAULT_DEVICE              "frameTransformClient"
     #define MAP_REMOTE_PORT_DEFAULT               "/map2D_nws_yarp"
-    #define NAVIGATION_REMOTE_PORT_DEFAULT        "/navigation_nws_yarp"
+    #define NAVIGATION_REMOTE_PORT_DEFAULT        "/navigation2D_nws_yarp"
     #define LOCALIZATION_REMOTE_PORT_DEFAULT      "/localization2D_nws_yarp"
 #else
     #define LOCALIZATION_CLIENT_DEVICE_DEFAULT    "localization2DClient"
