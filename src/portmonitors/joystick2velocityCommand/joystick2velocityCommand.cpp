@@ -17,7 +17,7 @@ YARP_LOG_COMPONENT(JOY2VEL, "navigation.Joy2Vel")
 
 Joy2vel::Joy2vel()
 {
-    this->things.setPortWriter(&this->command);
+    this->m_things.setPortWriter(&this->m_command);
 }
 
 bool Joy2vel::accept(yarp::os::Things& thing)
@@ -59,10 +59,10 @@ yarp::os::Things& Joy2vel::update(yarp::os::Things& thing)
     if (bot->get(0).asInt32()==3)
     {
         double percent = bot->get(4).asFloat64()/100.0;
-        this->command.vel_x = bot->get(1).asFloat64() * percent;
-        this->command.vel_y = bot->get(2).asFloat64() * percent;
-        this->command.vel_theta = bot->get(3).asFloat64() * percent;
+        this->m_command.vel_x = bot->get(1).asFloat64() * percent;
+        this->m_command.vel_y = bot->get(2).asFloat64() * percent;
+        this->m_command.vel_theta = bot->get(3).asFloat64() * percent;
     }
 
-    return this->things;
+    return this->m_things;
 }

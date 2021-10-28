@@ -20,8 +20,8 @@ public:
     virtual bool accept(yarp::os::Things& thing);
     virtual yarp::os::Things& update(yarp::os::Things& thing);
 private:
-    yarp::os::Things things;
-    yarp::dev::MobileBaseVelocity command;
+    yarp::os::Things              m_things;
+    yarp::dev::MobileBaseVelocity m_command;
 
     bool validate_bot(const yarp::os::Bottle* bot);
 };
