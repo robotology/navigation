@@ -25,12 +25,6 @@ YARP_LOG_COMPONENT(MOTOR_CTRL, "navigation.baseControl.MotorControl")
 
 void MotorControl::close()
 {
-    if (enable_ROS && enable_ROS_OUTPUT_GROUP)
-    {
-        rosPublisherPort_cmd_twist.interrupt();
-        rosPublisherPort_cmd_twist.close();
-    }
-
     port_status.interrupt();
     port_status.close();
 }
@@ -42,20 +36,6 @@ MotorControl::~MotorControl()
 
 void MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
-    if (enable_ROS_OUTPUT_GROUP)
-    {
-        yarp::rosmsg::geometry_msgs::Twist &twist = rosPublisherPort_cmd_twist.prepare();
-
-        twist.linear.x = appl_linear_speed * cos(appl_desired_direction* DEG2RAD);
-        twist.linear.y = appl_linear_speed * sin(appl_desired_direction* DEG2RAD);
-        twist.linear.z = 0;
-
-        twist.angular.x = 0;
-        twist.angular.y = 0;
-        twist.angular.z = appl_angular_speed*DEG2RAD;
-
-        rosPublisherPort_cmd_twist.write();
-    }
 }
 
 void  MotorControl::apply_motor_filter(int joint)
@@ -104,10 +84,6 @@ bool MotorControl::open(const Property &_options)
     if (ctrl_options.check("BASECTRL_GENERAL"))
     {
         yarp::os::Bottle g_group = ctrl_options.findGroup("BASECTRL_GENERAL");
-        enable_ROS = (g_group.find("use_ROS").asBool() == true);
-        if (enable_ROS) yCInfo(MOTOR_CTRL) << "ROS enabled";
-        else
-            yCInfo(MOTOR_CTRL) << "ROS not enabled";
     }
     else
     {
@@ -150,28 +126,6 @@ bool MotorControl::open(const Property &_options)
     max_motor_vel = motors_options.check("max_motor_vel", Value(0), "max_motor_vel").asFloat64();
 
     localName = ctrl_options.find("local").asString();
-
-    if (enable_ROS)
-    {
-        if (ctrl_options.check("ROS_OUTPUT"))
-        {
-            yarp::os::Bottle rout_group = ctrl_options.findGroup("ROS_OUTPUT");
-            if (rout_group.check("topic_name") == false)  { yCError(MOTOR_CTRL) << "Missing topic_name parameter"; return false; }
-            rosTopicName_cmd_twist = rout_group.find("topic_name").asString();
-            enable_ROS_OUTPUT_GROUP = true;
-        }
-        else
-        {
-            enable_ROS_OUTPUT_GROUP = false;
-        }
-
-        if (!rosPublisherPort_cmd_twist.topic(rosTopicName_cmd_twist))
-        {
-            yCError(MOTOR_CTRL) << " opening " << rosTopicName_cmd_twist << " Topic, check your yarp-ROS network configuration\n";
-            return false;
-        }
-        yCInfo (MOTOR_CTRL) << "ROS_OUTPUT param found. Enabling topic "<<rosTopicName_cmd_twist;
-    }
 
     bool ret = port_status.open((localName+"/motors_status:o").c_str());
     if (ret == false)

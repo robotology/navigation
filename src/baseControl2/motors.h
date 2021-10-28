@@ -85,12 +85,6 @@ protected:
     IPWMControl           *ipwm;
     IControlMode          *icmd;
 
-    //ROS
-    bool                                         enable_ROS;
-    bool                                         enable_ROS_OUTPUT_GROUP;
-    std::string                                  rosTopicName_cmd_twist;
-    yarp::os::Publisher<yarp::rosmsg::geometry_msgs::Twist>     rosPublisherPort_cmd_twist;
-
 protected:
     /**
     * Decouples the control, i.e. computes the individual motor commands, given the robot velocity command in the cartesian space.
