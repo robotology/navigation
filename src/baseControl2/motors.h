@@ -36,9 +36,6 @@
 #include <string>
 #include <math.h>
 #include <vector>
-#include <yarp/rosmsg/geometry_msgs/Twist.h>
-#include <yarp/os/Node.h>
-#include <yarp/os/Publisher.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>

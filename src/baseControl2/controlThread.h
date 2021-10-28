@@ -98,9 +98,6 @@ private:
     double               max_linear_acc_pos = 0;
     double               max_linear_acc_neg = 0;
 
-    //ROS node
-    yarp::os::Node*     rosNode;
-
 protected:
     ResourceFinder       &rf;
     PolyDriver           *control_board_driver;

@@ -51,12 +51,6 @@ void ControlThread::threadRelease()
     port_filtered_commands.interrupt();
     port_filtered_commands.close();
 
-    if (rosNode)
-    {
-        rosNode->interrupt();
-        delete rosNode;
-        rosNode = 0;
-    }
 }
 
 double ControlThread::get_max_linear_vel()  { return max_linear_vel; }
@@ -64,7 +58,6 @@ double ControlThread::get_max_angular_vel() { return max_angular_vel; }
 
 ControlThread::ControlThread (double _period, ResourceFinder &_rf, Property options) : PeriodicThread(_period), rf(_rf), ctrl_options(options)
 {
-    rosNode                  = NULL;
     control_board_driver     = 0;
     thread_timeout_counter   = 0;
     base_control_type        = BASE_CONTROL_NONE;
@@ -407,14 +400,12 @@ bool ControlThread::threadInit()
     if (general_options.check("max_angular_vel") == false)   { yCError(CONTROL_THRD) << "Missing 'max_angular_vel' param";   return false; }
 
     string control_type, robot_type_s;
-    bool useRos;
-    
+
     control_type          = general_options.check("control_mode",         Value("none"), "type of control for the wheels").asString().c_str();
     input_filter_enabled  = general_options.check("input_filter_enabled", Value(0),      "input filter frequency (1/2/4/8Hz), 0 = disabled)").asInt32();
     ratio_limiter_enabled = general_options.check("ratio_limiter_enabled", Value(0),     "1=enabled, 0 = disabled").asInt32()==1;
     lin_ang_ratio         = general_options.check("linear_angular_ratio", Value(0.7),    "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asFloat64();
     robot_type_s          = general_options.check("robot_type",           Value("none"), "geometry of the robot").asString();
-    useRos                = general_options.check("use_ROS",              Value(false),  "enable ROS communications").asBool();
 
     //max velocities
     {
@@ -513,26 +504,6 @@ bool ControlThread::threadInit()
         trials++;
         yCWarning(CONTROL_THRD,"Unable to connect the device driver, trying again...");
     } while (true);
-
-    //initialize ROS
-    if(useRos)
-    {
-        if (ctrl_options.check("ROS_GENERAL"))
-        {
-            string rosNodeName;
-            yarp::os::Bottle r_group = ctrl_options.findGroup("ROS_GENERAL");
-            if (r_group.check("node_name") == false)
-            {
-                yCError(CONTROL_THRD) << "Missing node_name parameter"; return false;
-            }
-            rosNodeName = r_group.find("node_name").asString();
-            rosNode     = new yarp::os::Node(rosNodeName);
-        }
-        else
-        {
-            yCError(CONTROL_THRD) << "[ROS_GENERAL] group is missing from configuration file. ROS communication will not be initialized";
-        }
-    }
 
     //create the odometry and the motor handlers
     odometry_enabled = true;
