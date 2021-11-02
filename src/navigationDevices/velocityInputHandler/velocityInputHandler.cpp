@@ -40,6 +40,7 @@ bool VelocityInputHandler::close()
 
 bool VelocityInputHandler::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_control_out.linear_xvel = x_vel;
     m_control_out.linear_yvel = y_vel;
     m_control_out.angular_vel = theta_vel;
@@ -50,6 +51,7 @@ bool VelocityInputHandler::applyVelocityCommand(double x_vel, double y_vel, doub
 
 bool VelocityInputHandler::getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     double current_time = yarp::os::Time::now();
     if (current_time - m_control_out.reception_time > m_max_timeout)
     {

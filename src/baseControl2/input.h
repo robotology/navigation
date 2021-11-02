@@ -60,13 +60,12 @@ protected:
     {
         public:
         string                                            m_name;
-        yarp::dev::PolyDriver*                            m_dd=nullptr;
+        yarp::dev::PolyDriver*                            m_nws_dd=nullptr;
+        yarp::dev::PolyDriver*                            m_inputmanager_dd = nullptr;
         yarp::dev::Nav2D::INavigation2DVelocityActions*   m_iVel=nullptr;
 
         int                                               m_timeout_counter = 0;
         int                                               data_received = 0;
-        double                                            m_wdt = 0;
-        double                                            m_old_wdt = 0;
 
         double                                            m_linear_speed = 0;
         double                                            m_angular_speed = 0;
@@ -74,10 +73,7 @@ protected:
         double                                            m_pwm_gain = 0;
         inputManager(const inputManager&) = default;
         inputManager& operator=(const inputManager&) = default;
-        inputManager()
-        {
-            m_wdt= yarp::os::Time::now();
-        }
+        inputManager() = default;
     };
     std::vector <inputManager>                    m_input;
 

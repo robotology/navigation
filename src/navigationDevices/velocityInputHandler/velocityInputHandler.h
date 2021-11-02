@@ -14,6 +14,8 @@ class VelocityInputHandler :     public yarp::dev::Nav2D::INavigation2DVelocityA
 {
 protected:
     std::string                                 m_localName;
+    std::mutex                                  m_mutex;
+
     //internal type definition to store control output
     struct control_type
     {
