@@ -28,6 +28,7 @@ add_subdirectory(map2Gazebo)
 add_subdirectory(follower)
 
 add_subdirectory(tests)
+add_subdirectory(devices)
 add_subdirectory(tutorials)
 add_subdirectory(freeFloorViewer)
 
