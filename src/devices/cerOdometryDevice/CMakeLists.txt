@@ -1,4 +1,7 @@
-
+#
+# Copyright (C) 2021 IIT Istituto Italiano di Tecnologia
+# CopyPolicy: Released under the terms of the GNU GPL v2.0.
+#
 yarp_prepare_plugin(cerOdometryDevice
         CATEGORY device
         TYPE CerOdometryDevice

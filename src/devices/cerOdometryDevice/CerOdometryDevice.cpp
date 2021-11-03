@@ -1,3 +1,17 @@
+/*
+* Copyright (C)2021 Istituto Italiano di Tecnologia
+* Permission is granted to copy, distribute, and/or modify this program
+* under the terms of the GNU General Public License, version 2 or any
+* later version published by the Free Software Foundation.
+*
+* A copy of the license can be found at
+* http://www.robotcub.org/icub/license/gpl.txt
+*
+* This program is distributed in the hope that it will be useful, but
+* WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+* Public License for more details
+*/
 
 #include "CerOdometryDevice.h"
 
@@ -5,15 +19,12 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/math/Rand.h>
 
-
 namespace {
     YARP_LOG_COMPONENT(CERODOMDEVICE, "yarp.device.CerOdometryDevice")
 }
 
-
 CerOdometryDevice::CerOdometryDevice()
 {
-
     encvel_estimator =new iCub::ctrl::AWLinEstimator(2,1.0);
     encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
     enc.resize(2);
@@ -169,7 +180,6 @@ void CerOdometryDevice::compute()
         m_odometryData.base_vel_y = 0;
         base_vel_lin = fabs(m_odometryData.base_vel_x);
         m_odometryData.base_vel_theta = vvv[0];///-(geom_r / geom_L) * encv[0] + (geom_r / geom_L) * encv[1];
-        //yCDebug() << base_vel_theta << vvv[0];
 
 
         m_odometryData.odom_vel_x = m_odometryData.base_vel_x * cos(m_odometryData.odom_theta);
@@ -199,30 +209,25 @@ void CerOdometryDevice::compute()
 }
 
 bool CerOdometryDevice::attach(yarp::dev::PolyDriver *driver) {
-    if (driver->isValid())
+    if (!driver->isValid())
     {
-        driver->view(control_board_driver);
-    } else {
-        yCError(CERODOMDEVICE) << "not valid control board driver";
-    }
-
-    if (control_board_driver == nullptr)
-    {
-        yCError(CERODOMDEVICE, "Subdevice passed to attach method is invalid");
+        yCError(CERODOMDEVICE) << "not valid poly driver";
         return false;
     }
-
-    // open the interfaces for the control boards
-    if(!control_board_driver->view(ienc))
-    {
+    if(!driver->view(ienc)){
         yCError(CERODOMDEVICE) << "iencoder device has not been viewed";
+        return false;
+    }
+    int axesNumber;
+    ienc->getAxes(&axesNumber);
+    if(axesNumber != 2){
+        yCError(CERODOMDEVICE) << "failed to get correct number of axes";
         return false;
     }
     return true;
 }
 
 bool CerOdometryDevice::detach() {
-    control_board_driver = nullptr;
     ienc = nullptr;
     return true;
 }
