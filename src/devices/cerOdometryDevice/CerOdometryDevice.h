@@ -36,10 +36,10 @@ constexpr double default_period = 0.02;
 
 
 /**
- * @ingroup dev_impl_fake dev_impl_navigation
+ * @ingroup dev dev_impl_navigation
  *
- * \section fakeOdometry_parameters Device description
- * \brief `CerOdometryDevice`: A device for generating a fake odometry.
+ * \section cerOdometryDevice_parameters Device description
+ * \brief `CerOdometryDevice`: A device for generating a cer odometry.
  * This device will generate the odometry and then the user can retrieve it by calling `getOdometry`.
  *
  *   Parameters required by this device are:
