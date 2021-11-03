@@ -11,7 +11,7 @@ yarp_prepare_plugin(cerOdometryDevice
 
 #if(NOT SKIP_cerOdometryDevice)
     yarp_add_plugin(yarp_cerOdometryDevice)
-    include_directories(${ICUB_INCLUDE_DIRS})
+#    include_directories(${ICUB_INCLUDE_DIRS})
 
     target_sources(yarp_cerOdometryDevice
             PRIVATE
@@ -25,12 +25,14 @@ yarp_prepare_plugin(cerOdometryDevice
             YARP::YARP_sig
             YARP::YARP_dev
             YARP::YARP_math
+            ctrlLib
             )
     list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS
             YARP_os
             YARP_sig
             YARP_dev
             YARP_math
+            ctrlLib
             )
 
     yarp_install(
