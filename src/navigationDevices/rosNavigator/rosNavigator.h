@@ -51,7 +51,8 @@
 class rosNavigator : public yarp::dev::DeviceDriver,
     public yarp::os::PeriodicThread,
     public yarp::dev::Nav2D::INavigation2DTargetActions,
-    public yarp::dev::Nav2D::INavigation2DControlActions
+    public yarp::dev::Nav2D::INavigation2DControlActions,
+    public yarp::dev::Nav2D::INavigation2DVelocityActions
 {
 protected:
     yarp::dev::PolyDriver              m_pLoc;
@@ -210,6 +211,10 @@ public:
     * @return true/false
     */
     bool recomputeCurrentNavigationPath() override;
+
+    // INavigation2DVelocityActions methods
+    bool getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel) override;
+    bool applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout=0.1) override;
 };
 
 #endif

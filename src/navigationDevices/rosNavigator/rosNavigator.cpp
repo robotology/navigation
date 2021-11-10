@@ -707,3 +707,15 @@ std::string rosNavigator::getStatusAsString(NavigationStatusEnum status)
         return std::string("navigation_status_error");
     return std::string("navigation_status_error");
 }
+
+bool rosNavigator::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
+{
+    yCDebug(ROS_NAV) << "Not yet implemented";
+    return false;
+}
+
+bool rosNavigator::getLastVelocityCommand(double &x_vel, double &y_vel, double &theta_vel)
+{
+    yCDebug(ROS_NAV) << "Not yet implemented";
+    return false;
+}
