@@ -117,7 +117,7 @@ void ControlThread::apply_ratio_limiter (double max, double& linear_speed, doubl
 void ControlThread::apply_acceleration_limiter(double& linear_speed, double& angular_speed, double& desired_direction)
 {
     double period = this->getPeriod();
-    angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc_pos*period, max_angular_acc_neg * period);
+    angular_speed = control_filters::ratelim_filter_0(angular_speed, 7, max_angular_acc_pos*period, max_angular_acc_neg * period, get_max_angular_vel(), -get_max_angular_vel());
 #if 0
     linear_speed = control_filters::ratelim_filter_0(linear_speed, 8, max_linear_acc*period);
     //the following line is not numerically correct because of max_linear_acc, but it prevents jerky motions
@@ -125,8 +125,8 @@ void ControlThread::apply_acceleration_limiter(double& linear_speed, double& ang
 #else
     double xcomp = linear_speed * sin(desired_direction*DEG2RAD);
     double ycomp = linear_speed * cos(desired_direction*DEG2RAD);
-    xcomp = control_filters::ratelim_filter_0(xcomp, 8, max_linear_acc_pos*period, max_linear_acc_neg * period);
-    ycomp = control_filters::ratelim_filter_0(ycomp, 9, max_linear_acc_pos*period, max_linear_acc_neg * period);
+    xcomp = control_filters::ratelim_filter_0(xcomp, 8, max_linear_acc_pos*period, max_linear_acc_neg * period, get_max_linear_vel(), -get_max_linear_vel());
+    ycomp = control_filters::ratelim_filter_0(ycomp, 9, max_linear_acc_pos*period, max_linear_acc_neg * period, get_max_linear_vel(), -get_max_linear_vel());
     linear_speed = sqrt(xcomp * xcomp+ ycomp * ycomp);
     desired_direction = atan2(xcomp, ycomp) * RAD2DEG;
 #endif

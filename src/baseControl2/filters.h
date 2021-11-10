@@ -43,6 +43,6 @@ namespace control_filters
     * @param rate the maximum change rate
     * @return the filtered value
     */
-    double ratelim_filter_0 (double input, int i, double rate_pos, double rate_neg);
+    double ratelim_filter_0 (double input, int i, double rate_pos, double rate_neg, double max_val, double min_val);
 }
 #endif

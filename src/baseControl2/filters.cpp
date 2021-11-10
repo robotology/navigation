@@ -80,12 +80,15 @@ double control_filters::lp_filter_0_5Hz(double input, int i)
     return yv[1][i];
 }
 
-double control_filters::ratelim_filter_0(double input, int i, double rate_pos, double rate_neg)
+double control_filters::ratelim_filter_0(double input, int i, double rate_pos, double rate_neg, double max_val, double min_val)
 {
     //This is a rate limiter filter. 
     static double prev[10];
 
 //    if (i==9) {yCDebug() << "9>>>" << input << rate_pos << rate_neg << prev[9];} //print lin vel along x axis
+    
+    if (prev[i]>max_val) prev[i]=max_val;
+    if (prev[i]<min_val) prev[i]=min_val;
     
     if (input*prev[i]>=0)
     {
