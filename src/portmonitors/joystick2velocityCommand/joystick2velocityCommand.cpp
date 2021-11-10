@@ -13,6 +13,9 @@
 #include <yarp/os/Value.h>
 #include <yarp/os/Bottle.h>
 
+//example
+//yarp connect / joystickCtrl:o / baseControl / input / joystick : i tcp + recv.portmonitor + type.dll + file.joy2vel
+
 YARP_LOG_COMPONENT(JOY2VEL, "navigation.Joy2Vel")
 
 Joy2vel::Joy2vel()
@@ -27,8 +30,8 @@ bool Joy2vel::accept(yarp::os::Things& thing)
         yCWarning(JOY2VEL,"expected type Bottle but got wrong data type!");
         return false;
     }
-    if (bot->size() != 5) {
-        yCWarning(JOY2VEL,"expected Bottle of size 5 but got wrong size (%zd)!", bot->size());
+    if (bot->size() < 5) {
+        yCWarning(JOY2VEL,"expected Bottle of size >=5 but got wrong size (%zd)!", bot->size());
         return false;
     }
     return true;
@@ -36,18 +39,29 @@ bool Joy2vel::accept(yarp::os::Things& thing)
 
 bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
 {
-    if (bot &&
-        bot->size() == 5 &&
-        bot->get(0).isInt32() &&
-        bot->get(1).isFloat64() &&
-        bot->get(2).isFloat64() &&
-        bot->get(3).isFloat64() &&
-        bot->get(0).isFloat64())
-    { 
-        return true;
+    if (!bot)
+    {
+        yCError(JOY2VEL, "Invalid bottle format: empty bottle");
+        return false;
     }
-    yCError(JOY2VEL,"Invalid bottle format");
-    return false;
+
+    if (bot->size() < 5)
+    {
+        yCError(JOY2VEL, "Invalid bottle format: Size <5 or invalid data type");
+        return false;
+    }
+
+    if ( bot->get(0).isInt32()   == false ||
+         bot->get(1).isFloat64() == false ||
+         bot->get(2).isFloat64() == false ||
+         bot->get(3).isFloat64() == false ||
+         bot->get(4).isFloat64() == false )
+    {
+        yCError(JOY2VEL, "Invalid bottle format: invalid data type");
+        return false;
+    }
+
+    return true;
 }
 
 yarp::os::Things& Joy2vel::update(yarp::os::Things& thing)
@@ -62,6 +76,10 @@ yarp::os::Things& Joy2vel::update(yarp::os::Things& thing)
         this->m_command.vel_x = bot->get(1).asFloat64() * percent;
         this->m_command.vel_y = bot->get(2).asFloat64() * percent;
         this->m_command.vel_theta = bot->get(3).asFloat64() * percent;
+    }
+    else
+    {
+        yCError(JOY2VEL, "Unsupported bottle format: Type!=3");
     }
 
     return this->m_things;
