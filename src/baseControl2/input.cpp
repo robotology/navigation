@@ -119,6 +119,13 @@ bool Input::open(Property &_options)
             return false;
         }
 
+        //read param max_timeout
+        double max_timeout=0.1;
+        if (input_options.check("max_timeout"))
+        {
+            max_timeout = input_options.find("max_timeout").asFloat64();
+        }
+
         //open the nws
         inputManager anInputM;
         Property nws_options;
@@ -141,7 +148,7 @@ bool Input::open(Property &_options)
         //open the input manager
         Property inputManager_options;
         inputManager_options.put("device", "velocityInputHandler");
-        inputManager_options.put("max_timeout", 0.1); //velocityInputHandler
+        inputManager_options.put("max_timeout", max_timeout);
         anInputM.m_inputmanager_dd = new yarp::dev::PolyDriver();
         if (anInputM.m_inputmanager_dd->open(inputManager_options) == false)
         {
