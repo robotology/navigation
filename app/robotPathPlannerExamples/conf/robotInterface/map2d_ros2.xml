@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+<robot name="map2DServer" build="2" portprefix="" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<devices>
+		<!-- ############################## MAPSTORAGE ################################# -->
+		<device name="mapStorage" type="map2DStorage">
+			<param extern-name="mapserver_mapcollectioncontext" name="mapCollectionContext">
+				mapsExample
+			</param>
+		</device>
+
+		<!-- ############################## MAP_NWS_ROS2 ############################### -->
+		<device name="mapNwsRos2" type="map2D_nws_ros2">
+			<group name="ROS">
+				<param extern-name="mapnwsros2_enablepub" name="enable_publisher">
+					1
+				</param>
+				<param extern-name="mapnwsros2_enablesub" name="enable_subscriber">
+					0
+				</param>
+			</group>
+			<action phase="startup" level="5" type="attach">
+				<paramlist name="networks">
+					<elem name="subdevice_mapstorage_ros2">
+						mapStorage
+					</elem>
+				</paramlist>
+			</action>
+			<action phase="shutdown" level="5" type="detach" />
+		</device>
+
+		<!-- ############################## MAP_NWS_YARP ############################### -->
+        <device name="mapNwsYarp" type="map2D_nws_yarp">
+            <param extern-name="mapNwsYarp_name" name="name">
+				/map2D_nws_yarp/rpc
+			</param>
+			<action phase="startup" level="5" type="attach">
+				<paramlist name="networks">
+					<elem name="subdevice_mapstorage_yarp">
+						mapStorage
+					</elem>
+				</paramlist>
+			</action>
+			<action phase="shutdown" level="5" type="detach" />
+		</device>
+	</devices>
+</robot>

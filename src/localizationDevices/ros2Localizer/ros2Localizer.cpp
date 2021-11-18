@@ -328,10 +328,13 @@ bool ros2LocalizerThread::threadInit()
     {
         if(!ros_group.check("node_name"))
         {
-            yCError(ROS2_LOC) << "No node_name specified";
-            return false;
+            yCWarning(ROS2_LOC) << "No node_name specified. Using device name instead";
+            m_nodeName = m_name;
         }
-        m_nodeName = ros_group.find ("node_name").asString();
+        else
+        {
+            m_nodeName = ros_group.find ("node_name").asString();
+        }
         m_node = NodeCreator::createNode(m_nodeName);
     }
 
