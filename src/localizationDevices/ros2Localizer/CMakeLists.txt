@@ -29,17 +29,18 @@ source_group("Header Files" FILES ${folder_header})
 yarp_add_plugin(ros2Localizer ${folder_source} ${folder_header})
                               
 target_link_libraries(ros2Localizer YARP::YARP_os
-                                   YARP::YARP_sig
-                                   YARP::YARP_dev
-                                   YARP::YARP_math
-                                   YARP::YARP_rosmsg
-                                   navigation_lib
-                                   rclcpp::rclcpp
-                                   std_msgs::std_msgs__rosidl_typesupport_cpp
-                                   nav_msgs::nav_msgs__rosidl_typesupport_cpp
-                                   test_msgs::test_msgs__rosidl_typesupport_cpp
-                                   geometry_msgs::geometry_msgs__rosidl_typesupport_cpp
-                                   tf2_msgs::tf2_msgs__rosidl_typesupport_cpp)
+                                    YARP::YARP_sig
+                                    YARP::YARP_dev
+                                    YARP::YARP_math
+                                    YARP::YARP_rosmsg
+                                    navigation_lib
+                                    rclcpp::rclcpp
+                                    std_msgs::std_msgs__rosidl_typesupport_cpp
+                                    nav_msgs::nav_msgs__rosidl_typesupport_cpp
+                                    test_msgs::test_msgs__rosidl_typesupport_cpp
+                                    geometry_msgs::geometry_msgs__rosidl_typesupport_cpp
+                                    tf2_msgs::tf2_msgs__rosidl_typesupport_cpp
+                                    navigation_lib)
 
 
 yarp_install(TARGETS ros2Localizer

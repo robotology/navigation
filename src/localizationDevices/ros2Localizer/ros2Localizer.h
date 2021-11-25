@@ -54,6 +54,7 @@
 #include "Ros2Spinner.h"
 #include "Ros2Utils.h"
 #include "Ros2Subscriber.h"
+#include "navigation_defines.h"
 
 #include <mutex>
 
