@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
-<robot name="localization2D" build="2" portprefix="" xmlns:xi="http://www.w3.org/2001/XInclude">
+<robot name="localization2D" build="2" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<devices>
 		<device name="ros2loc" type="ros2Localizer">
 
