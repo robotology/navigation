@@ -17,7 +17,6 @@ SPDX-License-Identifier: BSD-3-Clause
 		<device name="mapNwsRos2" type="map2D_nws_ros2">
 			<param extern-name="mapnwsros2_enablepub" name="enable_publisher">1</param>
 			<param extern-name="mapnwsros2_enablesub" name="enable_subscriber">0</param>
-			<param extern-name="mapnwsros2_nodename" name="node_name">map2D_nws_ros2</param>
 			<action phase="startup" level="5" type="attach">
 				<paramlist name="networks">
 					<elem name="subdevice_mapstorage_ros2">
