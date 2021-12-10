@@ -39,15 +39,35 @@ bool FreeFloorViewer::configure(yarp::os::ResourceFinder &rf)
      * */
     yarp::dev::PolyDriver tempPoly;
     yarp::dev::IRGBDSensor* tempIRGBD{nullptr};
-    bool okRgbdRf{rf.check("RGBD_SENSOR_CLIENT")};
+    yarp::os::Property rgbdProp;
+    // Prepare default prop object
+    rgbdProp.put("device", RGBDClient);
+    rgbdProp.put("localImagePort", RGBDLocalImagePort);
+    rgbdProp.put("localDepthPort", RGBDLocalDepthPort);
+    rgbdProp.put("localRpcPort", RGBDLocalRpcPort);
+    rgbdProp.put("remoteImagePort", RGBDRemoteImagePort);
+    rgbdProp.put("remoteDepthPort", RGBDRemoteDepthPort);
+    rgbdProp.put("remoteRpcPort", RGBDRemoteRpcPort);
+    rgbdProp.put("ImageCarrier", RGBDImageCarrier);
+    rgbdProp.put("DepthCarrier", RGBDDepthCarrier);
+    bool okRgbdRf = rf.check("RGBD_SENSOR_CLIENT");
     if(!okRgbdRf)
     {
-        yCError(FREE_FLOOR_VIEWER,"RGBD_SENSOR_CLIENT section missing in ini file");
-
-        return false;
+        yCWarning(FREE_FLOOR_VIEWER,"RGBD_SENSOR_CLIENT section missing in ini file. Using default values");
     }
-    yarp::os::Property rgbdProp;
-    rgbdProp.fromString(rf.findGroup("RGBD_SENSOR_CLIENT").toString());
+    else
+    {
+        yarp::os::Searchable& rgbd_config = rf.findGroup("RGBD_SENSOR_CLIENT");
+        if(rgbd_config.check("device")) {rgbdProp.put("device", rgbd_config.find("device").asString());}
+        if(rgbd_config.check("localImagePort")) {rgbdProp.put("localImagePort", rgbd_config.find("localImagePort").asString());}
+        if(rgbd_config.check("localDepthPort")) {rgbdProp.put("localDepthPort", rgbd_config.find("localDepthPort").asString());}
+        if(rgbd_config.check("localRpcPort")) {rgbdProp.put("localRpcPort", rgbd_config.find("localRpcPort").asString());}
+        if(rgbd_config.check("remoteImagePort")) {rgbdProp.put("remoteImagePort", rgbd_config.find("remoteImagePort").asString());}
+        if(rgbd_config.check("remoteDepthPort")) {rgbdProp.put("remoteDepthPort", rgbd_config.find("remoteDepthPort").asString());}
+        if(rgbd_config.check("remoteRpcPort")) {rgbdProp.put("remoteRpcPort", rgbd_config.find("remoteRpcPort").asString());}
+        if(rgbd_config.check("ImageCarrier")) {rgbdProp.put("ImageCarrier", rgbd_config.find("ImageCarrier").asString());}
+        if(rgbd_config.check("DepthCarrier")) {rgbdProp.put("DepthCarrier", rgbd_config.find("DepthCarrier").asString());}
+    }
     tempPoly.open(rgbdProp);
     if(!tempPoly.isValid())
     {
@@ -67,14 +87,24 @@ bool FreeFloorViewer::configure(yarp::os::ResourceFinder &rf)
 
     tempPoly.close(); // Temporary polydriver closed
 
+    yarp::os::Property headProp;
+    // Prepare default prop object
+    headProp.put("device","remote_controlboard");
+    headProp.put("local","/freeFloorViewer/head");
+    headProp.put("remote","/SIM_CER_ROBOT/head");
+
     bool okHeadRf{rf.check("HEAD_CONTROL_CLIENT")};
     if(!okHeadRf)
     {
-        yCError(FREE_FLOOR_VIEWER,"HEAD_CONTROL_CLIENT section missing in ini file");
-        return false;
+        yCError(FREE_FLOOR_VIEWER,"HEAD_CONTROL_CLIENT section missing in ini file. Using default values.");
     }
-    yarp::os::Property headProp;
-    headProp.fromString(rf.findGroup("HEAD_CONTROL_CLIENT").toString());
+    else
+    {
+        yarp::os::Searchable& head_config = rf.findGroup("HEAD_CONTROL_CLIENT");
+        if(head_config.check("device")) {headProp.put("device", head_config.find("device").asString());}
+        if(head_config.check("local")) {headProp.put("local", head_config.find("local").asString());}
+        if(head_config.check("remote")) {headProp.put("remote", head_config.find("remote").asString());}
+    }
 
     headProp.put("img_width",imgWidth);
     headProp.put("img_height",imgHeight);
@@ -109,7 +139,7 @@ bool FreeFloorViewer::configure(yarp::os::ResourceFinder &rf)
     if(rf.check("clicked_pos_port")){posName = rf.find("clicked_pos_port").asString();}
     m_posInputPort.useCallback(*m_innerThread);
     ret = m_posInputPort.open(posName);
-    if (ret == false)
+    if (!ret)
     {
         yCError(FREE_FLOOR_VIEWER, "Unable to open module ports");
         return false;
