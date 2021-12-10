@@ -12,6 +12,7 @@
 <module>
    <name>freeFloorViewer</name>
    <parameters>--context freeFloorViewer --from freeFloorViewer_sim_tour.ini</parameters>
+   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=20000</environment>
    <node>console</node>
 </module>
 
