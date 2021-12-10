@@ -77,13 +77,16 @@ protected:
     int    m_depth_height;
     int    m_col_granularity;
     bool   m_publish_ros_pc;
+    bool   m_self_reliant{true};
     double m_floor_height;
     double m_ceiling_height;
     size_t m_pc_stepx;
     size_t m_pc_stepy;
     std::string                m_ground_frame_id;
     std::string                m_camera_frame_id;
+    std::string                m_extern_ref_frame_id;
     yarp::sig::Matrix          m_transform_mtrx;
+    yarp::sig::Matrix          m_transform_mtrx_extern;
     yarp::os::Property         m_propIntrinsics;
     yarp::sig::FlexImage       m_rgbImage;
     yarp::sig::utils::PCL_ROI  m_pc_roi;

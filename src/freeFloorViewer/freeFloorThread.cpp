@@ -21,6 +21,7 @@
 
 #include "freeFloorThread.h"
 #include <chrono>
+#include <cmath>
 
 YARP_LOG_COMPONENT(FREE_FLOOR_THREAD, "navigation.freeFloorViewer.freeFloorThread")
 bool print{true};
@@ -40,6 +41,7 @@ FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
     m_ceiling_height = 3.0;
     m_ground_frame_id = "/ground_frame";
     m_camera_frame_id = "/depth_camera_frame";
+    m_extern_ref_frame_id = "";
     m_imgOutPortName = "/freeFloorViewer/floorEnhanced:o";
     m_targetOutPortName = "/free_floor_viewer/target:o";
 }
@@ -53,6 +55,7 @@ bool FreeFloorThread::threadInit()
     // --------- Generic config --------- //
     if(m_rf.check("target_pos_port")) {m_targetOutPortName = m_rf.find("target_pos_port").asString();}
     if(m_rf.check("img_out_port")) {m_imgOutPortName = m_rf.find("img_out_port").asString();}
+    if(m_rf.check("self_reliant")) {m_self_reliant = m_rf.find("self_reliant").asInt()==1;}
 
     // --------- Z related props -------- //
     bool okZClipRf = m_rf.check("Z_CLIPPING_PLANES");
@@ -64,6 +67,18 @@ bool FreeFloorThread::threadInit()
         if (pointcloud_clip_config.check("ground_frame_id")) {m_ground_frame_id = pointcloud_clip_config.find("ground_frame_id").asString();}
         if (pointcloud_clip_config.check("camera_frame_id")) {m_camera_frame_id = pointcloud_clip_config.find("camera_frame_id").asString();}
         if (pointcloud_clip_config.check("column_granularity")) {m_col_granularity = pointcloud_clip_config.find("column_granularity").asInt32();}
+        if(!m_self_reliant)
+        {
+            if (pointcloud_clip_config.check("extern_ref_frame_id"))
+            {
+                m_extern_ref_frame_id = pointcloud_clip_config.find("extern_ref_frame_id").asString();
+            }
+            else
+            {
+                yCError(FREE_FLOOR_THREAD, "No exter_ref_frame_id parameter found. Exiting");
+                return false;
+            }
+        }
     }
 
     // --------- Point cloud quality -------- //
@@ -252,6 +267,13 @@ void FreeFloorThread::run()
     {
         yCWarning(FREE_FLOOR_THREAD, "Unable to found m matrix");
     }
+    if(!m_self_reliant)
+    {
+        frame_exists = m_iTc->getTransform(m_camera_frame_id, m_extern_ref_frame_id, m_transform_mtrx_extern);
+        if (!frame_exists) {
+            yCWarning(FREE_FLOOR_THREAD, "Unable to found m matrix");
+        }
+    }
 
     //if (m_publish_ros_pc) {ros_compute_and_send_pc(pc,m_ground_frame_id);}//<-------------------------
 
@@ -406,7 +428,18 @@ void FreeFloorThread::reachSpot(yarp::os::Bottle &b)
     {
         if(m_nav2DPoly.isValid())
         {
-            m_iNav2D->gotoTargetByRelativeLocation(pixel(0),pixel(1));
+            if(m_self_reliant) {m_iNav2D->gotoTargetByRelativeLocation(pixel(0),pixel(1));}
+            else
+            {
+                double theta = atan2(pixel(1),pixel(0))*180.0/M_PI;
+                pixel = m_transform_mtrx_extern*tempPC(u,v).toVector4();
+                yarp::dev::Nav2D::Map2DLocation locPixel;
+                m_iNav2D->getCurrentPosition(locPixel);
+                locPixel.x = pixel(0);
+                locPixel.y = pixel(1);
+                locPixel.theta += theta;
+                m_iNav2D->gotoTargetByAbsoluteLocation(locPixel);
+            }
         }
         yarp::os::Bottle& toSend = m_targetOutPort.prepare();
         toSend.clear();
