@@ -76,15 +76,36 @@ bool FreeFloorThread::threadInit()
     }
 
     // --------- RGBDSensor config --------- //
+    yarp::os::Property rgbdProp;
+    // Prepare default prop object
+    rgbdProp.put("device", RGBDClient);
+    rgbdProp.put("localImagePort", RGBDLocalImagePort);
+    rgbdProp.put("localDepthPort", RGBDLocalDepthPort);
+    rgbdProp.put("localRpcPort", RGBDLocalRpcPort);
+    rgbdProp.put("remoteImagePort", RGBDRemoteImagePort);
+    rgbdProp.put("remoteDepthPort", RGBDRemoteDepthPort);
+    rgbdProp.put("remoteRpcPort", RGBDRemoteRpcPort);
+    rgbdProp.put("ImageCarrier", RGBDImageCarrier);
+    rgbdProp.put("DepthCarrier", RGBDDepthCarrier);
     bool okRgbdRf = m_rf.check("RGBD_SENSOR_CLIENT");
     if(!okRgbdRf)
     {
-        yCError(FREE_FLOOR_THREAD,"RGBD_SENSOR_CLIENT section missing in ini file");
-
-        return false;
+        yCWarning(FREE_FLOOR_THREAD,"RGBD_SENSOR_CLIENT section missing in ini file. Using default values");
     }
-    yarp::os::Property rgbdProp;
-    rgbdProp.fromString(m_rf.findGroup("RGBD_SENSOR_CLIENT").toString());
+    else
+    {
+        yarp::os::Searchable& rgbd_config = m_rf.findGroup("RGBD_SENSOR_CLIENT");
+        if(rgbd_config.check("device")) {rgbdProp.put("device", rgbd_config.find("device").asString());}
+        if(rgbd_config.check("localImagePort")) {rgbdProp.put("localImagePort", rgbd_config.find("localImagePort").asString());}
+        if(rgbd_config.check("localDepthPort")) {rgbdProp.put("localDepthPort", rgbd_config.find("localDepthPort").asString());}
+        if(rgbd_config.check("localRpcPort")) {rgbdProp.put("localRpcPort", rgbd_config.find("localRpcPort").asString());}
+        if(rgbd_config.check("remoteImagePort")) {rgbdProp.put("remoteImagePort", rgbd_config.find("remoteImagePort").asString());}
+        if(rgbd_config.check("remoteDepthPort")) {rgbdProp.put("remoteDepthPort", rgbd_config.find("remoteDepthPort").asString());}
+        if(rgbd_config.check("remoteRpcPort")) {rgbdProp.put("remoteRpcPort", rgbd_config.find("remoteRpcPort").asString());}
+        if(rgbd_config.check("ImageCarrier")) {rgbdProp.put("ImageCarrier", rgbd_config.find("ImageCarrier").asString());}
+        if(rgbd_config.check("DepthCarrier")) {rgbdProp.put("DepthCarrier", rgbd_config.find("DepthCarrier").asString());}
+    }
+
     m_rgbdPoly.open(rgbdProp);
     if(!m_rgbdPoly.isValid())
     {
@@ -100,16 +121,28 @@ bool FreeFloorThread::threadInit()
     //Verify if this is needed
     yarp::os::Time::delay(0.1);
 
-    // --------- TransformClient config --------- //
+    // --------- TransformClient config FAKE REMOVE WHEN READY--------- //
+    yarp::os::Property tcProp;
+    // Prepare default prop object
+    tcProp.put("device", "frameTransformClient");
+    tcProp.put("ft_client_prefix", "/freeFloorViewer");
+    tcProp.put("local_rpc", "/freeFloorViewer/ftClient.rpc");
+    tcProp.put("filexml_option","ftc_yarp_only.xml");
     bool okTransformRf = m_rf.check("TRANSFORM_CLIENT");
     if(!okTransformRf)
     {
-        yCError(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT section missing in ini file");
-
-        return false;
+        yCWarning(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT section missing in ini file Using default values");
     }
-    yarp::os::Property tcProp;
-    tcProp.fromString(m_rf.findGroup("TRANSFORM_CLIENT").toString());
+    else {
+        yarp::os::Searchable &tf_config = m_rf.findGroup("TRANSFORM_CLIENT");
+        if (tf_config.check("ft_client_prefix")) {
+            tcProp.put("ft_client_prefix", tf_config.find("ft_client_prefix").asString());
+        }
+        if (tf_config.check("ft_server_prefix")) {
+            tcProp.put("ft_server_prefix", tf_config.find("ft_server_prefix").asString());
+        }
+        if(tf_config.check("filexml_option")) {tcProp.put("filexml_option", tf_config.find("filexml_option").asString());}
+    }
     m_tcPoly.open(tcProp);
     if(!m_tcPoly.isValid())
     {
@@ -124,20 +157,30 @@ bool FreeFloorThread::threadInit()
     }
 
     // --------- Navigation2DClient config --------- //
+    yarp::os::Property nav2DProp;
+    // Prepare default prop object
+    nav2DProp.put("device",         NAVIGATION_CLIENT_DEVICE_DEFAULT);
+    nav2DProp.put("local",          NAVLOCAL);
+    nav2DProp.put("navigation_server", NAVIGATION_REMOTE_PORT_DEFAULT);
+    nav2DProp.put("map_locations_server", MAP_REMOTE_PORT_DEFAULT);
+    nav2DProp.put("localization_server", LOCALIZATION_REMOTE_PORT_DEFAULT);
     bool okNavigation2DRf = m_rf.check("NAVIGATION_CLIENT");
     if(!okNavigation2DRf)
     {
-        yCError(FREE_FLOOR_THREAD,"NAVIGATION_CLIENT section missing in ini file");
-
-        return false;
+        yCWarning(FREE_FLOOR_THREAD,"NAVIGATION_CLIENT section missing in ini file. Using the default values");
     }
-    yarp::os::Property nav2DProp;
-    nav2DProp.fromString(m_rf.findGroup("NAVIGATION_CLIENT").toString());
+    else
+    {
+        yarp::os::Searchable& nav_config = m_rf.findGroup("NAVIGATION_CLIENT");
+        if(nav_config.check("local")) {nav2DProp.put("local", nav_config.find("local").asString());}
+        if(nav_config.check("navigation_server")) {nav2DProp.put("navigation_server", nav_config.find("navigation_server").asString());}
+        if(nav_config.check("map_locations_server")) {nav2DProp.put("map_locations_server", nav_config.find("map_locations_server").asString());}
+        if(nav_config.check("localization_server")) {nav2DProp.put("localization_server", nav_config.find("localization_server").asString());}
+    }
     m_nav2DPoly.open(nav2DProp);
     if(!m_nav2DPoly.isValid())
     {
-        yCError(FREE_FLOOR_THREAD,"Error opening PolyDriver check parameters");
-        return false;
+        yCWarning(FREE_FLOOR_THREAD,"Error opening PolyDriver check parameters. Using the default values");
     }
     m_nav2DPoly.view(m_iNav2D);
     if(!m_iNav2D){
@@ -172,7 +215,7 @@ void FreeFloorThread::run()
 {
     //std::lock_guard<std::mutex> lock(m_floorMutex);
     bool depth_ok = m_iRgbd->getDepthImage(m_depth_image);
-    if (depth_ok == false)
+    if (!depth_ok)
     {
         yCDebug(FREE_FLOOR_THREAD, "getDepthImage failed");
         return;
@@ -184,7 +227,7 @@ void FreeFloorThread::run()
     }
 
     bool rgb_ok = m_iRgbd->getRgbImage(m_rgbImage);
-    if (rgb_ok == false)
+    if (!rgb_ok)
     {
         yCDebug(FREE_FLOOR_THREAD, "getRgbImage failed");
         return;
@@ -205,7 +248,7 @@ void FreeFloorThread::run()
     //we compute the transformation matrix from the camera to the laser reference frame
 
     bool frame_exists = m_iTc->getTransform(m_camera_frame_id,m_ground_frame_id, m_transform_mtrx);
-    if (frame_exists==false)
+    if (!frame_exists)
     {
         yCWarning(FREE_FLOOR_THREAD, "Unable to found m matrix");
     }
@@ -224,7 +267,7 @@ void FreeFloorThread::run()
     auto t3 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
     auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t3 - t2 ).count();
-    yCInfo(FREE_FLOOR_THREAD) << "The durations are: " << duration << " " << duration2;
+    //yCInfo(FREE_FLOOR_THREAD) << "The durations are: " << duration << " " << duration2;
 
     m_floorMutex.unlock();
 
@@ -239,7 +282,7 @@ void FreeFloorThread::depthToFilteredPc()
     size_t min_y = std::min(m_pc_roi.min_y,max_y);
     m_pc_stepx = std::max<size_t>(std::min(m_pc_stepx, max_x - min_x), 1);
     m_pc_stepy = std::max<size_t>(std::min(m_pc_stepy, max_y - min_y), 1);
-    yCInfo(FREE_FLOOR_THREAD, "Steps: x%d y%d",m_pc_stepx,m_pc_stepy);
+    //yCInfo(FREE_FLOOR_THREAD, "Steps: x%d y%d",m_pc_stepx,m_pc_stepy);
 
     size_t size_x = (max_x-min_x)/m_pc_stepx;
     size_t size_y = (max_y-min_y)/m_pc_stepy;
@@ -324,6 +367,9 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
             yCError(FREE_FLOOR_THREAD,"An error occurred while retrieving the navigation status");
         }
     }
+
+    yCInfo(FREE_FLOOR_THREAD,"Received: %s",b.toString().c_str());
+
     if(b.size() == 2)
     {
         reachSpot(b);
