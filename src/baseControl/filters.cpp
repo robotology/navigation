@@ -152,4 +152,7 @@ double control_filters::ratelim_filter_0(double input, int i, double rate_pos, d
             return prev[i];
         }
     }
+
+    yError() << "This should be unreachable code!";
+    return 0;
 }

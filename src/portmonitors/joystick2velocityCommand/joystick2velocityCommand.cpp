@@ -42,11 +42,8 @@ bool Joy2vel::accept(yarp::os::Things& thing)
         yCWarning(JOY2VEL,"expected type Bottle but got wrong data type!");
         return false;
     }
-    if (bot->size() < 5) {
-        yCWarning(JOY2VEL,"expected Bottle of size >=5 but got wrong size (%zd)!", bot->size());
-        return false;
-    }
-    return true;
+
+    return validate_bot(bot);
 }
 
 bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
