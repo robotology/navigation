@@ -14,9 +14,21 @@
 #include <yarp/os/Bottle.h>
 
 //example
-//yarp connect / joystickCtrl:o / baseControl / input / joystick : i tcp + recv.portmonitor + type.dll + file.joy2vel
+//yarp connect /joystickCtrl:o /baseControl /input /joystick:i tcp+recv.portmonitor+type.dll+file.joy2vel
 
 YARP_LOG_COMPONENT(JOY2VEL, "navigation.Joy2Vel")
+
+bool isNumeric(yarp::os::Value& val)
+{
+    if (val.isFloat32() ||
+        val.isFloat64() ||
+        val.isInt8() ||
+        val.isInt16() ||
+        val.isInt32() ||
+        val.isInt64())
+        {return true;}
+    return false;
+}
 
 Joy2vel::Joy2vel()
 {
@@ -51,7 +63,7 @@ bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
         return false;
     }
 
-    if ( bot->get(0).isInt32()   == false ||
+    if ( isNumeric(bot->get(0))  == false ||
          bot->get(1).isFloat64() == false ||
          bot->get(2).isFloat64() == false ||
          bot->get(3).isFloat64() == false ||
@@ -60,6 +72,12 @@ bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
         yCError(JOY2VEL, "Invalid bottle format: invalid data type");
         return false;
     }
+
+    //when the joystick button is not pressed, filter out the message.
+    //This will eventually trigger a timeout on the receiver and
+    //the control will be give to a different input source
+    double percent = bot->get(4).asFloat64();
+    if (percent < 10) {return false;}
 
     return true;
 }
