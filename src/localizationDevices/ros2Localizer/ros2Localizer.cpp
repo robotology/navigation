@@ -565,8 +565,13 @@ bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLo
         m_node = NodeCreator::createNode(m_nodeName);
     }
     //initialize an initial pose publisher
-    if (ros_group.check ("initialpose_topic") && m_ros2Publisher_initial_pose == nullptr)
+    if (m_ros2Publisher_initial_pose == nullptr)
     {
+        if(!ros_group.check("initialpose_topic"))
+        {
+            yCError(ROS2_LOC) << "No initialpose_topic specified";
+            return false;
+        }
         m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
         m_ros2Publisher_initial_pose = m_node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
         if (m_ros2Publisher_initial_pose == nullptr)
