@@ -469,7 +469,10 @@ void ros2LocalizerThread::publish_map()
     m_current_map.getResolution(tmp);
     ogrid.info.resolution=tmp;
     ogrid.header.frame_id="map";
+    auto tempRos2Time = ros2TimeFromYarpNow();
+    ogrid.header.stamp = tempRos2Time;
     ogrid.info.map_load_time.sec=0;
+    ogrid.info.map_load_time.nanosec=0;
     double x, y, t;
     m_current_map.getOrigin(x,y,t);
     ogrid.info.origin.position.x=x;
