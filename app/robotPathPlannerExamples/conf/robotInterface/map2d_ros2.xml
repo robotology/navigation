@@ -9,7 +9,7 @@ SPDX-License-Identifier: BSD-3-Clause
 		<!-- ############################## MAPSTORAGE ################################# -->
 		<device name="mapStorage" type="map2DStorage">
 			<param extern-name="mapserver_mapcollectioncontext" name="mapCollectionContext">
-				mapsExample
+				5g_maps
 			</param>
 		</device>
 

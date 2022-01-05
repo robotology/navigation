@@ -20,7 +20,7 @@ SPDX-License-Identifier: BSD-3-Clause
 				<param  name="connect_to_yarp_mapserver">1</param>
 			</group>
 			<group name="ROS2">
-				<param  name="node_name">/ros2Localizer</param>
+				<param  name="node_name">ros2Localizer</param>
 				<param  name="initialpose_topic">initialpose</param>
 				<param  name="occupancygrid_topic">map</param>
 				<param  name="particles_topic">particles</param>
