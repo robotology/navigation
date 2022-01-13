@@ -8,6 +8,7 @@
    <name>yarpdev</name>
     <parameters>--device frameTransformServer --testxml_option /home/user1/yarp-ros2/src/devices/frameTransformUtils/robotinterface_xml_files/fts_full/fts_full_ros2.xml</parameters>
    <node>console</node>
+    <environment>YARP_CLOCK=/clock</environment>
 </module>
 
 <!--<module>-->
