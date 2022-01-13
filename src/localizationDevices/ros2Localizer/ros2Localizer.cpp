@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <rclcpp/qos.hpp>
 
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/LogStream.h>
@@ -285,7 +286,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
 
-    Bottle ros_group = m_cfg.findGroup("ROS2");
+    ros_group = m_cfg.findGroup("ROS2");
     if (ros_group.isNull())
     {
         yCError(ROS2_LOC) << "Missing ROS2 group!";
@@ -344,7 +345,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
     m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
-    m_ros2Publisher_occupancyGrid = m_node->create_publisher<nav_msgs::msg::OccupancyGrid>(m_topic_occupancyGrid, 10);
+    m_ros2Publisher_occupancyGrid = m_node->create_publisher<nav_msgs::msg::OccupancyGrid>(m_topic_occupancyGrid, rclcpp::QoS(10).reliable().durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL));
     if (m_ros2Publisher_occupancyGrid == nullptr)
     {
         yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_occupancyGrid
@@ -549,14 +550,7 @@ void ros2LocalizerThread::run()
 bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6)
 {
     m_localization_data.map_id = loc.map_id;
-    
-    Bottle ros_group = m_cfg.findGroup("ROS2");
-    
-    if (ros_group.isNull())
-    {
-        yCError(ROS2_LOC) << "Missing ROS2 group!";
-        return false;
-    }
+
     if(!m_node)
     {
         if(!ros_group.check("node_name"))

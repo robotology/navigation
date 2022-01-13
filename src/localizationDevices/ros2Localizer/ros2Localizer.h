@@ -144,6 +144,8 @@ protected:
     yarp::dev::Nav2D::Map2DLocation  m_localization_data;
     std::mutex                       m_mutex;
     yarp::os::Searchable&            m_cfg;
+    Bottle                           ros_group;
+
 
     //configuration options
     bool                         m_use_localization_from_odometry_port;
