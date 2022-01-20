@@ -207,13 +207,6 @@ void rosLocalizerThread::run()
 
         //velocity estimation block
         if (1) { estimateOdometry(m_localization_data); }
-        m_iTf->allFramesAsString(lll);
-        yInfo() << "ok " << lll.c_str();
-    }
-    else
-    {
-        m_iTf->allFramesAsString(lll);
-        yInfo() << "missing " << m_frame_robot_id << m_frame_map_id << lll.c_str();
     }
     if (current_time - m_tf_data_received > 0.1)
     {
