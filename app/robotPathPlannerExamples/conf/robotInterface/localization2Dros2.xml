@@ -21,9 +21,9 @@ SPDX-License-Identifier: BSD-3-Clause
 			</group>
 			<group name="ROS2">
 				<param  name="node_name">ros2Localizer</param>
-				<param  name="initialpose_topic">initialpose</param>
-				<param  name="occupancygrid_topic">map</param>
-				<param  name="particles_topic">particles</param>
+				<param  name="initialpose_topic">/initialpose</param>
+				<param  name="occupancygrid_topic">/map</param>
+				<param  name="particles_topic">/particle_cloud</param>
 			</group>
 			<group name= "TF">
 				<param  name="robot_frame_id">mobile_base_body_link</param>
