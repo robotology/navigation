@@ -7,7 +7,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    nav2_yaml = os.path.join(os.getcwd(), 'amcl_params.yaml')
+    # nav2_yaml = os.path.join(os.getcwd(), 'amcl_params.yaml')
     ld = LaunchDescription([
     Node(
         package='nav2_amcl',
