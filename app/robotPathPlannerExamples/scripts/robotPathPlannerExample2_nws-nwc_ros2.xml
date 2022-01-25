@@ -67,8 +67,8 @@
 
 <connection>
   <from>/robotGoto/control:o</from>
-  <to>/baseControl/control:i</to>
-  <protocol>tcp</protocol>
+  <to>/baseControl/input/command:i</to>
+  <protocol>tcp+recv.portmonitor+type.dll+file.joy2vel</protocol>
 </connection>
 
 <connection>
