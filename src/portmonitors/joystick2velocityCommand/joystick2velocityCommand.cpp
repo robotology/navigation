@@ -12,7 +12,8 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/Bottle.h>
-
+#include <cmath>
+#define _USE_MATH_DEFINES
 //example
 //yarp connect /joystickCtrl:o /baseControl /input /joystick:i tcp+recv.portmonitor+type.dll+file.joy2vel
 
@@ -91,8 +92,13 @@ yarp::os::Things& Joy2vel::update(yarp::os::Things& thing)
         this->m_command.vel_x = bot->get(1).asFloat64() * percent;
         this->m_command.vel_y = bot->get(2).asFloat64() * percent;
         this->m_command.vel_theta = bot->get(3).asFloat64() * percent;
-    }
-    else
+    } else if (bot->get(0).asInt32()==2)
+    {
+        double percent = bot->get(4).asFloat64()/100.0;
+        this->m_command.vel_x = bot->get(2).asFloat64() * percent  *  cos(bot->get(1).asFloat64()/ 180 * M_PI)  ;
+        this->m_command.vel_y = bot->get(2).asFloat64() * percent * sin(bot->get(1).asFloat64() / 180 * M_PI);
+        this->m_command.vel_theta = bot->get(3).asFloat64() * percent;
+    } else
     {
         yCError(JOY2VEL, "Unsupported bottle format: Type!=3");
     }
