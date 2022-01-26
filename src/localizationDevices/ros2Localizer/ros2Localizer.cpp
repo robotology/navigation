@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <rclcpp/qos.hpp>
 
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/LogStream.h>
@@ -285,7 +286,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
 
-    Bottle ros_group = m_cfg.findGroup("ROS2");
+    ros_group = m_cfg.findGroup("ROS2");
     if (ros_group.isNull())
     {
         yCError(ROS2_LOC) << "Missing ROS2 group!";
@@ -344,7 +345,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
     m_topic_occupancyGrid = ros_group.find ("occupancygrid_topic").asString();
-    m_ros2Publisher_occupancyGrid = m_node->create_publisher<nav_msgs::msg::OccupancyGrid>(m_topic_occupancyGrid, 10);
+    m_ros2Publisher_occupancyGrid = m_node->create_publisher<nav_msgs::msg::OccupancyGrid>(m_topic_occupancyGrid, rclcpp::QoS(10).reliable().durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL));
     if (m_ros2Publisher_occupancyGrid == nullptr)
     {
         yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_occupancyGrid
@@ -359,7 +360,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
     m_topic_particles = ros_group.find("particles_topic").asString();
-    m_ros2Subscriber_particles = m_node->create_subscription<geometry_msgs::msg::PoseArray>(m_topic_particles, 10, std::bind(&ros2LocalizerThread::particles_callback, this, _1));
+    m_ros2Subscriber_particles = m_node->create_subscription<nav2_msgs::msg::ParticleCloud>(m_topic_particles, rclcpp::SensorDataQoS(), std::bind(&ros2LocalizerThread::particles_callback, this, _1));
     if (m_ros2Subscriber_particles == nullptr)
     {
         yCError(ROS2_LOC) << "localizationModule: unable to subscribe data on " << m_topic_particles << " topic, check your yarp-ROS network configuration";
@@ -549,14 +550,7 @@ void ros2LocalizerThread::run()
 bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6)
 {
     m_localization_data.map_id = loc.map_id;
-    
-    Bottle ros_group = m_cfg.findGroup("ROS2");
-    
-    if (ros_group.isNull())
-    {
-        yCError(ROS2_LOC) << "Missing ROS2 group!";
-        return false;
-    }
+
     if(!m_node)
     {
         if(!ros_group.check("node_name"))
@@ -649,15 +643,15 @@ bool ros2LocalizerThread::stopLoc()
 bool ros2LocalizerThread::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
 {
     poses.clear();
-    for (auto it = m_last_received_particles.poses.begin(); it!=m_last_received_particles.poses.end(); it++)
+    for (auto it = m_last_received_particles.particles.begin(); it!=m_last_received_particles.particles.end(); it++)
     {
-        double xp = it->position.x;
-        double yp = it->position.y;
+        double xp = it->pose.position.x;
+        double yp = it->pose.position.y;
         yarp::math::Quaternion q;
-        q.x() = it->orientation.x;
-        q.y() = it->orientation.y;
-        q.z() = it->orientation.z;
-        q.w() = it->orientation.w;
+        q.x() = it->pose.orientation.x;
+        q.y() = it->pose.orientation.y;
+        q.z() = it->pose.orientation.z;
+        q.w() = it->pose.orientation.w;
         yarp::sig::Vector v = q.toAxisAngle();
         double t = v[2];
         Map2DLocation loc(m_localization_data.map_id, xp, yp, t);
@@ -666,7 +660,7 @@ bool ros2LocalizerThread::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DL
     return true;
 }
 
-void ros2LocalizerThread::particles_callback(const geometry_msgs::msg::PoseArray poses)
+void ros2LocalizerThread::particles_callback(const nav2_msgs::msg::ParticleCloud poses)
 {
     if (m_ros2Subscriber_particles)
     {
@@ -676,7 +670,7 @@ void ros2LocalizerThread::particles_callback(const geometry_msgs::msg::PoseArray
             return;
         }
 
-        m_last_received_particles = *(new geometry_msgs::msg::PoseArray(poses));
+        m_last_received_particles = *(new nav2_msgs::msg::ParticleCloud(poses));
     }
 }
 
@@ -684,15 +678,12 @@ builtin_interfaces::msg::Time ros2LocalizerThread::ros2TimeFromYarpNow()
 {
     double yarpTimeStamp = yarp::os::Time::now();
     builtin_interfaces::msg::Time toReturn;
-    uint64_t time;
     uint64_t sec_part;
     uint64_t nsec_part;
-    time = (uint64_t)(yarpTimeStamp * 1000000000UL);
-    sec_part = (time / 1000000000UL);
-    nsec_part = time - sec_part*1000000000UL;
+    sec_part = int(yarpTimeStamp); // (time / 1000000000UL);
+    nsec_part = (yarpTimeStamp - sec_part)*1000000000UL;
     toReturn.sec = sec_part;
     toReturn.nanosec = (uint32_t)nsec_part;
-
     return toReturn;
 }
 

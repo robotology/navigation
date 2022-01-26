@@ -9,6 +9,7 @@ find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
 
 yarp_prepare_plugin(ros2Localizer
                     CATEGORY device
@@ -35,6 +36,7 @@ target_link_libraries(ros2Localizer YARP::YARP_os
                                     YARP::YARP_rosmsg
                                     navigation_lib
                                     rclcpp::rclcpp
+                                    nav2_msgs::nav2_msgs__rosidl_typesupport_cpp
                                     std_msgs::std_msgs__rosidl_typesupport_cpp
                                     nav_msgs::nav_msgs__rosidl_typesupport_cpp
                                     test_msgs::test_msgs__rosidl_typesupport_cpp

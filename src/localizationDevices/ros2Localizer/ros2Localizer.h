@@ -45,6 +45,7 @@
 #include <nav_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h>
 //#include <nav_msgs/msg/rosidl_typesupport_connext_cpp__visibility_control.h>
 #include <nav_msgs/msg/odometry.hpp>
+#include <nav2_msgs/msg/particle_cloud.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <geometry_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
@@ -144,6 +145,8 @@ protected:
     yarp::dev::Nav2D::Map2DLocation  m_localization_data;
     std::mutex                       m_mutex;
     yarp::os::Searchable&            m_cfg;
+    Bottle                           ros_group;
+
 
     //configuration options
     bool                         m_use_localization_from_odometry_port;
@@ -173,8 +176,8 @@ protected:
     Ros2Spinner*                      m_innerSpinner{nullptr};
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr  m_ros2Publisher_initial_pose{nullptr};
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr                   m_ros2Publisher_occupancyGrid{nullptr};
-    rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr               m_ros2Subscriber_particles{nullptr};
-    geometry_msgs::msg::PoseArray                                                m_last_received_particles;
+    rclcpp::Subscription<nav2_msgs::msg::ParticleCloud>::SharedPtr               m_ros2Subscriber_particles{nullptr};
+    nav2_msgs::msg::ParticleCloud                                                m_last_received_particles;
 
 public:
     ros2LocalizerThread(double period, std::string _name, yarp::os::Searchable& _cfg);
@@ -187,7 +190,7 @@ public:
     bool initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6);
     bool getCurrentLoc(yarp::dev::Nav2D::Map2DLocation& loc);
     bool getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses);
-    void particles_callback(const geometry_msgs::msg::PoseArray msg);
+    void particles_callback(const nav2_msgs::msg::ParticleCloud msg);
     bool startLoc();
     bool stopLoc();
     builtin_interfaces::msg::Time ros2TimeFromYarpNow();
