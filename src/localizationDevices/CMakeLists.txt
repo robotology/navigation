@@ -5,6 +5,9 @@
 #
 
 add_subdirectory(rosLocalizer)
+if(NAVIGATION_USE_ROS2)
+    add_subdirectory(ros2Localizer)
+endif()
 add_subdirectory(odomLocalizer)
 add_subdirectory(gazeboLocalizer)
 add_subdirectory(pozyxLocalizer)

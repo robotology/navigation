@@ -18,6 +18,8 @@ set(YARP_REQUIRED_VERSION 3.5)
 find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
 
+option(NAVIGATION_USE_ROS2 "if enabled, ROS2 related executables/plugins will be compiled" OFF)
+
 option(NAVIGATION_USE_NWC "if enabled, yarp nwc devices instead of standard clients" OFF)
 if(NAVIGATION_USE_NWC)
     add_definitions(-DNAVIGATION_USE_NWC=1)
@@ -49,8 +51,8 @@ set(BUILD_SHARED_LIBS ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED 17)
 
 find_package(YCM REQUIRED)
 
@@ -81,6 +83,18 @@ list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 find_package(OpenCV)
 find_package(GSL)
 find_package(SDL)
+
+if(NAVIGATION_USE_ROS2)
+    find_package(ament_cmake REQUIRED)
+    find_package(rclcpp REQUIRED)
+    find_package(std_msgs REQUIRED)
+    find_package(sensor_msgs REQUIRED)
+    find_package(nav_msgs REQUIRED)
+    find_package(geometry_msgs REQUIRED)
+    find_package(tf2_msgs REQUIRED)
+    find_package(test_msgs REQUIRED)
+    find_package(visualization_msgs REQUIRED)
+endif()
 
 add_subdirectory(src)
 add_subdirectory(app)
