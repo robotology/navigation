@@ -1,17 +1,17 @@
 <application>
-<name>freeFloorViewer_testHead_sim</name>
+<name>freeFloorViewer_testHead_R1SN003</name>
 
 <dependencies>
 </dependencies>
 
 <application>
-    <name>Navigation_ROS_R1_SIM</name>
+    <name>Navigation_ROS_R1SN003</name>
     <prefix></prefix>
 </application>
 
 <module>
    <name>freeFloorViewer</name>
-   <parameters>--context freeFloorViewer --from freeFloorViewer_sim_tour.ini</parameters>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_R1SN003.ini</parameters>
    <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=20000</environment>
    <node>console</node>
 </module>

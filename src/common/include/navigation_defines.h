@@ -31,6 +31,9 @@
     #define MAP_REMOTE_PORT_DEFAULT               "/map2D_nws_yarp"
     #define NAVIGATION_REMOTE_PORT_DEFAULT        "/navigation2D_nws_yarp"
     #define LOCALIZATION_REMOTE_PORT_DEFAULT      "/localization2D_nws_yarp"
+    #define TF_REMOTE_PARAM_NAME                  "ft_server_prefix"
+    #define TF_LOCAL_PARAM_NAME                   "ft_client_prefix"
+    #define TF_CLIENT_DEFAULT_CONFIG              "ftc_yarp_only.xml"
 #else
     #define LOCALIZATION_CLIENT_DEVICE_DEFAULT    "localization2DClient"
     #define MAP_CLIENT_DEVICE_DEFAULT             "map2DClient"
@@ -40,4 +43,6 @@
     #define MAP_REMOTE_PORT_DEFAULT               "/mapServer"
     #define NAVIGATION_REMOTE_PORT_DEFAULT        "/navigationServer"
     #define LOCALIZATION_REMOTE_PORT_DEFAULT      "/localizationServer"
+    #define TF_REMOTE_PARAM_NAME                  "remote"
+    #define TF_LOCAL_PARAM_NAME                   "local"
 #endif
