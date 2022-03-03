@@ -192,22 +192,52 @@ void rosLocalizerThread::run()
     }
 
     lock_guard<std::mutex> lock(m_mutex);
-    yarp::sig::Vector iv;
-    yarp::sig::Vector pose;
-    iv.resize(6, 0.0);
-    pose.resize(6, 0.0);
-    bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
-    if (r)
-    {
-        //data is formatted as follows: x, y, angle (in degrees)
-        m_tf_data_received = yarp::os::Time::now();
-        m_localization_data.x = pose[0];
-        m_localization_data.y = pose[1];
-        m_localization_data.theta = pose[5] * RAD2DEG;
 
-        //velocity estimation block
-        if (1) { estimateOdometry(m_localization_data); }
+    if (m_loc_mode == use_tf_loc)
+    {
+        yarp::sig::Vector iv;
+        yarp::sig::Vector pose;
+        iv.resize(6, 0.0);
+        pose.resize(6, 0.0);
+        bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
+        if (r)
+        {
+            //data is formatted as follows: x, y, angle (in degrees)
+            m_tf_data_received = yarp::os::Time::now();
+            m_localization_data.x = pose[0];
+            m_localization_data.y = pose[1];
+            m_localization_data.theta = pose[5] * RAD2DEG;
+
+            //velocity estimation block
+            if (1) { estimateOdometry(m_localization_data); }
+        }
     }
+    else if (m_loc_mode == use_ros_loc)
+    {
+        yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped* rospose = m_rosSubscriber_current_pose.read(false);
+        if (rospose)
+        {
+            m_tf_data_received = yarp::os::Time::now();
+            m_localization_data.x = rospose->pose.pose.position.x;
+            m_localization_data.y = rospose->pose.pose.position.y;
+            yarp::math::Quaternion q;
+            q.x() = rospose->pose.pose.orientation.x;
+            q.y() = rospose->pose.pose.orientation.y;
+            q.z() = rospose->pose.pose.orientation.z;
+            q.w() = rospose->pose.pose.orientation.w;
+            yarp::sig::Vector v = q.toAxisAngle();
+            double t = v[2];
+            m_localization_data.theta = t * RAD2DEG;
+
+            //velocity estimation block
+            if (1) { estimateOdometry(m_localization_data); }
+        }
+    }
+    else
+    {
+        yCError(ROS_LOC) << "ERROR!";
+    }
+
     if (current_time - m_tf_data_received > 0.1)
     {
         yCWarning(ROS_LOC) << "No localization data received for more than 0.1s!";
@@ -357,6 +387,30 @@ bool rosLocalizerThread::threadInit()
         return false;
     }
 
+    Bottle loc_group = m_cfg.findGroup("LOCALIZATION");
+    if (loc_group.isNull())
+    {
+        //yCError(ROS_LOC) << "Missing LOCALIZATION group!";
+        //return false;
+
+        if (loc_group.find("use_localization_from_tf").asInt() == 1)
+        {
+            m_loc_mode = use_tf_loc;
+            yCInfo(ROS_LOC) << "using localization from transform server";
+        }
+        else if (loc_group.find("use_localization_from_ros").asInt() == 1)
+        {
+            m_loc_mode = use_ros_loc;
+            yCInfo(ROS_LOC) << "using localization from ros topic";
+        }
+        else
+        {
+            //m_loc_mode = use_unknown;
+            m_loc_mode = use_tf_loc;
+            yCInfo(ROS_LOC) << "Missing MAP group!";
+        }
+    }
+
     Bottle map_group = m_cfg.findGroup("MAP");
     if (map_group.isNull())
     {
@@ -398,6 +452,23 @@ bool rosLocalizerThread::threadInit()
             return false;
         }
         yCDebug(ROS_LOC) << "opened " << m_topic_particles << " topic";
+    }
+
+    //initialize a subscriber for current pose
+    if (ros_group.check("currentpose_topic") && m_loc_mode == use_ros_loc)
+    {
+        m_topic_currpose = ros_group.find("currentpose_topic").asString();
+        if (!m_rosSubscriber_current_pose.topic(m_topic_currpose))
+        {
+            if (m_rosNode)
+            {
+                delete m_rosNode;
+                m_rosNode = 0;
+            }
+            yCError(ROS_LOC) << "localizationModule: unable to subscribe data on " << m_topic_currpose << " topic, check your yarp-ROS network configuration";
+            return false;
+        }
+        yCDebug(ROS_LOC) << "opened " << m_topic_currpose << " topic";
     }
 
      //initialize an initial pose publisher
@@ -537,6 +608,11 @@ void rosLocalizerThread::threadRelease()
     {
         m_rosSubscriber_particles.interrupt();
         m_rosSubscriber_particles.close();
+    }
+    if (m_rosSubscriber_current_pose.asPort().isOpen())
+    {
+        m_rosSubscriber_current_pose.interrupt();
+        m_rosSubscriber_current_pose.close();
     }
     if (m_rosNode)
     {
