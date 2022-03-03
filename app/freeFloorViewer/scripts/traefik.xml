@@ -1,7 +1,5 @@
 <application>
    <name>traefik for webgui teleop</name>
-   <dependencies>
-   </dependencies>
 
    <!-- modules -->
 
@@ -9,7 +7,6 @@
    <module>
       <name>yarp</name>
       <parameters>repeat /r1</parameters>
-      <workdir><workdir>
       <node>traefik</node>
       <environment>YARP_PORTNUMBER_r1=11000</environment>
    </module>
@@ -19,7 +16,6 @@
    <module>
       <name>yarp</name>
       <parameters>repeat /r2</parameters>
-      <workdir><workdir>
       <node>traefik</node>
       <environment>YARP_PORTNUMBER_r2=11001</environment>
    </module>
@@ -28,9 +24,8 @@
    <module>
       <name>python3</name>
       <parameters>server.py --map_port 20001 --camera_port 20000 --camera_host webgui.docker --map_host webgui.docker --click_port /click --traefik</parameters>
-      <workdir>/home/user1/yarp-web-teleop<workdir>
+      <workdir>/home/user1/yarp-web-teleop</workdir>
       <node>traefik</node>
-      <environment></environment>
    </module>
 
 
