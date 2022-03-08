@@ -67,7 +67,7 @@ using namespace yarp::os;
  * | TF                   | ft_client_prefix                     | string  | -      | ""                 | No           | A prefix to add to the names of all the ports opened by the frameTransformClient               | -                                                        |
  * | TF                   | ft_server_prefix                     | string  | -      | ""                 | No           | The prefix added to all the names of the ports opened by the frameTransformServer              | -                                                        |
  * | LOCALIZATION         | use_localization_from_ros            | int     | 0/1    | -                  | Yes          | If set to 1, the module will use a ros topic to receive localization data                      | Incompatible with 'use_localization_from_tf=1'           |
- * | LOCALIZATION         | use_localization_from_tf             | int     | 0/1    | -                  | Yes          | If set to 1, the module will use a tfClient to receive localization data                       | Incompatible with 'use_localization_from_odometry_port=1 |
+ * | LOCALIZATION         | use_localization_from_tf             | int     | 0/1    | -                  | Yes          | If set to 1, the module will use a tfClient to receive localization data                       | Incompatible with 'use_localization_from_ros=1'          |
  */
 
 class rosLocalizer;
@@ -134,8 +134,6 @@ protected:
 
     //configuration options
     bool                         m_ros_enabled;
-    bool                         m_use_localization_from_odometry_port;
-    bool                         m_use_localization_from_tf;
     bool                         m_use_map_server;
 
     //tf data

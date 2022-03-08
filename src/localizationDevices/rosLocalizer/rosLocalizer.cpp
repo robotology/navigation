@@ -390,25 +390,25 @@ bool rosLocalizerThread::threadInit()
     Bottle loc_group = m_cfg.findGroup("LOCALIZATION");
     if (loc_group.isNull())
     {
-        //yCError(ROS_LOC) << "Missing LOCALIZATION group!";
-        //return false;
+        yCError(ROS_LOC) << "Missing LOCALIZATION group!";
+        return false;
+    }
 
-        if (loc_group.find("use_localization_from_tf").asInt() == 1)
-        {
-            m_loc_mode = use_tf_loc;
-            yCInfo(ROS_LOC) << "using localization from transform server";
-        }
-        else if (loc_group.find("use_localization_from_ros").asInt() == 1)
-        {
-            m_loc_mode = use_ros_loc;
-            yCInfo(ROS_LOC) << "using localization from ros topic";
-        }
-        else
-        {
-            //m_loc_mode = use_unknown;
-            m_loc_mode = use_tf_loc;
-            yCInfo(ROS_LOC) << "Missing MAP group!";
-        }
+    if (loc_group.find("use_localization_from_tf").asInt() == 1)
+    {
+        m_loc_mode = use_tf_loc;
+        yCInfo(ROS_LOC) << "using localization from transform server";
+    }
+    else if (loc_group.find("use_localization_from_ros").asInt() == 1)
+    {
+        m_loc_mode = use_ros_loc;
+        yCInfo(ROS_LOC) << "using localization from ros topic";
+    }
+    else
+    {
+        //m_loc_mode = use_unknown;
+        m_loc_mode = use_tf_loc;
+        yCInfo(ROS_LOC) << "Missing MAP group!";
     }
 
     Bottle map_group = m_cfg.findGroup("MAP");
