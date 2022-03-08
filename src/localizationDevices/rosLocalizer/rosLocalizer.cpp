@@ -406,9 +406,9 @@ bool rosLocalizerThread::threadInit()
     }
     else
     {
-        //m_loc_mode = use_unknown;
-        m_loc_mode = use_tf_loc;
-        yCInfo(ROS_LOC) << "Missing MAP group!";
+        m_loc_mode = use_unknown;
+        yCError(ROS_LOC) << "Missing localization mode! Choose either 'use_localization_from_tf' or 'use_localization_from_ros'";
+        return false;
     }
 
     Bottle map_group = m_cfg.findGroup("MAP");
