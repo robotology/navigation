@@ -413,48 +413,57 @@ void rosNavigator::run()
         yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
         if (statusArray && statusArray->status_list.size() != 0)
         {
+            // Comments for the goal status types are taken from http://docs.ros.org/en/kinetic/api/actionlib_msgs/html/msg/GoalStatus.html
             switch (statusArray->status_list[statusArray->status_list.size() - 1].status)
             {
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:     // The goal has yet to be processed by the action server
             {
+                m_navigation_status = navigation_status_preparing_before_move;
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE:      // The goal is currently being processed by the action server
             {
                 m_navigation_status = navigation_status_moving;
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED:   // The goal received a cancel request after it started executing
+                                                                        // and has since completed its execution (Terminal State)
             {
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED:   // The goal was achieved successfully by the action server (Terminal State)
             {
                 m_navigation_status = navigation_status_goal_reached;
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED:     // The goal was aborted during execution by the action server due
+                                                                        // to some failure (Terminal State)
             {
                 m_navigation_status = navigation_status_aborted;
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED:    // The goal was rejected by the action server without being processed,
+                                                                        // because the goal was unattainable or invalid (Terminal State)
             {
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING:  // The goal received a cancel request after it started executing
+                                                                        // and has not yet completed execution
             {
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING:   // The goal received a cancel request before it started executing,
+                                                                        // but the action server has not yet confirmed that the goal is canceled
             {
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED:    // The goal received a cancel request before it started executing
+                                                                        // and was successfully cancelled (Terminal State)
             {
             }
             break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST:
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST:        // An action client can determine that a goal is LOST. This should not be
+                                                                        // sent over the wire by an action server
             {
             }
             break;
