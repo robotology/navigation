@@ -66,8 +66,7 @@ using namespace yarp::os;
  * | TF                   | ft_client_config                     | string  | -      | ftc_yarp_only.xml  | No           | The name of the xml file containing the needed client configuration                            | -                                                        |
  * | TF                   | ft_client_prefix                     | string  | -      | ""                 | No           | A prefix to add to the names of all the ports opened by the frameTransformClient               | -                                                        |
  * | TF                   | ft_server_prefix                     | string  | -      | ""                 | No           | The prefix added to all the names of the ports opened by the frameTransformServer              | -                                                        |
- * | LOCALIZATION         | use_localization_from_odometry_port  | int     | 0/1    | -                  | Yes          | If set to 1, the module will use a port to receive localization data                           | Incompatible with 'use_localization_from_tf=1'           |
- * | LOCALIZATION         | use_localization_from_tf             | int     | 0/1    | -                  | Yes          | If set to 1, the module will use a tfClient to receive localization data                       | Incompatible with 'use_localization_from_odometry_port=1 |
+ * | LOCALIZATION         | localization_mode                    | string  | -      | -                  | Yes          | If set to "ros", the module will use a ros topic to receive localization data. If set to 'tf' it will use data received on the transformClient  | -       |
  */
 
 class rosLocalizer;
@@ -134,8 +133,6 @@ protected:
 
     //configuration options
     bool                         m_ros_enabled;
-    bool                         m_use_localization_from_odometry_port;
-    bool                         m_use_localization_from_tf;
     bool                         m_use_map_server;
 
     //tf data
@@ -156,9 +153,12 @@ protected:
     std::string                       m_topic_initial_pose;
     std::string                       m_topic_occupancyGrid;
     std::string                       m_topic_particles;
+    std::string                       m_topic_currpose;
+    enum { use_tf_loc = 0, use_ros_loc=1, use_unknown=-1 } m_loc_mode ;
     yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped> m_rosPublisher_initial_pose;
     yarp::os::Publisher<yarp::rosmsg::nav_msgs::OccupancyGrid> m_rosPublisher_occupancyGrid;
     yarp::os::Subscriber<yarp::rosmsg::geometry_msgs::PoseArray> m_rosSubscriber_particles;
+    yarp::os::Subscriber <yarp::rosmsg::geometry_msgs::PoseWithCovarianceStamped> m_rosSubscriber_current_pose;
     yarp::rosmsg::geometry_msgs::PoseArray m_last_received_particles;
 
 public:
