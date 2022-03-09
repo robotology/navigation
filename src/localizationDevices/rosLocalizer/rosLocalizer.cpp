@@ -226,7 +226,7 @@ void rosLocalizerThread::run()
             q.z() = rospose->pose.pose.orientation.z;
             q.w() = rospose->pose.pose.orientation.w;
             yarp::sig::Vector v = q.toAxisAngle();
-            double t = v[2];
+            double t = v[3]*v[2];
             m_localization_data.theta = t * RAD2DEG;
 
             //velocity estimation block
@@ -235,13 +235,14 @@ void rosLocalizerThread::run()
     }
     else
     {
-        yCError(ROS_LOC) << "ERROR!";
+        yCError(ROS_LOC) << "Impossible condition!";
     }
 
-    if (current_time - m_tf_data_received > 0.1)
+    //FIXME
+    /*if (current_time - m_tf_data_received > 0.1)
     {
         yCWarning(ROS_LOC) << "No localization data received for more than 0.1s!";
-    }
+    }*/
     
     //republish the map periodically
     if (0)
@@ -394,21 +395,27 @@ bool rosLocalizerThread::threadInit()
         return false;
     }
 
-    if (loc_group.find("use_localization_from_tf").asInt() == 1)
+    if (loc_group.check("localization_mode")==false)
+    {
+        yCError(ROS_LOC) << "Missing localization_mode param!";
+        return false; 
+    }
+    string locmodestr = loc_group.find("localization_mode").asString();
+
+    if (locmodestr == "tf")
     {
         m_loc_mode = use_tf_loc;
         yCInfo(ROS_LOC) << "using localization from transform server";
     }
-    else if (loc_group.find("use_localization_from_ros").asInt() == 1)
+    else if (locmodestr == "ros")
     {
         m_loc_mode = use_ros_loc;
         yCInfo(ROS_LOC) << "using localization from ros topic";
     }
     else
     {
-        m_loc_mode = use_unknown;
-        yCError(ROS_LOC) << "Missing localization mode! Choose either 'use_localization_from_tf' or 'use_localization_from_ros'";
-        return false;
+        yCError(ROS_LOC) << "invalid localization_mode param!";
+        return false; 
     }
 
     Bottle map_group = m_cfg.findGroup("MAP");
@@ -455,20 +462,33 @@ bool rosLocalizerThread::threadInit()
     }
 
     //initialize a subscriber for current pose
-    if (ros_group.check("currentpose_topic") && m_loc_mode == use_ros_loc)
+    if (m_loc_mode == use_ros_loc)
     {
-        m_topic_currpose = ros_group.find("currentpose_topic").asString();
-        if (!m_rosSubscriber_current_pose.topic(m_topic_currpose))
+        if (ros_group.check("currentpose_topic"))
         {
-            if (m_rosNode)
+            m_topic_currpose = ros_group.find("currentpose_topic").asString();
+            if (m_topic_currpose.empty())
             {
-                delete m_rosNode;
-                m_rosNode = 0;
+                yCError(ROS_LOC) << "Invalid topic name for currentpose_topic";
+                return false;
             }
-            yCError(ROS_LOC) << "localizationModule: unable to subscribe data on " << m_topic_currpose << " topic, check your yarp-ROS network configuration";
+            if (!m_rosSubscriber_current_pose.topic(m_topic_currpose))
+            {
+                if (m_rosNode)
+                {
+                    delete m_rosNode;
+                    m_rosNode = 0;
+                }
+                yCError(ROS_LOC) << "localizationModule: unable to subscribe data on " << m_topic_currpose << " topic, check your yarp-ROS network configuration";
+                return false;
+            }
+            yCDebug(ROS_LOC) << "opened " << m_topic_currpose << " topic";
+        }
+        else
+        {
+            yCError(ROS_LOC) << "Missing currentpose_topic param";
             return false;
         }
-        yCDebug(ROS_LOC) << "opened " << m_topic_currpose << " topic";
     }
 
      //initialize an initial pose publisher
