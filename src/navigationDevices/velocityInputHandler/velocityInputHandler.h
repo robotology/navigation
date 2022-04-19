@@ -19,18 +19,15 @@ protected:
     //internal type definition to store control output
     struct control_type
     {
-        double linear_xvel;
-        double linear_yvel;
-        double angular_vel;
-        double timeout;
-        double reception_time;
-        control_type()
-        {
-            linear_xvel = 0; linear_yvel = 0; angular_vel = 0; timeout = 0; reception_time = 0;
-        }
+        double linear_xvel = 0;
+        double linear_yvel = 0;
+        double angular_vel = 0;
+        double timeout = 0;
+        double reception_time =0;
     }
     m_control_out;
     double   m_max_timeout = 0.1;
+    bool     timeout_printable = false;
 
 public:
     VelocityInputHandler();

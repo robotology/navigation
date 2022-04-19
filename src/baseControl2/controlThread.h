@@ -105,6 +105,7 @@ protected:
     BufferedPort<Bottle> port_debug_linear;
     BufferedPort<Bottle> port_debug_angular;
     BufferedPort<Bottle> port_filtered_commands;
+    BufferedPort<Bottle> port_unfiltered_commands;
 
     MotorControl*        m_motor_handler = nullptr;
     Input*               m_input_handler = nullptr;

@@ -50,6 +50,8 @@ void ControlThread::threadRelease()
     }
     port_filtered_commands.interrupt();
     port_filtered_commands.close();
+    port_unfiltered_commands.interrupt();
+    port_unfiltered_commands.close();
 
 }
 
@@ -285,6 +287,16 @@ void ControlThread::run()
         if (input_desired_direction >= 360.0) input_desired_direction -= 360.0;
     }
 
+    //debug block: outputs unfiltered commands
+    static double otime = yarp::os::Time::now();
+    double ctime = yarp::os::Time::now();
+    Bottle &uncoms = port_unfiltered_commands.prepare();
+    uncoms.clear();
+    uncoms.addFloat64(input_linear_speed);
+    uncoms.addFloat64(input_angular_speed);
+    uncoms.addFloat64(ctime-otime);
+    port_unfiltered_commands.write();
+    
     //low pass filter
     apply_input_filter(input_linear_speed, input_angular_speed, input_desired_direction);
 
@@ -300,11 +312,15 @@ void ControlThread::run()
     //apply ratio limiter
     if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
 
+    //debug block: outputs filtered commands
     Bottle &coms = port_filtered_commands.prepare();
     coms.clear();
     coms.addFloat64(input_linear_speed);
     coms.addFloat64(input_angular_speed);
+    coms.addFloat64(ctime-otime);
     port_filtered_commands.write();
+    otime=ctime;
+    
 
     /*
     if (!lateral_movement_enabled)
@@ -616,6 +632,7 @@ bool ControlThread::threadInit()
         port_debug_angular.open((localName + "/debug/angular:o").c_str());
     }
     port_filtered_commands.open((localName + "/filtered_commands:o").c_str());
+    port_unfiltered_commands.open((localName + "/unfiltered_commands:o").c_str());
 
     //start the motors
     if (rf.check("no_start"))

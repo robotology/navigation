@@ -17,7 +17,7 @@ YARP_LOG_COMPONENT(VEL_INPUT_HANDLER, "navigation.VelocityInputHandler")
 
 VelocityInputHandler::VelocityInputHandler()
 {
-    m_localName = "VelocityInputHandler";
+    m_localName = "VelocityInputHandler_defaultName";
 }
 
 bool VelocityInputHandler::open(yarp::os::Searchable& config)
@@ -46,6 +46,7 @@ bool VelocityInputHandler::applyVelocityCommand(double x_vel, double y_vel, doub
     m_control_out.angular_vel = theta_vel;
     m_control_out.timeout = timeout;
     m_control_out.reception_time = yarp::os::Time::now();
+    timeout_printable = true;
     return true;
 }
 
@@ -55,6 +56,11 @@ bool VelocityInputHandler::getLastVelocityCommand(double& x_vel, double& y_vel, 
     double current_time = yarp::os::Time::now();
     if (current_time - m_control_out.reception_time > m_max_timeout)
     {
+        if (timeout_printable)
+        {
+            yCWarning(VEL_INPUT_HANDLER) << "[" << m_localName << "] timeout:" << current_time-m_control_out.reception_time;
+            timeout_printable = false;
+        }
         return false;
     }
     x_vel = m_control_out.linear_xvel;

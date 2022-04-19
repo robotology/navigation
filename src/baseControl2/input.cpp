@@ -149,6 +149,7 @@ bool Input::open(Property &_options)
         Property inputManager_options;
         inputManager_options.put("device", "velocityInputHandler");
         inputManager_options.put("max_timeout", max_timeout);
+        inputManager_options.put("local", input_name);
         anInputM.m_inputmanager_dd = new yarp::dev::PolyDriver();
         if (anInputM.m_inputmanager_dd->open(inputManager_options) == false)
         {
