@@ -1,5 +1,5 @@
 <application>
-<name>freeFloorViewer_testHead_R1SN003</name>
+<name>freeFloorViewer_testHead_R1SN003_wifi</name>
 
 <dependencies>
 </dependencies>
@@ -13,13 +13,13 @@
    <name>freeFloorViewer</name>
    <parameters>--context freeFloorViewer --from freeFloorViewer_R1SN003.ini</parameters>
    <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=20000</environment>
-   <node>console2</node>
+   <node>console3</node>
 </module>
 
 <module>
    <name>yarpview</name>
    <parameters>--name /view/floorView:i --out /view/floorClick:o --rightout /view/headClick:o</parameters>
-   <node>console2</node>
+   <node>console3</node>
 </module>
 
 <connection>
