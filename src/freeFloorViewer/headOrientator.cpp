@@ -23,6 +23,18 @@ YARP_LOG_COMPONENT(HEAD_ORIENTATOR, "navigation.headOrientator")
 bool HeadOrientator::configure(yarp::os::Property rf)
 {
     // --------- Generic config --------- //
+    if(rf.check("yaw_safe_margin")){m_yawSafeMargin = rf.find("yaw_safe_margin").asFloat64();}
+    else
+    {
+        yCInfo(HEAD_ORIENTATOR) << "Safe margin for neck yaw not found using the default value: " << m_yawSafeMargin;
+    }
+
+    if(rf.check("pitch_safe_margin")){m_pitchSafeMargin = rf.find("pitch_safe_margin").asFloat64();}
+    else
+    {
+        yCInfo(HEAD_ORIENTATOR) << "Safe margin for neck pitch not found using the default value: " << m_pitchSafeMargin;
+    }
+
     if(rf.check("img_width")){m_imgWidth = rf.find("img_width").asInt32();}
     else
     {
@@ -76,6 +88,27 @@ bool HeadOrientator::configure(yarp::os::Property rf)
         return false;
     }
 
+    double tempMaxYaw, tempMinYaw, tempMaxPitch, tempMinPitch;
+
+    if(!m_iNeckLimits->getLimits(0, &tempMinPitch, &tempMaxPitch) || !m_iNeckLimits->getLimits(1, &tempMinYaw, &tempMaxYaw))
+    {
+        yCError(HEAD_ORIENTATOR,"Error retrieving the limits values for the neck joints");
+        return false;
+    }
+
+    m_yawMax = tempMaxYaw - m_yawSafeMargin;
+    m_yawMin = tempMinYaw + m_yawSafeMargin;
+    m_pitchMax = tempMaxPitch - m_pitchSafeMargin;
+    m_pitchMin = tempMinPitch + m_pitchSafeMargin;
+
+    // --------- IEncoders device config --------- //
+    m_neck.view(m_iNeckEncoders);
+    if(!m_iNeckEncoders)
+    {
+        yCError(HEAD_ORIENTATOR,"Error opening iEncoders interface. Device not available");
+        return false;
+    }
+
     return true;
 }
 
@@ -116,11 +149,35 @@ void HeadOrientator::backToZero()
 
 void HeadOrientator::rotateHead(yarp::os::Bottle &b)
 {
+    double currYaw, currPitch;
+    if (!m_iNeckEncoders->getEncoder(0,&currPitch), !m_iNeckEncoders->getEncoder(1,&currYaw))
+    {
+        yCError(HEAD_ORIENTATOR,"Error while retrieving the encoders current values");
+        return;
+    }
+
     double dX = b.get(0).asFloat64() - b.get(2).asFloat64();
     double dY = b.get(3).asFloat64() - b.get(1).asFloat64();
+    double absYaw = currYaw+dX*m_uToYaw;
+    double absPitch = currPitch+dY*m_vToPitch;
 
-    m_iNeckPos->relativeMove(1,dX*m_uToYaw);
-    m_iNeckPos->relativeMove(0,dY*m_vToPitch);
+    bool highYaw = absYaw > m_yawMax;
+    bool lowYaw = absYaw < m_yawMin;
+    absYaw = highYaw ? m_yawMax : (lowYaw ? m_yawMin : absYaw);
+    bool highPitch = absPitch > m_pitchMax;
+    bool lowPitch = absPitch < m_pitchMin;
+    absPitch = highPitch ? m_pitchMax : (lowPitch ? m_pitchMin : absPitch);
+
+    if(!m_iNeckPos->positionMove(0, absPitch)){
+        yCError(HEAD_ORIENTATOR) << "Neck pitch joint movement failed";
+        return;
+    }
+    if(!m_iNeckPos->positionMove(1, absYaw)){
+        yCError(HEAD_ORIENTATOR) << "Neck yaw joint movement failed";
+        return;
+    }
+    //m_iNeckPos->relativeMove(1,dX*m_uToYaw);
+    //m_iNeckPos->relativeMove(0,dY*m_vToPitch);
 }
 
 void HeadOrientator::close()

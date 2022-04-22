@@ -464,7 +464,14 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
     //int sign = (b.get(0).asInt32()-b.get(2).asInt32())/(abs(b.get(0).asInt32()-b.get(2).asInt32())>0?abs(b.get(0).asInt32()-b.get(2).asInt32()):1);
     if(m_nav2DPoly.isValid())
     {
-        m_iNav2D->gotoTargetByRelativeLocation(0.0,0.0,rotation);
+        if(m_self_reliant) {m_iNav2D->gotoTargetByRelativeLocation(0.0,0.0,rotation);}
+        else
+        {
+            yarp::dev::Nav2D::Map2DLocation locPixel;
+            m_iNav2D->getCurrentPosition(locPixel);
+            locPixel.theta += rotation;
+            m_iNav2D->gotoTargetByAbsoluteLocation(locPixel);
+        }
     }
 }
 
