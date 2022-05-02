@@ -1,5 +1,5 @@
 <application>
-   <name>traefik for webgui teleop</name>
+   <name>traefik_for_webgui_teleop</name>
 
    <!-- modules -->
 
@@ -23,7 +23,7 @@
 
    <module>
       <name>python3</name>
-      <parameters>server.py --map_port 20001 --camera_port 20000 --camera_host 88.54.208.58 --map_host 88.54.208.58 --traefik</parameters>
+      <parameters>server.py --map_port 20001 --camera_port 20000 --camera_host 88.54.208.58 --map_host 88.54.208.58 --no_ssl</parameters>
       <workdir>/home/user1/yarp-web-teleop</workdir>
       <node>traefik</node>
    </module>
@@ -36,7 +36,7 @@
    <connection>
       <from>/freeFloorViewer/floorEnhanced:o</from>
       <to>/r1</to>
-      <protocol>tcp</protocol>
+      <protocol>mjpeg</protocol>
    </connection>
 
    <connection>
@@ -48,18 +48,18 @@
    <connection>
       <from>/webview/headClick:o</from>
       <to>/freeFloorViewer/clicked_head:i</to>
-      <protocol>tcp</protocol>
+      <protocol>fast_tcp</protocol>
    </connection>
    
       <connection>
       <from>/webview/mapClick:o</from>
       <to>/navigationGui/yarpviewTarget:i</to>
-      <protocol>tcp</protocol>
+      <protocol>fast_tcp</protocol>
    </connection>
    
       <connection>
       <from>/webview/navClick:o</from>
       <to>/freeFloorViewer/clicked_pos:i</to>
-      <protocol>tcp</protocol>
+      <protocol>fast_tcp</protocol>
    </connection>
 </application>

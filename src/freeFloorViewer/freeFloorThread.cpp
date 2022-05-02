@@ -303,14 +303,8 @@ void FreeFloorThread::run()
 
     m_floorMutex.lock();
     //compute the point cloud
-    auto t1 = std::chrono::high_resolution_clock::now();
     depthToFilteredPc();
-    auto t2 = std::chrono::high_resolution_clock::now();
     freeFloorDraw(imgOut);
-    auto t3 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t3 - t2 ).count();
-    //yCInfo(FREE_FLOOR_THREAD) << "The durations are: " << duration << " " << duration2;
 
     m_floorMutex.unlock();
 
@@ -487,7 +481,8 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
     }
 
     int deltaPx = (b.get(0).asInt32()-b.get(2).asInt32());
-    double rotation = (double)deltaPx * horizFOV/m_depth_width;
+    //double rotation = (double)deltaPx * horizFOV/m_depth_width;
+    double rotation = (double)deltaPx * 180.0/m_depth_width;
     //int sign = (b.get(0).asInt32()-b.get(2).asInt32())/(abs(b.get(0).asInt32()-b.get(2).asInt32())>0?abs(b.get(0).asInt32()-b.get(2).asInt32()):1);
     if(m_nav2DPoly.isValid())
     {

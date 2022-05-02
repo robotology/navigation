@@ -9,6 +9,11 @@
     <prefix></prefix>
 </application>
 
+<application>
+    <name>open_pose_stuff</name>
+    <prefix></prefix>
+</application>
+
 <module>
    <name>freeFloorViewer</name>
    <parameters>--context freeFloorViewer --from freeFloorViewer_complete_R1SN003.ini</parameters>
@@ -31,19 +36,19 @@
 <connection>
   <from>/view/floorClick:o</from>
   <to>/freeFloorViewer/clicked_pos:i</to>
-  <protocol>tcp</protocol>
+  <protocol>fast_tcp</protocol>
 </connection>
 
 <connection>
   <from>/view/headClick:o</from>
   <to>/freeFloorViewer/clicked_head:i</to>
-  <protocol>tcp</protocol>
+  <protocol>fast_tcp</protocol>
 </connection>
 
 <connection>
     <from>/freeFloorViewer/baseVelCmd:o</from>
     <to>/baseControl/input/joystick:i</to>
-    <protocol>tcp</protocol>
+    <protocol>fast_tcp</protocol>
 </connection>
 
 </application>

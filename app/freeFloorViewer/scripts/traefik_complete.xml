@@ -1,0 +1,16 @@
+<application>
+   <name>Traefik_for_webgui_teleop_COMPLETE</name>
+
+   <!-- Applications -->
+
+   <application>
+      <name>freeFloorViewer_complete_R1SN003</name>
+      <prefix></prefix>
+   </application>
+
+   <application>
+      <name>traefik_for_webgui_teleop</name>
+      <prefix></prefix>
+   </application>
+
+</application>
