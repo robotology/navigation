@@ -44,6 +44,7 @@ FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
     m_extern_ref_frame_id = "";
     m_imgOutPortName = "/freeFloorViewer/floorEnhanced:o";
     m_targetOutPortName = "/free_floor_viewer/target:o";
+    m_baseCmdOutPortName = "/freeFloorViewer/baseVelCmd:o";
 }
 
 bool FreeFloorThread::threadInit()
@@ -56,6 +57,16 @@ bool FreeFloorThread::threadInit()
     if(m_rf.check("target_pos_port")) {m_targetOutPortName = m_rf.find("target_pos_port").asString();}
     if(m_rf.check("img_out_port")) {m_imgOutPortName = m_rf.find("img_out_port").asString();}
     if(m_rf.check("self_reliant")) {m_self_reliant = m_rf.find("self_reliant").asInt()==1;}
+
+    // --------- BaseControl config --------- //
+    bool okBaseCtrl = m_rf.check("BASE_CONTROL");
+    if(okBaseCtrl){
+        if(m_rf.check("base_ctrl_port")) {m_baseCmdOutPortName = m_rf.find("base_ctrl_port").asString();}
+        if(m_rf.check("max_angular_vel")) {m_maxVelTheta = m_rf.find("max_angular_vel").asFloat64();}
+        m_outputBaseData.vel_x = 0.0;
+        m_outputBaseData.vel_y = 0.0;
+        m_outputBaseData.vel_theta = 0.0;
+    }
 
     // --------- Z related props -------- //
     bool okZClipRf = m_rf.check("Z_CLIPPING_PLANES");
@@ -216,8 +227,18 @@ bool FreeFloorThread::threadInit()
     yCInfo(FREE_FLOOR_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
     m_intrinsics.fromProperty(m_propIntrinsics);
 
-    m_imgOutPort.open(m_imgOutPortName);
-    m_targetOutPort.open(m_targetOutPortName);
+    if(!m_imgOutPort.open(m_imgOutPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open imgOut port with name" << m_imgOutPortName;
+        return false;
+    }
+    if(!m_targetOutPort.open(m_targetOutPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open targetOut port with name" << m_targetOutPortName;
+        return false;
+    }
+    if(!m_baseCmdOutPort.open(m_baseCmdOutPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open baseCmdOut port with name" << m_baseCmdOutPortName;
+        return false;
+    }
 
 #ifdef FREEFLOOR_DEBUG
     yCDebug(FREE_FLOOR_THREAD, "... done!\n");
@@ -396,6 +417,12 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
     {
         reachSpot(b);
     }
+    else if(b.size()==3){
+        if(b.get(0).asString() != "base"){
+            yCError(FREE_FLOOR_THREAD) << "The first element of the bottle should be \"base\" but it's actually:" << b.get(0).asString();
+        }
+
+    }
     else if(b.size() == 4)
     {
         rotate(b);
@@ -473,6 +500,22 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
             m_iNav2D->gotoTargetByAbsoluteLocation(locPixel);
         }
     }
+}
+
+void FreeFloorThread::rotateBase(yarp::os::Bottle& b)
+{
+    if(b.get(1).asInt32() != 0 && b.get(2).asInt32() != 0){
+        m_outputBaseData.vel_theta = (double)b.get(1).asInt32()*(m_maxVelTheta);
+    }
+    else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() != 0){
+        m_outputBaseData.vel_theta = (double)b.get(2).asInt32()*(m_maxVelTheta)*(-1.0);
+    }
+    else{
+        yCError(FREE_FLOOR_THREAD) << "You cannot go both left and right";
+        return;
+    }
+    m_baseCmdOutPort.write(m_outputBaseData);
+    m_currentVelTheta = m_outputBaseData.vel_theta;
 }
 
 void FreeFloorThread::threadRelease()

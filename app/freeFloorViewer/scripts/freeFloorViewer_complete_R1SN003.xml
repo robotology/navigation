@@ -1,0 +1,43 @@
+<application>
+<name>freeFloorViewer_complete_R1SN003</name>
+
+<dependencies>
+</dependencies>
+
+<application>
+    <name>Navigation_ROS_R1SN003</name>
+    <prefix></prefix>
+</application>
+
+<module>
+   <name>freeFloorViewer</name>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_R1SN003.ini</parameters>
+   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=20000</environment>
+   <node>console2</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /view/floorView:i --out /view/floorClick:o --rightout /view/headClick:o</parameters>
+   <node>console2</node>
+</module>
+
+<connection>
+  <from>/freeFloorViewer/floorEnhanced:o</from>
+  <to>/view/floorView:i</to>
+  <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+  <from>/view/floorClick:o</from>
+  <to>/freeFloorViewer/clicked_pos:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+<connection>
+  <from>/view/headClick:o</from>
+  <to>/freeFloorViewer/clicked_head:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>
