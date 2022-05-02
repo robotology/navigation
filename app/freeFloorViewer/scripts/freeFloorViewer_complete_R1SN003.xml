@@ -11,8 +11,8 @@
 
 <module>
    <name>freeFloorViewer</name>
-   <parameters>--context freeFloorViewer --from freeFloorViewer_R1SN003.ini</parameters>
-   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=20000</environment>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_complete_R1SN003.ini</parameters>
+   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=21000</environment>
    <node>console2</node>
 </module>
 
@@ -38,6 +38,12 @@
   <from>/view/headClick:o</from>
   <to>/freeFloorViewer/clicked_head:i</to>
   <protocol>tcp</protocol>
+</connection>
+
+<connection>
+    <from>/freeFloorViewer/baseVelCmd:o</from>
+    <to>/baseControl/input/joystick:i</to>
+    <protocol>tcp</protocol>
 </connection>
 
 </application>
