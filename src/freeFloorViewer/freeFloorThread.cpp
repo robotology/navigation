@@ -414,8 +414,9 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
     else if(b.size()==3){
         if(b.get(0).asString() != "base"){
             yCError(FREE_FLOOR_THREAD) << "The first element of the bottle should be \"base\" but it's actually:" << b.get(0).asString();
+            return;
         }
-
+        rotateBase(b);
     }
     else if(b.size() == 4)
     {
@@ -499,11 +500,11 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
 
 void FreeFloorThread::rotateBase(yarp::os::Bottle& b)
 {
-    if(b.get(1).asInt32() != 0 && b.get(2).asInt32() != 0){
-        m_outputBaseData.vel_theta = (double)b.get(1).asInt32()*(m_maxVelTheta);
+    if(b.get(1).asInt32() != 0 && b.get(2).asInt32() == 0){
+        m_outputBaseData.vel_theta = (double)b.get(1).asInt32()*(m_maxVelTheta)/100.0;
     }
-    else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() != 0){
-        m_outputBaseData.vel_theta = (double)b.get(2).asInt32()*(m_maxVelTheta)*(-1.0);
+    else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() == 0){
+        m_outputBaseData.vel_theta = (double)b.get(2).asInt32()*(m_maxVelTheta)/100.0*(-1.0);
     }
     else{
         yCError(FREE_FLOOR_THREAD) << "You cannot go both left and right";

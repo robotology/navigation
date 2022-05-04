@@ -1,0 +1,31 @@
+<application>
+   <name>web_teleop_server_SIM</name>
+
+   <!-- modules -->
+   <module>
+      <name>python3</name>
+      <parameters>server.py --map_name /navigationGui/map:o --camera_name /freeFloorViewer/floorEnhanced:o --no_ssl</parameters>
+      <workdir>/home/user1/yarp-web-teleop</workdir>
+      <node>console</node>
+   </module>
+
+
+   <!-- connections -->
+   <connection>
+      <from>/webview/headClick:o</from>
+      <to>/freeFloorViewer/clicked_head:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
+      <connection>
+      <from>/webview/mapClick:o</from>
+      <to>/navigationGui/yarpviewTarget:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
+      <connection>
+      <from>/webview/navClick:o</from>
+      <to>/freeFloorViewer/clicked_pos:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+</application>

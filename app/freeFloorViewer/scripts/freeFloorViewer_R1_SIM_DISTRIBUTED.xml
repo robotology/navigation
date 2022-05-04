@@ -1,43 +1,44 @@
 <application>
-<name>freeFloorViewer_testHead_sim_DISTRIBUTED</name>
+<name>freeFloorViewer_R1_SIM_DISTRIBUTED</name>
 
 <dependencies>
 </dependencies>
 
-<application>
-    <name>Navigation_ROS_R1_SIM_DISTRIBUTED</name>
-    <prefix></prefix>
-</application>
-
 <module>
    <name>freeFloorViewer</name>
-   <parameters>--context freeFloorViewer --from freeFloorViewer_sim_tour.ini</parameters>
-   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=20000</environment>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_R1_SIM.ini</parameters>
+   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=21000</environment>
    <node>console2</node>
 </module>
 
 <module>
    <name>yarpview</name>
    <parameters>--name /view/floorView:i --out /view/floorClick:o --rightout /view/headClick:o</parameters>
-   <node>console3</node>
+   <node>console2</node>
 </module>
 
 <connection>
   <from>/freeFloorViewer/floorEnhanced:o</from>
   <to>/view/floorView:i</to>
-  <protocol>mjpeg</protocol>
+  <protocol>fast_tcp</protocol>
 </connection>
 
 <connection>
   <from>/view/floorClick:o</from>
   <to>/freeFloorViewer/clicked_pos:i</to>
-  <protocol>tcp</protocol>
+  <protocol>fast_tcp</protocol>
 </connection>
 
 <connection>
   <from>/view/headClick:o</from>
   <to>/freeFloorViewer/clicked_head:i</to>
-  <protocol>tcp</protocol>
+  <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+    <from>/freeFloorViewer/baseVelCmd:o</from>
+    <to>/baseControl/input/joystick:i</to>
+    <protocol>fast_tcp</protocol>
 </connection>
 
 </application>

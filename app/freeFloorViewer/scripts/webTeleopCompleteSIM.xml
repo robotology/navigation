@@ -1,21 +1,21 @@
 <application>
-<name>freeFloorViewer_complete_R1SN003</name>
+<name>web_teleop_complete_SIM</name>
 
 <dependencies>
 </dependencies>
 
     <application>
-        <name>Navigation_ROS_R1SN003</name>
+        <name>Navigation_ROS_R1_SIM</name>
         <prefix></prefix>
     </application>
 
     <application>
-        <name>open_pose_stuff</name>
+        <name>freeFloorViewer_R1_SIM</name>
         <prefix></prefix>
     </application>
 
     <application>
-        <name>freeFloorViewer_R1SN003</name>
+        <name>web_teleop_server_SIM</name>
         <prefix></prefix>
     </application>
 
