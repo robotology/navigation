@@ -37,7 +37,13 @@
 
 <connection>
     <from>/freeFloorViewer/baseVelCmd:o</from>
-    <to>/baseControl/input/joystick:i</to>
+    <to>/baseControl/input/aux:i</to>
+    <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+    <from>/baseControl/filtered_commands:o</from>
+    <to>/freeFloorViewer/baseCtrlCmd:i</to>
     <protocol>fast_tcp</protocol>
 </connection>
 
