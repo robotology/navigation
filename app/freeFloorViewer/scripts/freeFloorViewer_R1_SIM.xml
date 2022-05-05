@@ -41,4 +41,10 @@
     <protocol>fast_tcp</protocol>
 </connection>
 
+<connection>
+    <from>/baseControl/filtered_commands:o</from>
+    <to>/freeFloorViewer/baseCtrlCmd:i</to>
+    <protocol>fast_tcp</protocol>
+</connection>
+
 </application>

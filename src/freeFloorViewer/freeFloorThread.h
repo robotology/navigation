@@ -105,8 +105,10 @@ protected:
     std::string m_targetOutPortName;
     std::string m_imgOutPortName;
     std::string m_baseCmdOutPortName;
+    std::string m_baseCmdInPortName;
     yarp::os::BufferedPort<yarp::os::Bottle>                         m_targetOutPort;
     yarp::os::Port                                                   m_baseCmdOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle>                         m_baseCmdInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelBgra>> m_imgOutPort;
 
     //Others

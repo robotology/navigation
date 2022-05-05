@@ -45,6 +45,7 @@ FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
     m_imgOutPortName = "/freeFloorViewer/floorEnhanced:o";
     m_targetOutPortName = "/free_floor_viewer/target:o";
     m_baseCmdOutPortName = "/freeFloorViewer/baseVelCmd:o";
+    m_baseCmdInPortName = "/freeFloorViewer/baseCtrlCmd:i";
 }
 
 bool FreeFloorThread::threadInit()
@@ -62,6 +63,7 @@ bool FreeFloorThread::threadInit()
     bool okBaseCtrl = m_rf.check("BASE_CONTROL");
     if(okBaseCtrl){
         if(m_rf.check("base_ctrl_port")) {m_baseCmdOutPortName = m_rf.find("base_ctrl_port").asString();}
+        if(m_rf.check("base_ctrl_state_port")) {m_baseCmdInPortName = m_rf.find("base_ctrl_state_port").asString();}
         if(m_rf.check("max_angular_vel")) {m_maxVelTheta = m_rf.find("max_angular_vel").asFloat64();}
         m_outputBaseData.vel_x = 0.0;
         m_outputBaseData.vel_y = 0.0;
@@ -239,6 +241,10 @@ bool FreeFloorThread::threadInit()
         yCError(FREE_FLOOR_THREAD) << "Cannot open baseCmdOut port with name" << m_baseCmdOutPortName;
         return false;
     }
+    if(!m_baseCmdInPort.open(m_baseCmdInPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open baseCmdIn port with name" << m_baseCmdInPortName;
+        return false;
+    }
 
 #ifdef FREEFLOOR_DEBUG
     yCDebug(FREE_FLOOR_THREAD, "... done!\n");
@@ -367,7 +373,12 @@ void FreeFloorThread::freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &ou
     double arScaler = 0.2;
     yarp::dev::Nav2D::NavigationStatusEnum currentStatus;
     m_iNav2D->getNavigationStatus(currentStatus);
-    bool moving = currentStatus == yarp::dev::Nav2D::navigation_status_moving;
+    yarp::os::Bottle* baseCmdIn = m_baseCmdInPort.read(false);
+    bool navigating = currentStatus == yarp::dev::Nav2D::navigation_status_moving;
+    bool moving = false;
+    if (baseCmdIn){
+        moving = (baseCmdIn->get(0).asFloat64() != 0.0) || (baseCmdIn->get(1).asFloat64() != 0.0);
+    }
     //rotateAndCheck(m_pc, m_transform_mtrx,m_rgbImage,imgOut,m_okPixels,m_floor_height,m_ceiling_height);
     output.copy(m_rgbImage);
 
@@ -377,9 +388,9 @@ void FreeFloorThread::freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &ou
             int u = blob.first.first;
             int v = blob.first.second;
             m_okPixels.push_back(blob.first);
-            pOk.r = moving ? output.pixel(u,v).r*arScaler+255*(1-arScaler) : output.pixel(u,v).r*arScaler;
-            pOk.b = output.pixel(u,v).b*arScaler;
-            pOk.g = moving ? output.pixel(u,v).g*arScaler : output.pixel(u,v).g*arScaler+255*(1-arScaler);
+            pOk.r = (!navigating && moving) ? output.pixel(u,v).r*arScaler+255*(1-arScaler) : output.pixel(u,v).r*arScaler;
+            pOk.b = (navigating) ? output.pixel(u,v).b*arScaler+255*(1-arScaler) : output.pixel(u,v).b*arScaler;
+            pOk.g = (navigating || moving) ? output.pixel(u,v).g*arScaler : output.pixel(u,v).g*arScaler+255*(1-arScaler);
             output.pixel(u,v) = pOk;
 
         }
