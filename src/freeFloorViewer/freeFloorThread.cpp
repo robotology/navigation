@@ -44,6 +44,8 @@ FreeFloorThread::FreeFloorThread(double _period, yarp::os::ResourceFinder &rf):
     m_extern_ref_frame_id = "";
     m_imgOutPortName = "/freeFloorViewer/floorEnhanced:o";
     m_targetOutPortName = "/free_floor_viewer/target:o";
+    m_baseCmdOutPortName = "/freeFloorViewer/baseVelCmd:o";
+    m_baseCmdInPortName = "/freeFloorViewer/baseCtrlCmd:i";
 }
 
 bool FreeFloorThread::threadInit()
@@ -56,6 +58,18 @@ bool FreeFloorThread::threadInit()
     if(m_rf.check("target_pos_port")) {m_targetOutPortName = m_rf.find("target_pos_port").asString();}
     if(m_rf.check("img_out_port")) {m_imgOutPortName = m_rf.find("img_out_port").asString();}
     if(m_rf.check("self_reliant")) {m_self_reliant = m_rf.find("self_reliant").asInt()==1;}
+
+    // --------- BaseControl config --------- //
+    bool okBaseCtrl = m_rf.check("BASE_CONTROL");
+    if(okBaseCtrl){
+        if(m_rf.check("base_ctrl_port")) {m_baseCmdOutPortName = m_rf.find("base_ctrl_port").asString();}
+        if(m_rf.check("base_ctrl_state_port")) {m_baseCmdInPortName = m_rf.find("base_ctrl_state_port").asString();}
+        if(m_rf.check("max_angular_vel")) {m_maxVelTheta = m_rf.find("max_angular_vel").asFloat64();}
+        if(m_rf.check("max_linear_vel")) {m_maxVelX = m_rf.find("max_linear_vel").asFloat64();}
+        m_outputBaseData.vel_x = 0.0;
+        m_outputBaseData.vel_y = 0.0;
+        m_outputBaseData.vel_theta = 0.0;
+    }
 
     // --------- Z related props -------- //
     bool okZClipRf = m_rf.check("Z_CLIPPING_PLANES");
@@ -216,8 +230,22 @@ bool FreeFloorThread::threadInit()
     yCInfo(FREE_FLOOR_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
     m_intrinsics.fromProperty(m_propIntrinsics);
 
-    m_imgOutPort.open(m_imgOutPortName);
-    m_targetOutPort.open(m_targetOutPortName);
+    if(!m_imgOutPort.open(m_imgOutPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open imgOut port with name" << m_imgOutPortName;
+        return false;
+    }
+    if(!m_targetOutPort.open(m_targetOutPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open targetOut port with name" << m_targetOutPortName;
+        return false;
+    }
+    if(!m_baseCmdOutPort.open(m_baseCmdOutPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open baseCmdOut port with name" << m_baseCmdOutPortName;
+        return false;
+    }
+    if(!m_baseCmdInPort.open(m_baseCmdInPortName)){
+        yCError(FREE_FLOOR_THREAD) << "Cannot open baseCmdIn port with name" << m_baseCmdInPortName;
+        return false;
+    }
 
 #ifdef FREEFLOOR_DEBUG
     yCDebug(FREE_FLOOR_THREAD, "... done!\n");
@@ -282,14 +310,8 @@ void FreeFloorThread::run()
 
     m_floorMutex.lock();
     //compute the point cloud
-    auto t1 = std::chrono::high_resolution_clock::now();
     depthToFilteredPc();
-    auto t2 = std::chrono::high_resolution_clock::now();
     freeFloorDraw(imgOut);
-    auto t3 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t3 - t2 ).count();
-    //yCInfo(FREE_FLOOR_THREAD) << "The durations are: " << duration << " " << duration2;
 
     m_floorMutex.unlock();
 
@@ -352,7 +374,12 @@ void FreeFloorThread::freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &ou
     double arScaler = 0.2;
     yarp::dev::Nav2D::NavigationStatusEnum currentStatus;
     m_iNav2D->getNavigationStatus(currentStatus);
-    bool moving = currentStatus == yarp::dev::Nav2D::navigation_status_moving;
+    yarp::os::Bottle* baseCmdIn = m_baseCmdInPort.read(false);
+    bool navigating = currentStatus == yarp::dev::Nav2D::navigation_status_moving;
+    bool moving = false;
+    if (baseCmdIn){
+        moving = (baseCmdIn->get(0).asFloat64() != 0.0) || (baseCmdIn->get(1).asFloat64() != 0.0);
+    }
     //rotateAndCheck(m_pc, m_transform_mtrx,m_rgbImage,imgOut,m_okPixels,m_floor_height,m_ceiling_height);
     output.copy(m_rgbImage);
 
@@ -362,9 +389,9 @@ void FreeFloorThread::freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &ou
             int u = blob.first.first;
             int v = blob.first.second;
             m_okPixels.push_back(blob.first);
-            pOk.r = moving ? output.pixel(u,v).r*arScaler+255*(1-arScaler) : output.pixel(u,v).r*arScaler;
-            pOk.b = output.pixel(u,v).b*arScaler;
-            pOk.g = moving ? output.pixel(u,v).g*arScaler : output.pixel(u,v).g*arScaler+255*(1-arScaler);
+            pOk.r = (!navigating && moving) ? output.pixel(u,v).r*arScaler+255*(1-arScaler) : output.pixel(u,v).r*arScaler;
+            pOk.b = (navigating) ? output.pixel(u,v).b*arScaler+255*(1-arScaler) : output.pixel(u,v).b*arScaler;
+            pOk.g = (navigating || moving) ? output.pixel(u,v).g*arScaler : output.pixel(u,v).g*arScaler+255*(1-arScaler);
             output.pixel(u,v) = pOk;
 
         }
@@ -395,6 +422,13 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
     if(b.size() == 2)
     {
         reachSpot(b);
+    }
+    else if(b.size()==5){
+        if(b.get(0).asString() != "base"){
+            yCError(FREE_FLOOR_THREAD) << "The first element of the bottle should be \"base\" but it's actually:" << b.get(0).asString();
+            return;
+        }
+        moveBase(b);
     }
     else if(b.size() == 4)
     {
@@ -460,7 +494,8 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
     }
 
     int deltaPx = (b.get(0).asInt32()-b.get(2).asInt32());
-    double rotation = (double)deltaPx * horizFOV/m_depth_width;
+    //double rotation = (double)deltaPx * horizFOV/m_depth_width;
+    double rotation = (double)deltaPx * 180.0/m_depth_width;
     //int sign = (b.get(0).asInt32()-b.get(2).asInt32())/(abs(b.get(0).asInt32()-b.get(2).asInt32())>0?abs(b.get(0).asInt32()-b.get(2).asInt32()):1);
     if(m_nav2DPoly.isValid())
     {
@@ -473,6 +508,44 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
             m_iNav2D->gotoTargetByAbsoluteLocation(locPixel);
         }
     }
+}
+
+void FreeFloorThread::moveBase(yarp::os::Bottle& b)
+{
+    bool leftRight = false;
+    bool upDown = false;
+    if(b.get(1).asInt32() != 0 && b.get(2).asInt32() == 0){
+        m_outputBaseData.vel_theta = (double)b.get(1).asInt32()*(m_maxVelTheta)/100.0;
+    }
+    else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() == 0){
+        m_outputBaseData.vel_theta = (double)b.get(2).asInt32()*(m_maxVelTheta)/100.0*(-1.0);
+    }
+    else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() != 0){
+        yCError(FREE_FLOOR_THREAD) << "You cannot go both left and right";
+        leftRight = true;
+    }
+    else{
+        m_outputBaseData.vel_theta = 0.0;
+    }
+    if(b.get(3).asInt32() != 0 && b.get(4).asInt32() == 0){
+        m_outputBaseData.vel_x = (double)b.get(3).asInt32()*(m_maxVelX)/100.0;
+    }
+    else if(b.get(4).asInt32() != 0 && b.get(3).asInt32() == 0){
+        m_outputBaseData.vel_x = (double)b.get(2).asInt32()*(m_maxVelX)/100.0*(-1.0);
+    }
+    else if(b.get(4).asInt32() != 0 && b.get(3).asInt32() != 0){
+        yCError(FREE_FLOOR_THREAD) << "You cannot go both forward and backward";
+        upDown = true;
+    }
+    else{
+        m_outputBaseData.vel_x = 0.0;
+    }
+    if(upDown || leftRight){
+        return;
+    }
+    m_baseCmdOutPort.write(m_outputBaseData);
+    m_currentVelTheta = m_outputBaseData.vel_theta;
+    m_currentVelX = m_outputBaseData.vel_x;
 }
 
 void FreeFloorThread::threadRelease()

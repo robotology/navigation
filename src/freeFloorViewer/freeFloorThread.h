@@ -35,6 +35,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/MobileBaseVelocity.h>
 
 #include <math.h>
 #include <mutex>
@@ -80,6 +81,10 @@ protected:
     bool   m_self_reliant{true};
     double m_floor_height;
     double m_ceiling_height;
+    double m_maxVelTheta{10.0};
+    double m_maxVelX{0.1};
+    double m_currentVelTheta{0.0};
+    double m_currentVelX{0.0};
     size_t m_pc_stepx;
     size_t m_pc_stepy;
     std::string                m_ground_frame_id;
@@ -92,6 +97,7 @@ protected:
     yarp::sig::utils::PCL_ROI  m_pc_roi;
     yarp::sig::ImageOf<float>  m_depth_image;
     yarp::sig::IntrinsicParams m_intrinsics;
+    yarp::dev::MobileBaseVelocity                         m_outputBaseData;
     yarp::sig::PointCloud<yarp::sig::DataXYZ>             m_pc;
     std::vector<std::pair<size_t,size_t>>                 m_okPixels;
     std::map<std::pair<int,int>,bool>                     m_obstacle_columns;
@@ -100,7 +106,11 @@ protected:
     //Ports
     std::string m_targetOutPortName;
     std::string m_imgOutPortName;
+    std::string m_baseCmdOutPortName;
+    std::string m_baseCmdInPortName;
     yarp::os::BufferedPort<yarp::os::Bottle>                         m_targetOutPort;
+    yarp::os::Port                                                   m_baseCmdOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle>                         m_baseCmdInPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelBgra>> m_imgOutPort;
 
     //Others
@@ -123,6 +133,7 @@ public:
     //Internal methods
     void reachSpot(yarp::os::Bottle& b);
     void rotate(yarp::os::Bottle& b);
+    void moveBase(yarp::os::Bottle& b);
     void freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output);
     void depthToFilteredPc();
 

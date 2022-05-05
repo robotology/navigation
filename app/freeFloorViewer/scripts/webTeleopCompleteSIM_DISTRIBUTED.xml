@@ -1,0 +1,22 @@
+<application>
+<name>web_teleop_complete_SIM_DISTRIBUTED</name>
+
+<dependencies>
+</dependencies>
+
+    <application>
+        <name>Navigation_ROS_R1_SIM_DISTRIBUTED</name>
+        <prefix></prefix>
+    </application>
+
+    <application>
+        <name>freeFloorViewer_R1_SIM_DISTRIBUTED</name>
+        <prefix></prefix>
+    </application>
+
+    <application>
+        <name>web_teleop_server_SIM_DISTRIBUTED</name>
+        <prefix></prefix>
+    </application>
+
+</application>
