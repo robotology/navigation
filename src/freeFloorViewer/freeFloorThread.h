@@ -82,7 +82,9 @@ protected:
     double m_floor_height;
     double m_ceiling_height;
     double m_maxVelTheta{10.0};
+    double m_maxVelX{0.1};
     double m_currentVelTheta{0.0};
+    double m_currentVelX{0.0};
     size_t m_pc_stepx;
     size_t m_pc_stepy;
     std::string                m_ground_frame_id;
@@ -131,7 +133,7 @@ public:
     //Internal methods
     void reachSpot(yarp::os::Bottle& b);
     void rotate(yarp::os::Bottle& b);
-    void rotateBase(yarp::os::Bottle& b);
+    void moveBase(yarp::os::Bottle& b);
     void freeFloorDraw(yarp::sig::ImageOf<yarp::sig::PixelBgra> &output);
     void depthToFilteredPc();
 

@@ -65,6 +65,7 @@ bool FreeFloorThread::threadInit()
         if(m_rf.check("base_ctrl_port")) {m_baseCmdOutPortName = m_rf.find("base_ctrl_port").asString();}
         if(m_rf.check("base_ctrl_state_port")) {m_baseCmdInPortName = m_rf.find("base_ctrl_state_port").asString();}
         if(m_rf.check("max_angular_vel")) {m_maxVelTheta = m_rf.find("max_angular_vel").asFloat64();}
+        if(m_rf.check("max_linear_vel")) {m_maxVelX = m_rf.find("max_linear_vel").asFloat64();}
         m_outputBaseData.vel_x = 0.0;
         m_outputBaseData.vel_y = 0.0;
         m_outputBaseData.vel_theta = 0.0;
@@ -422,12 +423,12 @@ void FreeFloorThread::onRead(yarp::os::Bottle &b)
     {
         reachSpot(b);
     }
-    else if(b.size()==3){
+    else if(b.size()==5){
         if(b.get(0).asString() != "base"){
             yCError(FREE_FLOOR_THREAD) << "The first element of the bottle should be \"base\" but it's actually:" << b.get(0).asString();
             return;
         }
-        rotateBase(b);
+        moveBase(b);
     }
     else if(b.size() == 4)
     {
@@ -509,20 +510,42 @@ void FreeFloorThread::rotate(yarp::os::Bottle &b)
     }
 }
 
-void FreeFloorThread::rotateBase(yarp::os::Bottle& b)
+void FreeFloorThread::moveBase(yarp::os::Bottle& b)
 {
+    bool leftRight = false;
+    bool upDown = false;
     if(b.get(1).asInt32() != 0 && b.get(2).asInt32() == 0){
         m_outputBaseData.vel_theta = (double)b.get(1).asInt32()*(m_maxVelTheta)/100.0;
     }
     else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() == 0){
         m_outputBaseData.vel_theta = (double)b.get(2).asInt32()*(m_maxVelTheta)/100.0*(-1.0);
     }
-    else{
+    else if(b.get(2).asInt32() != 0 && b.get(1).asInt32() != 0){
         yCError(FREE_FLOOR_THREAD) << "You cannot go both left and right";
+        leftRight = true;
+    }
+    else{
+        m_outputBaseData.vel_theta = 0.0;
+    }
+    if(b.get(3).asInt32() != 0 && b.get(4).asInt32() == 0){
+        m_outputBaseData.vel_x = (double)b.get(3).asInt32()*(m_maxVelX)/100.0;
+    }
+    else if(b.get(4).asInt32() != 0 && b.get(3).asInt32() == 0){
+        m_outputBaseData.vel_x = (double)b.get(2).asInt32()*(m_maxVelX)/100.0*(-1.0);
+    }
+    else if(b.get(4).asInt32() != 0 && b.get(3).asInt32() != 0){
+        yCError(FREE_FLOOR_THREAD) << "You cannot go both forward and backward";
+        upDown = true;
+    }
+    else{
+        m_outputBaseData.vel_x = 0.0;
+    }
+    if(upDown || leftRight){
         return;
     }
     m_baseCmdOutPort.write(m_outputBaseData);
     m_currentVelTheta = m_outputBaseData.vel_theta;
+    m_currentVelX = m_outputBaseData.vel_x;
 }
 
 void FreeFloorThread::threadRelease()
