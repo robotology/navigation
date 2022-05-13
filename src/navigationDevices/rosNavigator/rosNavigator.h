@@ -41,6 +41,7 @@
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
 #include <yarp/rosmsg/nav_msgs/Path.h>
 #include <math.h>
+#include <mutex>
 #include "navigation_defines.h"
 
 #ifndef ROS_NAVIGATOR_H
@@ -48,6 +49,8 @@
 
 #define DEFAULT_THREAD_PERIOD 0.02 //s
 
+class RosRecoveryStatusCallback;
+class RosNavigationStatusCallback;
 class rosNavigator : public yarp::dev::DeviceDriver,
     public yarp::os::PeriodicThread,
     public yarp::dev::Nav2D::INavigation2DTargetActions,
@@ -59,6 +62,10 @@ protected:
     yarp::dev::Nav2D::ILocalization2D* m_iLoc;
     yarp::dev::PolyDriver              m_pMap;
     yarp::dev::Nav2D::IMap2D*          m_iMap;
+
+    RosNavigationStatusCallback*            m_rosNavigationStatusCallback;
+    RosRecoveryStatusCallback*              m_rosRecoveryStatusCallback;
+    std::mutex                              m_mutex;
 
     yarp::dev::Nav2D::NavigationStatusEnum  m_navigation_status;
     std::string                             m_abs_frame_id;
@@ -166,6 +173,21 @@ public:
     bool getNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum& status) override;
 
     /**
+    * Setter for the internal member variable that holds the current navigation status
+    */
+    void setNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum status);
+
+    /**
+    * Setter for the member that holds if the robot is currently recovering
+    */
+    void setIsRecovering(bool isRecovering);
+    
+    /**
+    * Getter for the member that holds if the robot is currently recovering
+    */
+    bool getIsRecovering();
+
+    /**
     * //Stops the current navigation task.
     * @return true/false if the command is executed successfully.
     */
@@ -215,6 +237,28 @@ public:
     // INavigation2DVelocityActions methods
     bool getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel) override;
     bool applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout=0.1) override;
+};
+
+class RosNavigationStatusCallback : public yarp::os::TypedReaderCallback<yarp::rosmsg::actionlib_msgs::GoalStatusArray>
+{
+public:
+    RosNavigationStatusCallback(rosNavigator *nav);
+    using yarp::os::TypedReaderCallback<yarp::rosmsg::actionlib_msgs::GoalStatusArray>::onRead;
+    void onRead(yarp::rosmsg::actionlib_msgs::GoalStatusArray &statusArray) override;
+
+private:
+    rosNavigator *m_nav;
+};
+
+class RosRecoveryStatusCallback : public yarp::os::TypedReaderCallback<yarp::rosmsg::move_base_msgs::RecoveryStatus>
+{
+public:
+    RosRecoveryStatusCallback(rosNavigator *nav);
+    using yarp::os::TypedReaderCallback<yarp::rosmsg::move_base_msgs::RecoveryStatus>::onRead;
+    void onRead(yarp::rosmsg::move_base_msgs::RecoveryStatus &status) override;
+
+private:
+    rosNavigator *m_nav;
 };
 
 #endif

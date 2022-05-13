@@ -133,6 +133,8 @@ bool rosNavigator::open(yarp::os::Searchable &config)
         yCError(ROS_NAV) << " opening " << m_rosTopicName_status << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
+    m_rosNavigationStatusCallback = new RosNavigationStatusCallback(this);
+    m_rosSubscriber_status.useCallback(*m_rosNavigationStatusCallback);
     if (!m_rosSubscriber_result.topic(m_rosTopicName_result))
     {
         yCError(ROS_NAV) << " opening " << m_rosTopicName_result << " Topic, check your yarp-ROS network configuration\n";
@@ -153,6 +155,8 @@ bool rosNavigator::open(yarp::os::Searchable &config)
         yCError(ROS_NAV) << " opening " << m_rosTopicName_recoveryStatus << " Topic, check your yarp-ROS network configuration\n";
         return false;
     }
+    m_rosRecoveryStatusCallback = new RosRecoveryStatusCallback(this);
+    m_rosSubscriber_recoveryStatus.useCallback(*m_rosRecoveryStatusCallback);
     m_rosSubscriber_recoveryStatus.setStrict();
     if (!m_rosSubscriber_globalPath.topic(m_rosTopicName_globalPath))
     {
@@ -178,6 +182,10 @@ bool rosNavigator::close()
         delete m_rosNode;
         m_rosNode = nullptr;
     }
+    m_rosSubscriber_status.close();
+    delete m_rosNavigationStatusCallback;
+    m_rosSubscriber_recoveryStatus.close();
+    delete m_rosRecoveryStatusCallback;
     return true;
 }
 
@@ -319,7 +327,11 @@ void rosNavigator::run()
             err = true;
         }*/
         if (err == false)
-            yCInfo(ROS_NAV) << "rosNavigator running, ALL ok. Navigation status:" << getStatusAsString(m_navigation_status);
+        {
+            NavigationStatusEnum status;
+            getNavigationStatus(status);
+            yCInfo(ROS_NAV) << "rosNavigator running, ALL ok. Navigation status:" << getStatusAsString(status);
+        }
     }
 
     bool b1 = readLocalizationData();
@@ -393,87 +405,6 @@ void rosNavigator::run()
             }
         }
     }
-
-    yarp::rosmsg::move_base_msgs::RecoveryStatus *recoveryInfo = m_rosSubscriber_recoveryStatus.read(false);
-    if (recoveryInfo && recoveryInfo->recovery_behavior_name.length() > 0)
-    {        
-        if (recoveryInfo->total_number_of_recoveries == 999){
-			yCInfo(ROS_NAV) << "Navigation finished recovery:" << recoveryInfo->recovery_behavior_name;
-			m_navigation_status = navigation_status_waiting_obstacle;
-			m_isRecovering = false;
-		}else{
-			yCInfo(ROS_NAV) << "Navigation status set to recovery:" << recoveryInfo->recovery_behavior_name;
-			m_navigation_status = navigation_status_thinking;
-			m_isRecovering = true;
-		}
-    }
-    
-    if (!m_isRecovering)
-    {
-        yarp::rosmsg::actionlib_msgs::GoalStatusArray *statusArray = m_rosSubscriber_status.read(false);
-        if (statusArray && statusArray->status_list.size() != 0)
-        {
-            // Comments for the goal status types are taken from http://docs.ros.org/en/kinetic/api/actionlib_msgs/html/msg/GoalStatus.html
-            switch (statusArray->status_list[statusArray->status_list.size() - 1].status)
-            {
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:     // The goal has yet to be processed by the action server
-            {
-                m_navigation_status = navigation_status_preparing_before_move;
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE:      // The goal is currently being processed by the action server
-            {
-                m_navigation_status = navigation_status_moving;
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED:   // The goal received a cancel request after it started executing
-                                                                        // and has since completed its execution (Terminal State)
-            {
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED:   // The goal was achieved successfully by the action server (Terminal State)
-            {
-                m_navigation_status = navigation_status_goal_reached;
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED:     // The goal was aborted during execution by the action server due
-                                                                        // to some failure (Terminal State)
-            {
-                m_navigation_status = navigation_status_aborted;
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED:    // The goal was rejected by the action server without being processed,
-                                                                        // because the goal was unattainable or invalid (Terminal State)
-            {
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING:  // The goal received a cancel request after it started executing
-                                                                        // and has not yet completed execution
-            {
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING:   // The goal received a cancel request before it started executing,
-                                                                        // but the action server has not yet confirmed that the goal is canceled
-            {
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED:    // The goal received a cancel request before it started executing
-                                                                        // and was successfully cancelled (Terminal State)
-            {
-            }
-            break;
-            case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST:        // An action client can determine that a goal is LOST. This should not be
-                                                                        // sent over the wire by an action server
-            {
-            }
-            break;
-            default:
-            {
-            }
-            break;
-            }
-        }
-    }
 }
 
 bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
@@ -535,7 +466,9 @@ bool rosNavigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 
 bool rosNavigator::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
-    if (m_navigation_status == navigation_status_idle)
+    NavigationStatusEnum status;
+    getNavigationStatus(status);
+    if (status == navigation_status_idle)
     {
         Map2DLocation loc;
         loc.map_id = m_current_position.map_id;
@@ -550,7 +483,9 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y, double theta
 
 bool rosNavigator::gotoTargetByRelativeLocation(double x, double y)
 {
-    if (m_navigation_status == navigation_status_idle)
+    NavigationStatusEnum status;
+    getNavigationStatus(status);
+    if (status == navigation_status_idle)
     {
         Map2DLocation loc;
         loc.map_id = m_current_position.map_id;
@@ -565,8 +500,24 @@ bool rosNavigator::gotoTargetByRelativeLocation(double x, double y)
 
 bool rosNavigator::getNavigationStatus(NavigationStatusEnum &status)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     status = m_navigation_status;
     return true;
+}
+
+void rosNavigator::setNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum status){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_navigation_status = status;
+}
+
+void rosNavigator::setIsRecovering(bool isRecovering){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_isRecovering = isRecovering;
+}
+
+bool rosNavigator::getIsRecovering(){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_isRecovering;
 }
 
 bool rosNavigator::stopNavigation()
@@ -576,7 +527,7 @@ bool rosNavigator::stopNavigation()
     goal_id.id = m_last_goal_id;
     m_rosPublisher_cancel.write();
 
-    m_navigation_status = navigation_status_idle;
+    setNavigationStatus(navigation_status_idle);
     return true;
 }
 
@@ -683,7 +634,9 @@ bool rosNavigator::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGr
 
 bool rosNavigator::recomputeCurrentNavigationPath()
 {
-    if (m_navigation_status == navigation_status_moving)
+    NavigationStatusEnum status;
+    getNavigationStatus(status);
+    if (status == navigation_status_moving)
     {
         yCDebug(ROS_NAV) << "Not yet implemented";
         return false;
@@ -727,4 +680,96 @@ bool rosNavigator::getLastVelocityCommand(double &x_vel, double &y_vel, double &
 {
     yCDebug(ROS_NAV) << "Not yet implemented";
     return false;
+}
+
+RosNavigationStatusCallback::RosNavigationStatusCallback(rosNavigator *nav) : m_nav(nav)
+{}
+
+void RosNavigationStatusCallback::onRead(yarp::rosmsg::actionlib_msgs::GoalStatusArray &statusArray)
+{
+    if (!m_nav->getIsRecovering())
+    {
+        if (statusArray.status_list.size() != 0)
+        {
+            // Comments for the goal status types are taken from http://docs.ros.org/en/kinetic/api/actionlib_msgs/html/msg/GoalStatus.html
+            switch (statusArray.status_list[statusArray.status_list.size() - 1].status)
+            {
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PENDING:     // The goal has yet to be processed by the action server
+            {
+                m_nav->setNavigationStatus(navigation_status_preparing_before_move);
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::ACTIVE:      // The goal is currently being processed by the action server
+            {
+                m_nav->setNavigationStatus(navigation_status_moving);
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTED:   // The goal received a cancel request after it started executing
+                                                                        // and has since completed its execution (Terminal State)
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::SUCCEEDED:   // The goal was achieved successfully by the action server (Terminal State)
+            {
+                m_nav->setNavigationStatus(navigation_status_goal_reached);
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::ABORTED:     // The goal was aborted during execution by the action server due
+                                                                        // to some failure (Terminal State)
+            {
+                m_nav->setNavigationStatus(navigation_status_aborted);
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::REJECTED:    // The goal was rejected by the action server without being processed,
+                                                                        // because the goal was unattainable or invalid (Terminal State)
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::PREEMPTING:  // The goal received a cancel request after it started executing
+                                                                        // and has not yet completed execution
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLING:   // The goal received a cancel request before it started executing,
+                                                                        // but the action server has not yet confirmed that the goal is canceled
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::RECALLED:    // The goal received a cancel request before it started executing
+                                                                        // and was successfully cancelled (Terminal State)
+            {
+            }
+            break;
+            case yarp::rosmsg::actionlib_msgs::GoalStatus::LOST:        // An action client can determine that a goal is LOST. This should not be
+                                                                        // sent over the wire by an action server
+            {
+            }
+            break;
+            default:
+            {
+            }
+            break;
+            }
+        }
+    }
+}
+
+RosRecoveryStatusCallback::RosRecoveryStatusCallback(rosNavigator *nav) : m_nav(nav)
+{
+}
+
+void RosRecoveryStatusCallback::onRead(yarp::rosmsg::move_base_msgs::RecoveryStatus &recoveryInfo)
+{
+    if (recoveryInfo.recovery_behavior_name.length() > 0)
+    {        
+        if (recoveryInfo.total_number_of_recoveries == 999){
+			yCInfo(ROS_NAV) << "Navigation finished recovery:" << recoveryInfo.recovery_behavior_name;
+			m_nav->setNavigationStatus(navigation_status_waiting_obstacle);
+			m_nav->setIsRecovering(false);
+		}else{
+			yCInfo(ROS_NAV) << "Navigation status set to recovery:" << recoveryInfo.recovery_behavior_name;
+			m_nav->setNavigationStatus(navigation_status_thinking);
+			m_nav->setIsRecovering(true);
+		}
+    }
 }
