@@ -57,7 +57,7 @@ bool FreeFloorThread::threadInit()
     // --------- Generic config --------- //
     if(m_rf.check("target_pos_port")) {m_targetOutPortName = m_rf.find("target_pos_port").asString();}
     if(m_rf.check("img_out_port")) {m_imgOutPortName = m_rf.find("img_out_port").asString();}
-    if(m_rf.check("self_reliant")) {m_self_reliant = m_rf.find("self_reliant").asInt()==1;}
+    if(m_rf.check("self_reliant")) {m_self_reliant = m_rf.find("self_reliant").asInt32()==1;}
 
     // --------- BaseControl config --------- //
     bool okBaseCtrl = m_rf.check("BASE_CONTROL");

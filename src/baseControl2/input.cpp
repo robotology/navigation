@@ -85,7 +85,7 @@ bool Input::open(Property &_options)
     localName = ctrl_options.find("local").asString();
 
     string general_options_string = general_options.toString();
-    size_t input_size= general_options.find("number_of_inputs").asInt();
+    size_t input_size= general_options.find("number_of_inputs").asInt32();
     if (input_size == 0)
     {
         yCError(INPUT_HND) << "Missing or invalid `number_of_inputs` param in `BASECTRL_GENERAL` section";
