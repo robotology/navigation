@@ -31,7 +31,7 @@
 #include <yarp/sig/ImageDraw.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/IMap2D.h>
 #include <yarp/dev/MapGrid2D.h>

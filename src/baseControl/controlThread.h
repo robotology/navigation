@@ -31,7 +31,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/pids.h>
