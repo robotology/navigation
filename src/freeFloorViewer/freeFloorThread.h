@@ -19,7 +19,7 @@
 #ifndef FREE_FLOOR_THREAD_H
 #define FREE_FLOOR_THREAD_H
 
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>

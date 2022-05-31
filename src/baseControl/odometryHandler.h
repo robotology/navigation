@@ -29,7 +29,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <iCub/ctrl/adaptWinPolyEstimator.h>

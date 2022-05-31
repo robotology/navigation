@@ -62,7 +62,7 @@ Windows, Linux
 
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>

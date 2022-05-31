@@ -34,7 +34,7 @@
 #include <yarp/dev/MobileBaseVelocity.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IJoypadController.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/pids.h>
