@@ -1,5 +1,5 @@
 <application>
-   <name>web_teleop_complete_R1SN003</name>
+   <name>web_teleop_complete_R1SN003_traefik</name>
 
    <!-- Applications -->
 
@@ -9,7 +9,7 @@
    </application>
 
    <application>
-      <name>web_teleop_server</name>
+      <name>traefik_for_webgui_teleop</name>
       <prefix></prefix>
    </application>
 

@@ -5,17 +5,12 @@
 </dependencies>
 
     <application>
-        <name>Navigation_ROS_R1_SIM</name>
+        <name>freeFloorViewer_complete_R1_SIM</name>
         <prefix></prefix>
     </application>
 
     <application>
-        <name>freeFloorViewer_R1_SIM</name>
-        <prefix></prefix>
-    </application>
-
-    <application>
-        <name>web_teleop_server_SIM</name>
+        <name>web_teleop_server</name>
         <prefix></prefix>
     </application>
 

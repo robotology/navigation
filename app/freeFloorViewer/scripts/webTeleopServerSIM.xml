@@ -1,5 +1,5 @@
 <application>
-   <name>web_teleop_server_SIM</name>
+   <name>web_teleop_server</name>
 
    <!-- modules -->
    <module>
