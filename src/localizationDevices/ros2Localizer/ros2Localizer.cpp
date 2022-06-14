@@ -55,7 +55,7 @@ void ros2LocalizerRPCHandler::setInterface(ros2Localizer* iface)
 bool ros2LocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
     reply.clear();
-    reply.addVocab32(Vocab::encode("many"));
+    reply.addVocab32(Vocab32::encode("many"));
     reply.addString("Not yet Implemented");
     return true;
 }
