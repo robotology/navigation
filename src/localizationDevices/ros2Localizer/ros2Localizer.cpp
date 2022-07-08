@@ -101,14 +101,14 @@ bool ros2Localizer::open(yarp::os::Searchable& config)
     m_default_covariance_3x3[1][1] = 0.25;
     m_default_covariance_3x3[2][2] = 0.068538;
     
-    setInitialPose(m_initial_loc,m_default_covariance_3x3);
-    
     //start the m_thread
     if (!m_thread->start())
     {
         delete m_thread;
         return false;
     }
+
+    setInitialPose(m_initial_loc, m_default_covariance_3x3);
 
     bool ret = m_rpcPort.open(m_name+"/rpc");
     if (!ret)
@@ -286,7 +286,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
 
-    ros_group = m_cfg.findGroup("ROS2");
+    Bottle ros_group = m_cfg.findGroup("ROS2");
     if (ros_group.isNull())
     {
         yCError(ROS2_LOC) << "Missing ROS2 group!";
@@ -351,6 +351,20 @@ bool ros2LocalizerThread::threadInit()
             m_nodeName = ros_group.find ("node_name").asString();
         }
         m_node = NodeCreator::createNode(m_nodeName);
+    }
+
+    //initialize an initial pose publisher
+    if(!ros_group.check("initialpose_topic"))
+    {
+        yCError(ROS2_LOC) << "No initialpose_topic specified";
+        return false;
+    }
+    m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
+    m_ros2Publisher_initial_pose = m_node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
+    if (m_ros2Publisher_initial_pose == nullptr)
+    {
+        yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
+        return false;
     }
 
     if (!ros_group.check ("occupancygrid_topic"))
@@ -576,10 +590,6 @@ void ros2LocalizerThread::run()
 
         }
     }
-    else if (m_loc_mode == use_ros_loc)
-    {
-        yCDebug(ROS2_LOC) << "Data from topic callback";
-    }
 
     //FIXME
     //if (current_time - m_tf_data_received > 0.1)
@@ -591,33 +601,6 @@ void ros2LocalizerThread::run()
 bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6)
 {
     m_localization_data.map_id = loc.map_id;
-
-    if(!m_node)
-    {
-        if(!ros_group.check("node_name"))
-        {
-            yCError(ROS2_LOC) << "No node_name specified";
-            return false;
-        }
-        m_nodeName = ros_group.find ("node_name").asString();
-        m_node = NodeCreator::createNode(m_nodeName);
-    }
-    //initialize an initial pose publisher
-    if (m_ros2Publisher_initial_pose == nullptr)
-    {
-        if(!ros_group.check("initialpose_topic"))
-        {
-            yCError(ROS2_LOC) << "No initialpose_topic specified";
-            return false;
-        }
-        m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
-        m_ros2Publisher_initial_pose = m_node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
-        if (m_ros2Publisher_initial_pose == nullptr)
-        {
-            yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
-            return false;
-        }
-    }
 
     if (m_iMap)
     {
@@ -717,7 +700,7 @@ void ros2LocalizerThread::particles_callback(const nav2_msgs::msg::ParticleCloud
 
 void ros2LocalizerThread::currPose_callback(const geometry_msgs::msg::PoseWithCovarianceStamped inputPose)
 {
-    if (m_ros2Subscriber_current_pose)
+    if (m_ros2Subscriber_current_pose && m_loc_mode == use_ros_loc)
     {
         if (!this->isRunning() ||
             this->isSuspended())
