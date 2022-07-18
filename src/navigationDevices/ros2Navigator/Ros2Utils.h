@@ -6,4 +6,15 @@
  * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
-#include "Ros2Subscriber.h"
+#ifndef YARP_ROS2_ROS2UTILS_H
+#define YARP_ROS2_ROS2UTILS_H
+
+#include <rclcpp/rclcpp.hpp>
+class NodeCreator
+{
+public:
+	static rclcpp::Node::SharedPtr createNode(std::string name);
+};
+
+
+#endif // YARP_ROS2_ROS2UTILS_H

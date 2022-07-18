@@ -77,8 +77,8 @@ bool ros2Localizer::open(yarp::os::Searchable& config)
         if (general_group.check("name")) {m_name = general_group.find("name").asString(); }
     }
     
-    //create the thread
-    thread = new ros2LocalizerThread(0.010, m_name, p);
+    //create the m_thread
+    m_thread = new ros2LocalizerThread(0.010, m_name, p);
 
     //initial location initialization
     Bottle initial_group = p.findGroup("INITIAL_POS");
@@ -101,59 +101,59 @@ bool ros2Localizer::open(yarp::os::Searchable& config)
     m_default_covariance_3x3[1][1] = 0.25;
     m_default_covariance_3x3[2][2] = 0.068538;
     
-    setInitialPose(m_initial_loc,m_default_covariance_3x3);
-    
-    //start the thread
-    if (!thread->start())
+    //start the m_thread
+    if (!m_thread->start())
     {
-        delete thread;
+        delete m_thread;
         return false;
     }
 
-    bool ret = rpcPort.open(m_name+"/rpc");
+    setInitialPose(m_initial_loc, m_default_covariance_3x3);
+
+    bool ret = m_rpcPort.open(m_name+"/rpc");
     if (!ret)
     {
         yCError(ROS2_LOC) << "Unable to open module ports";
         return false;
     }
 
-    rpcPortHandler.setInterface(this);
-    rpcPort.setReader(rpcPortHandler);
+    m_rpcPortHandler.setInterface(this);
+    m_rpcPort.setReader(m_rpcPortHandler);
 
     return true;
 }
 
 ros2Localizer::ros2Localizer()
 {
-    thread = NULL;
+    m_thread = NULL;
 }
 
 ros2Localizer::~ros2Localizer()
 {
-    if (thread)
+    if (m_thread)
     {
-        delete thread;
-        thread = NULL;
+        delete m_thread;
+        m_thread = NULL;
     }
 }
 
 bool ros2Localizer::close()
 {
-    rpcPort.interrupt();
-    rpcPort.close();
+    m_rpcPort.interrupt();
+    m_rpcPort.close();
     return true;
 }
 
 bool ros2Localizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yCWarning(ROS2_LOC) << "Covariance matrix is not currently handled by ros2Localizer";
-    thread->getCurrentLoc(loc);
+    m_thread->getCurrentLoc(loc);
     return true;
 }
 
 bool ros2Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
-	if (thread)
+	if (m_thread)
 	{
         yarp::sig::Matrix cov6x6(6,6);
 	    cov6x6.zero();
@@ -168,7 +168,7 @@ bool ros2Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Ma
 	    cov6x6[0][5]=cov[0][2];
 	    cov6x6[1][5]=cov[1][2];
 	    cov6x6[5][5]=cov[2][2];
-		return thread->initializeLocalization(loc, cov6x6);
+		return m_thread->initializeLocalization(loc, cov6x6);
 	}
 	yCError(ROS2_LOC) << "ros2Localizer thread not running";
 	return false;
@@ -176,18 +176,18 @@ bool ros2Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Ma
 
 bool  ros2Localizer::startLocalizationService()
 {
-    if (thread)
+    if (m_thread)
     {
-        return thread->startLoc();
+        return m_thread->startLoc();
     }
     return false;
 }
 
 bool  ros2Localizer::stopLocalizationService()
 {
-    if (thread)
+    if (m_thread)
     {
-        return thread->stopLoc();
+        return m_thread->stopLoc();
     }
     return false;
 }
@@ -200,9 +200,9 @@ bool   ros2Localizer::getLocalizationStatus(LocalizationStatusEnum& status)
 
 bool   ros2Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
 {
-    if (thread)
+    if (m_thread)
     {
-        return thread->getEstimatedPoses(poses);
+        return m_thread->getEstimatedPoses(poses);
     }
     yCError(ROS2_LOC) << "ros2Localizer thread not running";
     return false;
@@ -210,9 +210,9 @@ bool   ros2Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocat
 
 bool   ros2Localizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
 {
-    if (thread)
+    if (m_thread)
     {
-        return thread->getCurrentLoc(loc);
+        return m_thread->getCurrentLoc(loc);
     }
     yCError(ROS2_LOC) << "ros2Localizer thread not running";
     return false;
@@ -220,13 +220,13 @@ bool   ros2Localizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc)
 
 bool  ros2Localizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
-    odom = thread->getOdometry();
+    odom = m_thread->getOdometry();
     return true;
 }
 
 bool   ros2Localizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
 {
-    if (thread)
+    if (m_thread)
     {
         yarp::sig::Matrix cov6x6(6,6);
         cov6x6.zero();
@@ -241,7 +241,7 @@ bool   ros2Localizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
         cov6x6[0][5]=m_default_covariance_3x3[0][2];
         cov6x6[1][5]=m_default_covariance_3x3[1][2];
         cov6x6[5][5]=m_default_covariance_3x3[2][2];
-        return thread->initializeLocalization(loc, cov6x6);
+        return m_thread->initializeLocalization(loc, cov6x6);
     }
     yCError(ROS2_LOC) << "ros2Localizer thread not running";
     return false;
@@ -286,7 +286,7 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
 
-    ros_group = m_cfg.findGroup("ROS2");
+    Bottle ros_group = m_cfg.findGroup("ROS2");
     if (ros_group.isNull())
     {
         yCError(ROS2_LOC) << "Missing ROS2 group!";
@@ -314,13 +314,27 @@ bool ros2LocalizerThread::threadInit()
     }
 
     // LOCALIZATION group /////////////////////////////////////////////////////////////////////////////////////////////
-    if (localization_group.check("use_localization_from_odometry_port"))
+    if (localization_group.check("localization_mode")==false)
     {
-        m_use_localization_from_odometry_port = localization_group.find("use_localization_from_odometry_port").asInt32() == 1;
+        yCError(ROS2_LOC) << "Missing localization_mode param!";
+        return false;
     }
-    if (localization_group.check("use_localization_from_tf"))
+    string locmodestr = localization_group.find("localization_mode").asString();
+
+    if (locmodestr == "tf")
     {
-        m_use_localization_from_tf = localization_group.find("use_localization_from_tf").asInt32() == 1;
+        m_loc_mode = use_tf_loc;
+        yCInfo(ROS2_LOC) << "using localization from transform server";
+    }
+    else if (locmodestr == "ros")
+    {
+        m_loc_mode = use_ros_loc;
+        yCInfo(ROS2_LOC) << "using localization from ros topic";
+    }
+    else
+    {
+        yCError(ROS2_LOC) << "invalid localization_mode param!";
+        return false;
     }
 
     // ROS2 group /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -337,6 +351,20 @@ bool ros2LocalizerThread::threadInit()
             m_nodeName = ros_group.find ("node_name").asString();
         }
         m_node = NodeCreator::createNode(m_nodeName);
+    }
+
+    //initialize an initial pose publisher
+    if(!ros_group.check("initialpose_topic"))
+    {
+        yCError(ROS2_LOC) << "No initialpose_topic specified";
+        return false;
+    }
+    m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
+    m_ros2Publisher_initial_pose = m_node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
+    if (m_ros2Publisher_initial_pose == nullptr)
+    {
+        yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
+        return false;
     }
 
     if (!ros_group.check ("occupancygrid_topic"))
@@ -367,6 +395,31 @@ bool ros2LocalizerThread::threadInit()
         return false;
     }
     yCDebug(ROS2_LOC) << "opened " << m_topic_particles << " topic";
+
+    if (m_loc_mode == use_ros_loc)
+    {
+        if (ros_group.check("currentpose_topic"))
+        {
+            m_topic_currpose = ros_group.find("currentpose_topic").asString();
+            if (m_topic_currpose.empty())
+            {
+                yCError(ROS2_LOC) << "Invalid topic name for currentpose_topic";
+                return false;
+            }
+            m_ros2Subscriber_current_pose = m_node->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_currpose, rclcpp::SensorDataQoS(), std::bind(&ros2LocalizerThread::currPose_callback, this, _1));
+            if (!m_ros2Subscriber_current_pose)
+            {
+                yCError(ROS2_LOC) << "localizationModule: unable to subscribe data on " << m_topic_currpose << " topic, check your yarp-ROS network configuration";
+                return false;
+            }
+            yCDebug(ROS2_LOC) << "opened " << m_topic_currpose << " topic";
+        }
+        else
+        {
+            yCError(ROS2_LOC) << "Missing currentpose_topic param";
+            return false;
+        }
+    }
 
     // MAP group //////////////////////////////////////////////////////////////////////////////////////////////////////
     yCDebug(ROS2_LOC) << map_group.toString();
@@ -517,66 +570,37 @@ void ros2LocalizerThread::run()
     }
 
     lock_guard<std::mutex> lock(m_mutex);
-    yarp::sig::Vector iv;
-    yarp::sig::Vector pose;
-    iv.resize(6, 0.0);
-    pose.resize(6, 0.0);
-    bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
-    if (r)
+
+    if(m_loc_mode == use_tf_loc)
     {
-        //data is formatted as follows: x, y, angle (in degrees)
-        m_tf_data_received = yarp::os::Time::now();
-        m_localization_data.x = pose[0];
-        m_localization_data.y = pose[1];
-        m_localization_data.theta = pose[5] * RAD2DEG;
+        yarp::sig::Vector iv;
+        yarp::sig::Vector pose;
+        iv.resize(6, 0.0);
+        pose.resize(6, 0.0);
+        bool r = m_iTf->transformPose(m_frame_robot_id, m_frame_map_id, iv, pose);
+        if (r) {
+            //data is formatted as follows: x, y, angle (in degrees)
+            m_tf_data_received = yarp::os::Time::now();
+            m_localization_data.x = pose[0];
+            m_localization_data.y = pose[1];
+            m_localization_data.theta = pose[5] * RAD2DEG;
 
-        //velocity estimation block
-        if (1) { estimateOdometry(m_localization_data); }
+            //velocity estimation block
+            if (1) { estimateOdometry(m_localization_data); }
 
+        }
     }
-    if (current_time - m_tf_data_received > 0.1)
-    {
-        yCWarning(ROS2_LOC) << "No localization data received for more than 0.1s!";
-    }
 
-    //republish the map periodically
-    /*if (current_time - m_last_published_map > 5.0)
-    {
-        publish_map();
-        m_last_published_map = yarp::os::Time::now();
-    }*/
+    //FIXME
+    //if (current_time - m_tf_data_received > 0.1)
+    //
+    //   yCWarning(ROS2_LOC) << "No localization data received for more than 0.1s!";
+    //
 }
 
 bool ros2LocalizerThread::initializeLocalization(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& roscov6x6)
 {
     m_localization_data.map_id = loc.map_id;
-
-    if(!m_node)
-    {
-        if(!ros_group.check("node_name"))
-        {
-            yCError(ROS2_LOC) << "No node_name specified";
-            return false;
-        }
-        m_nodeName = ros_group.find ("node_name").asString();
-        m_node = NodeCreator::createNode(m_nodeName);
-    }
-    //initialize an initial pose publisher
-    if (m_ros2Publisher_initial_pose == nullptr)
-    {
-        if(!ros_group.check("initialpose_topic"))
-        {
-            yCError(ROS2_LOC) << "No initialpose_topic specified";
-            return false;
-        }
-        m_topic_initial_pose = ros_group.find ("initialpose_topic").asString();
-        m_ros2Publisher_initial_pose = m_node->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(m_topic_initial_pose, 10);
-        if (m_ros2Publisher_initial_pose == nullptr)
-        {
-            yCError(ROS2_LOC) << "localizationModule: unable to publish data on " << m_topic_initial_pose << " topic, check your yarp-ROS network configuration";
-            return false;
-        }
-    }
 
     if (m_iMap)
     {
@@ -671,6 +695,33 @@ void ros2LocalizerThread::particles_callback(const nav2_msgs::msg::ParticleCloud
         }
 
         m_last_received_particles = *(new nav2_msgs::msg::ParticleCloud(poses));
+    }
+}
+
+void ros2LocalizerThread::currPose_callback(const geometry_msgs::msg::PoseWithCovarianceStamped inputPose)
+{
+    if (m_ros2Subscriber_current_pose && m_loc_mode == use_ros_loc)
+    {
+        if (!this->isRunning() ||
+            this->isSuspended())
+        {
+            return;
+        }
+
+        m_tf_data_received = yarp::os::Time::now();
+        m_localization_data.x = inputPose.pose.pose.position.x;
+        m_localization_data.y = inputPose.pose.pose.position.y;
+        yarp::math::Quaternion q;
+        q.x() = inputPose.pose.pose.orientation.x;
+        q.y() = inputPose.pose.pose.orientation.y;
+        q.z() = inputPose.pose.pose.orientation.z;
+        q.w() = inputPose.pose.pose.orientation.w;
+        yarp::sig::Vector v = q.toAxisAngle();
+        double t = v[3]*v[2];
+        m_localization_data.theta = t * RAD2DEG;
+
+        //velocity estimation block
+        if (1) { estimateOdometry(m_localization_data); }
     }
 }
 
