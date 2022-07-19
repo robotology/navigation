@@ -396,7 +396,7 @@ bool ros2LocalizerThread::threadInit()
     }
     yCDebug(ROS2_LOC) << "opened " << m_topic_particles << " topic";
 
-    if (m_loc_mode == use_ros_loc)
+    if (m_loc_mode == use_ros_loc) 
     {
         if (ros_group.check("currentpose_topic"))
         {
@@ -446,46 +446,49 @@ bool ros2LocalizerThread::threadInit()
     m_frame_robot_id = tf_group.find("robot_frame_id").asString();
 
     //opens a client to receive localization data from transformServer
-    Property options;
-    options.put("device", "frameTransformClient");
-    if(!tf_group.check("ft_client_config"))
+    if (m_loc_mode == use_tf_loc)
     {
-        yCWarning(ROS2_LOC) << "Parameter 'ft_client_config' missing in [TF] group. Using default value: 'ftc_yarp_only.xml'";
-        options.put("filexml_option", "ftc_yarp_only.xml");
-    }
-    else
-    {
-        options.put("filexml_option", tf_group.find("ft_client_config").asString());
-    }
-    if(!tf_group.check("ft_client_prefix"))
-    {
-        yCWarning(ROS2_LOC) << "Parameter 'ft_client_prefix' missing in [TF] group. Using: '/" << m_name << "'";
-        options.put("ft_client_prefix", m_name);
-    }
-    else
-    {
-        options.put("ft_client_prefix", tf_group.find("ft_client_prefix").asString());
-    }
+        Property options;
+        options.put("device", "frameTransformClient");
+        if(!tf_group.check("ft_client_config"))
+        {
+            yCWarning(ROS2_LOC) << "Parameter 'ft_client_config' missing in [TF] group. Using default value: 'ftc_yarp_only.xml'";
+            options.put("filexml_option", "ftc_yarp_only.xml");
+        }
+        else
+        {
+            options.put("filexml_option", tf_group.find("ft_client_config").asString());
+        }
+        if(!tf_group.check("ft_client_prefix"))
+        {
+            yCWarning(ROS2_LOC) << "Parameter 'ft_client_prefix' missing in [TF] group. Using: '/" << m_name << "'";
+            options.put("ft_client_prefix", m_name);
+        }
+        else
+        {
+            options.put("ft_client_prefix", tf_group.find("ft_client_prefix").asString());
+        }
 
-    if(!tf_group.check("ft_server_prefix"))
-    {
-        yCWarning(ROS2_LOC) << "Parameter 'ft_server_prefix' missing in [TF] group. Using an empty string";
-    }
-    else
-    {
-        options.put("ft_server_prefix", tf_group.find("ft_server_prefix").asString());
-    }
+        if(!tf_group.check("ft_server_prefix"))
+        {
+            yCWarning(ROS2_LOC) << "Parameter 'ft_server_prefix' missing in [TF] group. Using an empty string";
+        }
+        else
+        {
+            options.put("ft_server_prefix", tf_group.find("ft_server_prefix").asString());
+        }
 
-    if (!m_ptf.open(options))
-    {
-        yCError(ROS2_LOC) << "Unable to open transform client";
-        return false;
-    }
-    m_ptf.view(m_iTf);
-    if (!m_ptf.isValid() || m_iTf == 0)
-    {
-        yCError(ROS2_LOC) << "Unable to view iTransform interface";
-        return false;
+        if (!m_ptf.open(options))
+        {
+            yCError(ROS2_LOC) << "Unable to open transform client";
+            return false;
+        }
+        m_ptf.view(m_iTf);
+        if (!m_ptf.isValid() || m_iTf == 0)
+        {
+            yCError(ROS2_LOC) << "Unable to view iTransform interface";
+            return false;
+        }
     }
 
     if (m_use_map_server)
