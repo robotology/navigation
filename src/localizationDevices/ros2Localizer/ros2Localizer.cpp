@@ -396,7 +396,7 @@ bool ros2LocalizerThread::threadInit()
     }
     yCDebug(ROS2_LOC) << "opened " << m_topic_particles << " topic";
 
-    if (m_loc_mode == use_ros_loc) 
+    if (m_loc_mode == use_ros_loc)
     {
         if (ros_group.check("currentpose_topic"))
         {
