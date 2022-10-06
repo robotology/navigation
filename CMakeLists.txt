@@ -98,6 +98,7 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(app)
+add_subdirectory(tests)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS 1)
 
