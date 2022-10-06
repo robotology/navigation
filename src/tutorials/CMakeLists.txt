@@ -6,3 +6,4 @@
 
 add_subdirectory(robotPathPlannerExample)
 add_subdirectory(robotGotoExample)
+add_subdirectory(robotGotoExample2)
