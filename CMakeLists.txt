@@ -13,14 +13,14 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(YCM_REQUIRED_VERSION 0.11.0)
-set(YARP_REQUIRED_VERSION 3.5)
+set(YARP_REQUIRED_VERSION 3.7)
 
 find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
 
 option(NAVIGATION_USE_ROS2 "if enabled, ROS2 related executables/plugins will be compiled" OFF)
 
-option(NAVIGATION_USE_NWC "if enabled, yarp nwc devices instead of standard clients" OFF)
+option(NAVIGATION_USE_NWC "if enabled, yarp nwc devices instead of standard clients" ON)
 if(NAVIGATION_USE_NWC)
     add_definitions(-DNAVIGATION_USE_NWC=1)
 endif()
