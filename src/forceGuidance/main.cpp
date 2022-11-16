@@ -69,7 +69,6 @@ Windows, Linux
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
 
-#include <yarp/dev/SerialInterfaces.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
