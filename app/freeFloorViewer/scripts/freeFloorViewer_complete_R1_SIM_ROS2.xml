@@ -1,0 +1,17 @@
+<application>
+<name>freeFloorViewer_complete_R1_SIM_ROS2</name>
+
+<dependencies>
+</dependencies>
+
+    <application>
+        <name>Navigation_ROS2_R1_SIM</name>
+        <prefix></prefix>
+    </application>
+
+    <application>
+        <name>freeFloorViewer_R1_SIM_ROS2</name>
+        <prefix></prefix>
+    </application>
+
+</application>

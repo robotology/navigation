@@ -1,0 +1,50 @@
+<application>
+<name>freeFloorViewer_R1_SIM_ROS2</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>freeFloorViewer</name>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_R1_SIM_ROS2.ini</parameters>
+   <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=21000</environment>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /view/floorView:i --out /view/floorClick:o --rightout /view/headClick:o</parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/freeFloorViewer/floorEnhanced:o</from>
+  <to>/view/floorView:i</to>
+  <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+  <from>/view/floorClick:o</from>
+  <to>/freeFloorViewer/clicked_pos:i</to>
+  <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+  <from>/view/headClick:o</from>
+  <to>/freeFloorViewer/clicked_head:i</to>
+  <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+    <from>/freeFloorViewer/baseVelCmd:o</from>
+    <to>/baseControl/input/aux:i</to>
+    <protocol>fast_tcp</protocol>
+</connection>
+
+<connection>
+    <from>/baseControl/filtered_commands:o</from>
+    <to>/freeFloorViewer/baseCtrlCmd:i</to>
+    <protocol>fast_tcp</protocol>
+</connection>
+
+</application>

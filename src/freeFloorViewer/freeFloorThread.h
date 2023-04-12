@@ -77,7 +77,6 @@ protected:
     int    m_depth_width;
     int    m_depth_height;
     int    m_col_granularity;
-    bool   m_publish_ros_pc;
     bool   m_self_reliant{true};
     double m_floor_height;
     double m_ceiling_height;

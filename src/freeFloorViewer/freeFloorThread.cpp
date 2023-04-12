@@ -150,7 +150,7 @@ bool FreeFloorThread::threadInit()
     //Verify if this is needed
     yarp::os::Time::delay(0.1);
 
-    // --------- TransformClient config FAKE REMOVE WHEN READY--------- //
+    // --------- TransformClient config ---------- //
     yarp::os::Property tcProp;
     // Prepare default prop object
     tcProp.put("device", "frameTransformClient");
@@ -170,7 +170,15 @@ bool FreeFloorThread::threadInit()
         if (tf_config.check("ft_server_prefix")) {
             tcProp.put("ft_server_prefix", tf_config.find("ft_server_prefix").asString());
         }
-        if(tf_config.check("filexml_option")) {tcProp.put("filexml_option", tf_config.find("filexml_option").asString());}
+        if(tf_config.check("filexml_option") && !(tf_config.check("testxml_from") || tf_config.check("testxml_context")))
+        {
+            tcProp.put("filexml_option", tf_config.find("filexml_option").asString());
+        }
+        if(!tf_config.check("filexml_option") && !(tf_config.check("testxml_from") && tf_config.check("testxml_context")))
+        {
+            tcProp.put("testxml_from", tf_config.find("testxml_from").asString());
+            tcProp.put("testxml_context", tf_config.find("testxml_context").asString());
+        }
     }
     m_tcPoly.open(tcProp);
     if(!m_tcPoly.isValid())
@@ -302,8 +310,6 @@ void FreeFloorThread::run()
             yCWarning(FREE_FLOOR_THREAD, "Unable to found m matrix");
         }
     }
-
-    //if (m_publish_ros_pc) {ros_compute_and_send_pc(pc,m_ground_frame_id);}//<-------------------------
 
     yarp::sig::ImageOf<yarp::sig::PixelBgra>& imgOut = m_imgOutPort.prepare();
     imgOut.zero();
