@@ -156,11 +156,11 @@ bool FreeFloorThread::threadInit()
     tcProp.put("device", "frameTransformClient");
     tcProp.put("ft_client_prefix", "/freeFloorViewer");
     tcProp.put("local_rpc", "/freeFloorViewer/ftClient.rpc");
-    tcProp.put("filexml_option","ftc_yarp_only.xml");
     bool okTransformRf = m_rf.check("TRANSFORM_CLIENT");
     if(!okTransformRf)
     {
         yCWarning(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT section missing in ini file Using default values");
+        tcProp.put("filexml_option","ftc_yarp_only.xml");
     }
     else {
         yarp::os::Searchable &tf_config = m_rf.findGroup("TRANSFORM_CLIENT");
@@ -174,10 +174,15 @@ bool FreeFloorThread::threadInit()
         {
             tcProp.put("filexml_option", tf_config.find("filexml_option").asString());
         }
-        if(!tf_config.check("filexml_option") && !(tf_config.check("testxml_from") && tf_config.check("testxml_context")))
+        else if(!tf_config.check("filexml_option") && (tf_config.check("testxml_from") && tf_config.check("testxml_context")))
         {
             tcProp.put("testxml_from", tf_config.find("testxml_from").asString());
             tcProp.put("testxml_context", tf_config.find("testxml_context").asString());
+        }
+        else
+        {
+            yCError(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT is missing information about the frameTransformClient device configuration. Check your config. RETURNING");
+            return false;
         }
     }
     m_tcPoly.open(tcProp);

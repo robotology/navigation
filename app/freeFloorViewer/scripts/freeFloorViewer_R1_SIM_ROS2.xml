@@ -37,7 +37,7 @@
 
 <connection>
     <from>/freeFloorViewer/baseVelCmd:o</from>
-    <to>/baseControl/input/aux:i</to>
+    <to>/baseControl/input/aux/data:i</to>
     <protocol>fast_tcp</protocol>
 </connection>
 
