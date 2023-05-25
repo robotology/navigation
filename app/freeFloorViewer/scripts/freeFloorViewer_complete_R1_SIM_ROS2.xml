@@ -1,0 +1,23 @@
+<application>
+<name>freeFloorViewer_complete_R1_SIM_ROS2</name>
+
+<dependencies>
+</dependencies>
+
+    <application>
+        <name>Navigation_ROS2_R1_SIM</name>
+        <prefix></prefix>
+    </application>
+
+    <application>
+        <name>freeFloorViewer_R1_SIM_ROS2</name>
+        <prefix></prefix>
+    </application>
+
+    <module>
+        <name>navigationGUI</name>
+        <parameters>--context navigationGUI --from navigationGUI_base_nws-nwc.ini --LASER::remote_laser /SIM_CER_ROBOT/laser:o --LASER::laser_client rangefinder2D_nwc_yarp --NAVIGATIONGUI_GENERAL::draw_and_publish_period 1.0 --UPDATE_DATA::period_laser_data 0.5</parameters>
+        <node>console</node>
+    </module>
+
+</application>

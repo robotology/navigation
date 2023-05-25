@@ -1,0 +1,17 @@
+<application>
+<name>web_teleop_complete_SIM_ROS2</name>
+
+<dependencies>
+</dependencies>
+
+    <application>
+        <name>freeFloorViewer_complete_R1_SIM_ROS2</name>
+        <prefix></prefix>
+    </application>
+
+    <application>
+        <name>web_teleop_server</name>
+        <prefix></prefix>
+    </application>
+
+</application>

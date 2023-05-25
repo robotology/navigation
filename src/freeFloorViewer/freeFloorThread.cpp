@@ -150,17 +150,17 @@ bool FreeFloorThread::threadInit()
     //Verify if this is needed
     yarp::os::Time::delay(0.1);
 
-    // --------- TransformClient config FAKE REMOVE WHEN READY--------- //
+    // --------- TransformClient config ---------- //
     yarp::os::Property tcProp;
     // Prepare default prop object
     tcProp.put("device", "frameTransformClient");
     tcProp.put("ft_client_prefix", "/freeFloorViewer");
     tcProp.put("local_rpc", "/freeFloorViewer/ftClient.rpc");
-    tcProp.put("filexml_option","ftc_yarp_only.xml");
     bool okTransformRf = m_rf.check("TRANSFORM_CLIENT");
     if(!okTransformRf)
     {
         yCWarning(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT section missing in ini file Using default values");
+        tcProp.put("filexml_option","ftc_yarp_only.xml");
     }
     else {
         yarp::os::Searchable &tf_config = m_rf.findGroup("TRANSFORM_CLIENT");
@@ -170,7 +170,20 @@ bool FreeFloorThread::threadInit()
         if (tf_config.check("ft_server_prefix")) {
             tcProp.put("ft_server_prefix", tf_config.find("ft_server_prefix").asString());
         }
-        if(tf_config.check("filexml_option")) {tcProp.put("filexml_option", tf_config.find("filexml_option").asString());}
+        if(tf_config.check("filexml_option") && !(tf_config.check("testxml_from") || tf_config.check("testxml_context")))
+        {
+            tcProp.put("filexml_option", tf_config.find("filexml_option").asString());
+        }
+        else if(!tf_config.check("filexml_option") && (tf_config.check("testxml_from") && tf_config.check("testxml_context")))
+        {
+            tcProp.put("testxml_from", tf_config.find("testxml_from").asString());
+            tcProp.put("testxml_context", tf_config.find("testxml_context").asString());
+        }
+        else
+        {
+            yCError(FREE_FLOOR_THREAD,"TRANSFORM_CLIENT is missing information about the frameTransformClient device configuration. Check your config. RETURNING");
+            return false;
+        }
     }
     m_tcPoly.open(tcProp);
     if(!m_tcPoly.isValid())
@@ -302,8 +315,6 @@ void FreeFloorThread::run()
             yCWarning(FREE_FLOOR_THREAD, "Unable to found m matrix");
         }
     }
-
-    //if (m_publish_ros_pc) {ros_compute_and_send_pc(pc,m_ground_frame_id);}//<-------------------------
 
     yarp::sig::ImageOf<yarp::sig::PixelBgra>& imgOut = m_imgOutPort.prepare();
     imgOut.zero();
