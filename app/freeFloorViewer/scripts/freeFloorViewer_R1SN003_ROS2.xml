@@ -6,21 +6,21 @@
 
 <module>
    <name>freeFloorViewer</name>
-   <parameters>--context freeFloorViewer --from freeFloorViewer_complete_R1SN003`_ROS2.ini</parameters>
+   <parameters>--context freeFloorViewer --from freeFloorViewer_R1SN003_ROS2.ini</parameters>
    <environment>YARP_PORTNUMBER_freeFloorViewer_floorEnhanced_o=21000</environment>
-   <node>console2</node>
+   <node>console</node>
 </module>
 
 <module>
    <name>yarpview</name>
    <parameters>--name /view/floorView:i --out /view/floorClick:o --rightout /view/headClick:o</parameters>
-   <node>console2</node>
+   <node>console</node>
 </module>
 
 <connection>
   <from>/freeFloorViewer/floorEnhanced:o</from>
   <to>/view/floorView:i</to>
-  <protocol>fast_tcp</protocol>
+  <protocol>mjpeg</protocol>
 </connection>
 
 <connection>
