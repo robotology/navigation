@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C)2011  Department of Robotics Brain and Cognitive Sciences - Istituto Italiano di Tecnologia
  * Author: Marco Randazzo
  * email:  marco.randazzo@iit.it
@@ -53,7 +53,7 @@ bool map_utilites::sendToPort (BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelR
     {
         yarp::sig::ImageOf<yarp::sig::PixelRgb> *segImg = new yarp::sig::ImageOf<yarp::sig::PixelRgb>;
         segImg->resize(image_to_send->width, image_to_send->height );
-        cvCopy(image_to_send, (IplImage*)segImg->getIplImage());
+        cvCopy(image_to_send, (IplImage*)segImg->getRawImage());
         port->prepare() = *segImg;
         port->write();
         delete segImg;
@@ -66,7 +66,7 @@ bool map_utilites::drawPath(IplImage *map, XYCell current_position, XYCell curre
 {
     if (map==0) return false;
     if (path.size()==0) return true;
-    
+
     XYCell src = current_target;
     while (path.size()>0)
     {
@@ -75,7 +75,7 @@ bool map_utilites::drawPath(IplImage *map, XYCell current_position, XYCell curre
         cvLine(map, cvPoint(src.x, src.y), cvPoint(dst.x, dst.y), color2);
         src=dst;
     };
-    
+
     cvLine(map, cvPoint(current_position.x, current_position.y), cvPoint(current_target.x, current_target.y), color1);
     return true;
 }

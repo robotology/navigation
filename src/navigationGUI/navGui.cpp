@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C)2011  Department of Robotics Brain and Cognitive Sciences - Istituto Italiano di Tecnologia
  * Author: Marco Randazzo
  * email:  marco.randazzo@iit.it
@@ -99,7 +99,7 @@ void NavGuiThread::readTargetFromYarpView()
                 {
                     m_iNav->stopNavigation();
                 }
-            else 
+            else
                 if (click_p.x > button2_l && click_p.x < button2_r &&
                     click_p.y > button2_t && click_p.y < button2_b)
                 {
@@ -321,7 +321,7 @@ bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_im
         yCError(NAVIGATION_GUI) << "PlannerThread::draw_map cannot copy an empty image!";
         return false;
     }
-    if (image_to_be_prepared == 0) 
+    if (image_to_be_prepared == 0)
     {
         image_to_be_prepared = cvCloneImage(template_image);
     }
@@ -359,7 +359,7 @@ void NavGuiThread::addMenu(CvFont& font)
     char txt[255];
 
     //button 1
-    if (m_navigation_status == navigation_status_moving || 
+    if (m_navigation_status == navigation_status_moving ||
         m_navigation_status == navigation_status_paused )
     {
         snprintf(txt, 255, "Stop");
@@ -430,7 +430,7 @@ void NavGuiThread::draw_and_send()
 #if 1
         yarp::sig::ImageOf<yarp::sig::PixelRgb> map_image;
         m_current_map.getMapImage(map_image);
-        IplImage* tmp = (IplImage*)map_image.getIplImage();
+        IplImage* tmp = (IplImage*)map_image.getRawImage();
         int w = tmp->width;
         int h = tmp->height;
         if (w < 320) w = 320;
@@ -503,7 +503,7 @@ void NavGuiThread::draw_and_send()
     {
          map_utilites::drawPose(i3_map_menu_scan, m_current_map, m_estimated_poses[i], green_color);
     }
-    
+
 
     //############### draw locations
     if (m_enable_draw_all_locations)
