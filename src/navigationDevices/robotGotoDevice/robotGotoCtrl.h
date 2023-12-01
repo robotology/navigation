@@ -23,9 +23,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/os/Subscriber.h>
-#include <yarp/os/Publisher.h>
-#include <yarp/os/Node.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
@@ -42,18 +39,11 @@
 #include <string>
 #include <math.h>
 #include <mutex>
-#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
-#include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
-#include <yarp/rosmsg/nav_msgs/Path.h>
 #include "obstacles.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
-
-typedef yarp::os::Subscriber<yarp::rosmsg::geometry_msgs::PoseStamped> rosGoalSubscriber;
-typedef yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseStamped>  rosGoalPublisher;
-typedef yarp::os::Publisher<yarp::rosmsg::nav_msgs::Path>              rosPathPublisher;
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -142,13 +132,6 @@ protected:
     BufferedPort<yarp::os::Bottle>  m_port_speak_output;
     BufferedPort<yarp::os::Bottle>  m_port_gui_output;
 
-    //ROS topics
-    yarp::os::Node*                 m_rosNode;
-    rosGoalSubscriber               m_rosGoalInputPort;
-    rosGoalPublisher                m_rosCurrentGoal;
-    rosPathPublisher                m_localPlan;
-    rosPathPublisher                m_globalPlan;
-    
     Property                           m_robotCtrl_options;
     Searchable                         &m_cfg;
     yarp::dev::Nav2D::Map2DLocation    m_localization_data;
@@ -159,8 +142,6 @@ protected:
     Nav2D::NavigationStatusEnum m_status_after_approach;
     double               m_retreat_duration_time;
     double               m_retreat_starting_time;
-    bool                 m_useGoalFromRosTopic;
-    bool                 m_publishRosStuff;
     string               m_frame_robot_id;
     string               m_frame_map_id;
     double               m_min_laser_angle;
@@ -285,13 +266,6 @@ public:
     
 private:
     /**
-    * Initializes the ROS system, opening the ROS node and the requested ROS topics.
-    * @param ros_group the configuration options defined in [ROS_GROUP]. Valid parameters are parameters are reported in module description.
-    * @return true if the ROS system initialization was successful.
-    */
-    bool        rosInit(const yarp::os::Bottle& ros_group);
-    
-    /**
     * Sends Cartesian velocities commands to a yarp output port (typically connected to baseControl)
     */
     void        sendOutput();
@@ -303,24 +277,9 @@ private:
     bool  evaluateLocalization();
     
     /**
-    * Receives a new target from a ROS topic and starts the navigation
-    */
-    void evaluateGoalFromTopic();
-    
-    /**
     * Obtains laser data through a IRangefinder2D interface.
     */
     void getLaserData();
-    
-    /**
-    * Publishes the current goal on the dedicated ROS topic.
-    */
-    void publishCurrentGoal();
-    
-    /**
-    * Publishes the current local plan on the dedicated ROS topic.
-    */
-    void publishLocalPlan();
     
     /**
     * Checks the computed control outputs and saturates them if necessary.

@@ -2,7 +2,11 @@ yarp_prepare_plugin(velocityInputHandler
                     CATEGORY device
                     TYPE VelocityInputHandler
                     INCLUDE velocityInputHandler.h
-                    INTERNAL)
+                    DEFAULT ON)
+
+if(SKIP_velocityInputHandler)
+   return()
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

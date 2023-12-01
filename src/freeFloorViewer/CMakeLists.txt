@@ -12,11 +12,8 @@ file(GLOB folder_header *.h)
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
 
-if(NAVIGATION_USE_ROS2)
-    find_package(YARP REQUIRED COMPONENTS sig cv dev os math)
-else()
-    find_package(YARP REQUIRED COMPONENTS sig cv dev os math rosmsg)
-endif()
+find_package(YARP REQUIRED COMPONENTS sig cv dev os math)
+
 include_directories(${OpenCV_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YARP_LIBRARIES} navigation_lib)

@@ -2,7 +2,11 @@ yarp_prepare_plugin(simpleVelocityNavigation
                     CATEGORY device
                     TYPE simpleVelocityNavigation
                     INCLUDE simpleVelocityNavigation.h
-                    INTERNAL)
+                    DEFAULT ON)
+
+if(SKIP_simpleVelocityNavigation)
+   return()
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

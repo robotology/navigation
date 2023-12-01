@@ -88,111 +88,8 @@ GotoThread::GotoThread(double _period, Searchable &_cfg) :
     m_robot_laser_x = 0;
     m_robot_laser_y = 0;
     m_robot_laser_t = 0;
-    m_rosNode = 0;
     m_stats_time_curr = yarp::os::Time::now();
     m_stats_time_last = yarp::os::Time::now();
-}
-
-bool GotoThread::rosInit(const yarp::os::Bottle& ros_group)
-{
-    if(ros_group.check("useGoalFromRosTopic") || ros_group.check("publishRosStuff"))
-    {
-        m_useGoalFromRosTopic  = ros_group.find("useGoalFromRosTopic").asBool();
-        m_publishRosStuff      = ros_group.find("publishRosStuff").asBool();
-
-        if(m_useGoalFromRosTopic || m_publishRosStuff)
-        {
-            if (ros_group.check("rosNodeName"))
-            {
-                m_rosNode = new yarp::os::Node(ros_group.find("rosNodeName").asString());
-
-                if (!m_useGoalFromRosTopic)
-                {
-                    yCInfo(GOTO_CTRL) << "goal from ROS topic deactivated";
-                }
-                else
-                {
-
-                    yCInfo(GOTO_CTRL) << "activating ROS goal input";
-
-                    if (ros_group.check("goalTopicName"))
-                    {
-                        if (!m_rosGoalInputPort.topic(ros_group.find("goalTopicName").asString()))
-                        {
-                            yCError(GOTO_CTRL) << "error while opening goal subscriber";
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        yCError(GOTO_CTRL) << "Initialization failed. Missing goalTopicName parameters in configuration file.";
-                        return false;
-                    }
-                }
-
-                if (!m_publishRosStuff)
-                {
-                    yCInfo(GOTO_CTRL) << "Path and current goal publication deactivated";
-                }
-                else
-                {
-
-                    yCInfo(GOTO_CTRL) << "activating current goal and path publication";
-
-                    if (ros_group.check("currentGoalTopicName"))
-                    {
-                        if (!m_rosCurrentGoal.topic(ros_group.find("currentGoalTopicName").asString()))
-                        {
-                            yCError(GOTO_CTRL) << "error while opening current goal publisher";
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        yCError(GOTO_CTRL) << "Initialization failed. Missing currentGoalTopicName parameters in configuration file. Current goal publication will be deactivated";
-                        return false;
-                    }
-
-                    if (ros_group.check("localPlanTopicName"))
-                    {
-                        if (!m_localPlan.topic(ros_group.find("localPlanTopicName").asString()))
-                        {
-                            yCError(GOTO_CTRL) << "error while opening local plan publisher";
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        yCError(GOTO_CTRL) << "Initialization failed. Missing localPlanTopicName parameters in configuration file. Path publication will be deactivated";
-                        return false;
-                    }
-
-                    if (ros_group.check("globalPlanTopicName"))
-                    {
-                        if (!m_globalPlan.topic(ros_group.find("globalPlanTopicName").asString()))
-                        {
-                            yCError(GOTO_CTRL) << "error while opening global plan publisher";
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        yCError(GOTO_CTRL) << "Initialization failed. Missing localPlanTopicName parameters in configuration file. Path publication will be deactivated";
-                        return false;
-                    }
-
-                }
-
-            }
-            else
-            {
-                yCInfo(GOTO_CTRL) << "Initialization failed. Missing rosNodeName parameters in configuration file.";
-                return false;
-            }
-
-        }
-    }
-    return true;
 }
 
 bool GotoThread::threadInit()
@@ -211,23 +108,8 @@ bool GotoThread::threadInit()
     m_default_approach_direction    = 180;
     m_default_approach_speed        = 0.2; //ms/s
 
-    m_useGoalFromRosTopic        = false;
-    m_publishRosStuff            = false;
     m_obstacle_handler = new obstacles_class(m_cfg);
     yCInfo(GOTO_CTRL,"Using following parameters: %s", m_cfg.toString().c_str());
-
-    Bottle ros_group = m_cfg.findGroup("ROS");
-    if (ros_group.isNull())
-    {
-        yCInfo(GOTO_CTRL) << "Missing ROS group in configuration file. ROS functionality will be deactivated";
-    }
-    else
-    {
-      if(!rosInit(ros_group))
-      {
-          return false;
-      }
-    }
 
     Bottle trajectory_group = m_cfg.findGroup("ROBOT_TRAJECTORY");
     if (trajectory_group.isNull())
@@ -420,18 +302,6 @@ void GotoThread::threadRelease()
     m_port_gui_output.interrupt();
     m_port_gui_output.close();
 
-    m_rosGoalInputPort.interrupt();
-    m_rosGoalInputPort.close();
-
-    m_rosCurrentGoal.interrupt();
-    m_rosCurrentGoal.close();
-
-    m_localPlan.interrupt();
-    m_localPlan.close();
-
-    m_globalPlan.interrupt();
-    m_globalPlan.close();
-
     if (m_obstacle_handler)
     {
         delete m_obstacle_handler;
@@ -455,29 +325,6 @@ bool GotoThread::evaluateLocalization()
     return true;
 }
 
-void GotoThread::evaluateGoalFromTopic()
-{
-    yarp::rosmsg::geometry_msgs::PoseStamped* rosGoalData = m_rosGoalInputPort.read(false);
-
-    if (rosGoalData != 0)
-    {
-        yCInfo(GOTO_CTRL) << "received a goal from ROS topic";
-        yarp::sig::Vector v(3);
-        yarp::math::Quaternion q;
-
-        q.w() = rosGoalData->pose.orientation.w;
-        q.x() = rosGoalData->pose.orientation.x;
-        q.y() = rosGoalData->pose.orientation.y;
-        q.z() = rosGoalData->pose.orientation.z;
-
-        v[0] = rosGoalData->pose.position.x;
-        v[1] = rosGoalData->pose.position.y;
-        v[2] = -yarp::math::dcm2rpy(q.toRotationMatrix4x4())[2] * RAD2DEG;
-
-        setNewAbsTarget(v);
-    }
-}
-
 void GotoThread::getLaserData()
 {
     yarp::sig::Vector scan;
@@ -492,102 +339,6 @@ void GotoThread::getLaserData()
         m_las_timeout_counter++;
         if (m_las_timeout_counter>TIMEOUT_MAX) m_las_timeout_counter = TIMEOUT_MAX;
     }
-}
-
-void GotoThread::publishCurrentGoal()
-{
-    if (!m_publishRosStuff)
-    {
-        return;
-    }
-    yarp::rosmsg::geometry_msgs::PoseStamped& goal = m_rosCurrentGoal.prepare();
-    static int        seq;
-    yarp::math::Quaternion q;
-    yarp::sig::Vector rpy(3);
-    yarp::sig::Matrix m;
-
-    rpy[0]                  = rpy[1] = 0;
-    rpy[2]                  = m_target_data.target.theta * DEG2RAD;
-    m                       = yarp::math::SE3inv(yarp::math::rpy2dcm(rpy)); 
-    q.fromRotationMatrix(m);
-    goal.header.frame_id    = m_frame_map_id;
-    goal.header.seq         = seq;
-    goal.pose.position.x    = m_target_data.target.x;
-    goal.pose.position.y    = m_target_data.target.y;
-    goal.pose.position.z    = 0;
-    goal.pose.orientation.w = q.w();
-    goal.pose.orientation.x = q.x();
-    goal.pose.orientation.y = q.y();
-    goal.pose.orientation.z = q.z();
-
-    m_rosCurrentGoal.write();
-    seq++;
-}
-
-void GotoThread::publishLocalPlan()
-{
-    if (m_status != navigation_status_moving || (m_control_out.linear_vel== 0 && m_control_out.angular_vel == 0))
-    {
-        return;
-    }
-    else
-    {
-
-        static int                seq;
-        double                    radius, angle, distance;
-        size_t                    pointCount;
-        yarp::rosmsg::nav_msgs::Path&            path = m_localPlan.prepare();
-        yarp::sig::Matrix         map2robotMatrix(4,4);
-        map2robotMatrix.zero();
-        yarp::rosmsg::geometry_msgs::PoseStamped pose;
-        yarp::sig::Vector         pos(4);
-
-        //preparing header
-        path.header.frame_id = m_frame_map_id;
-        path.header.seq        = seq;
-        path.header.stamp.sec  = int(yarp::os::Time::now());;
-        path.header.stamp.nsec = (yarp::os::Time::now() - int(yarp::os::Time::now())) * 1000000;
-
-        //drawing data
-        pointCount = 10;
-        radius     = 0.7;
-        distance = sqrt(pow(m_target_data.target.x - m_localization_data.x, 2) + pow(m_target_data.target.y - m_localization_data.y, 2));
-        angle = m_control_out.linear_dir * DEG2RAD;
-        path.poses.clear();
-        path.poses.resize(pointCount + 1);
-
-        double cs = cos(m_localization_data.theta*DEG2RAD);
-        double ss = sin(m_localization_data.theta*DEG2RAD);
-
-        //transformation matrix from map to robot
-        map2robotMatrix[0][0] = cs; map2robotMatrix[0][1] = -ss; map2robotMatrix[0][3] = m_localization_data.x;
-        map2robotMatrix[1][0] = ss; map2robotMatrix[1][1] =  cs; map2robotMatrix[0][3] = m_localization_data.y;
-        map2robotMatrix[2][2] = 1;
-        map2robotMatrix[3][3] = 1;
-
-        for(size_t i = 0; i < pointCount + 1; i++)
-        {
-            pos[0]                  = m_control_out.linear_vel ? distance / pointCount * i : radius * cos(angle / pointCount * i);
-            pos[1]                  = m_control_out.linear_vel ? 0 : radius * sin(angle / pointCount * i);
-            pos[2]                  = 0.1;
-            pos[3]                  = 1;
-            pos                     = map2robotMatrix * pos;
-            pose.header             = path.header;
-            pose.pose.position.x    = pos[0];
-            pose.pose.position.y    = pos[1];
-            pose.pose.position.z    = pos[2];
-            pose.pose.orientation.w = 1;
-            pose.pose.orientation.x = 0;
-            pose.pose.orientation.y = 0;
-            pose.pose.orientation.z = 0;
-            path.poses[i]           = pose;
-
-        }
-
-        m_localPlan.write();
-        seq++;
-    }
-
 }
 
 bool GotoThread::getCurrentPos(Map2DLocation& loc)
@@ -681,7 +432,6 @@ void GotoThread::run()
     }
 
     m_mutex.wait();
-    if (m_useGoalFromRosTopic) evaluateGoalFromTopic();
     evaluateLocalization();
     getLaserData();
 
@@ -891,7 +641,6 @@ void GotoThread::run()
     }
 
     //send commands
-    if (m_publishRosStuff) publishLocalPlan();
     sendOutput();
     m_mutex.post();
 }
@@ -980,7 +729,6 @@ void GotoThread::setNewAbsTarget(yarp::sig::Vector target)
 
     yCDebug(GOTO_CTRL,"current pos: abs(%.3f %.3f %.2f)", m_localization_data.x, m_localization_data.y, m_localization_data.theta);
     yCDebug(GOTO_CTRL,"received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
-    publishCurrentGoal();
 }
 
 bool GotoThread::getCurrentAbsTarget(Map2DLocation& target)
@@ -1040,7 +788,6 @@ void GotoThread::setNewRelTarget(yarp::sig::Vector target)
         m_retreat_duration_time = 0;
     }
     yCInfo(GOTO_CTRL,"received new target: abs(%.3f %.3f %.2f)", m_target_data.target.x, m_target_data.target.y, m_target_data.target.theta);
-    publishCurrentGoal();
 }
 
 void GotoThread::approachTarget(double dir, double speed, double time)

@@ -43,7 +43,6 @@
 #include <yarp/dev/ILocalization2D.h>
 #include <yarp/dev/INavigation2D.h>
 #include <string>
-#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 #include <yarp/dev/Map2DPath.h>
 #include <yarp/dev/Map2DLocation.h>
 #include <mapUtils.h>

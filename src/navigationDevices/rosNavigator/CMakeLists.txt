@@ -10,7 +10,11 @@ yarp_prepare_plugin(rosNavigator
                     CATEGORY device
                     TYPE rosNavigator
                     INCLUDE rosNavigator.h
-                    INTERNAL)
+                    DEFAULT OFF)
+
+if(SKIP_rosNavigator)
+   return()
+endif()
 
 yarp_add_idl (ROS_MSG "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/actionlib_msgs/GoalID.msg"
                       "${CMAKE_CURRENT_SOURCE_DIR}/../../ros_messages/actionlib_msgs/GoalStatusArray.msg"

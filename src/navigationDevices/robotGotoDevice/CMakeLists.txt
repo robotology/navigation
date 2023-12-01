@@ -7,8 +7,11 @@ yarp_prepare_plugin(robotGotoDev
                     CATEGORY device
                     TYPE robotGotoDev
                     INCLUDE robotGotoDev.h
-                    INTERNAL)
+                    DEFAULT ON)
 
+if(SKIP_robotGotoDev)
+   return()
+endif()
 
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -19,7 +22,6 @@ target_link_libraries(robotGotoDev YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   YARP::YARP_rosmsg
                                    navigation_lib)
 
 

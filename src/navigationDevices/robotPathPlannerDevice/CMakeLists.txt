@@ -7,8 +7,11 @@ yarp_prepare_plugin(robotPathPlannerDev
                     CATEGORY device
                     TYPE robotPathPlannerDev
                     INCLUDE robotPathPlannerDev.h
-                    INTERNAL)
+                    DEFAULT ON)
 
+if(SKIP_robotPathPlannerDev)
+   return()
+endif()
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -22,7 +25,6 @@ target_link_libraries(robotPathPlannerDev YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   YARP::YARP_rosmsg
                                    navigation_lib
                                    ${OpenCV_LIBRARIES})
 

@@ -7,9 +7,11 @@ yarp_prepare_plugin(gazeboLocalizer
                     CATEGORY device
                     TYPE gazeboLocalizer
                     INCLUDE gazeboLocalizer.h
-                    INTERNAL)
+                    DEFAULT ON)
 
-
+if(SKIP_gazeboLocalizer)
+   return()
+endif()
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -21,8 +23,7 @@ target_link_libraries(gazeboLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   navigation_lib
-                                   YARP::YARP_rosmsg)
+                                   navigation_lib)
 
 
 yarp_install(TARGETS gazeboLocalizer

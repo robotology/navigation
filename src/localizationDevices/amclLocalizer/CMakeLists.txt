@@ -7,9 +7,11 @@ yarp_prepare_plugin(amclLocalizer
                     CATEGORY device
                     TYPE amclLocalizer
                     INCLUDE amclLocalizer.h
-                    INTERNAL)
+                    DEFAULT ON)
 
-
+if(SKIP_amclLocalizer)
+   return()
+endif()
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

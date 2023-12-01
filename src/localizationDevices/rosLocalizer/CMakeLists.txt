@@ -7,9 +7,11 @@ yarp_prepare_plugin(rosLocalizer
                     CATEGORY device
                     TYPE rosLocalizer
                     INCLUDE rosLocalizer.h
-                    INTERNAL)
+                    DEFAULT OFF)
 
-
+if(SKIP_rosLocalizer)
+   return()
+endif()
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

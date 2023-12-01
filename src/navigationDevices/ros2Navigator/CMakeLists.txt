@@ -16,7 +16,11 @@ yarp_prepare_plugin(ros2Navigator
     CATEGORY device
     TYPE ros2Navigator
     INCLUDE ros2Navigator.h
-    INTERNAL)
+    DEFAULT ON)
+
+if(SKIP_ros2Navigator)
+   return()
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

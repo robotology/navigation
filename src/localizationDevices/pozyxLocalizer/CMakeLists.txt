@@ -7,8 +7,11 @@ yarp_prepare_plugin(pozyxLocalizer
                     CATEGORY device
                     TYPE pozyxLocalizer
                     INCLUDE pozyxLocalizer.h
-                    INTERNAL)
+                    DEFAULT ON)
 
+if(SKIP_pozyxLocalizer)
+   return()
+endif()
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -20,7 +23,6 @@ target_link_libraries(pozyxLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   YARP::YARP_rosmsg
                                    navigation_lib)
 
 

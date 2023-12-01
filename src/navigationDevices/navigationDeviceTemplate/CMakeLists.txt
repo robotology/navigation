@@ -2,7 +2,11 @@ yarp_prepare_plugin(navigationDeviceTemplate
                     CATEGORY device
                     TYPE navigationDeviceTemplate
                     INCLUDE navigationDeviceTemplate.h
-                    INTERNAL)
+                    DEFAULT ON)
+
+if(SKIP_navigationDeviceTemplate)
+   return()
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

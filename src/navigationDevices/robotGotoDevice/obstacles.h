@@ -42,17 +42,10 @@
 #include <string>
 #include <math.h>
 #include <mutex>
-#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
-#include <yarp/rosmsg/geometry_msgs/PoseStamped.h>
-#include <yarp/rosmsg/nav_msgs/Path.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
-
-typedef yarp::os::Subscriber<yarp::rosmsg::geometry_msgs::PoseStamped> rosGoalSubscriber;
-typedef yarp::os::Publisher<yarp::rosmsg::geometry_msgs::PoseStamped>  rosGoalPublisher;
-typedef yarp::os::Publisher<yarp::rosmsg::nav_msgs::Path>              rosPathPublisher;
 
 class obstacles_class
 {

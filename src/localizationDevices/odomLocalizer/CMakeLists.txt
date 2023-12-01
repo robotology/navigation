@@ -7,9 +7,11 @@ yarp_prepare_plugin(odomLocalizer
                     CATEGORY device
                     TYPE odomLocalizer
                     INCLUDE odomLocalizer.h
-                    INTERNAL)
+                    DEFAULT ON)
 
-
+if(SKIP_odomLocalizer)
+   return()
+endif()
                                             
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -21,7 +23,6 @@ target_link_libraries(odomLocalizer YARP::YARP_os
                                    YARP::YARP_sig
                                    YARP::YARP_dev
                                    YARP::YARP_math
-                                   YARP::YARP_rosmsg
                                    navigation_lib)
 
 
