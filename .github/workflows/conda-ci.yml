@@ -54,12 +54,11 @@ jobs:
         python3 tests/misc/check_tests.py
 
   build:
-    name: '[${{ matrix.os }}@${{ matrix.build_type }}@${{ matrix.ros_distro }}@conda]'
+    name: '[${{ matrix.os }}@${{ matrix.build_type }}@conda]'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         build_type: [Release]
-        ros_distro: [humble, iron]
         os: [ubuntu-latest, macos-latest, windows-2019]
       fail-fast: false
 
@@ -106,7 +105,7 @@ jobs:
         mkdir build
         cd build
         cmake -GNinja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. \
+                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
 
@@ -128,11 +127,11 @@ jobs:
         cmake --install . --config ${{ matrix.build_type }}
 
         cd ${GITHUB_WORKSPACE}
-        cd yarp
+        cd icub-main
         mkdir build
         cd build
         cmake -G"Visual Studio 16 2019" -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}/Library \
-                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. \
+                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
 
@@ -151,13 +150,13 @@ jobs:
 
     - name: Configure [Windows]
       if: contains(matrix.os, 'windows')
-      shell: cmd /C CALL {0}
+      shell: bash -l {0}
       run: |
         mkdir -p build
         cd build
-        cmake -G"Visual Studio 16 2019" -DBUILD_TESTING:BOOL=ON ^
-                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ^
-                                        -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}\Library .. ^
+        cmake -G"Visual Studio 16 2019" -DBUILD_TESTING:BOOL=ON \
+                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                                        -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}\Library .. \
                                         -DYARP_COMPILE_TESTS:BOOL=ON
 
     - name: Build [Linux&macOS]
@@ -208,7 +207,6 @@ jobs:
     strategy:
       matrix:
         build_type: [Debug]
-        ros_distro: [humble]
         os: [ubuntu-latest]
       fail-fast: false
 
@@ -258,7 +256,7 @@ jobs:
         mkdir icub-main
         cd build
         cmake -G"Visual Studio 16 2019" -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}/Library \
-                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. \
+                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
         
