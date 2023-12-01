@@ -76,9 +76,11 @@ jobs:
         # Compilation related dependencies
         mamba install cmake compilers make ninja pkg-config
         # Actual dependencies
-        mamba install -c conda-forge -c robostack-staging ycm-cmake-modules eigen ace
+        mamba install -c conda-forge -c robostack-staging ycm-cmake-modules eigen ace opencv gsl
+        mamba install -c conda-forge freeglut expat-cos7-x86_64 libselinux-cos7-x86_64 libxau-cos7-x86_64 libxcb-cos7-x86_64 libxdamage-cos7-x86_64 libxext-cos7-x86_64 libxfixes-cos7-x86_64 libxxf86vm-cos7-x86_64 mesa-libgl-cos7-x86_64 mesa-libgl-devel-cos7-x86_64 libxshmfence-cos7-x86_64 libxshmfence-devel-cos7-x86_64 
 
     - name: Download YARP/iCub-main
+      shell: bash -l {0}
       run: |
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/yarp
