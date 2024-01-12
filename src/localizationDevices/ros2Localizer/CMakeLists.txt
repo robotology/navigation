@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 iCub Facility - IIT Istituto Italiano di Tecnologia 
+# Copyright (C) 2016 iCub Facility - IIT Istituto Italiano di Tecnologia
 # Author: Marco Randazzo marco.randazzo@iit.it
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
@@ -20,7 +20,7 @@ yarp_prepare_plugin(ros2Localizer
 if(SKIP_ros2Localizer)
    return()
 endif()
-                                            
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 file(GLOB folder_source *.cpp)
@@ -30,12 +30,11 @@ source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
 
 yarp_add_plugin(ros2Localizer ${folder_source} ${folder_header})
-                              
+
 target_link_libraries(ros2Localizer YARP::YARP_os
                                     YARP::YARP_sig
                                     YARP::YARP_dev
                                     YARP::YARP_math
-                                    YARP::YARP_rosmsg
                                     navigation_lib
                                     rclcpp::rclcpp
                                     nav2_msgs::nav2_msgs__rosidl_typesupport_cpp
@@ -54,7 +53,7 @@ yarp_install(TARGETS ros2Localizer
            ARCHIVE DESTINATION ${NAVIGATION_STATIC_PLUGINS_INSTALL_DIR}
            YARP_INI DESTINATION ${NAVIGATION_PLUGIN_MANIFESTS_INSTALL_DIR})
 
-           
+
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
 set_property(TARGET ros2Localizer PROPERTY FOLDER "Plugins/Localization Devices")
