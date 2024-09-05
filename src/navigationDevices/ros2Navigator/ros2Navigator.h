@@ -26,11 +26,13 @@
 #include <yarp/dev/INavigation2D.h>
 #include <yarp/dev/ILocalization2D.h>
 #include <yarp/dev/IMap2D.h>
+#include <yarp/dev/Map2DPath.h>
 #include <mutex>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <nav2_msgs/action/navigate_to_pose.hpp>
+#include <nav2_msgs/action/navigate_through_poses.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <yarp/math/Math.h>
@@ -82,6 +84,7 @@ protected:
     Ros2Spinner *m_innerSpinner{nullptr};
     rclcpp::Node::SharedPtr m_node{nullptr};
     rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SharedPtr client_ptr_;
+    rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SharedPtr nav_through_pose_client_ptr_;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr m_ros2Subscriber_globalPath;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr m_ros2Subscriber_localPath;
     rclcpp::Subscription<nav2_msgs::action::NavigateToPose::Impl::FeedbackMessage>::SharedPtr navigation_feedback_sub_;
@@ -124,6 +127,13 @@ public:
      * @return true/false if the command is accepted
      */
     bool gotoTargetByRelativeLocation(double x, double y) override;
+
+    /**
+     * Ask the robot to pass through a set of locations defined in the world reference frame
+     * @param locs the locations to be reached
+     * @return true/false
+    */
+    bool followPath(const yarp::dev::Nav2D::Map2DPath& path) override;
 
     /**
      * //Gets the last target set through a setNewAbsTarget() command.

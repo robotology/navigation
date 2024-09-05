@@ -24,6 +24,7 @@
  * A detailed description of configuration parameters available for the module is provided in the README.md file.
  */
 
+#include <yarp/os/Log.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
@@ -153,6 +154,12 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
     b &= m_plannerThread->setNewRelTarget(v);
     m_plannerThread->resetAttemptCounter();
     return b;
+}
+
+bool robotPathPlannerDev::followPath(const Map2DPath& path)
+{
+    yError("robotPathPlannerDev::goThroughTargetsByAbsoluteLocations() not implemented yet");
+    return false;
 }
 
 bool robotPathPlannerDev::recomputeCurrentNavigationPath()

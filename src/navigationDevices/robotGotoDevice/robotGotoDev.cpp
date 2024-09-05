@@ -244,6 +244,12 @@ bool robotGotoDev::gotoTargetByRelativeLocation(double x, double y)
     return b;
 }
 
+bool robotGotoDev::followPath(const yarp::dev::Nav2D::Map2DPath& path)
+{
+    yCError(GOTO_DEV) << "Not yet implemented";
+    return false;
+}
+
 bool robotGotoDev::stopNavigation()
 {
     bool b=gotoThread->stopMovement();

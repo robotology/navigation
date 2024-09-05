@@ -74,6 +74,13 @@ public:
     bool gotoTargetByRelativeLocation(double x, double y, double theta) override;
 
     /**
+     * Ask the robot to pass through a set of locations defined in the world reference frame
+     * @param path the path to follow
+     * @return true/false
+    */
+    bool followPath(const yarp::dev::Nav2D::Map2DPath& path) override;
+
+    /**
     * //Gets the last target set through a setNewAbsTarget() command.
     * @return a Map2DLocation containing data of the current target.
     * @return true if a target is currently available, false otherwise (in this case returned target is invalid)

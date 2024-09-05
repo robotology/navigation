@@ -17,6 +17,7 @@
  */
 
 #include "ros2Navigator.h"
+#include <geometry_msgs/msg/detail/pose_stamped__struct.hpp>
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -113,6 +114,7 @@ bool ros2Navigator::open(yarp::os::Searchable &config)
     {
         m_node = NodeCreator::createNode(m_nodeName);
         client_ptr_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(m_node, "navigate_to_pose");
+        nav_through_pose_client_ptr_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(m_node, "navigate_through_poses");
         m_ros2Subscriber_globalPath = m_node->create_subscription<nav_msgs::msg::Path>(m_rosTopicName_globalPath, 10, std::bind(&ros2Navigator::globalPath_callback, this, _1));
         m_ros2Subscriber_localPath = m_node->create_subscription<nav_msgs::msg::Path>(m_rosTopicName_localPath, 10, std::bind(&ros2Navigator::localPath_callback, this, _1));
 
@@ -362,6 +364,53 @@ bool ros2Navigator::gotoTargetByRelativeLocation(double x, double y)
     loc.y = m_current_position.y + y;
     loc.theta = m_current_position.theta;
     return gotoTargetByAbsoluteLocation(loc);
+}
+
+bool ros2Navigator::followPath(const yarp::dev::Nav2D::Map2DPath &path)
+{
+
+    if (!nav_through_pose_client_ptr_->wait_for_action_server())
+    {
+        yCWarning(ROS2_NAV) << "Action server not available after waiting for seconds.";
+    }
+
+    auto goal_msg = nav2_msgs::action::NavigateThroughPoses::Goal();
+
+    std::vector<geometry_msgs::msg::PoseStamped> poses; // vector of 2Dposes
+    for (auto location = path.cbegin(); location != path.cend(); location++){
+        geometry_msgs::msg::Pose goal_pose;
+
+        goal_pose.position.x = location->x;
+        goal_pose.position.y = location->y;
+        goal_pose.position.z = 0;
+        yarp::math::Quaternion q;
+        yarp::sig::Vector v(4);
+        v[0] = 0;
+        v[1] = 0;
+        v[2] = 1;
+        v[3] = location->theta * DEG2RAD;
+        q.fromAxisAngle(v);
+        goal_pose.orientation.x = q.x();
+        goal_pose.orientation.y = q.y();
+        goal_pose.orientation.z = q.z();
+        goal_pose.orientation.w = q.w();
+
+        geometry_msgs::msg::PoseStamped pose_stamped;
+        double temp_current_time_secs = yarp::os::Time::now();
+        pose_stamped.header.frame_id = m_abs_frame_id;
+        pose_stamped.header.stamp.sec = temp_current_time_secs;
+        pose_stamped.header.stamp.nanosec = 0;
+        pose_stamped.pose = goal_pose;
+
+        poses.push_back(std::move(pose_stamped)); //we move because it's cheaper than copying
+    }
+
+    goal_msg.poses = poses;
+    
+    auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
+    nav_through_pose_client_ptr_->async_send_goal(goal_msg, send_goal_options);
+    setNavigationStatus(navigation_status_preparing_before_move);
+    return true;
 }
 
 bool ros2Navigator::getNavigationStatus(NavigationStatusEnum &status)
