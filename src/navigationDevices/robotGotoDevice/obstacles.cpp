@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C)2011  Department of Robotics Brain and Cognitive Sciences - Istituto Italiano di Tecnologia
  * Author: Marco Randazzo
  * email:  marco.randazzo@iit.it
@@ -126,7 +126,7 @@ int obstacles_class::pnpoly(int nvert, double *vertx, double *verty, double test
 }
 
 
-bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementData>& laser_data)
+bool obstacles_class::compute_obstacle_avoidance(std::vector<yarp::sig::LaserMeasurementData>& laser_data)
 {
     /*
     double correction = m_angle_f;
@@ -189,7 +189,7 @@ bool obstacles_class::compute_obstacle_avoidance(std::vector<LaserMeasurementDat
     return true;
 }
 
-bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data, double beta)
+bool obstacles_class::check_obstacles_in_path(std::vector<yarp::sig::LaserMeasurementData>& laser_data, double beta)
 {
     static double last_time_error_message = 0;
     int laser_obstacles  = 0;
