@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C)2011  Department of Robotics Brain and Cognitive Sciences - Istituto Italiano di Tecnologia
  * Author: Marco Randazzo
  * email:  marco.randazzo@iit.it
@@ -36,6 +36,7 @@
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/ILocalization2D.h>
+#include <yarp/sig/LaserMeasurementData.h>
 #include <string>
 #include <math.h>
 #include <mutex>
@@ -84,7 +85,7 @@ public:
     double m_beta_angle_threshold;
     double m_gain_lin;
     double m_gain_ang;
-    double m_goal_tolerance_lin;  //m 
+    double m_goal_tolerance_lin;  //m
     double m_goal_tolerance_ang;  //deg
     double m_max_lin_speed;       //m/s
     double m_max_ang_speed;       //deg/s
@@ -95,7 +96,7 @@ public:
     double m_default_beta_angle_threshold;
     double m_default_gain_lin;
     double m_default_gain_ang;
-    double m_default_goal_tolerance_lin;  //m 
+    double m_default_goal_tolerance_lin;  //m
     double m_default_goal_tolerance_ang;  //deg
     double m_default_max_lin_speed;       //m/s
     double m_default_max_ang_speed;       //deg/s
@@ -136,8 +137,8 @@ protected:
     Searchable                         &m_cfg;
     yarp::dev::Nav2D::Map2DLocation    m_localization_data;
     target_type                        m_target_data;
-    std::vector<LaserMeasurementData>  m_laser_data;
-    
+    std::vector<yarp::sig::LaserMeasurementData>  m_laser_data;
+
     Nav2D::NavigationStatusEnum m_status;
     Nav2D::NavigationStatusEnum m_status_after_approach;
     double               m_retreat_duration_time;
@@ -162,7 +163,7 @@ protected:
        void zero() { linear_vel = 0; linear_dir = 0; angular_vel = 0; }
     }
     m_control_out;
-    
+
     ////////////////////////////////////////
     //METHODS
     ///////////////////////////////////////
@@ -186,101 +187,101 @@ public:
     * @return true if the command is executed successfully, false otherwise
     */
     bool          getCurrentPos(yarp::dev::Nav2D::Map2DLocation& loc);
-    
+
     /**
     * Sets a new target, expressed in the map reference frame.
     * @param target a three-elements vector containing the robot pose (x,y,theta)
     */
     void          setNewAbsTarget(yarp::sig::Vector target);
-    
+
     /**
     * Sets a new target, expressed in the robot reference frame.
     * @param target a three-elements vector containing the robot pose (x,y,theta)
     */
     void          setNewRelTarget(yarp::sig::Vector target);
-    
+
     /**
-    * Performs an open-loop movement: the robot is commanded to move in the desired direction for 
+    * Performs an open-loop movement: the robot is commanded to move in the desired direction for
     * a determined amount of time, regardless the presence of obstacle in the path.
     * @param dir the desired direction (in the robot reference frame)
     * @param speed the velocity of the movement, expressed in m/s
     * @param time the duration of the approach command, expressed in seconds
     */
     void          approachTarget(double dir, double speed, double time);
-    
+
     /**
     * Restores all internal parameters (such as max/min velocities, goal tolerance etc) to the values
     * defined in the configuration files.
     */
     void          resetParamsToDefaultValue();
-    
+
     /**
     * Terminates a previously started navigation task.
     * @return true if the operation was successful, false otherwise.
     */
     bool          stopMovement();
-    
+
     /**
     * Pauses the robot navigation
     * @param sec the duration of the pause, expressed in seconds. A negative number means forever.
     * @return true if the operation was successful, false otherwise.
     */
     bool          pauseMovement (double secs=-1);
-    
+
     /**
     * Resumes the robot navigation after a previous pauseMovement()
     * @return true if the operation was successful, false otherwise.
     */
     bool          resumeMovement();
-    
+
     /**
     * Returns the current navigation status used by the internal finite-state machine
     * @return the internal navigation status, expressed as a string
     */
     string        getNavigationStatusAsString();
-    
+
     /**
     * Returns the current navigation status, used by the internal finite-state machine
     * @return the internal navigation status, expressed as an enum
     */
     Nav2D::NavigationStatusEnum getNavigationStatusAsInt();
-    
+
     /**
     * Retrieves the current target, expressed in absolute (map) reference frame
     * @param the current target (set by a setNewAbsTarget)
     * @return true if the returned target is valid, false otherwise
     */
     bool getCurrentAbsTarget(Nav2D::Map2DLocation& target);
-    
+
     /**
     * Retrieves the current target, expressed in robot reference frame
     * @param the current target (set by a setNewRelTarget)
     * @return true if the returned target is valid, false otherwise
     */
     bool getCurrentRelTarget(Nav2D::Map2DLocation& target);
-    
+
     /**
     * Prints stats about the internal status of the module
     */
     void          printStats();
-    
+
 private:
     /**
     * Sends Cartesian velocities commands to a yarp output port (typically connected to baseControl)
     */
     void        sendOutput();
-    
+
     /**
     * Obtains current robot position through a ILocalization2D interface.
     * @return true if data is successfully retrieved from the localization server, false otherwise
     */
     bool  evaluateLocalization();
-    
+
     /**
     * Obtains laser data through a IRangefinder2D interface.
     */
     void getLaserData();
-    
+
     /**
     * Checks the computed control outputs and saturates them if necessary.
     */
