@@ -129,10 +129,10 @@ Result ObstacleVerifier::checkObstaclesInPath()
 }
 
 
-bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<LaserMeasurementData> & laser_data)
+bool ObstacleVerifier::checkObstaclesInPath_helper(std::vector<yarp::sig::LaserMeasurementData> & laser_data)
 {
     //--------------------------------------------------------------------------------------------
-    //bool obstacles_class::check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data)
+    //bool obstacles_class::check_obstacles_in_path(std::vector<yarp::sig::LaserMeasurementData>& laser_data)
     //--------------------------------------------------------------------------------------------
 
 
