@@ -24,6 +24,7 @@
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/LaserMeasurementData.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/PeriodicThread.h>
@@ -284,7 +285,7 @@ bool  NavGuiThread::readNavigationStatus(bool& changed)
 
 void  NavGuiThread::readLaserData()
 {
-    std::vector<LaserMeasurementData> scan;
+    std::vector<yarp::sig::LaserMeasurementData> scan;
     bool ret = m_iLaser->getLaserMeasurement(scan);
 
     if (ret)

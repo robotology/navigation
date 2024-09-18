@@ -17,7 +17,7 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/LaserMeasurementData.h>
+#include <yarp/sig/LaserMeasurementData.h>
 
 #include <vector>
 
@@ -55,14 +55,14 @@ namespace FollowerTarget
             yarp::dev::IRangefinder2D * m_laser;
             yarp::dev::PolyDriver      m_driver;
             bool m_isRunning;
-            std::vector<yarp::dev::LaserMeasurementData>  m_laser_data;
+            std::vector<yarp::sig::LaserMeasurementData>  m_laser_data;
 
             double last_time_error_message;
             double m_last_print_time;
             bool m_debugOn;
 
             bool initLaserClient(yarp::os::ResourceFinder &rf);
-            bool checkObstaclesInPath_helper(std::vector<yarp::dev::LaserMeasurementData>& laser_data);
+            bool checkObstaclesInPath_helper(std::vector<yarp::sig::LaserMeasurementData>& laser_data);
             int pnpoly(int nvert, double *vertx, double *verty, double testx, double testy);
         };
     }

@@ -1,9 +1,9 @@
 /*
-•   Copyright (C) 2020 Istituto Italiano di Tecnologia (IIT)
-•   All rights reserved.
-•
-•   This software may be modified and distributed under the terms of the
-•   GPL-2+ license. See the accompanying LICENSE file for details.
+ï¿½   Copyright (C) 2020 Istituto Italiano di Tecnologia (IIT)
+ï¿½   All rights reserved.
+ï¿½
+ï¿½   This software may be modified and distributed under the terms of the
+ï¿½   GPL-2+ license. See the accompanying LICENSE file for details.
 */
 
 #include <yarp/os/Network.h>
@@ -116,7 +116,7 @@ protected:
     yarp::os::BufferedPort<yarp::dev::OdometryData> m_port_pd_debug_out;
 #endif
 
-    //map interface 
+    //map interface
     yarp::dev::PolyDriver        m_pMap;
     yarp::dev::Nav2D::IMap2D*    m_iMap;
     yarp::dev::Nav2D::MapGrid2D  m_yarp_map;
@@ -124,7 +124,7 @@ protected:
     //laser client
     yarp::dev::PolyDriver                        m_pLas;
     yarp::dev::IRangefinder2D*                   m_iLaser;
-    std::vector<yarp::dev::LaserMeasurementData> m_laser_measurement_data;
+    std::vector<yarp::sig::LaserMeasurementData> m_laser_measurement_data;
     double                                       m_laser_measurement_timestamp;
     double                                       m_min_laser_angle;
     double                                       m_max_laser_angle;

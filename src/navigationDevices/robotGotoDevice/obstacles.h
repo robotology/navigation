@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C)2017  iCub Facility - Istituto Italiano di Tecnologia
  * Author: Marco Randazzo
  * email:  marco.randazzo@iit.it
@@ -30,6 +30,7 @@
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/LaserMeasurementData.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/PeriodicThread.h>
@@ -78,8 +79,8 @@ public:
 public:
     obstacles_class(Searchable  &rf);
     //beta is the direction (in degrees) in which the robot wants to move, in the robot reference frame
-    bool check_obstacles_in_path(std::vector<LaserMeasurementData>& laser_data, double beta);
-    bool compute_obstacle_avoidance(std::vector<LaserMeasurementData>& laser_data);
+    bool check_obstacles_in_path(std::vector<yarp::sig::LaserMeasurementData>& laser_data, double beta);
+    bool compute_obstacle_avoidance(std::vector<yarp::sig::LaserMeasurementData>& laser_data);
     double get_max_time_waiting_for_obstacle_removal();
     void set_safety_coeff(double val);
 

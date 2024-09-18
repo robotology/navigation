@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C)2011  Department of Robotics Brain and Cognitive Sciences - Istituto Italiano di Tecnologia
  * Author: Marco Randazzo
  * email:  marco.randazzo@iit.it
@@ -29,6 +29,7 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/INavigation2D.h>
+#include <yarp/sig/LaserMeasurementData.h>
 #include <string>
 
 #define _USE_MATH_DEFINES
@@ -75,7 +76,7 @@ bool  PlannerThread::readLocalizationData()
         yCWarning(PATHPLAN_CTRL) << "Current map name ("<<m_current_map.getMapName()<<") != m_localization_data.map_id ("<< m_localization_data.map_id <<")";
         yCInfo(PATHPLAN_CTRL) << "Asking the map '"<< m_localization_data.map_id << "' to the MAP server";
         bool b = reloadCurrentMap();
-    
+
         yarp::os::Time::delay(1.0);
         if (b){return true;}
         else  { return true; //consider changing this to false
@@ -110,7 +111,7 @@ bool  PlannerThread::internal_controller_t::readInnerNavigationStatus()
     {
         if (yarp::os::Time::now() - last_print_time > 1.0)
         {
-            yCError(PATHPLAN_CTRL) << "Inner status = error"; 
+            yCError(PATHPLAN_CTRL) << "Inner status = error";
             yarp::os::Time::delay(1.0);
             last_print_time = yarp::os::Time::now();
         }
@@ -121,7 +122,7 @@ bool  PlannerThread::internal_controller_t::readInnerNavigationStatus()
 
 void  PlannerThread::readLaserData()
 {
-    std::vector<LaserMeasurementData> scan;
+    std::vector<yarp::sig::LaserMeasurementData> scan;
     bool ret = m_iLaser->getLaserMeasurement(scan);
 
     if (ret)
@@ -180,7 +181,7 @@ bool prepare_image(IplImage* & image_to_be_prepared, const IplImage* template_im
         yCError(PATHPLAN_CTRL) << "PlannerThread::draw_map cannot copy an empty image!";
         return false;
     }
-    if (image_to_be_prepared == 0) 
+    if (image_to_be_prepared == 0)
     {
         image_to_be_prepared = cvCloneImage(template_image);
     }
@@ -222,7 +223,7 @@ void PlannerThread::run()
         if (err == false)
             yCInfo(PATHPLAN_CTRL) << "robotPathPlanner running, ALL ok. Navigation status:" << this->getNavigationStatusAsString();
     }
-    
+
     m_mutex.wait();
     //double check1 = yarp::os::Time::now();
     readLocalizationData();
@@ -582,7 +583,7 @@ void PlannerThread::run()
         b.addString(s.c_str());
         m_port_status_output.write();
     }
-    
+
     m_mutex.post();
 }
 
@@ -672,7 +673,7 @@ bool  PlannerThread::getCurrentPath(yarp::dev::Nav2D::Map2DPath& current_path) c
     return false;
 }
 
-bool PlannerThread::getOstaclesMap(MapGrid2D& obstacles_map) 
+bool PlannerThread::getOstaclesMap(MapGrid2D& obstacles_map)
 {
     m_temporary_obstacles_map_mutex.lock();
     obstacles_map = m_temporary_obstacles_map;
@@ -759,7 +760,7 @@ bool PlannerThread::startPath()
     start.y = 150;//&&&&&
 #endif
     double t1 = yarp::os::Time::now();
-    //clear the memory 
+    //clear the memory
     m_computed_path.clear();
     m_computed_simplified_path.clear();
     m_planner_status = navigation_status_thinking;
