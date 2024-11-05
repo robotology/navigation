@@ -1,6 +1,6 @@
-#include "opencv2/imgproc.hpp"
-#include "opencv2/highgui.hpp"
-#include <cv.h>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include <math.h>
 #include <iostream>
 #include <yarp/dev/MapGrid2D.h>
@@ -14,6 +14,7 @@ using namespace cv;
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 const int w = 500;
 int levels = 3;
@@ -88,14 +89,14 @@ int main( int argc, char** argv)
         for (auto y = 0; y <h; y++)
         {
             unsigned char c = 0;
-            yarp::dev::MapGrid2D::map_flags pixin;
-            the_map.getMapFlag(yarp::dev::MapGrid2D::XYCell(x, y), pixin);
-            if      (pixin == yarp::dev::MapGrid2D::MAP_CELL_WALL) { c = 0;}
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN) { c = 0; }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_FREE) { c = 255; }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_KEEP_OUT) { c = 255; }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE) { c = 255;   }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE) { c = 255;  }
+            MapGrid2D::map_flags pixin;
+            the_map.getMapFlag(XYCell(x, y), pixin);
+            if      (pixin == MapGrid2D::MAP_CELL_WALL) { c = 0;}
+            else if (pixin == MapGrid2D::MAP_CELL_UNKNOWN) { c = 0; }
+            else if (pixin == MapGrid2D::MAP_CELL_FREE) { c = 255; }
+            else if (pixin == MapGrid2D::MAP_CELL_KEEP_OUT) { c = 255; }
+            else if (pixin == MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE) { c = 255;   }
+            else if (pixin == MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE) { c = 255;  }
             img.at<unsigned char>(x, y) = c;
         }
 #endif
@@ -108,7 +109,7 @@ int main( int argc, char** argv)
     contours.resize(contours0.size());
     for (size_t k = 0; k < contours0.size(); k++)
     {
-        yarp::dev::Map2DArea area;
+        Map2DArea area;
         double accuracy = 4;
         approxPolyDP(Mat(contours0[k]), contours[k], accuracy, true);
 #if SIMULATION_ONLY

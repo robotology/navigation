@@ -1,6 +1,6 @@
-#include "opencv2/imgproc.hpp"
-#include "opencv2/highgui.hpp"
-#include <cv.h>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include <math.h>
 #include <iostream>
 #include <yarp/dev/MapGrid2D.h>
@@ -14,6 +14,7 @@ using namespace cv;
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::dev::Nav2D;
 
 #define FROM_MAPS 1
 //#define DRAW_WINDOWS 1
@@ -59,7 +60,7 @@ int main( int argc, char** argv)
 
     // Perform the distance transform algorithm
     cv::Mat dist;
-    distanceTransform(img, dist, CV_DIST_L2, 3);
+    distanceTransform(img, dist, DistanceTypes::DIST_L2, 3);
     // Normalize the distance image for range = {0.0, 1.0)
     normalize(dist, dist, 0, 1., cv::NORM_MINMAX);
 
@@ -68,7 +69,7 @@ int main( int argc, char** argv)
     imshow( "distNorm", dist );
 #endif
     // Threshold to obtain the peaks
-    threshold(dist, dist, .4, 1., CV_THRESH_BINARY);
+    threshold(dist, dist, .4, 1., ThresholdTypes::THRESH_BINARY);
 
 #ifdef DRAW_WINDOWS
     namedWindow( "distThresh", 1 );
@@ -93,7 +94,7 @@ int main( int argc, char** argv)
     // Find the contours
     std::vector<std::vector<cv::Point> > cnt;
 
-    findContours(dist_8u,cnt,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
+    findContours(dist_8u,cnt, RetrievalModes::RETR_EXTERNAL, ContourApproximationModes::CHAIN_APPROX_NONE);
 
 
     // Get the moments and mass center (future use)
@@ -107,8 +108,8 @@ int main( int argc, char** argv)
 
     for( size_t i = 0; i< cnt.size(); i++ )
     {
-        // Draw the forground marker
-        drawContours(markers, cnt, static_cast<int>(i), cv::Scalar::all(static_cast<int>(i)+1), CV_FILLED);
+        // Draw the foreground marker
+        drawContours(markers, cnt, static_cast<int>(i), cv::Scalar::all(static_cast<int>(i)+1), LineTypes::FILLED);
 
         //collect moments and mass center (mc) of each contours. Currently I don't need them, maybe later....
         mu[i] = moments( cnt[i], false );
@@ -124,7 +125,7 @@ int main( int argc, char** argv)
     imshow( "Marker1000", markers*10000 );
 #endif
 
-    cv::cvtColor(img, img, CV_GRAY2RGB);
+    cv::cvtColor(img, img, ColorConversionCodes::COLOR_GRAY2RGB);
 
     watershed(img, markers);
 
@@ -180,8 +181,8 @@ int main( int argc, char** argv)
 
     vector<vector<Point> > contours0;
     vector<Vec4i> hierarchy;
-    //findContours( im_gray, contours0, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-    findContours( im_gray, contours0, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    //findContours( im_gray, contours0, hierarchy, RETR_TREE, ContourApproximationModes::CHAIN_APPROX_SIMPLE);
+    findContours( im_gray, contours0, RETR_EXTERNAL, ContourApproximationModes::CHAIN_APPROX_NONE);
 
     Mat drawing0= Mat::zeros( im_gray.size(), CV_8UC1 );
 
@@ -204,7 +205,7 @@ int main( int argc, char** argv)
         vector<vector<Point> > contours;
 
         //find contours, only external pixels?
-        findContours( drawingList[i], contours, RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+        findContours( drawingList[i], contours, RETR_EXTERNAL, ContourApproximationModes::CHAIN_APPROX_NONE);
 
         //calculate the max area
         maxArea[i]=contourArea(contours[0]); //one only contour for i-th room
@@ -225,7 +226,7 @@ int main( int argc, char** argv)
         //contours11.resize(contours[0].size());
         contours11.resize(1);
 
-        yarp::dev::Map2DArea area;
+        Map2DArea area;
         double accuracy = 3;
         approxPolyDP(Mat(contours0[i]), contours11[0], accuracy, true);
 #if SIMULATION_ONLY
@@ -240,7 +241,7 @@ int main( int argc, char** argv)
             area.points.push_back(yarp::math::Vec2D<double>(contours[k][kk].x, contours[k][kk].y));
             yDebug() << k << " " << kk << " x:" << contours[k][kk].x << " y:" << contours[k][kk].y;
 #else
-            MapGrid2D::XYWorld worldc = the_map.cell2World(MapGrid2D::XYCell(contours11[0][kk].x, contours11[0][kk].y));
+            XYWorld worldc = the_map.cell2World(XYCell(contours11[0][kk].x, contours11[0][kk].y));
             area.points.push_back(yarp::math::Vec2D<double>(worldc.x, worldc.y));
             yDebug() << i << " " << kk << " x:" << contours11[0][kk].x << "(" << worldc.x << ") y:" << contours11[0][kk].y << " (" << worldc.y << ")";
 #endif
@@ -254,7 +255,7 @@ int main( int argc, char** argv)
         std::string area_name = "auto_area" + to_string(i);
         if (m_iMap->storeArea(area_name, area))
         {
-            yInfo() << "Area " << area_name << "succesfully stored into map server";
+            yInfo() << "Area " << area_name << "successfully stored into map server";
         }
         else
         {
@@ -310,19 +311,19 @@ static bool getImage(cv::Mat &img, std::string mapname)
     size_t w = the_map.width();
     size_t h = the_map.height();
     yInfo() << "get image of size " << w << h;
-    img = Mat::zeros(h,w, CV_8UC1);
+    img = Mat::zeros((int)h, (int)w, CV_8UC1);
     for (auto x=0; x<w; x++)
         for (auto y = 0; y <h; y++)
         {
             unsigned char c = 0;
-            yarp::dev::MapGrid2D::map_flags pixin;
-            the_map.getMapFlag(yarp::dev::MapGrid2D::XYCell(x, y), pixin);
-            if      (pixin == yarp::dev::MapGrid2D::MAP_CELL_WALL) { c = 0;}
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_UNKNOWN) { c = 0; }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_FREE) { c = 255; }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_KEEP_OUT) { c = 255; }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE) { c = 255;   }
-            else if (pixin == yarp::dev::MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE) { c = 255;  }
+            MapGrid2D::map_flags pixin;
+            the_map.getMapFlag(XYCell(x, y), pixin);
+            if      (pixin == MapGrid2D::MAP_CELL_WALL) { c = 0;}
+            else if (pixin == MapGrid2D::MAP_CELL_UNKNOWN) { c = 0; }
+            else if (pixin == MapGrid2D::MAP_CELL_FREE) { c = 255; }
+            else if (pixin == MapGrid2D::MAP_CELL_KEEP_OUT) { c = 255; }
+            else if (pixin == MapGrid2D::MAP_CELL_ENLARGED_OBSTACLE) { c = 255;   }
+            else if (pixin == MapGrid2D::MAP_CELL_TEMPORARY_OBSTACLE) { c = 255;  }
             img.at<unsigned char>(y, x) = c;
         }
 
