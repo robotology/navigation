@@ -41,6 +41,7 @@ target_link_libraries(ros2Navigator YARP::YARP_os
     nav2_msgs::nav2_msgs__rosidl_typesupport_cpp
     nav_msgs::nav_msgs__rosidl_typesupport_cpp
     geometry_msgs::geometry_msgs__rosidl_typesupport_cpp
+    visualization_msgs::visualization_msgs__rosidl_typesupport_cpp
     navigation_lib)
 
 yarp_install(TARGETS ros2Navigator

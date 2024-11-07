@@ -33,6 +33,7 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <nav2_msgs/action/navigate_to_pose.hpp>
 #include <nav2_msgs/action/navigate_through_poses.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <yarp/math/Math.h>
@@ -89,6 +90,7 @@ protected:
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr m_ros2Subscriber_localPath;
     rclcpp::Subscription<nav2_msgs::action::NavigateToPose::Impl::FeedbackMessage>::SharedPtr navigation_feedback_sub_;
     rclcpp::Subscription<nav2_msgs::action::NavigateToPose::Impl::GoalStatusMessage>::SharedPtr navigation_goal_status_sub_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr m_ros2Publisher;
 
 public:
     ros2Navigator();

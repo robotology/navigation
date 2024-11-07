@@ -117,7 +117,8 @@ bool ros2Navigator::open(yarp::os::Searchable &config)
         nav_through_pose_client_ptr_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(m_node, "navigate_through_poses");
         m_ros2Subscriber_globalPath = m_node->create_subscription<nav_msgs::msg::Path>(m_rosTopicName_globalPath, 10, std::bind(&ros2Navigator::globalPath_callback, this, _1));
         m_ros2Subscriber_localPath = m_node->create_subscription<nav_msgs::msg::Path>(m_rosTopicName_localPath, 10, std::bind(&ros2Navigator::localPath_callback, this, _1));
-
+        m_ros2Publisher = m_node->create_publisher<visualization_msgs::msg::Marker>("ros2_navigator_goal_marker", 10);
+ 
         // Navigation feedback lambda
         navigation_feedback_sub_ = m_node->create_subscription<nav2_msgs::action::NavigateToPose::Impl::FeedbackMessage>(
             "navigate_to_pose/_action/feedback", rclcpp::SystemDefaultsQoS(),
@@ -339,6 +340,18 @@ bool ros2Navigator::gotoTargetByAbsoluteLocation(Map2DLocation loc)
     goal_msg.pose.header.stamp.sec = temp_current_time_secs;
     goal_msg.pose.header.stamp.nanosec = 0;
     goal_msg.pose.pose = goal_pose;
+
+    auto goal_marker = visualization_msgs::msg::Marker();
+    goal_marker.header.frame_id = m_abs_frame_id;
+    goal_marker.header.stamp.sec = temp_current_time_secs;
+    goal_marker.header.stamp.nanosec = 0;
+    goal_marker.ns = "ros2_nav_goal_marker";
+    goal_marker.id = 0;
+    goal_marker.type = 0;
+    goal_marker.action = 0;
+    goal_marker.pose = goal_pose;
+    
+    m_ros2Publisher->publish(goal_marker);
 
     auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
     client_ptr_->async_send_goal(goal_msg, send_goal_options);
