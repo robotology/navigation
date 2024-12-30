@@ -1,9 +1,8 @@
-/******************************************************************************
- *                                                                            *
- * Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)        *
- * All Rights Reserved.                                                       *
- *                                                                            *
- ******************************************************************************/
+/*
+ * SPDX-FileCopyrightText: 2024 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 /**
  * @file Person3DPPointRetriver.cpp
  * @authors: Valentina Gaggero <valentina.gaggero@iit.it>

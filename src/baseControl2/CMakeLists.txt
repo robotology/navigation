@@ -1,8 +1,7 @@
-#
-# Copyright (C) 2017 RobotCub Consortium
-# Author: Marco Randazzo marco.randazzo@iit.it
-# CopyPolicy: Released under the terms of the GNU GPL v2.0.
-#
+/*
+ * SPDX-FileCopyrightText: 2024 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
 set(PROJECTNAME baseControl2)
 project(${PROJECTNAME})
