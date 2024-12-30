@@ -1,12 +1,7 @@
-/* 
-* Copyright (C) 2006-2018 Istituto Italiano di Tecnologia (IIT)
-* All rights reserved.
- * Author: Marco Randazzo
- * email:  marco.randazzo@iit.it
-
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
-*/
+/*
+ * SPDX-FileCopyrightText: 2024 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>

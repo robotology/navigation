@@ -1,10 +1,7 @@
 /*
-•   Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
-•   All rights reserved.
-•
-•   This software may be modified and distributed under the terms of the
-•   GPL-2+ license. See the accompanying LICENSE file for details.
-*/
+ * SPDX-FileCopyrightText: 2024 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
