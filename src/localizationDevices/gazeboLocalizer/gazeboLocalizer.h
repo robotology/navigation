@@ -26,6 +26,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/ReturnValue.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/RpcClient.h>
@@ -72,15 +73,15 @@ public:
 
 public:
 
-    bool   getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
-    bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
-    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
-    bool   getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
-    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
-    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
-    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
-    bool   startLocalizationService() override;
-    bool   stopLocalizationService() override;
+    yarp::dev::ReturnValue  getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
+    yarp::dev::ReturnValue  getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
+    yarp::dev::ReturnValue  getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
+    yarp::dev::ReturnValue  getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
+    yarp::dev::ReturnValue  setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
+    yarp::dev::ReturnValue  getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
+    yarp::dev::ReturnValue  setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
+    yarp::dev::ReturnValue  startLocalizationService() override;
+    yarp::dev::ReturnValue  stopLocalizationService() override;
 };
 
 class gazeboLocalizerThread : public yarp::os::PeriodicThread,

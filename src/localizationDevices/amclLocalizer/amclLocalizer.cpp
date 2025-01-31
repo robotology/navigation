@@ -12,6 +12,7 @@
 #include <yarp/os/Port.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Node.h>
+#include <yarp/dev/ReturnValue.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
@@ -74,59 +75,60 @@ bool amclLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os:
 }
 
 
-bool   amclLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
+ReturnValue   amclLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
     status = LocalizationStatusEnum::localization_status_localized_ok;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool    amclLocalizer::startLocalizationService()
+ReturnValue    amclLocalizer::startLocalizationService()
 {
     yCError(AMCL_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool    amclLocalizer::stopLocalizationService()
+ReturnValue    amclLocalizer::stopLocalizationService()
 {
     yCError(AMCL_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
+
 }
 
-bool   amclLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov)
+ReturnValue   amclLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yCError(AMCL_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool   amclLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue   amclLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
     odom = m_thread->getOdometry();
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   amclLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
+ReturnValue   amclLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
     m_thread->getPoses(poses);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   amclLocalizer::getCurrentPosition(Map2DLocation& loc)
+ReturnValue   amclLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     m_thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   amclLocalizer::setInitialPose(const Map2DLocation& loc)
+ReturnValue   amclLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     m_thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   amclLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov)
+ReturnValue   amclLocalizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     m_thread->initializeLocalization(loc,cov);
-    return true;
+    return ReturnValue_ok;
 }
 
 //////////////////////////

@@ -196,7 +196,7 @@ bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp:
     return true;
 }
 
-bool robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocation loc)
+ReturnValue robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocation loc)
 {
     yarp::sig::Vector v;
     v.push_back(loc.x);
@@ -205,79 +205,80 @@ bool robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocation 
     {
         v.push_back(loc.theta);
     }
-    bool b = true;
     gotoThread->setNewAbsTarget(v);
-    return b;
+    return ReturnValue_ok;
 }
 
-bool robotGotoDev::gotoTargetByRelativeLocation(double x, double y, double theta)
+ReturnValue robotGotoDev::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
     yarp::sig::Vector v;
     v.push_back(x);
     v.push_back(y);
     v.push_back(theta);
-    bool b = true;
     gotoThread->setNewRelTarget(v);
-    return b;
+    return ReturnValue_ok;
 }
 
-bool robotGotoDev::gotoTargetByRelativeLocation(double x, double y)
+ReturnValue robotGotoDev::gotoTargetByRelativeLocation(double x, double y)
 {
     yarp::sig::Vector v;
     v.push_back(x);
     v.push_back(y);
-    bool b = true;
     gotoThread->setNewRelTarget(v);
-    return b;
+    return ReturnValue_ok;
 }
 
-bool robotGotoDev::followPath(const yarp::dev::Nav2D::Map2DPath& path)
+ReturnValue robotGotoDev::followPath(const yarp::dev::Nav2D::Map2DPath& path)
 {
     yCError(GOTO_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool robotGotoDev::stopNavigation()
+ReturnValue robotGotoDev::stopNavigation()
 {
     bool b=gotoThread->stopMovement();
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotGotoDev::suspendNavigation(double time)
+ReturnValue robotGotoDev::suspendNavigation(double time)
 {
     bool b= gotoThread->pauseMovement(time);
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotGotoDev::resumeNavigation()
+ReturnValue robotGotoDev::resumeNavigation()
 {
     bool b = gotoThread->resumeMovement();
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotGotoDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
+ReturnValue robotGotoDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     yCError(GOTO_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool robotGotoDev::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation& curr_waypoint)
+ReturnValue robotGotoDev::getCurrentNavigationWaypoint(yarp::dev::Nav2D::Map2DLocation& curr_waypoint)
 {
     yCError(GOTO_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
+
 }
 
-bool robotGotoDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
+ReturnValue robotGotoDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     yCError(GOTO_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool robotGotoDev::getNavigationStatus(NavigationStatusEnum& status)
+ReturnValue robotGotoDev::getNavigationStatus(NavigationStatusEnum& status)
 {
     int nav_status = gotoThread->getNavigationStatusAsInt();
     status = (NavigationStatusEnum)(nav_status);
-    return true;
+    return ReturnValue_ok;
 }
 
 //This function parses the user commands received through the RPC port
@@ -316,24 +317,26 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     return true;
 }
 
-bool robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Nav2D::Map2DLocation& target)
+ReturnValue robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Nav2D::Map2DLocation& target)
 {
     bool b= gotoThread->getCurrentAbsTarget(target);
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotGotoDev::recomputeCurrentNavigationPath()
+ReturnValue robotGotoDev::recomputeCurrentNavigationPath()
 {
     yCWarning(GOTO_DEV) << "robotGotoDev is not a navigation planner. recomputeCurrentNavigationPath() is not implemented.";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool robotGotoDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
+ReturnValue robotGotoDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
     Map2DLocation loc;
     bool b = gotoThread->getCurrentRelTarget(loc);
     x = loc.x;
     y = loc.y;
     theta = loc.theta;
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }

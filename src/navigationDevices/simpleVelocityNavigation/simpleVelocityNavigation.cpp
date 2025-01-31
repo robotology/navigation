@@ -133,18 +133,18 @@ void simpleVelocityNavigation::send_command(control_type control_data)
     m_port_commands_output.write();
 }
 
-bool simpleVelocityNavigation::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
+ReturnValue simpleVelocityNavigation::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
 {
     m_control_out.linear_xvel = x_vel;
     m_control_out.linear_yvel = y_vel;
     m_control_out.angular_vel = theta_vel;
     m_control_out.timeout = timeout;
     m_control_out.reception_time = yarp::os::Time::now();
-    return true;
+    return ReturnValue_ok;
 }
 
-bool simpleVelocityNavigation::getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel)
+ReturnValue simpleVelocityNavigation::getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel)
 {
     yCError(SIMPLE_VEL_NAV) << "getLastVelocityCommand() not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }

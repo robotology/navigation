@@ -61,37 +61,37 @@ bool pozyxLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os
 }
 
 
-bool   pozyxLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
+ReturnValue   pozyxLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
     status = LocalizationStatusEnum::localization_status_localized_ok;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   pozyxLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
+ReturnValue   pozyxLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
     Map2DLocation loc;
     m_thread->getCurrentLoc(loc);
     poses.push_back(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   pozyxLocalizer::getCurrentPosition(Map2DLocation& loc)
+ReturnValue   pozyxLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     m_thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool  pozyxLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  pozyxLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
     yCError(POZYX_DEV) << " pozyxLocalizer::getEstimatedOdometry is not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool   pozyxLocalizer::setInitialPose(const Map2DLocation& loc)
+ReturnValue   pozyxLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     m_thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
 //////////////////////////
@@ -406,28 +406,28 @@ bool pozyxLocalizer::close()
 }
  
 
-bool pozyxLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+ReturnValue pozyxLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yCWarning(POZYX_DEV) << "Covariance matrix is not currently handled by pozyxLocalizer";
     m_thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool pozyxLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+ReturnValue pozyxLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     yCWarning(POZYX_DEV) << "Covariance matrix is not currently handled by pozyxLocalizer";
     m_thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool  pozyxLocalizer::startLocalizationService()
+ReturnValue  pozyxLocalizer::startLocalizationService()
 {
     yCError(POZYX_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool  pozyxLocalizer::stopLocalizationService()
+ReturnValue  pozyxLocalizer::stopLocalizationService()
 {
     yCError(POZYX_DEV) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }

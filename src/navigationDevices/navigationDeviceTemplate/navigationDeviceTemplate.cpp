@@ -14,6 +14,7 @@
 #include "navigationDeviceTemplate.h"
 
 using namespace yarp::dev::Nav2D;
+using namespace yarp::dev;
 
 YARP_LOG_COMPONENT(NAVIGATOR_TEMPLATE, "navigation.NavigatonDeviceTemplate")
 
@@ -51,118 +52,124 @@ void navigationDeviceTemplate::run()
     //### TO BE IMPLEMENTED BY USER
 }
 
-bool navigationDeviceTemplate::gotoTargetByAbsoluteLocation(Map2DLocation loc)
+ReturnValue navigationDeviceTemplate::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
     if (m_navigation_status == navigation_status_idle)
     {
         //### TO BE IMPLEMENTED BY USER
-        return true;
+        return ReturnValue_ok;
     }
     yCError(NAVIGATOR_TEMPLATE) << "A navigation task is already running. Stop it first";
-    return false;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y)
+ReturnValue navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y)
 {
     if (m_navigation_status == navigation_status_idle)
     {
         //### TO BE IMPLEMENTED BY USER
-        return true;
+        return ReturnValue_ok;
     }
     yCError(NAVIGATOR_TEMPLATE) << "A navigation task is already running. Stop it first";
-    return false;
-
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
-bool navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y, double theta)
+
+ReturnValue navigationDeviceTemplate::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
     if (m_navigation_status == navigation_status_idle)
     {
         //### TO BE IMPLEMENTED BY USER
-        return true;
+        return ReturnValue_ok;
     }
     yCError(NAVIGATOR_TEMPLATE) << "A navigation task is already running. Stop it first";
-    return false;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool navigationDeviceTemplate::getNavigationStatus(NavigationStatusEnum& status)
+ReturnValue navigationDeviceTemplate::getNavigationStatus(NavigationStatusEnum& status)
 {
     status = m_navigation_status;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool navigationDeviceTemplate::stopNavigation()
+ReturnValue navigationDeviceTemplate::stopNavigation()
 {
     //### TO BE IMPLEMENTED BY USER
     m_navigation_status = navigation_status_idle;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool navigationDeviceTemplate::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
+ReturnValue navigationDeviceTemplate::followPath(const Map2DPath& path)
+{
+    //### TO BE IMPLEMENTED BY USER
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;;
+}
+
+ReturnValue navigationDeviceTemplate::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
     //### TO BE IMPLEMENTED BY USER
     Map2DLocation curr;
     target = curr;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool navigationDeviceTemplate::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
+ReturnValue navigationDeviceTemplate::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
     //### TO BE IMPLEMENTED BY USER
     Map2DLocation curr;
     x = curr.x;
     y = curr.y;
     theta = curr.theta;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool navigationDeviceTemplate::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
+ReturnValue navigationDeviceTemplate::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     //### TO BE IMPLEMENTED BY USER
-    return true;
+    return ReturnValue_ok;
 }
 
-bool navigationDeviceTemplate::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
+ReturnValue navigationDeviceTemplate::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
     //### TO BE IMPLEMENTED BY USER
-    return true;
+    return ReturnValue_ok;
 }
 
-bool navigationDeviceTemplate::suspendNavigation(double time)
+ReturnValue navigationDeviceTemplate::suspendNavigation(double time)
 {
     if (m_navigation_status == navigation_status_moving)
     {
         //### TO BE IMPLEMENTED BY USER
         m_navigation_status = navigation_status_paused;
-        return true;
+        return ReturnValue_ok;
     }
     yCError(NAVIGATOR_TEMPLATE) << "Unable to pause current navigation task";
-    return false;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool navigationDeviceTemplate::resumeNavigation()
+ReturnValue navigationDeviceTemplate::resumeNavigation()
 {
     if (m_navigation_status == navigation_status_paused)
     {
         //### TO BE IMPLEMENTED BY USER
-        return true;
+        return ReturnValue_ok;
     }
     yCError(NAVIGATOR_TEMPLATE) << "Unable to resume any paused navigation task";
-    return false;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool navigationDeviceTemplate::recomputeCurrentNavigationPath()
+ReturnValue navigationDeviceTemplate::recomputeCurrentNavigationPath()
 {
     if (m_navigation_status == navigation_status_moving)
     {
         //### TO BE IMPLEMENTED BY USER
-        return true;
+        return ReturnValue_ok;
     }
     yCError(NAVIGATOR_TEMPLATE) << "Unable to recompute path. Navigation task not assigned yet.";
-    return false;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool navigationDeviceTemplate::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
+ReturnValue navigationDeviceTemplate::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     //### TO BE IMPLEMENTED BY USER
-    return true;
+    return ReturnValue_ok;
 }

@@ -35,6 +35,7 @@
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 
 #ifndef M_PI
@@ -63,13 +64,13 @@ bool odomLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os:
 }
 
 
-bool   odomLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
+ReturnValue   odomLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
     status = LocalizationStatusEnum::localization_status_localized_ok;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
+ReturnValue   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
     Map2DLocation loc;
@@ -94,26 +95,26 @@ bool   odomLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
         poses.push_back(newloc);
     }
 #endif
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
+ReturnValue   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     m_thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
 //    odom = m_thread->getOdometry(); //from the estimator
     m_thread->getLastOdometryDataFromPort(odom);
-    return false;
+    return ReturnValue_ok;
 }
 
-bool   odomLocalizer::setInitialPose(const Map2DLocation& loc)
+ReturnValue   odomLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     m_thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
 //////////////////////////
@@ -340,28 +341,28 @@ bool odomLocalizer::close()
     return true;
 }
  
-bool   odomLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+ReturnValue   odomLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yCWarning(ODOMLOC) << "Covariance matrix is not currently handled by odomLocalizer";
     m_thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   odomLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+ReturnValue   odomLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     yCWarning(ODOMLOC) << "Covariance matrix is not currently handled by odomLocalizer";
     m_thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool    odomLocalizer::startLocalizationService()
+ReturnValue    odomLocalizer::startLocalizationService()
 {
     yCError(ODOMLOC) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool    odomLocalizer::stopLocalizationService()
+ReturnValue    odomLocalizer::stopLocalizationService()
 {
     yCError(ODOMLOC) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }

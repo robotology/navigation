@@ -59,37 +59,37 @@ bool gazeboLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::o
 }
 
 
-bool   gazeboLocalizer::getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status)
+ReturnValue   gazeboLocalizer::getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status)
 {
     status = yarp::dev::Nav2D::LocalizationStatusEnum::localization_status_localized_ok;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   gazeboLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
+ReturnValue   gazeboLocalizer::getEstimatedPoses(std::vector<Map2DLocation>& poses)
 {
     poses.clear();
     Map2DLocation loc;
     thread->getCurrentLoc(loc);
     poses.push_back(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc)
+ReturnValue   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc)
 {
     thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool  gazeboLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  gazeboLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
     odom = thread->getOdometry();
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc)
+ReturnValue   gazeboLocalizer::setInitialPose(const Map2DLocation& loc)
 {
     thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
 //////////////////////////
@@ -307,28 +307,28 @@ bool gazeboLocalizer::close()
     return true;
 }
  
-bool   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
+ReturnValue   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Matrix& cov)
 {
     yCWarning(GAZEBO_LOC) << "Covariance matrix is not currently handled by gazeboLocalizer";
     thread->getCurrentLoc(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool   gazeboLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
+ReturnValue   gazeboLocalizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
 {
     yCWarning(GAZEBO_LOC) << "Covariance matrix is not currently handled by gazeboLocalizer";
     thread->initializeLocalization(loc);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool    gazeboLocalizer::startLocalizationService()
+ReturnValue    gazeboLocalizer::startLocalizationService()
 {
     yCError(GAZEBO_LOC) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool    gazeboLocalizer::stopLocalizationService()
+ReturnValue    gazeboLocalizer::stopLocalizationService()
 {
     yCError(GAZEBO_LOC) << "Not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }

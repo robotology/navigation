@@ -22,6 +22,7 @@
 #include "pathPlannerCtrl.h"
 #include <math.h>
 
+using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 
 YARP_LOG_COMPONENT(PATHPLAN_DEV, "navigation.devices.robotPathPlanner.dev")
@@ -121,16 +122,18 @@ bool robotPathPlannerDev::read(yarp::os::ConnectionReader& connection)
 }
 
 
-bool robotPathPlannerDev::gotoTargetByAbsoluteLocation(Map2DLocation loc)
+ReturnValue robotPathPlannerDev::gotoTargetByAbsoluteLocation(Map2DLocation loc)
 {
     bool b = true;
     b &= m_plannerThread->reloadCurrentMap();
     b &= m_plannerThread->setNewAbsTarget(loc);
     m_plannerThread->resetAttemptCounter();
-    return b;
+
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, double theta)
+ReturnValue robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
     yarp::sig::Vector v;
     v.push_back(x);
@@ -140,27 +143,29 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y, doubl
     b &= m_plannerThread->reloadCurrentMap();
     b &= m_plannerThread->setNewRelTarget(v);
     m_plannerThread->resetAttemptCounter();
-    return b;
+
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::followPath(const Map2DPath& path)
+ReturnValue robotPathPlannerDev::followPath(const Map2DPath& path)
 {
     yError("robotPathPlannerDev::goThroughTargetsByAbsoluteLocations() not implemented yet");
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;;
 }
 
-bool robotPathPlannerDev::recomputeCurrentNavigationPath()
+ReturnValue robotPathPlannerDev::recomputeCurrentNavigationPath()
 {
     bool b= m_plannerThread->recomputePath();
     if (b==false)
     {
         yCError(PATHPLAN_DEV) << "robotPathPlannerDev::recomputeCurrentNavigationPath(). An error occurred while performing the requested operation.";
-        return false;
+        return ReturnValue::return_code::return_value_error_method_failed;;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
-bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
+ReturnValue robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
 {
     yarp::sig::Vector v;
     v.push_back(x);
@@ -169,75 +174,81 @@ bool robotPathPlannerDev::gotoTargetByRelativeLocation(double x, double y)
     b &= m_plannerThread->reloadCurrentMap();
     b &= m_plannerThread->setNewRelTarget(v);
     m_plannerThread->resetAttemptCounter();
-    return b;
+
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
+ReturnValue robotPathPlannerDev::getAbsoluteLocationOfCurrentTarget(Map2DLocation& target)
 {
     m_plannerThread->getCurrentAbsTarget(target);
-    return true;
+    return ReturnValue_ok;
 }
 
-bool robotPathPlannerDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
+ReturnValue robotPathPlannerDev::getRelativeLocationOfCurrentTarget(double& x, double& y, double& theta)
 {
     Map2DLocation loc;
     m_plannerThread->getCurrentRelTarget(loc);
     x=loc.x;
     y=loc.y;
     theta=loc.theta;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool robotPathPlannerDev::getNavigationStatus(NavigationStatusEnum& status)
+ReturnValue robotPathPlannerDev::getNavigationStatus(NavigationStatusEnum& status)
 {
      int nav_status = m_plannerThread->getNavigationStatusAsInt();
      status = (NavigationStatusEnum)(nav_status);
-     return true;
+     return ReturnValue_ok;
 }
 
-bool robotPathPlannerDev::stopNavigation()
+ReturnValue robotPathPlannerDev::stopNavigation()
 {
      bool b = m_plannerThread->stopMovement();
-     return true;
+     return ReturnValue_ok;
 }
 
-bool robotPathPlannerDev::suspendNavigation(double time)
+ReturnValue robotPathPlannerDev::suspendNavigation(double time)
 {
      bool b = m_plannerThread->pauseMovement(time);
-     return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::resumeNavigation()
+ReturnValue robotPathPlannerDev::resumeNavigation()
 {
      bool b = m_plannerThread->resumeMovement();
-     return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
+ReturnValue robotPathPlannerDev::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath& waypoints)
 {
     bool b = m_plannerThread->getCurrentPath(waypoints);
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
+ReturnValue robotPathPlannerDev::getCurrentNavigationWaypoint(Map2DLocation& curr_waypoint)
 {
     bool b = m_plannerThread->getCurrentWaypoint(curr_waypoint);
-    return b;
+    if (b) return ReturnValue_ok;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool robotPathPlannerDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
+ReturnValue robotPathPlannerDev::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D& map)
 {
     if (map_type == NavigationMapTypeEnum::global_map)
     {
         m_plannerThread->getCurrentMap(map);
-        return true;
+        return ReturnValue_ok;
     }
     else if (map_type == NavigationMapTypeEnum::local_map)
     {
         m_plannerThread->getOstaclesMap(map);
-        return true;
+        return ReturnValue_ok;
     }
-    return false;
+    return ReturnValue::return_code::return_value_error_method_failed;
 }
 
 bool robotPathPlannerDev::parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)

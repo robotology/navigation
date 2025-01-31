@@ -38,7 +38,7 @@ bool VelocityInputHandler::close()
     return true;
 }
 
-bool VelocityInputHandler::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
+ReturnValue VelocityInputHandler::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_control_out.linear_xvel = x_vel;
@@ -47,10 +47,10 @@ bool VelocityInputHandler::applyVelocityCommand(double x_vel, double y_vel, doub
     m_control_out.timeout = timeout;
     m_control_out.reception_time = yarp::os::Time::now();
     timeout_printable = true;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool VelocityInputHandler::getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel)
+ReturnValue VelocityInputHandler::getLastVelocityCommand(double& x_vel, double& y_vel, double& theta_vel)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     double current_time = yarp::os::Time::now();
@@ -61,10 +61,10 @@ bool VelocityInputHandler::getLastVelocityCommand(double& x_vel, double& y_vel, 
             yCWarning(VEL_INPUT_HANDLER) << "[" << m_localName << "] timeout:" << current_time-m_control_out.reception_time;
             timeout_printable = false;
         }
-        return false;
+        return ReturnValue::return_code::return_value_error_method_failed;
     }
     x_vel = m_control_out.linear_xvel;
     y_vel = m_control_out.linear_yvel;
     theta_vel = m_control_out.angular_vel;
-    return true;
+    return ReturnValue_ok;
 }
