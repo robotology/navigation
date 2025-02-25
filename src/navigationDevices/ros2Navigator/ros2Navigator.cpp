@@ -330,7 +330,7 @@ yarp::dev::ReturnValue ros2Navigator::gotoTargetByAbsoluteLocation(Map2DLocation
     auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
     client_ptr_->async_send_goal(goal_msg, send_goal_options);
     setNavigationStatus(navigation_status_preparing_before_move);
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::gotoTargetByRelativeLocation(double x, double y, double theta)
@@ -397,14 +397,14 @@ yarp::dev::ReturnValue ros2Navigator::followPath(const yarp::dev::Nav2D::Map2DPa
     auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
     nav_through_pose_client_ptr_->async_send_goal(goal_msg, send_goal_options);
     setNavigationStatus(navigation_status_preparing_before_move);
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::getNavigationStatus(NavigationStatusEnum &status)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     status = m_navigation_status;
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 void ros2Navigator::setNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum status)
@@ -416,13 +416,13 @@ void ros2Navigator::setNavigationStatus(yarp::dev::Nav2D::NavigationStatusEnum s
 yarp::dev::ReturnValue ros2Navigator::stopNavigation()
 {
     client_ptr_->async_cancel_all_goals();
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::getAbsoluteLocationOfCurrentTarget(Map2DLocation &target)
 {
     target = m_current_goal;
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::getRelativeLocationOfCurrentTarget(double &x, double &y, double &theta)
@@ -430,19 +430,19 @@ yarp::dev::ReturnValue ros2Navigator::getRelativeLocationOfCurrentTarget(double 
     x = m_current_goal.x + m_current_position.x;
     y = m_current_goal.y + m_current_position.y;
     theta = m_current_goal.theta + m_current_position.theta;
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::suspendNavigation(double time)
 {
     yCError(ROS2_NAV) << "Unable to pause current navigation task";
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::resumeNavigation()
 {
     yCError(ROS2_NAV) << "Unable to resume any paused navigation task";
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::getAllNavigationWaypoints(yarp::dev::Nav2D::TrajectoryTypeEnum trajectory_type, yarp::dev::Nav2D::Map2DPath &waypoints)
@@ -455,7 +455,7 @@ yarp::dev::ReturnValue ros2Navigator::getAllNavigationWaypoints(yarp::dev::Nav2D
     {
         waypoints = m_local_plan;
     }
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 /**
@@ -469,7 +469,7 @@ yarp::dev::ReturnValue ros2Navigator::getCurrentNavigationWaypoint(Map2DLocation
 
     // yCDebug(ROS2_NAV) << "Not yet implemented";
     // return false;
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 yarp::dev::ReturnValue ros2Navigator::getCurrentNavigationMap(NavigationMapTypeEnum map_type, MapGrid2D &map)
@@ -477,12 +477,12 @@ yarp::dev::ReturnValue ros2Navigator::getCurrentNavigationMap(NavigationMapTypeE
     if (map_type == NavigationMapTypeEnum::global_map)
     {
         map = m_global_map;
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     else if (map_type == NavigationMapTypeEnum::local_map)
     {
         map = m_local_map;
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     yCError(ROS2_NAV) << "rosNavigator::getCurrentNavigationMap invalid type";
     return ReturnValue::return_code::return_value_error_method_failed;
@@ -495,7 +495,7 @@ yarp::dev::ReturnValue ros2Navigator::recomputeCurrentNavigationPath()
     if (status == navigation_status_moving)
     {
         yCDebug(ROS2_NAV) << "Not yet implemented";
-        return ReturnValue::return_code::return_value_error_not_implemented_by_device;
+        return YARP_METHOD_NOT_YET_IMPLEMENTED();
     }
     yCError(ROS2_NAV) << "Unable to recompute path. Navigation task not assigned yet.";
     return ReturnValue::return_code::return_value_error_method_failed;
@@ -529,11 +529,11 @@ std::string ros2Navigator::getStatusAsString(NavigationStatusEnum status)
 yarp::dev::ReturnValue ros2Navigator::applyVelocityCommand(double x_vel, double y_vel, double theta_vel, double timeout)
 {
     yCDebug(ROS2_NAV) << "Not yet implemented";
-    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
 yarp::dev::ReturnValue ros2Navigator::getLastVelocityCommand(double &x_vel, double &y_vel, double &theta_vel)
 {
     yCDebug(ROS2_NAV) << "Not yet implemented";
-    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }

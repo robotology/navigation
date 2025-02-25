@@ -135,7 +135,7 @@ ReturnValue ros2Localizer::getCurrentPosition(Map2DLocation& loc, yarp::sig::Mat
 {
     yCWarning(ROS2_LOC) << "Covariance matrix is not currently handled by ros2Localizer";
     m_thread->getCurrentLoc(loc);
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 ReturnValue ros2Localizer::setInitialPose(const Map2DLocation& loc, const yarp::sig::Matrix& cov)
@@ -160,7 +160,7 @@ ReturnValue ros2Localizer::setInitialPose(const Map2DLocation& loc, const yarp::
             yCError(ROS2_LOC) << "Unable to set initial pose";
             return ReturnValue::return_code::return_value_error_generic;
         }
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
 	}
 	yCError(ROS2_LOC) << "ros2Localizer thread not running";
 	return ReturnValue::return_code::return_value_error_generic;
@@ -175,7 +175,7 @@ ReturnValue  ros2Localizer::startLocalizationService()
             yCError(ROS2_LOC) << "Unable to start localization service";
             return ReturnValue::return_code::return_value_error_generic;
         }
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     return ReturnValue::return_code::return_value_error_generic;
 }
@@ -189,7 +189,7 @@ ReturnValue  ros2Localizer::stopLocalizationService()
             yCError(ROS2_LOC) << "Unable to stop localization service";
             return ReturnValue::return_code::return_value_error_generic;
         }
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     return ReturnValue::return_code::return_value_error_generic;
 }
@@ -197,7 +197,7 @@ ReturnValue  ros2Localizer::stopLocalizationService()
 ReturnValue   ros2Localizer::getLocalizationStatus(LocalizationStatusEnum& status)
 {
     status = LocalizationStatusEnum::localization_status_localized_ok;
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 ReturnValue   ros2Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses)
@@ -209,7 +209,7 @@ ReturnValue   ros2Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map
             yCError(ROS2_LOC) << "Unable to get estimated poses";
             return ReturnValue::return_code::return_value_error_generic;
         }
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     yCError(ROS2_LOC) << "ros2Localizer thread not running";
     return ReturnValue::return_code::return_value_error_generic;
@@ -224,7 +224,7 @@ ReturnValue   ros2Localizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation&
             yCError(ROS2_LOC) << "Unable to get current position";
             return ReturnValue::return_code::return_value_error_generic;
         }
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     yCError(ROS2_LOC) << "ros2Localizer thread not running";
     return ReturnValue::return_code::return_value_error_generic;
@@ -233,7 +233,7 @@ ReturnValue   ros2Localizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation&
 ReturnValue  ros2Localizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
 {
     odom = m_thread->getOdometry();
-    return ReturnValue::return_code::return_value_ok;
+    return ReturnValue_ok;
 }
 
 ReturnValue   ros2Localizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc)
@@ -258,7 +258,7 @@ ReturnValue   ros2Localizer::setInitialPose(const yarp::dev::Nav2D::Map2DLocatio
             yCError(ROS2_LOC) << "Unable to set initial pose";
             return ReturnValue::return_code::return_value_error_generic;
         }
-        return ReturnValue::return_code::return_value_ok;
+        return ReturnValue_ok;
     }
     yCError(ROS2_LOC) << "ros2Localizer thread not running";
     return ReturnValue::return_code::return_value_error_generic;
