@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 iCub Facility - IIT Istituto Italiano di Tecnologia 
+# Copyright (C) 2016 iCub Facility - IIT Istituto Italiano di Tecnologia
 # Author: Marco Randazzo marco.randazzo@iit.it
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
@@ -29,6 +29,9 @@ add_subdirectory(follower)
 add_subdirectory(tests)
 add_subdirectory(tutorials)
 add_subdirectory(freeFloorViewer)
+if(NAVIGATION_USE_ROS2)
+    add_subdirectory(ros2_utilities)
+endif()
 
 #add_subdirectory(extendedRangefinder2DWrapper)  da mettere???
 
