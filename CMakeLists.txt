@@ -1,4 +1,4 @@
-# Copyright (C) 2021 IIT Istituto Italiano di Tecnologia 
+# Copyright (C) 2021 IIT Istituto Italiano di Tecnologia
 # Author: Marco Randazzo marco.randazzo@iit.it
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
@@ -70,12 +70,12 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 #### Find YARP, require that YARP version is at least ICUB_REQYARP_VERSION
-find_package(YARP 3.9 COMPONENTS os sig dev math gsl idl_tools REQUIRED)
+find_package(YARP 3.11.0 COMPONENTS os sig dev math gsl idl_tools REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
 
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
-#### Find iCub 
+#### Find iCub
 find_package(ICUB)
 
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
