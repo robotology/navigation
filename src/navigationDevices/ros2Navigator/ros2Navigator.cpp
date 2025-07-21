@@ -5,6 +5,7 @@
 
 #include "ros2Navigator.h"
 #include <geometry_msgs/msg/detail/pose_stamped__struct.hpp>
+#include <rclcpp/version.h>
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -392,7 +393,11 @@ yarp::dev::ReturnValue ros2Navigator::followPath(const yarp::dev::Nav2D::Map2DPa
         poses.push_back(std::move(pose_stamped)); //we move because it's cheaper than copying
     }
 
+#if RCLCPP_VERSION_GTE(29,3,0)
+    goal_msg.poses.goals = poses;
+#else
     goal_msg.poses = poses;
+#endif
 
     auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
     nav_through_pose_client_ptr_->async_send_goal(goal_msg, send_goal_options);
