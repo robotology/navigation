@@ -10,6 +10,8 @@ add_subdirectory(baseControl)
 add_subdirectory(baseControl2)
 add_subdirectory(baseControl_SIM)
 add_subdirectory(baseControl2_SIM)
+add_subdirectory(baseControl2_SIM_new_model)
+
 
 add_subdirectory(robotGoto)
 add_subdirectory(freeFloorViewer)
