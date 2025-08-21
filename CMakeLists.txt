@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(YCM_REQUIRED_VERSION 0.11.0)
-set(YARP_REQUIRED_VERSION 3.7)
+set(YARP_REQUIRED_VERSION 4.0)
 
 find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
@@ -70,7 +70,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 #### Find YARP, require that YARP version is at least ICUB_REQYARP_VERSION
-find_package(YARP 3.11.0 COMPONENTS os sig dev math gsl idl_tools REQUIRED)
+find_package(YARP 4.0.0 COMPONENTS os sig dev math gsl idl_tools REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
 
 yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
