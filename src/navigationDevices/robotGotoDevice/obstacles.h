@@ -10,9 +10,6 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/os/Subscriber.h>
-#include <yarp/os/Publisher.h>
-#include <yarp/os/Node.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>

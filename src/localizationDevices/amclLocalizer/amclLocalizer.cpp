@@ -11,7 +11,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/Node.h>
 #include <yarp/dev/ReturnValue.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>

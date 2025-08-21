@@ -1,3 +1,0 @@
-std_msgs/Header header
-actionlib_msgs/GoalStatus status
-move_base_msgs/MoveBaseResult result

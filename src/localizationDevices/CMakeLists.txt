@@ -4,9 +4,6 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-if(NAVIGATION_USE_ROS)
-    add_subdirectory(rosLocalizer)
-endif()
 if(NAVIGATION_USE_ROS2)
     add_subdirectory(ros2Localizer)
 endif()
