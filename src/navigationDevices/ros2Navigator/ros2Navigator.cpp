@@ -337,19 +337,22 @@ yarp::dev::ReturnValue ros2Navigator::gotoTargetByAbsoluteLocation(Map2DLocation
 yarp::dev::ReturnValue ros2Navigator::gotoTargetByRelativeLocation(double x, double y, double theta)
 {
     Map2DLocation loc;
+    double a = m_current_position.theta * DEG2RAD;
     loc.map_id = m_current_position.map_id;
-    loc.x = m_current_position.x + x;
-    loc.y = m_current_position.y + y;
+    loc.x = x * cos(a) - y * sin(a) + m_current_position.x;
+    loc.y = x * sin(a) + y * cos(a) + m_current_position.y;
     loc.theta = m_current_position.theta + theta;
+
     return gotoTargetByAbsoluteLocation(loc);
 }
 
 yarp::dev::ReturnValue ros2Navigator::gotoTargetByRelativeLocation(double x, double y)
 {
     Map2DLocation loc;
+    double a = m_current_position.theta * DEG2RAD;
     loc.map_id = m_current_position.map_id;
-    loc.x = m_current_position.x + x;
-    loc.y = m_current_position.y + y;
+    loc.x = x * cos(a) - y * sin(a) + m_current_position.x;
+    loc.y = x * sin(a) + y * cos(a) + m_current_position.y;
     loc.theta = m_current_position.theta;
     return gotoTargetByAbsoluteLocation(loc);
 }
