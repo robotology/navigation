@@ -32,6 +32,13 @@
 
 #define DEFAULT_THREAD_PERIOD 0.02 // s
 
+#ifndef M_PI
+#define M_PI 3.14159265
+#endif
+
+const double RAD2DEG = 180.0 / M_PI;
+const double DEG2RAD = M_PI / 180.0;
+
 class ros2Navigator : public yarp::dev::DeviceDriver,
                       public yarp::os::PeriodicThread,
                       public yarp::dev::Nav2D::INavigation2DTargetActions,
