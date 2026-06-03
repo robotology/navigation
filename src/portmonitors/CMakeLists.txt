@@ -4,7 +4,9 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-add_subdirectory(joystick2velocityCommand)
+add_subdirectory(joystickCrl2velocityCommand)
+add_subdirectory(joystickServer2velocityCommand)
+add_subdirectory(joystickNwsYarp2velocityCommand)
 
 
 

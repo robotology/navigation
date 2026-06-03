@@ -6,16 +6,18 @@
  * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
-#include "joystick2velocityCommand.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+#include "joystickServer2velocityCommand.h"
 
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/Bottle.h>
-#include <cmath>
-#define _USE_MATH_DEFINES
+
 //example
-//yarp connect /joystickCtrl:o /baseControl /input /joystick:i tcp+recv.portmonitor+type.dll+file.joy2vel
+//yarp connect /joystickCtrl:o /baseControl /input /joystick:i tcp+recv.portmonitor+type.dll+file.joyServer2vel
 
 YARP_LOG_COMPONENT(JOY2VEL, "navigation.Joy2Vel")
 
@@ -31,12 +33,12 @@ bool isNumeric(yarp::os::Value& val)
     return false;
 }
 
-Joy2vel::Joy2vel()
+JoyServer2vel::JoyServer2vel()
 {
     this->m_things.setPortWriter(&this->m_command);
 }
 
-bool Joy2vel::accept(yarp::os::Things& thing)
+bool JoyServer2vel::accept(yarp::os::Things& thing)
 {
     yarp::os::Bottle *bot = thing.cast_as<yarp::os::Bottle>();
     if (bot == NULL) {
@@ -47,7 +49,7 @@ bool Joy2vel::accept(yarp::os::Things& thing)
     return validate_bot(bot);
 }
 
-bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
+bool JoyServer2vel::validate_bot(const yarp::os::Bottle* bot)
 {
     if (!bot)
     {
@@ -80,7 +82,7 @@ bool Joy2vel::validate_bot(const yarp::os::Bottle* bot)
     return true;
 }
 
-yarp::os::Things& Joy2vel::update(yarp::os::Things& thing)
+yarp::os::Things& JoyServer2vel::update(yarp::os::Things& thing)
 {
     yarp::os::Bottle *bot = thing.cast_as<yarp::os::Bottle>();
     yAssert(bot);
