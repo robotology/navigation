@@ -5,6 +5,6 @@
 #
 
 add_subdirectory(joystick2velocityCommand)
-
+add_subdirectory(metaQuestJoystick2velocityCommand)
 
 
