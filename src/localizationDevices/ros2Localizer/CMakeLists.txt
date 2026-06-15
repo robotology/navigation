@@ -21,6 +21,8 @@ if(SKIP_ros2Localizer)
    return()
 endif()
 
+add_subdirectory(messages)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 file(GLOB folder_source *.cpp)
@@ -53,6 +55,8 @@ yarp_install(TARGETS ros2Localizer
            ARCHIVE DESTINATION ${NAVIGATION_STATIC_PLUGINS_INSTALL_DIR}
            YARP_INI DESTINATION ${NAVIGATION_PLUGIN_MANIFESTS_INSTALL_DIR})
 
+target_sources(ros2Localizer PRIVATE $<TARGET_OBJECTS:ros2LocalizerMsg>)
+target_include_directories(ros2Localizer PRIVATE $<TARGET_PROPERTY:ros2LocalizerMsg,INTERFACE_INCLUDE_DIRECTORIES>)
 
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

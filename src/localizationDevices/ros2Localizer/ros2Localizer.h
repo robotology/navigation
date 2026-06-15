@@ -41,6 +41,7 @@
 #include "navigation_defines.h"
 
 #include <mutex>
+#include "ros2LocalizerMsgs.h"
 
 
 using namespace yarp::os;
@@ -74,12 +75,12 @@ using namespace yarp::os;
 class ros2Localizer;
 class ros2LocalizerThread;
 
-class ros2LocalizerRPCHandler : public yarp::dev::DeviceResponder
+class ros2LocalizerRPCHandler : public ros2LocalizerMsgs
 {
 protected:
     ros2Localizer * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
-
+    yarp::dev::ReturnValue test() override();
+    
 public:
     ros2LocalizerRPCHandler() : interface(NULL) { }
     void setInterface(ros2Localizer* iface);

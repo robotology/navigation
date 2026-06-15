@@ -30,6 +30,7 @@
 #include <localization_device_with_estimated_odometry.h>
 #include "navigation_defines.h"
 
+#include "amclLocalizerMsgs.h"
 
 using namespace yarp::os;
 
@@ -51,15 +52,16 @@ typedef struct
 
 } amcl_hyp_t;
 
-class amclLocalizerRPCHandler : public yarp::dev::DeviceResponder
+class amclLocalizerRPCHandler : public amclLocalizerMsgs
 {
 protected:
     amclLocalizer * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
 
 public:
     amclLocalizerRPCHandler() : interface(NULL) { }
     void setInterface(amclLocalizer* iface);
+
+    yarp::dev::ReturnValue test() override;
 };
 
 class amclLocalizer : public yarp::dev::DeviceDriver,

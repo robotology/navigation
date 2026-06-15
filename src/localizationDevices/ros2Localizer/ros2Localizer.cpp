@@ -38,13 +38,10 @@ void ros2LocalizerRPCHandler::setInterface(ros2Localizer* iface)
     this->interface = iface;
 }
 
-//This function parses the user commands received through the RPC port
-bool ros2LocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+ReturnValue ros2LocalizerRPCHandler::test()
 {
-    reply.clear();
-    reply.addVocab32(Vocab32::encode("many"));
-    reply.addString("Not yet Implemented");
-    return true;
+    yCInfo(ROS2_LOC) << "ros2LocalizerRPCHandler::test() called";
+    return ReturnValue_ok;
 }
 
 /////////////////////////////////////////////////////////////////////

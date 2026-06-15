@@ -21,13 +21,14 @@
 #include "robotGotoCtrl.h"
 #include "navigation_defines.h"
 
+#include "robotGotoMsgs.h"
+
 class robotGotoDev;
 
-class robotGotoRPCHandler : public yarp::dev::DeviceResponder
+class robotGotoRPCHandler : public robotGotoMsgs
 {
 protected:
     robotGotoDev * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response);
 
 public:
     robotGotoRPCHandler() : interface(NULL) { }

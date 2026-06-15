@@ -282,7 +282,7 @@ ReturnValue robotGotoDev::getNavigationStatus(NavigationStatusEnum& status)
 }
 
 //This function parses the user commands received through the RPC port
-bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+/*bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
     reply.clear();
 
@@ -316,6 +316,7 @@ bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bot
     interface->gotoThread->m_mutex.post();
     return true;
 }
+*/
 
 ReturnValue robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Nav2D::Map2DLocation& target)
 {

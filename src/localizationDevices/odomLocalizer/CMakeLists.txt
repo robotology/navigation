@@ -12,7 +12,9 @@ yarp_prepare_plugin(odomLocalizer
 if(SKIP_odomLocalizer)
    return()
 endif()
-                                            
+
+add_subdirectory(messages)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(odomLocalizer odomLocalizer.h odomLocalizer.cpp)
@@ -32,7 +34,11 @@ yarp_install(TARGETS odomLocalizer
            LIBRARY DESTINATION ${NAVIGATION_DYNAMIC_PLUGINS_INSTALL_DIR}
            ARCHIVE DESTINATION ${NAVIGATION_STATIC_PLUGINS_INSTALL_DIR}
            YARP_INI DESTINATION ${NAVIGATION_PLUGIN_MANIFESTS_INSTALL_DIR})
-           
+
+target_sources(odomLocalizer PRIVATE $<TARGET_OBJECTS:odomLocalizerMsgs>)
+target_include_directories(odomLocalizer PRIVATE $<TARGET_PROPERTY:odomLocalizerMsgs,INTERFACE_INCLUDE_DIRECTORIES>)
+
+
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
 set_property(TARGET odomLocalizer PROPERTY FOLDER "Plugins/Localization Devices")

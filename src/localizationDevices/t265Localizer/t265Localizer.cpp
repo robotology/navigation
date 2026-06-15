@@ -39,13 +39,10 @@ void t265LocalizerRPCHandler::setInterface(t265Localizer* iface)
     this->interface = iface;
 }
 
-//This function parses the user commands received through the RPC port
-bool t265LocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+ReturnValue t265LocalizerRPCHandler::test()
 {
-    reply.clear();
-    reply.addVocab32(Vocab32::encode("many"));
-    reply.addString("Not yet Implemented");
-    return true;
+    yCInfo(T265_LOC) << "t265LocalizerRPCHandler::test() called";
+    return ReturnValue_ok;
 }
 
 

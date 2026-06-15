@@ -28,6 +28,8 @@
 //realsense
 #include <librealsense2/rs.hpp>
 
+#include "t265LocalizerMsgs.h"
+
 #ifndef T265_LOCALIZER_H
 #define T265_LOCALIZER_H
 
@@ -36,11 +38,12 @@ using namespace yarp::os;
 class t265Localizer;
 class t265LocalizerThread;
 
-class t265LocalizerRPCHandler : public yarp::dev::DeviceResponder
+class t265LocalizerRPCHandler : public t265LocalizerMsgs
 {
 protected:
     t265Localizer * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
+    
+    yarp::dev::ReturnValue test() override();
 
 public:
     t265LocalizerRPCHandler() : interface(NULL) { }

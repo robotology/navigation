@@ -34,6 +34,8 @@
 #include <yarp/dev/IMap2D.h>
 #include <localization_device_with_estimated_odometry.h>
 
+#include "gazeboLocalizerMsgs.h"
+
 #ifndef GAZEBO_LOCALIZER_H
 #define GAZEBO_LOCALIZER_H
 
@@ -42,15 +44,16 @@ using namespace yarp::os;
 class gazeboLocalizer;
 class gazeboLocalizerThread;
 
-class gazeboLocalizerRPCHandler : public yarp::dev::DeviceResponder
+class gazeboLocalizerRPCHandler : public gazeboLocalizerMsgs
 {
 protected:
     gazeboLocalizer * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
 
 public:
     gazeboLocalizerRPCHandler() : interface(NULL) { }
     void setInterface(gazeboLocalizer* iface);
+
+    yarp::dev::ReturnValue test() override;
 };
 
 class gazeboLocalizer : public yarp::dev::DeviceDriver,

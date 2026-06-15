@@ -33,6 +33,8 @@
 #include <math.h>
 #include <localization_device_with_estimated_odometry.h>
 
+#include "odomLocalizerMsgs.h"
+
 using namespace yarp::os;
 
 /**
@@ -53,15 +55,16 @@ using namespace yarp::os;
 class odomLocalizer;
 class odomLocalizerThread;
 
-class odomLocalizerRPCHandler : public yarp::dev::DeviceResponder
+class odomLocalizerRPCHandler : public odomLocalizerMsgs
 {
 protected:
     odomLocalizer * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
 
 public:
     odomLocalizerRPCHandler() : interface(NULL) { }
     void setInterface(odomLocalizer* iface);
+
+    yarp::dev::ReturnValue test() override;
 };
 
 class odomLocalizer : public yarp::dev::DeviceDriver,
