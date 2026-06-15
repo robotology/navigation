@@ -79,8 +79,8 @@ class ros2LocalizerRPCHandler : public ros2LocalizerMsgs
 {
 protected:
     ros2Localizer * interface;
-    yarp::dev::ReturnValue test() override();
-    
+    yarp::dev::ReturnValue test() override;
+
 public:
     ros2LocalizerRPCHandler() : interface(NULL) { }
     void setInterface(ros2Localizer* iface);
