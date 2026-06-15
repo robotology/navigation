@@ -4,8 +4,8 @@
  */
 
 #include "filters.h"
-#include "yarp/os/Log.h"
-#include "yarp/os/LogStream.h"
+#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 
 double control_filters::lp_filter_8Hz(double input, int i)
 {

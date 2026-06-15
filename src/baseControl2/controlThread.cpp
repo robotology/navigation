@@ -238,17 +238,23 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_throttle, d
     if (debug_enabled) // debug block
     {
         char buff [255];
-        Bottle &b1=port_debug_linear.prepare();
-        b1.clear();
-        yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
-        b1.addString(buff);
-        port_debug_linear.write();
+        if (port_debug_linear.getOutputCount()>0)
+        {
+            Bottle &b1=port_debug_linear.prepare();
+            b1.clear();
+            yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_linear_speed, feedback_linear_speed, ref_linear_speed - feedback_linear_speed, pidout_linear_throttle);
+            b1.addString(buff);
+            port_debug_linear.write();
+        }
 
-        Bottle &b2=port_debug_angular.prepare();
-        b2.clear();
-        yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
-        b2.addString(buff);
-        port_debug_angular.write();
+        if (port_debug_angular.getOutputCount()>0)
+        {
+            Bottle &b2=port_debug_angular.prepare();
+            b2.clear();
+            yCInfo(CONTROL_THRD, "%+9.4f %+9.4f %+9.4f %+9.4f", ref_angular_speed, feedback_angular_speed, ref_angular_speed - feedback_angular_speed, pidout_angular_throttle);
+            b2.addString(buff);
+            port_debug_angular.write();
+        }
     }
 }
 
@@ -277,13 +283,16 @@ void ControlThread::run()
     //debug block: outputs unfiltered commands
     static double otime = yarp::os::Time::now();
     double ctime = yarp::os::Time::now();
-    Bottle &uncoms = port_unfiltered_commands.prepare();
-    uncoms.clear();
-    uncoms.addFloat64(input_linear_speed);
-    uncoms.addFloat64(input_angular_speed);
-    uncoms.addFloat64(ctime-otime);
-    port_unfiltered_commands.write();
-    
+    if (port_unfiltered_commands.getOutputCount()>0)
+    {
+        Bottle &uncoms = port_unfiltered_commands.prepare();
+        uncoms.clear();
+        uncoms.addFloat64(input_linear_speed);
+        uncoms.addFloat64(input_angular_speed);
+        uncoms.addFloat64(ctime-otime);
+        port_unfiltered_commands.write();
+    }
+
     //low pass filter
     apply_input_filter(input_linear_speed, input_angular_speed, input_desired_direction);
 
@@ -300,14 +309,16 @@ void ControlThread::run()
     if (ratio_limiter_enabled) apply_ratio_limiter(input_linear_speed, input_angular_speed);
 
     //debug block: outputs filtered commands
-    Bottle &coms = port_filtered_commands.prepare();
-    coms.clear();
-    coms.addFloat64(input_linear_speed);
-    coms.addFloat64(input_angular_speed);
-    coms.addFloat64(ctime-otime);
-    port_filtered_commands.write();
-    otime=ctime;
-    
+    if (port_filtered_commands.getOutputCount()>0)
+    {
+        Bottle &coms = port_filtered_commands.prepare();
+        coms.clear();
+        coms.addFloat64(input_linear_speed);
+        coms.addFloat64(input_angular_speed);
+        coms.addFloat64(ctime-otime);
+        port_filtered_commands.write();
+        otime=ctime;
+    }
 
     /*
     if (!lateral_movement_enabled)
