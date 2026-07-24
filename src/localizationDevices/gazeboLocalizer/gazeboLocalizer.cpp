@@ -49,13 +49,12 @@ void gazeboLocalizerRPCHandler::setInterface(gazeboLocalizer* iface)
 }
 
 //This function parses the user commands received through the RPC port
-bool gazeboLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+ReturnValue gazeboLocalizerRPCHandler::test()
 {
-    reply.clear();
-    reply.addVocab32(Vocab32::encode("many"));
-    reply.addString("Not yet Implemented");
-    return true;
+    yCInfo(GAZEBO_LOC) << "gazeboLocalizerRPCHandler::test() called";
+    return ReturnValue_ok;
 }
+
 
 
 ReturnValue   gazeboLocalizer::getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status)

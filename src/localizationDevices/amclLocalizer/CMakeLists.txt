@@ -12,7 +12,9 @@ yarp_prepare_plugin(amclLocalizer
 if(SKIP_amclLocalizer)
    return()
 endif()
-                                            
+
+add_subdirectory(messages)
+                        
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(amclLocalizer amclLocalizer.h amclLocalizer.cpp
@@ -53,7 +55,10 @@ yarp_install(TARGETS amclLocalizer
            LIBRARY DESTINATION ${NAVIGATION_DYNAMIC_PLUGINS_INSTALL_DIR}
            ARCHIVE DESTINATION ${NAVIGATION_STATIC_PLUGINS_INSTALL_DIR}
            YARP_INI DESTINATION ${NAVIGATION_PLUGIN_MANIFESTS_INSTALL_DIR})
-           
+
+target_sources(amclLocalizer PRIVATE $<TARGET_OBJECTS:amclLocalizerMsgs>)
+target_include_directories(amclLocalizer PRIVATE $<TARGET_PROPERTY:amclLocalizerMsgs,INTERFACE_INCLUDE_DIRECTORIES>)
+
 set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
 set_property(TARGET amclLocalizer PROPERTY FOLDER "Plugins/Localization Devices")

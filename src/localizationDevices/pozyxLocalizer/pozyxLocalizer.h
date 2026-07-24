@@ -21,6 +21,8 @@
 #include <localization_device_with_estimated_odometry.h>
 #include "navigation_defines.h"
 
+#include "pozyxLocalizerMsgs.h"
+
 #ifndef POZYX_LOCALIZER_H
 #define POZYX_LOCALIZER_H
 
@@ -29,11 +31,11 @@ using namespace yarp::os;
 class pozyxLocalizer;
 class pozyxLocalizerThread;
 
-class pozyxLocalizerRPCHandler : public yarp::dev::DeviceResponder
+class pozyxLocalizerRPCHandler : public pozyxLocalizerMsgs
 {
 protected:
     pozyxLocalizer * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
+    yarp::dev::ReturnValue test() override;
 
 public:
     pozyxLocalizerRPCHandler() : interface(NULL) { }

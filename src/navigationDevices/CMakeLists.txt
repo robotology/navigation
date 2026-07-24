@@ -12,3 +12,5 @@ if(NAVIGATION_USE_ROS2)
 endif()
 add_subdirectory(simpleVelocityNavigation)
 add_subdirectory(velocityInputHandler)
+
+add_subdirectory(messages)

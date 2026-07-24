@@ -77,7 +77,8 @@ bool HeadOrientator::configure(yarp::os::Property rf)
 
     double tempMaxYaw, tempMinYaw, tempMaxPitch, tempMinPitch;
 
-    if(!m_iNeckLimits->getLimits(0, &tempMinPitch, &tempMaxPitch) || !m_iNeckLimits->getLimits(1, &tempMinYaw, &tempMaxYaw))
+    if(!m_iNeckLimits->getPosLimits(0, &tempMinPitch, &tempMaxPitch) ||
+       !m_iNeckLimits->getPosLimits(1, &tempMinYaw, &tempMaxYaw))
     {
         yCError(HEAD_ORIENTATOR,"Error retrieving the limits values for the neck joints");
         return false;
@@ -101,14 +102,12 @@ bool HeadOrientator::configure(yarp::os::Property rf)
 
 void HeadOrientator::onRead(yarp::os::Bottle &b)
 {
-    bool *done = new bool[1];
+    bool done = true;
     m_iNeckPos->checkMotionDone(done);
-    if(!done[0])
+    if(!done)
     {
         m_iNeckPos->stop(0);
         m_iNeckPos->stop(1);
-
-        delete[] done;
 
         return;
     }
@@ -125,7 +124,6 @@ void HeadOrientator::onRead(yarp::os::Bottle &b)
         yCError(HEAD_ORIENTATOR,"Wrong bottle received");
     }
 
-    delete[] done;
 }
 
 void HeadOrientator::backToZero()

@@ -19,7 +19,9 @@ if(ENABLE_navmod_t265Localizer)
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
     yarp_add_plugin(t265Localizer t265Localizer.h t265Localizer.cpp)
-            
+
+    add_subdirectory(messages)
+
     include_directories(include ${realsense_INCLUDE_DIR})
 
     target_link_libraries(t265Localizer YARP::YARP_os
@@ -35,6 +37,9 @@ if(ENABLE_navmod_t265Localizer)
                LIBRARY DESTINATION ${NAVIGATION_DYNAMIC_PLUGINS_INSTALL_DIR}
                ARCHIVE DESTINATION ${NAVIGATION_STATIC_PLUGINS_INSTALL_DIR}
                YARP_INI DESTINATION ${NAVIGATION_PLUGIN_MANIFESTS_INSTALL_DIR})
+
+    target_sources(t265Localizer PRIVATE $<TARGET_OBJECTS:t265LocalizerMsg>)
+    target_include_directories(t265Localizer PRIVATE $<TARGET_PROPERTY:t265LocalizerMsg,INTERFACE_INCLUDE_DIRECTORIES>)
 
     set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

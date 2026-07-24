@@ -180,7 +180,7 @@ bool MotorControl::set_control_velocity()
     for (int i=0; i<motors_num; i++)
     {
         icmd->setControlMode(i, VOCAB_CM_VELOCITY);
-        ivel->setRefAcceleration(i, 1000000);
+        ivel->setTrajAcceleration(i, 1000000);
         ivel->velocityMove(i, 0);
     }
     return true;

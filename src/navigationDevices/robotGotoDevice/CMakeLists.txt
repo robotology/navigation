@@ -13,7 +13,6 @@ if(SKIP_robotGotoDev)
    return()
 endif()
 
-                                            
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 yarp_add_plugin(robotGotoDev robotGotoDev.h robotGotoDev.cpp robotGotoCtrl.h robotGotoCtrl.cpp obstacles.h obstacles.cpp )
@@ -24,6 +23,8 @@ target_link_libraries(robotGotoDev YARP::YARP_os
                                    YARP::YARP_math
                                    navigation_lib)
 
+target_sources(robotGotoDev PRIVATE $<TARGET_OBJECTS:robotGotoMsgs>)
+target_include_directories(robotGotoDev PRIVATE $<TARGET_PROPERTY:robotGotoMsgs,INTERFACE_INCLUDE_DIRECTORIES>)
 
 yarp_install(TARGETS robotGotoDev
            EXPORT YARP_${YARP_PLUGIN_MASTER}

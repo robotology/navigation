@@ -87,113 +87,83 @@ bool robotGotoDev:: close()
     return true;
 }
 
-bool robotGotoDev  ::parse_respond_string(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+ReturnValue robotGotoRPCHandler::ResetParams()
 {
-    if (command.get(0).isString() && command.get(0).asString() == "reset_params")
-    {
-        gotoThread->resetParamsToDefaultValue();
-        reply.addString("params reset done");
-    }
+    this->interface->gotoThread->resetParamsToDefaultValue();
+    return ReturnValue_ok;
+}
 
-    else if (command.get(0).isString() && command.get(0).asString() == "approach")
-    {
-        double dir    = command.get(1).asFloat64();
-        double speed  = command.get(2).asFloat64();
-        double time   = command.get(3).asFloat64();
-        gotoThread->approachTarget(dir,speed,time);
-        reply.addString("approach command received");
-    }
+ReturnValue robotGotoRPCHandler::Approach(const double dir, const double speed, const double time)
+{
+    this->interface->gotoThread->approachTarget(dir,speed,time);
+    return ReturnValue_ok;
+}
 
-    else if (command.get(0).asString() == "set")
-    {
-        if (command.get(1).asString() == "linear_tol")
-        {
-            gotoThread->m_goal_tolerance_lin = command.get(2).asFloat64();
-            reply.addString("linear_tol set.");
-        }
-        else if (command.get(1).asString() == "angular_tol")
-        {
-            gotoThread->m_goal_tolerance_ang = command.get(2).asFloat64();
-            reply.addString("angular_tol set.");
-        }
-        else if (command.get(1).asString() == "max_lin_speed")
-        {
-            gotoThread->m_max_lin_speed = command.get(2).asFloat64();
-            reply.addString("max_lin_speed set.");
-        }
-        else if (command.get(1).asString() == "max_ang_speed")
-        {
-            gotoThread->m_max_ang_speed = command.get(2).asFloat64();
-            reply.addString("max_ang_speed set.");
-        }
-        else if (command.get(1).asString() == "min_lin_speed")
-        {
-            gotoThread->m_min_lin_speed = command.get(2).asFloat64();
-            reply.addString("min_lin_speed set.");
-        }
-        else if (command.get(1).asString() == "min_ang_speed")
-        {
-            gotoThread->m_min_ang_speed = command.get(2).asFloat64();
-            reply.addString("min_ang_speed set.");
-        }
-        else if (command.get(1).asString() == "ang_speed_gain")
-        {
-            gotoThread->m_gain_ang = command.get(2).asFloat64();
-            reply.addString("ang_speed_gain set.");
-        }
-        else if (command.get(1).asString() == "lin_speed_gain")
-        {
-            gotoThread->m_gain_lin = command.get(2).asFloat64();
-            reply.addString("lin_speed_gain set.");
-        }
-        else if (command.get(1).asString() == "obstacle_avoidance")
-        {
-            if (command.get(2).asInt32() == 0)
-            {
-                reply.addString("enable_obstacles_avoidance=false");
-                gotoThread->m_enable_obstacles_avoidance = false;
-            }
-            else
-            {
-                gotoThread->m_enable_obstacles_avoidance = true;
-                reply.addString("enable_obstacles_avoidance=true");
-            }
-        }
-        else if (command.get(1).asString() == "obstacle_stop")
-        {
-            if (command.get(2).asInt32()==0)
-            {
-                reply.addString("enable_obstacle_stop=false");
-                gotoThread->m_enable_obstacles_emergency_stop = false;
-            }
-            else
-            {
-                gotoThread->m_enable_obstacles_emergency_stop = true;
-                reply.addString("enable_obstacle_stop=true");
-            }
-        }
-        else
-        {
-            reply.addString("Unknown set.");
-        }
-    }
-    else if (command.get(0).asString() == "get")
-    {
-        if (command.get(1).asString() == "navigation_status")
-        {
-            string s = gotoThread->getNavigationStatusAsString();
-            reply.addString(s.c_str());
-        }
-        else
-        {
-            reply.addString("Unknown get.");
-        }
-    }
-    else
-    {
-        reply.addString("Unknown command.");
-    }
-    return true;
+ReturnValue robotGotoRPCHandler::SetLinearTolerance(const double tol)
+{
+    this->interface->gotoThread->m_goal_tolerance_lin = tol;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetAngularTolerance(const double tol)
+{
+    this->interface->gotoThread->m_goal_tolerance_ang = tol;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetMaxLinearSpeed(const double maxLin)
+{
+    this->interface->gotoThread->m_max_lin_speed = maxLin;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetMaxAngularSpeed(const double maxAng)
+{
+    this->interface->gotoThread->m_max_ang_speed = maxAng;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetMinLinearSpeed(const double minLin)
+{
+    this->interface->gotoThread->m_min_lin_speed = minLin;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetMinAngularSpeed(const double minAng)
+{
+    this->interface->gotoThread->m_min_ang_speed = minAng;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetLinearSpeedGain(const double LinGain)
+{
+    this->interface->gotoThread->m_gain_lin = LinGain;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetAngularSpeedGain(const double AngGain)
+{
+    this->interface->gotoThread->m_gain_ang = AngGain;
+    return ReturnValue_ok;
+}
+
+ReturnValue robotGotoRPCHandler::SetObstacoleAvoidance(const bool enable)
+{
+    this->interface->gotoThread->m_enable_obstacles_avoidance = enable;
+    return ReturnValue_ok;
+}
+ReturnValue robotGotoRPCHandler::SetObstacoleStop(const bool enable)
+{
+    this->interface->gotoThread->m_enable_obstacles_emergency_stop = enable;
+    return ReturnValue_ok;
+}
+
+return_GetNavigationStatus robotGotoRPCHandler::GetNavigationStatus()
+{
+    return_GetNavigationStatus ret;
+    ret.ret = ReturnValue_ok;
+    ret.status = this->interface->gotoThread->getNavigationStatusAsString();
+    return ret;
 }
 
 ReturnValue robotGotoDev::gotoTargetByAbsoluteLocation(yarp::dev::Nav2D::Map2DLocation loc)
@@ -279,42 +249,6 @@ ReturnValue robotGotoDev::getNavigationStatus(NavigationStatusEnum& status)
     int nav_status = gotoThread->getNavigationStatusAsInt();
     status = (NavigationStatusEnum)(nav_status);
     return ReturnValue_ok;
-}
-
-//This function parses the user commands received through the RPC port
-bool robotGotoRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
-{
-    reply.clear();
-
-    interface->gotoThread->m_mutex.wait();
-
-    if (command.get(0).asString() == "help")
-    {
-        reply.addVocab32(Vocab32::encode("many"));
-        reply.addString("Available commands are:");
-        reply.addString("approach <angle in degrees> <linear velocity> <time>");
-        reply.addString("reset_params");
-        reply.addString("set linear_tol <m>");
-        reply.addString("set linear_ang <deg>");
-        reply.addString("set max_lin_speed <m/s>");
-        reply.addString("set max_ang_speed <deg/s>");
-        reply.addString("set min_lin_speed <m/s>");
-        reply.addString("set min_ang_speed <deg/s>");
-        reply.addString("set obstacle_stop <0/1>");
-        reply.addString("set obstacle_avoidance <0/1>");
-    }
-    else if (command.get(0).isString())
-    {
-        interface->parse_respond_string(command, reply);
-    }
-    else
-    {
-        yCError(GOTO_DEV) << "RobotGotoDev: Received invalid command type on RPC port";
-        reply.addVocab32(VOCAB_ERR);
-    }
-
-    interface->gotoThread->m_mutex.post();
-    return true;
 }
 
 ReturnValue robotGotoDev::getAbsoluteLocationOfCurrentTarget(yarp::dev::Nav2D::Map2DLocation& target)

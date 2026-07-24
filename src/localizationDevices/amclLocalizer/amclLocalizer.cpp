@@ -65,13 +65,12 @@ void amclLocalizerRPCHandler::setInterface(amclLocalizer* iface)
 }
 
 //This function parses the user commands received through the RPC port
-bool amclLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+ReturnValue amclLocalizerRPCHandler::test()
 {
-    reply.clear();
-    reply.addVocab32(Vocab32::encode("many"));
-    reply.addString("Not yet Implemented");
-    return true;
+    yCInfo(AMCL_DEV) << "amclLocalizerRPCHandler::test() called";
+    return ReturnValue_ok;
 }
+
 
 
 ReturnValue   amclLocalizer::getLocalizationStatus(LocalizationStatusEnum& status)

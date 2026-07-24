@@ -33,6 +33,14 @@ void Input::printStats()
         ss = ss + ":" + std::to_string(it->m_timeout_counter) + ")";
     }
     yCInfo(INPUT_HND) << ss;
+
+    ss = "data received:";
+    for (auto it = m_input.begin(); it != m_input.end(); it++)
+    {
+        ss = ss + " (" + it->m_name;
+        ss = ss + ":" + std::to_string(it->data_received) + ")";
+    }
+    yCInfo(INPUT_HND) << ss;
 }
 
 void Input::close()

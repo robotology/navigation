@@ -21,17 +21,32 @@
 #include "robotGotoCtrl.h"
 #include "navigation_defines.h"
 
+#include "robotGotoMsgs.h"
+
 class robotGotoDev;
 
-class robotGotoRPCHandler : public yarp::dev::DeviceResponder
+class robotGotoRPCHandler : public robotGotoMsgs
 {
 protected:
     robotGotoDev * interface;
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response);
 
 public:
     robotGotoRPCHandler() : interface(NULL) { }
     void setInterface(robotGotoDev* iface);
+
+    yarp::dev::ReturnValue ResetParams() override;
+    yarp::dev::ReturnValue Approach(const double dir, const double speed, const double time) override;
+    yarp::dev::ReturnValue SetLinearTolerance(const double tol) override;
+    yarp::dev::ReturnValue SetAngularTolerance(const double tol) override;
+    yarp::dev::ReturnValue SetMaxLinearSpeed(const double maxLin) override;
+    yarp::dev::ReturnValue SetMaxAngularSpeed(const double maxAng) override;
+    yarp::dev::ReturnValue SetMinLinearSpeed(const double minLin) override;
+    yarp::dev::ReturnValue SetMinAngularSpeed(const double minAng) override;
+    yarp::dev::ReturnValue SetLinearSpeedGain(const double LinGain) override;
+    yarp::dev::ReturnValue SetAngularSpeedGain(const double AngGain) override;
+    yarp::dev::ReturnValue SetObstacoleAvoidance(const bool enable) override;
+    yarp::dev::ReturnValue SetObstacoleStop(const bool enable) override;
+    return_GetNavigationStatus GetNavigationStatus() override;
 };
 
 class robotGotoDev : public yarp::dev::DeviceDriver,

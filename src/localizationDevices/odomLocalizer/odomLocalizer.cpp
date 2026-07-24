@@ -53,13 +53,10 @@ void odomLocalizerRPCHandler::setInterface(odomLocalizer* iface)
     this->interface = iface;
 }
 
-//This function parses the user commands received through the RPC port
-bool odomLocalizerRPCHandler::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+ReturnValue odomLocalizerRPCHandler::test()
 {
-    reply.clear();
-    reply.addVocab32(Vocab32::encode("many"));
-    reply.addString("Not yet Implemented");
-    return true;
+    yCInfo(ODOMLOC) << "odomLocalizerRPCHandler::test() called";
+    return ReturnValue_ok;
 }
 
 
