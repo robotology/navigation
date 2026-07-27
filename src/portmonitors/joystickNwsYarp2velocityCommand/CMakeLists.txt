@@ -19,7 +19,11 @@ yarp_add_plugin(joyNwsYarp2vel
               joystickNwsYarp2velocityCommand.cpp
               joystickNwsYarp2velocityCommand.h)
 
-include_directories (include)
+get_filename_component(ROBOT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." ABSOLUTE)
+
+include_directories (include
+                     "${ROBOT_SRC_DIR}/yarp/src/devices/messages/IJoypadControlMsg/idl_generated_code"
+                     "${ROBOT_SRC_DIR}/yarp/src/libYARP_dev/src/idl_generated_code")
 
 target_link_libraries(joyNwsYarp2vel YARP::YARP_os
                                           YARP::YARP_dev

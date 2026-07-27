@@ -13,6 +13,17 @@
 #include <yarp/os/Things.h>
 #include <yarp/dev/MobileBaseVelocity.h>
 
+namespace yarp::dev
+{
+class AllJoyData;
+class StickDataList;
+}
+
+namespace yarp::os
+{
+class Bottle;
+}
+
 class JoyNwsYarp2vel : public yarp::os::MonitorObject
 {
 public:
@@ -23,7 +34,10 @@ private:
     yarp::os::Things              m_things;
     yarp::dev::MobileBaseVelocity m_command;
 
-    bool validate_bot(const yarp::os::Bottle* bot);
+    bool validate_all_joy_data(const yarp::dev::AllJoyData* data);
+    bool validate_stick_data_list(const yarp::dev::StickDataList* data);
+    bool validate_metaquest_bot(const yarp::os::Bottle* bot);
+    void update_command(double x, double y, double theta);
 };
 
 #endif
