@@ -222,12 +222,10 @@ bool FreeFloorThread::threadInit()
     //get parameters data from the camera
     m_depth_width = m_iRgbd->getRgbWidth();
     m_depth_height = m_iRgbd->getRgbHeight();
-    bool propintr  = m_iRgbd->getDepthIntrinsicParam(m_propIntrinsics);
+    bool propintr  = m_iRgbd->getDepthIntrinsicParam(m_intrinsics);
     if(!propintr){
         return false;
     }
-    yCInfo(FREE_FLOOR_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
-    m_intrinsics.fromProperty(m_propIntrinsics);
 
     if(!m_imgOutPort.open(m_imgOutPortName)){
         yCError(FREE_FLOOR_THREAD) << "Cannot open imgOut port with name" << m_imgOutPortName;

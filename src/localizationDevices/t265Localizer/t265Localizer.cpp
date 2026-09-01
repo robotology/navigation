@@ -61,7 +61,7 @@ bool   t265Localizer::getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocat
     return true;
 }
 
-bool  t265Localizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+bool  t265Localizer::getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom)
 {
     odom = m_thread->getOdometry();
     return true;

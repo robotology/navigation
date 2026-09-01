@@ -100,7 +100,7 @@ ReturnValue   odomLocalizer::getCurrentPosition(Map2DLocation& loc)
     return ReturnValue_ok;
 }
 
-ReturnValue  odomLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  odomLocalizer::getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom)
 {
 //    odom = m_thread->getOdometry(); //from the estimator
     m_thread->getLastOdometryDataFromPort(odom);
@@ -137,7 +137,7 @@ void odomLocalizerThread::run()
     }
 
     lock_guard<std::mutex> lock(m_mutex);
-    yarp::dev::OdometryData *loc = m_port_odometry_input.read(false);
+    yarp::dev::Nav2D::Odometry *loc = m_port_odometry_input.read(false);
     if (loc)
     {
         m_last_port_odometryData = *loc;

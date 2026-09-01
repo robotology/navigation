@@ -89,7 +89,7 @@ public:
     yarp::dev::ReturnValue   getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
     yarp::dev::ReturnValue   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
     yarp::dev::ReturnValue   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
-    yarp::dev::ReturnValue   getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
+    yarp::dev::ReturnValue   getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom) override;
     yarp::dev::ReturnValue   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
     yarp::dev::ReturnValue   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
     yarp::dev::ReturnValue   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
@@ -113,9 +113,9 @@ protected:
 
     //odometry port
     std::string                  m_port_broadcast_odometry_name;
-    yarp::os::BufferedPort<yarp::dev::OdometryData>  m_port_odometry_input;
+    yarp::os::BufferedPort<yarp::dev::Nav2D::Odometry>  m_port_odometry_input;
     double                       m_last_port_odometryData_time;
-    yarp::dev::OdometryData      m_last_port_odometryData;
+    yarp::dev::Nav2D::Odometry      m_last_port_odometryData;
 
 public:
     odomLocalizerThread(const double _period, std::string _name, yarp::os::Searchable& _cfg);

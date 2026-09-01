@@ -10,6 +10,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/Map2DLocation.h>
 #include <yarp/dev/OdometryData.h>
+#include <yarp/dev/INavigation2D.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
@@ -27,12 +28,12 @@ private:
     yarp::sig::Vector            m_odom_vel;
     yarp::sig::Vector            m_robot_vel;
     iCub::ctrl::AWLinEstimator*  m_estimator;
-    yarp::dev::OdometryData      m_current_odom;
+    yarp::dev::Nav2D::Odometry      m_current_odom;
     std::mutex                   m_current_odom_mutex;
 
 public:
     localization_device_with_estimated_odometry();
     virtual ~localization_device_with_estimated_odometry();
-    yarp::dev::OdometryData estimateOdometry(const yarp::dev::Nav2D::Map2DLocation& m_localization_data);
-    yarp::dev::OdometryData getOdometry();
+    yarp::dev::Nav2D::Odometry estimateOdometry(const yarp::dev::Nav2D::Map2DLocation& m_localization_data);
+    yarp::dev::Nav2D::Odometry getOdometry();
 };

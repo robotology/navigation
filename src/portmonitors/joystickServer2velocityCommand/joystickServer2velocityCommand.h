@@ -21,7 +21,7 @@ public:
     virtual yarp::os::Things& update(yarp::os::Things& thing);
 private:
     yarp::os::Things              m_things;
-    yarp::dev::MobileBaseVelocity m_command;
+    yarp::dev::MobileBaseVelocityData m_command;
 
     bool validate_bot(const yarp::os::Bottle* bot);
 };

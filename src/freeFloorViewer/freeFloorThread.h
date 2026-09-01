@@ -78,12 +78,11 @@ protected:
     std::string                m_extern_ref_frame_id;
     yarp::sig::Matrix          m_transform_mtrx;
     yarp::sig::Matrix          m_transform_mtrx_extern;
-    yarp::os::Property         m_propIntrinsics;
     yarp::sig::FlexImage       m_rgbImage;
     yarp::sig::utils::PCL_ROI  m_pc_roi;
     yarp::sig::ImageOf<float>  m_depth_image;
     yarp::sig::IntrinsicParams m_intrinsics;
-    yarp::dev::MobileBaseVelocity                         m_outputBaseData;
+    yarp::dev::MobileBaseVelocityData                         m_outputBaseData;
     yarp::sig::PointCloud<yarp::sig::DataXYZ>             m_pc;
     std::vector<std::pair<size_t,size_t>>                 m_okPixels;
     std::map<std::pair<int,int>,bool>                     m_obstacle_columns;

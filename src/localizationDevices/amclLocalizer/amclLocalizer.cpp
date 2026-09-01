@@ -98,7 +98,7 @@ ReturnValue   amclLocalizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation&
     return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-ReturnValue   amclLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue   amclLocalizer::getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom)
 {
     odom = m_thread->getOdometry();
     return ReturnValue_ok;

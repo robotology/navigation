@@ -78,7 +78,7 @@ ReturnValue   pozyxLocalizer::getCurrentPosition(Map2DLocation& loc)
     return ReturnValue_ok;
 }
 
-ReturnValue  pozyxLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  pozyxLocalizer::getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom)
 {
     yCError(POZYX_DEV) << " pozyxLocalizer::getEstimatedOdometry is not yet implemented";
     return ReturnValue::return_code::return_value_error_not_implemented_by_device;
