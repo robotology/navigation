@@ -78,7 +78,7 @@ ReturnValue   gazeboLocalizer::getCurrentPosition(Map2DLocation& loc)
     return ReturnValue_ok;
 }
 
-ReturnValue  gazeboLocalizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  gazeboLocalizer::getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom)
 {
     odom = thread->getOdometry();
     return ReturnValue_ok;
