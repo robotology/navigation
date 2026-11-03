@@ -18,10 +18,10 @@ else()
 endif()
 
 # set up our program
-set(ASSISTIVE_REHAB_INC         $ENV{ROBOT_CODE}/assistive-rehab/lib/include)
 set(YARP_CV                     $ENV{ROBOT_CODE}/yarp/src/libYARP_cv/include)
 
 if(AssistiveRehab_FOUND)
+set(ASSISTIVE_REHAB_INC         $ENV{ROBOT_CODE}/assistive-rehab/lib/include)
 set(ASSISTIVE_REHAB_SRC         $ENV{ROBOT_CODE}/assistive-rehab/lib/src/dtw.cpp
                                 $ENV{ROBOT_CODE}/assistive-rehab/lib/src/helpers.cpp
                                 $ENV{ROBOT_CODE}/assistive-rehab/lib/src/skeleton.cpp)
@@ -33,8 +33,11 @@ else()
     message("YARPBTModules NOT found, follower will not have Tick interface")
 endif()
 
-
+if(AssistiveRehab_FOUND)
 include_directories (${ASSISTIVE_REHAB_INC} ${YARP_CV})
+else()
+include_directories (${YARP_CV})
+endif()
 
 set(FOLLOWER_FILES ./src/Follower.h
                    ./src/Follower.cpp
