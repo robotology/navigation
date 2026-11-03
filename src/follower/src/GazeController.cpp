@@ -244,9 +244,8 @@ std::string GazeController::stausToStrig()
             str="FAILED state. An error occurred in looking up for target";
         }break;
 
-        return str;
     };
-
+    return str;
 }
 
 
@@ -306,19 +305,30 @@ bool GazeController::lookAtPixel(double u, double v)
 
     yarp::os::Bottle &b = m_outputPort2gazeCtr.prepare();
     b.clear();
-    b.addString("control-frame");
-    b.addString(m_camera_str_command);
-    b.addString("target-type");
-    b.addString("image");
-    b.addString("image");
-    b.addString(m_camera_str_command);
+    yarp::os::Bottle &l1 = b.addList();
+    l1.clear();
+    l1.addString("control-frame");
+    l1.addString(m_camera_str_command);
+    yarp::os::Bottle &l2 = b.addList();
+    l2.clear();
+    l2.addString("target-type");
+    l2.addString("image");
+    yarp::os::Bottle &l3 = b.addList();
+    l3.clear();
+    l3.addString("image");
+    l3.addString(m_camera_str_command);
 
     Bottle location = yarp::os::Bottle();
     Bottle &val = location.addList();
+    val.clear();
     val.addFloat64(u);
     val.addFloat64(v);
-    b.addString("target-location");
-    b.addList().read(location.get(0));
+    yarp::os::Bottle &l4 = b.addList();
+    l4.clear();
+    l4.addString("target-location");
+    yarp::os::Bottle &l4_list = l4.addList();
+    l4_list.clear();
+    l4_list.read(location.get(0));
     m_outputPort2gazeCtr.write();
 
     return true;
@@ -339,15 +349,25 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
     yarp::os::Bottle &b = m_outputPort2gazeCtr.prepare();
     b.clear();
 
-    //b.addString("control-frame");
-    //b.addString(m_camera_str_command);
-    b.addString("target-type");
-    b.addString("cartesian");
+    // yarp::os::Bottle &l1 = b.addList();
+    // l1.addString("control-frame");
+    // l1.addString(m_camera_str_command);
+
+    yarp::os::Bottle &l2 = b.addList();
+    l2.clear();
+    l2.addString("target-type");
+    l2.addString("cartesian");
 
     Bottle target;
-    target.addList().read(x);
-    b.addString("target-location");
-    b.addList().read(target.get(0));
+    yarp::os::Bottle &target_list = target.addList();
+    target_list.clear();
+    target_list.read(x);
+    yarp::os::Bottle &l3 = b.addList();
+    l3.clear();
+    l3.addString("target-location");
+    yarp::os::Bottle &l3_list = l3.addList();
+    l3_list.clear();
+    l3_list.read(target.get(0));
 
     if(m_debugOn)
         yCDebug(FOLLOWER_GAZE) << "Command to gazectrl lookAtPoint: " << b.toString();
@@ -366,15 +386,22 @@ bool GazeController::lookAtAngle(double a, double b)
     yarp::os::Bottle &bott = m_outputPort2gazeCtr.prepare();
     bott.clear();
 
-    bott.addString("target-type");
-    bott.addString("angular");
+    yarp::os::Bottle &l1 = bott.addList();
+    l1.clear();
+    l1.addString("target-type");
+    l1.addString("angular");
 
     Bottle target;
     Bottle &val = target.addList();
+    val.clear();
     val.addFloat64(a);
     val.addFloat64(b);
-    bott.addString("target-location");
-    bott.addList().read(target.get(0));
+    yarp::os::Bottle &l2 = bott.addList();
+    l2.clear();
+    l2.addString("target-location");
+    yarp::os::Bottle &l2_list = l2.addList();
+    l2_list.clear();
+    l2_list.read(target.get(0));
 
    if(m_debugOn)
        yCDebug(FOLLOWER_GAZE) << "Command to gazectrl lookAtAngle: " << bott.toString();
@@ -515,17 +542,24 @@ count =0;
 
     cmd.addString("look");
     yarp::os::Bottle &b=cmd.addList();
+    b.clear();
 
-
-
-
-    b.addString("target-type");
-    b.addString("cartesian");
+    yarp::os::Bottle &l1 = b.addList();
+    l1.clear();
+    l1.addString("target-type");
+    l1.addString("cartesian");
 
     Bottle target;
-    target.addList().read(x);
-    b.addString("target-location");
-    b.addList().read(target.get(0));
+    target.clear();
+    yarp::os::Bottle &target_list = target.addList();
+    target_list.clear();
+    target_list.read(x);
+    yarp::os::Bottle &l2 = b.addList();
+    l2.clear();
+    l2.addString("target-location");
+    yarp::os::Bottle &l2_list = l2.addList();
+    l2_list.clear();
+    l2_list.read(target.get(0));
 
 
     if(m_debugOn)
