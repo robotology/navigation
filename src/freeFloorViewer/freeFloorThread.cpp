@@ -212,7 +212,7 @@ bool FreeFloorThread::threadInit()
     }
     m_nav2DPoly.view(m_iNav2D);
     if(!m_iNav2D){
-        yCError(FREE_FLOOR_THREAD,"Error opening iFrameTransform interface. Device not available");
+        yCError(FREE_FLOOR_THREAD,"Error opening iNavigation2D interface. Device not available");
         return false;
     }
 

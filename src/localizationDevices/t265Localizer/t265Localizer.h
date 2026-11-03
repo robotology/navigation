@@ -71,7 +71,7 @@ public:
 
     bool   getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
     bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
-    bool   getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
+    bool   getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom) override;
     bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc) override;
     bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
     bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
@@ -108,7 +108,7 @@ protected:
     yarp::dev::Nav2D::Map2DLocation     m_initial_loc;
     yarp::dev::Nav2D::Map2DLocation     m_initial_device_data;
     yarp::dev::Nav2D::Map2DLocation     m_current_loc;
-    yarp::dev::OdometryData             m_current_odom;
+    yarp::dev::Nav2D::Odometry             m_current_odom;
     yarp::dev::Nav2D::Map2DLocation     m_current_device_data;
     std::string                         m_name;
 

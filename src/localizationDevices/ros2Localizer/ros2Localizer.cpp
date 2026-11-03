@@ -227,7 +227,7 @@ ReturnValue   ros2Localizer::getCurrentPosition(yarp::dev::Nav2D::Map2DLocation&
     return ReturnValue::return_code::return_value_error_generic;
 }
 
-ReturnValue  ros2Localizer::getEstimatedOdometry(yarp::dev::OdometryData& odom)
+ReturnValue  ros2Localizer::getEstimatedOdometry(yarp::dev::Nav2D::Odometry& odom)
 {
     odom = m_thread->getOdometry();
     return ReturnValue_ok;

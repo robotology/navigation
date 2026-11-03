@@ -83,7 +83,7 @@ protected:
     yarp::sig::utils::PCL_ROI  m_pc_roi;
     yarp::sig::ImageOf<float>  m_depth_image;
     yarp::sig::IntrinsicParams m_intrinsics;
-    yarp::dev::MobileBaseVelocity                         m_outputBaseData;
+    yarp::dev::Nav2D::MobileBaseVelocity                         m_outputBaseData;
     yarp::sig::PointCloud<yarp::sig::DataXYZ>             m_pc;
     std::vector<std::pair<size_t,size_t>>                 m_okPixels;
     std::map<std::pair<int,int>,bool>                     m_obstacle_columns;
