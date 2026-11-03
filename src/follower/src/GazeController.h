@@ -63,7 +63,7 @@ namespace FollowerTarget
 
     private:
         GazeCtrlLookupStates m_lookupState;
-        yarp::os::BufferedPort<yarp::os::Property>  m_outputPort2gazeCtr; //I send commands to the gaze controller
+        yarp::os::BufferedPort<yarp::os::Bottle>  m_outputPort2gazeCtr; //I send commands to the gaze controller
         yarp::os::RpcClient m_rpcPort2gazeCtr;
 
         pixelPoint_t m_pLeft;

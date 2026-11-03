@@ -304,17 +304,21 @@ bool GazeController::lookAtPixel(double u, double v)
         last_v=v;
     }
 
-    Property &p = m_outputPort2gazeCtr.prepare();
-    p.clear();
-    p.put("control-frame",m_camera_str_command);
-    p.put("target-type","image");
-    p.put("image",m_camera_str_command);
+    yarp::os::Bottle &b = m_outputPort2gazeCtr.prepare();
+    b.clear();
+    b.addString("control-frame");
+    b.addString(m_camera_str_command);
+    b.addString("target-type");
+    b.addString("image");
+    b.addString("image");
+    b.addString(m_camera_str_command);
 
     Bottle location = yarp::os::Bottle();
     Bottle &val = location.addList();
     val.addFloat64(u);
     val.addFloat64(v);
-    p.put("target-location",location.get(0));
+    b.addString("target-location");
+    b.addList().read(location.get(0));
     m_outputPort2gazeCtr.write();
 
     return true;
@@ -332,18 +336,21 @@ bool GazeController::lookAtPoint(const  yarp::sig::Vector &x)
 
     count=0;
 
-    Property &p = m_outputPort2gazeCtr.prepare();
-    p.clear();
+    yarp::os::Bottle &b = m_outputPort2gazeCtr.prepare();
+    b.clear();
 
-    //p.put("control-frame", m_camera_str_command);
-    p.put("target-type","cartesian");
+    //b.addString("control-frame");
+    //b.addString(m_camera_str_command);
+    b.addString("target-type");
+    b.addString("cartesian");
 
     Bottle target;
     target.addList().read(x);
-    p.put("target-location",target.get(0));
+    b.addString("target-location");
+    b.addList().read(target.get(0));
 
     if(m_debugOn)
-        yCDebug(FOLLOWER_GAZE) << "Command to gazectrl lookAtPoint: " << p.toString();
+        yCDebug(FOLLOWER_GAZE) << "Command to gazectrl lookAtPoint: " << b.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -356,19 +363,21 @@ bool GazeController::lookAtAngle(double a, double b)
     if (m_outputPort2gazeCtr.getOutputCount() == 0)
         return true;
 
-    Property &p = m_outputPort2gazeCtr.prepare();
-    p.clear();
+    yarp::os::Bottle &bott = m_outputPort2gazeCtr.prepare();
+    bott.clear();
 
-    p.put("target-type","angular");
+    bott.addString("target-type");
+    bott.addString("angular");
 
     Bottle target;
     Bottle &val = target.addList();
     val.addFloat64(a);
     val.addFloat64(b);
-    p.put("target-location",target.get(0));
+    bott.addString("target-location");
+    bott.addList().read(target.get(0));
 
    if(m_debugOn)
-       yCDebug(FOLLOWER_GAZE) << "Command to gazectrl lookAtAngle: " << p.toString();
+       yCDebug(FOLLOWER_GAZE) << "Command to gazectrl lookAtAngle: " << bott.toString();
 
     m_outputPort2gazeCtr.write();
 
@@ -505,15 +514,18 @@ count =0;
     ans.clear();
 
     cmd.addString("look");
-    Property &p=cmd.addDict();
+    yarp::os::Bottle &b=cmd.addList();
 
 
 
-    p.put("target-type","cartesian");
+
+    b.addString("target-type");
+    b.addString("cartesian");
 
     Bottle target;
     target.addList().read(x);
-    p.put("target-location",target.get(0));
+    b.addString("target-location");
+    b.addList().read(target.get(0));
 
 
     if(m_debugOn)
