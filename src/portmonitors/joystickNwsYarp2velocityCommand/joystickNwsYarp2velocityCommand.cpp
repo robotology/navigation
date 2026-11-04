@@ -6,22 +6,21 @@
  * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 #include "joystickNwsYarp2velocityCommand.h"
 
+#include <yarp/dev/AllJoyData.h>
+#include <yarp/dev/StickDataList.h>
+#include <yarp/os/Bottle.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Value.h>
-#include <yarp/os/Bottle.h>
 
+YARP_LOG_COMPONENT(JOY2VEL, "navigation.JoyNwsYarp2Vel")
 
-
-//example
-//yarp connect /joystickCtrl:o /baseControl /input /joystick:i tcp+recv.portmonitor+type.dll+file.joy2vel
-
-YARP_LOG_COMPONENT(JOY2VEL, "navigation.Joy2Vel")
+namespace
+{
+constexpr double vtheta_scale = 30.0;
+constexpr int metaquest_bottle_size = 4;
 
 bool isNumeric(yarp::os::Value& val)
 {
@@ -31,8 +30,11 @@ bool isNumeric(yarp::os::Value& val)
         val.isInt16() ||
         val.isInt32() ||
         val.isInt64())
-        {return true;}
+    {
+        return true;
+    }
     return false;
+}
 }
 
 JoyNwsYarp2vel::JoyNwsYarp2vel()
@@ -42,70 +44,128 @@ JoyNwsYarp2vel::JoyNwsYarp2vel()
 
 bool JoyNwsYarp2vel::accept(yarp::os::Things& thing)
 {
-    yarp::os::Bottle *bot = thing.cast_as<yarp::os::Bottle>();
-    if (bot == NULL) {
-        yCWarning(JOY2VEL,"expected type Bottle but got wrong data type!");
-        return false;
+    if (yarp::dev::AllJoyData* data = thing.cast_as<yarp::dev::AllJoyData>())
+    {
+        return validate_all_joy_data(data);
     }
 
-    return validate_bot(bot);
+    if (yarp::dev::StickDataList* data = thing.cast_as<yarp::dev::StickDataList>())
+    {
+        return validate_stick_data_list(data);
+    }
+
+    if (yarp::os::Bottle* bot = thing.cast_as<yarp::os::Bottle>())
+    {
+        return validate_metaquest_bot(bot);
+    }
+
+    yCWarning(JOY2VEL, "expected type AllJoyData, StickDataList or Bottle but got wrong data type!");
+    return false;
 }
 
-bool JoyNwsYarp2vel::validate_bot(const yarp::os::Bottle* bot)
+bool JoyNwsYarp2vel::validate_all_joy_data(const yarp::dev::AllJoyData* data)
 {
-    if (!bot)
+    if (!data)
     {
-        yCError(JOY2VEL, "Invalid bottle format: empty bottle");
+        yCError(JOY2VEL, "Invalid AllJoyData message: empty message");
         return false;
     }
 
-    if (bot->size() < 5)
+    if (data->StickDataVal.empty())
     {
-        yCError(JOY2VEL, "Invalid bottle format: Size <5 or invalid data type");
+        yCError(JOY2VEL, "Invalid AllJoyData message: missing stick data");
         return false;
     }
-
-    if ( isNumeric(bot->get(0))  == false ||
-         bot->get(1).isFloat64() == false ||
-         bot->get(2).isFloat64() == false ||
-         bot->get(3).isFloat64() == false ||
-         bot->get(4).isFloat64() == false )
-    {
-        yCError(JOY2VEL, "Invalid bottle format: invalid data type");
-        return false;
-    }
-
-    //when the joystick button is not pressed, filter out the message.
-    //This will eventually trigger a timeout on the receiver and
-    //the control will be give to a different input source
-    double percent = bot->get(4).asFloat64();
-    if (percent < 10) {return false;}
 
     return true;
 }
 
-yarp::os::Things& JoyNwsYarp2vel::update(yarp::os::Things& thing)
+bool JoyNwsYarp2vel::validate_stick_data_list(const yarp::dev::StickDataList* data)
 {
-    yarp::os::Bottle *bot = thing.cast_as<yarp::os::Bottle>();
-    yAssert(bot);
-    validate_bot(bot);
-
-    if (bot->get(0).asInt32()==3)
+    if (!data)
     {
-        double percent = bot->get(4).asFloat64()/100.0;
-        this->m_command.vel_x = bot->get(1).asFloat64() * percent;
-        this->m_command.vel_y = bot->get(2).asFloat64() * percent;
-        this->m_command.vel_theta = bot->get(3).asFloat64() * percent;
-    } else if (bot->get(0).asInt32()==2)
-    {
-        double percent = bot->get(4).asFloat64()/100.0;
-        this->m_command.vel_x = bot->get(2).asFloat64() * percent  *  cos(bot->get(1).asFloat64()/ 180 * M_PI)  ;
-        this->m_command.vel_y = bot->get(2).asFloat64() * percent * sin(bot->get(1).asFloat64() / 180 * M_PI);
-        this->m_command.vel_theta = bot->get(3).asFloat64() * percent;
-    } else
-    {
-        yCError(JOY2VEL, "Unsupported bottle format: Type!=3");
+        yCError(JOY2VEL, "Invalid StickDataList message: empty message");
+        return false;
     }
 
-    return this->m_things;
+    if (data->value.empty())
+    {
+        yCError(JOY2VEL, "Invalid StickDataList message: missing stick data");
+        return false;
+    }
+
+    return true;
+}
+
+bool JoyNwsYarp2vel::validate_metaquest_bot(const yarp::os::Bottle* bot)
+{
+    if (!bot)
+    {
+        yCError(JOY2VEL, "Invalid Meta Quest bottle format: empty bottle");
+        return false;
+    }
+
+    if (bot->size() != metaquest_bottle_size)
+    {
+        yCError(JOY2VEL, "Invalid Meta Quest bottle format: expected 4 values");
+        return false;
+    }
+
+    // Meta Quest messages are expected as:
+    // [left_x, left_y, right_x, right_y]
+    for (int i = 0; i < metaquest_bottle_size; ++i)
+    {
+        yarp::os::Value value = bot->get(i);
+        if (!isNumeric(value))
+        {
+            yCError(JOY2VEL, "Invalid Meta Quest bottle format: item %d is not numeric", i);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void JoyNwsYarp2vel::update_command(double x, double y, double theta)
+{
+    m_command.vel_x = x;
+    m_command.vel_y = y;
+    m_command.vel_theta = theta;
+}
+
+yarp::os::Things& JoyNwsYarp2vel::update(yarp::os::Things& thing)
+{
+    if (yarp::dev::AllJoyData* data = thing.cast_as<yarp::dev::AllJoyData>())
+    {
+        yAssert(validate_all_joy_data(data));
+
+        const auto& left_stick = data->StickDataVal[0];
+        const double right_x = (data->StickDataVal.size() > 1) ? data->StickDataVal[1].s1 : 0.0;
+        update_command(left_stick.s2, left_stick.s1, -right_x * vtheta_scale);
+        return this->m_things;
+    }
+
+    if (yarp::dev::StickDataList* data = thing.cast_as<yarp::dev::StickDataList>())
+    {
+        yAssert(validate_stick_data_list(data));
+
+        const auto& left_stick = data->value[0];
+        const double right_x = (data->value.size() > 1) ? data->value[1].s1 : 0.0;
+        update_command(left_stick.s2, left_stick.s1, -right_x * vtheta_scale);
+        return this->m_things;
+    }
+
+    if (yarp::os::Bottle* bot = thing.cast_as<yarp::os::Bottle>())
+    {
+        yAssert(validate_metaquest_bot(bot));
+
+        const double left_x = bot->get(0).asFloat64();
+        const double left_y = bot->get(1).asFloat64();
+        const double right_x = bot->get(2).asFloat64();
+        update_command(left_y, left_x, -right_x * vtheta_scale);
+        return this->m_things;
+    }
+
+    yCError(JOY2VEL, "Unsupported message type received by joystickNwsYarp portmonitor");
+    return thing;
 }
